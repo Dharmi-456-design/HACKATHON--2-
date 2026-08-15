@@ -68,9 +68,7 @@ export default function Login() {
         {/* brand badge top-left */}
         <div className="relative z-10 p-10">
           <Link to="/" className="inline-flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-paper/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
-              <Leaf size={18} className="text-forest" strokeWidth={2} />
-            </div>
+            <img src="/logo.png" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shadow-lg" />
             <span style={{ fontFamily: 'Georgia, serif' }} className="text-xl font-semibold text-white drop-shadow-sm tracking-tight">
               NaturePulse
             </span>
@@ -85,9 +83,7 @@ export default function Login() {
             </p>
             <p className="text-white/80 text-sm mt-3">It needs you to come back.</p>
             <div className="flex items-center gap-2 mt-5">
-              <div className="w-7 h-7 rounded-full bg-gold flex items-center justify-center">
-                <Leaf size={13} className="text-white" />
-              </div>
+              <img src="/logo.png" alt="NaturePulse Logo" className="w-7 h-7 rounded-full object-cover" />
               <span className="text-white/90 text-xs uppercase tracking-widest">NaturePulse · Nature Connection</span>
             </div>
           </div>
@@ -98,9 +94,7 @@ export default function Login() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative text-ink">
         {/* mobile logo */}
         <div className="lg:hidden mb-8 flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-forest flex items-center justify-center">
-            <Leaf size={18} className="text-cream" strokeWidth={2} />
-          </div>
+          <img src="/logo.png" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover" />
           <span style={{ fontFamily: 'Georgia, serif' }} className="text-xl font-semibold text-ink">NaturePulse</span>
         </div>
 

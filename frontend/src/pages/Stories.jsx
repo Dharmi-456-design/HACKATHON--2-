@@ -21,8 +21,8 @@ export default function Stories() {
         apiFetch('/api/stories', {}, token),
         apiFetch('/api/discoveries', {}, token),
       ]);
-      setStories(s);
-      setDiscoveries(d);
+      setStories(Array.isArray(s) ? s : []);
+      setDiscoveries(Array.isArray(d) ? d : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load stories');
     } finally {

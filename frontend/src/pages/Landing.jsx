@@ -19,7 +19,7 @@ export default function Landing() {
       <header className="fixed top-0 inset-x-0 z-30 backdrop-blur-md bg-cream/80 border-b border-ink/5 transition-colors">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
-            <PulseOrb size={36} />
+            <img src="/logo.png" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shadow-sm" />
             <span className="font-display text-xl tracking-tight">NaturePulse</span>
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm text-forest/80">
