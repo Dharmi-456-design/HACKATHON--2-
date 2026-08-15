@@ -84,9 +84,7 @@ export default function Register() {
         {/* brand */}
         <div className="relative z-10 p-10">
           <Link to="/" className="inline-flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gold flex items-center justify-center shadow-lg">
-              <Leaf size={18} className="text-white" strokeWidth={2} />
-            </div>
+            <img src="/logo.png" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shadow-lg" />
             <span style={{ fontFamily: 'Georgia, serif' }} className="text-xl font-semibold text-white tracking-tight">
               NaturePulse
             </span>

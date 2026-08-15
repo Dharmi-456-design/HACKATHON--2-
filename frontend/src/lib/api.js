@@ -120,12 +120,72 @@ let mockActions = [
   { id: 'a3', title: 'Leave leaf pile for hibernating insects', category: 'Soil', minutes: 10, status: 'recommended' },
 ];
 
+let mockStories = [
+  {
+    id: 's1',
+    title: 'The Silent Canopy Connection',
+    narrative: 'Your recent observation of the Indian Myna and the Champa bloom reveals a shared urban shelter pattern. Both species thrive along the micro-climates created near residential garden boundaries, where soil moisture remains higher after dawn.',
+    created_at: new Date().toISOString(),
+  },
+];
+
+let mockPulse = [
+  {
+    id: 1,
+    role: 'assistant',
+    content: 'Welcome back! I am Pulse, your ecological guide. Tell me about your surroundings today or what species you are curious about.',
+    created_at: new Date().toISOString(),
+  },
+];
+
 function getMockData(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
   let body = {};
   try {
     if (options.body) body = JSON.parse(options.body);
   } catch {}
+
+  if (path.startsWith('/api/stories')) {
+    if (method === 'POST') {
+      const newStory = {
+        id: `s-${Date.now()}`,
+        title: 'Thread of Urban Adaptation',
+        narrative: 'Across your latest notes, native flora and urban wildlife show an interconnected rhythm. Moisture retention in garden bark directly supports insect foraging for local bird species.',
+        created_at: new Date().toISOString(),
+      };
+      mockStories = [newStory, ...mockStories];
+      return newStory;
+    }
+    if (method === 'DELETE') {
+      mockStories = mockStories.filter((s) => s.id !== body.id);
+      return { success: true };
+    }
+    return mockStories;
+  }
+
+  if (path.startsWith('/api/pulse')) {
+    if (method === 'POST') {
+      const userMsg = {
+        id: Date.now(),
+        role: 'user',
+        content: body.content || '',
+        created_at: new Date().toISOString(),
+      };
+      const assistantMsg = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: `I hear you! Paying attention to "${body.content}" opens up a wonderful window into your local ecosystem. Try spending 5 quiet minutes observing how light and shadow change across that spot.`,
+        created_at: new Date().toISOString(),
+      };
+      mockPulse = [...mockPulse, userMsg, assistantMsg];
+      return assistantMsg;
+    }
+    if (method === 'DELETE') {
+      mockPulse = [];
+      return { success: true };
+    }
+    return mockPulse;
+  }
 
   if (path.startsWith('/api/profile')) {
     if (method === 'PUT') {

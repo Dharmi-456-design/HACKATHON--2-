@@ -17,7 +17,8 @@ export default function PulseChat() {
   const load = useCallback(async () => {
     if (!token) return;
     try {
-      setMessages(await apiFetch('/api/pulse', {}, token));
+      const res = await apiFetch('/api/pulse', {}, token);
+      setMessages(Array.isArray(res) ? res : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not reach Pulse');
     } finally {
