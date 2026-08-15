@@ -25,7 +25,7 @@ function CountUp({ target }) {
   return <span>{display}</span>;
 }
 
-export default function ExplorerStreak() {
+export default function ExplorerStreak({ compact = false }) {
   const { session } = useAuth();
   const token = session?.access_token;
   const [streak, setStreak] = useState(null);
@@ -42,6 +42,17 @@ export default function ExplorerStreak() {
 
   const size = streak >= 8 ? 20 : streak >= 4 ? 16 : 14;
   const colorCls = streak >= 8 ? 'text-orange-500' : streak >= 4 ? 'text-gold' : 'text-forest/60';
+
+  if (compact) {
+    return (
+      <div
+        className="flex items-center justify-center p-2 rounded-xl transition-colors hover:bg-mist/30"
+        title={`${streak}-day explorer streak`}
+      >
+        <Flame size={18} className={colorCls} />
+      </div>
+    );
+  }
 
   return (
     <motion.div

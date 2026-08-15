@@ -18,6 +18,8 @@ import {
   Target,
   Globe,
   BarChart2,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import ExplorerStreak from './ExplorerStreak';
@@ -47,7 +49,18 @@ export default function AppShell() {
   const { theme } = useTheme();
   const nav = useNavigate();
   const [more, setMore] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    return localStorage.getItem('sidebar_collapsed') === 'true';
+  });
   const isDark = theme === 'dark';
+
+  const toggleSidebar = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('sidebar_collapsed', String(next));
+      return next;
+    });
+  };
 
   const signOut = async () => {
     if (isDemoUser) {
@@ -62,35 +75,75 @@ export default function AppShell() {
     <div className="min-h-screen bg-cream text-ink flex">
 
       {/* ────────────────────── DESKTOP SIDEBAR ────────────────────── */}
-      <aside className={`hidden md:flex w-[240px] shrink-0 flex-col border-r sticky top-0 h-screen
+      <aside className={`hidden md:flex flex-col border-r sticky top-0 h-screen transition-all duration-300 ease-in-out shrink-0 z-20
+        ${collapsed ? 'w-[70px]' : 'w-[240px]'}
         ${isDark ? 'bg-[#111f17] border-white/8' : 'bg-white border-ink/8'}`}
       >
-        {/* Brand */}
-        <div className="px-5 pt-6 pb-5 flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0
-            ${isDark ? 'bg-[#97CDAB]/20' : 'bg-[#1B3A2C]'}`}
-          >
-            <Leaf size={17} className={isDark ? 'text-[#97CDAB]' : 'text-white'} strokeWidth={2} />
-          </div>
-          <div>
-            <p className="font-display text-[17px] leading-none font-semibold">NaturePulse</p>
-            <p className="text-[10px] uppercase tracking-[0.18em] text-forest/40 mt-0.5">Nature Connection</p>
-          </div>
+        {/* Brand & Toggle Header */}
+        <div className={`pt-5 pb-4 flex items-center transition-all duration-300 ${collapsed ? 'px-2 justify-center' : 'px-4 justify-between'}`}>
+          {!collapsed ? (
+            <>
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0
+                  ${isDark ? 'bg-[#97CDAB]/20' : 'bg-[#1B3A2C]'}`}
+                >
+                  <Leaf size={17} className={isDark ? 'text-[#97CDAB]' : 'text-white'} strokeWidth={2} />
+                </div>
+                <div className="truncate">
+                  <p className="font-display text-[16px] leading-none font-semibold truncate">NaturePulse</p>
+                  <p className="text-[9px] uppercase tracking-[0.15em] text-forest/40 mt-1 truncate">Nature Connection</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title="Collapse sidebar"
+                aria-label="Collapse sidebar"
+                className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                  isDark
+                    ? 'text-white/60 hover:bg-white/10 hover:text-white'
+                    : 'text-forest/60 hover:bg-ink/5 hover:text-forest'
+                }`}
+              >
+                <PanelLeftClose size={19} strokeWidth={1.8} />
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              title="Expand sidebar"
+              aria-label="Expand sidebar"
+              className={`p-2 rounded-xl transition-colors ${
+                isDark
+                  ? 'text-[#97CDAB] hover:bg-white/10'
+                  : 'text-forest hover:bg-mist/70'
+              }`}
+            >
+              <PanelLeftOpen size={20} strokeWidth={2} />
+            </button>
+          )}
         </div>
 
         {/* Divider */}
-        <div className={`mx-5 h-px ${isDark ? 'bg-white/6' : 'bg-ink/6'} mb-3`} />
+        <div className={`mx-3 h-px ${isDark ? 'bg-white/6' : 'bg-ink/6'} mb-3`} />
 
         {/* Nav links */}
-        <nav className="px-3 flex-1 space-y-0.5 overflow-y-auto">
-          <p className="px-3 text-[10px] uppercase tracking-[0.2em] text-forest/35 font-semibold mb-2 mt-1">Menu</p>
+        <nav className="px-2 flex-1 space-y-1 overflow-y-auto overflow-x-hidden">
+          {!collapsed && (
+            <p className="px-3 text-[10px] uppercase tracking-[0.2em] text-forest/35 font-semibold mb-2 mt-1">Menu</p>
+          )}
           {LINKS.map((l) => (
             <NavLink
               key={l.to}
               to={l.to}
               end={l.end}
+              title={collapsed ? l.label : undefined}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 ${
+                `flex items-center gap-3 rounded-xl transition-all duration-150 ${
+                  collapsed ? 'justify-center p-2.5' : 'px-3 py-2.5 text-sm'
+                } ${
                   isActive
                     ? isDark
                       ? 'bg-[#97CDAB]/15 text-[#97CDAB] font-semibold'
@@ -101,42 +154,79 @@ export default function AppShell() {
                 }`
               }
             >
-              <l.icon size={16} strokeWidth={1.8} />
-              {l.label}
+              <l.icon size={18} strokeWidth={1.8} className="shrink-0" />
+              {!collapsed && <span className="truncate">{l.label}</span>}
             </NavLink>
           ))}
         </nav>
 
         {/* Bottom section */}
-        <div className={`p-4 border-t ${isDark ? 'border-white/6' : 'border-ink/6'} space-y-1`}>
-          {/* ── THEME TOGGLE (prominent pill) ── */}
-          <div className={`rounded-xl px-1 py-1 mb-2 ${isDark ? 'bg-white/4' : 'bg-[#F3F5F1]'}`}>
-            <ThemeToggle variant="pill" />
-          </div>
+        <div className={`p-3 border-t ${isDark ? 'border-white/6' : 'border-ink/6'} space-y-2`}>
+          {/* Theme Toggle */}
+          {!collapsed ? (
+            <div className={`rounded-xl px-1 py-1 ${isDark ? 'bg-white/4' : 'bg-[#F3F5F1]'}`}>
+              <ThemeToggle variant="pill" />
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <ThemeToggle variant="icon" />
+            </div>
+          )}
 
           {/* Explorer Streak */}
-          <ExplorerStreak />
+          {!collapsed ? (
+            <ExplorerStreak />
+          ) : (
+            <div className="flex justify-center">
+              <ExplorerStreak compact />
+            </div>
+          )}
 
-          {/* User */}
-          <p className={`text-xs truncate px-3 pb-1 ${isDark ? 'text-white/35' : 'text-forest/40'}`}>
-            {user?.email}
-          </p>
-          <div className="flex gap-1">
-            <NavLink
-              to="/app/settings"
-              className={`flex-1 text-xs rounded-lg px-3 py-2 inline-flex items-center gap-1.5 transition-colors
-                ${isDark ? 'text-white/50 hover:bg-white/6 hover:text-white/80' : 'text-forest/60 hover:bg-[#EDF2EA] hover:text-forest'}`}
-            >
-              <Settings size={13} /> Settings
-            </NavLink>
-            <button
-              onClick={signOut}
-              className={`text-xs rounded-lg px-3 py-2 inline-flex items-center gap-1.5 transition-colors
-                ${isDark ? 'text-white/50 hover:bg-white/6 hover:text-white/80' : 'text-forest/60 hover:bg-[#EDF2EA] hover:text-forest'}`}
-            >
-              <LogOut size={13} /> Sign out
-            </button>
-          </div>
+          {/* User info & actions */}
+          {!collapsed ? (
+            <>
+              <p className={`text-xs truncate px-2 pb-1 ${isDark ? 'text-white/35' : 'text-forest/40'}`}>
+                {user?.email}
+              </p>
+              <div className="flex gap-1">
+                <NavLink
+                  to="/app/settings"
+                  className={`flex-1 text-xs rounded-lg px-2.5 py-2 inline-flex items-center gap-1.5 transition-colors
+                    ${isDark ? 'text-white/50 hover:bg-white/6 hover:text-white/80' : 'text-forest/60 hover:bg-[#EDF2EA] hover:text-forest'}`}
+                >
+                  <Settings size={13} /> Settings
+                </NavLink>
+                <button
+                  onClick={signOut}
+                  className={`text-xs rounded-lg px-2 py-2 inline-flex items-center gap-1.5 transition-colors
+                    ${isDark ? 'text-white/50 hover:bg-white/6 hover:text-white/80' : 'text-forest/60 hover:bg-[#EDF2EA] hover:text-forest'}`}
+                >
+                  <LogOut size={13} /> Sign out
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-1 pt-1">
+              <NavLink
+                to="/app/settings"
+                title="Settings"
+                aria-label="Settings"
+                className={`p-2 rounded-lg transition-colors
+                  ${isDark ? 'text-white/50 hover:bg-white/6 hover:text-white/80' : 'text-forest/60 hover:bg-[#EDF2EA] hover:text-forest'}`}
+              >
+                <Settings size={17} />
+              </NavLink>
+              <button
+                onClick={signOut}
+                title="Sign out"
+                aria-label="Sign out"
+                className={`p-2 rounded-lg transition-colors
+                  ${isDark ? 'text-white/50 hover:bg-white/6 hover:text-white/80' : 'text-forest/60 hover:bg-[#EDF2EA] hover:text-forest'}`}
+              >
+                <LogOut size={17} />
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
