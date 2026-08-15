@@ -14,34 +14,47 @@ import {
   Menu,
   X,
   Leaf,
+  Award,
+  Target,
+  Globe,
+  BarChart2,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import ExplorerStreak from './ExplorerStreak';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import supabase from '../lib/supabase';
 
 const LINKS = [
-  { to: '/app',           label: 'Dashboard',   icon: LayoutDashboard, end: true },
-  { to: '/app/lens',      label: 'Nature Lens',  icon: Camera },
-  { to: '/app/places',    label: 'Nearby',       icon: Map },
-  { to: '/app/act',       label: 'Act',          icon: HandHeart },
-  { to: '/app/journal',   label: 'Journal',      icon: BookOpen },
-  { to: '/app/stories',   label: 'Stories',      icon: Sparkles },
-  { to: '/app/community', label: 'Community',    icon: Users },
-  { to: '/app/pulse',     label: 'Pulse Chat',   icon: MessageCircle },
+  { to: '/app',                label: 'Dashboard',    icon: LayoutDashboard, end: true },
+  { to: '/app/lens',           label: 'Nature Lens',  icon: Camera },
+  { to: '/app/places',         label: 'Nearby',       icon: Map },
+  { to: '/app/act',            label: 'Act',          icon: HandHeart },
+  { to: '/app/journal',        label: 'Journal',      icon: BookOpen },
+  { to: '/app/passport',       label: 'Passport',     icon: Award },
+  { to: '/app/missions',       label: 'Missions',     icon: Target },
+  { to: '/app/community-map',  label: 'Bio Map',      icon: Globe },
+  { to: '/app/recap',          label: 'Weekly Recap', icon: BarChart2 },
+  { to: '/app/stories',        label: 'Stories',      icon: Sparkles },
+  { to: '/app/community',      label: 'Community',    icon: Users },
+  { to: '/app/pulse',          label: 'Pulse Chat',   icon: MessageCircle },
 ];
 
 const MOBILE_PRIMARY = [LINKS[0], LINKS[1], LINKS[2], LINKS[7]];
 
 export default function AppShell() {
-  const { user } = useAuth();
+  const { user, exitDemoMode, isDemoUser } = useAuth();
   const { theme } = useTheme();
   const nav = useNavigate();
   const [more, setMore] = useState(false);
   const isDark = theme === 'dark';
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (isDemoUser) {
+      await exitDemoMode();
+    } else {
+      await supabase.auth.signOut();
+    }
     nav('/');
   };
 
@@ -100,6 +113,9 @@ export default function AppShell() {
           <div className={`rounded-xl px-1 py-1 mb-2 ${isDark ? 'bg-white/4' : 'bg-[#F3F5F1]'}`}>
             <ThemeToggle variant="pill" />
           </div>
+
+          {/* Explorer Streak */}
+          <ExplorerStreak />
 
           {/* User */}
           <p className={`text-xs truncate px-3 pb-1 ${isDark ? 'text-white/35' : 'text-forest/40'}`}>

@@ -16,6 +16,10 @@ import Stories from './pages/Stories';
 import Community from './pages/Community';
 import PulseChat from './pages/PulseChat';
 import Settings from './pages/Settings';
+import BiodiversityPassport from './pages/BiodiversityPassport';
+import NatureMissions from './pages/NatureMissions';
+import CommunityBiodiversityMap from './pages/CommunityBiodiversityMap';
+import WeeklyRecap from './pages/WeeklyRecap';
 import { useEffect, useState } from 'react';
 import { apiFetch } from './lib/api';
 
@@ -83,6 +87,10 @@ export default function App() {
               <Route path="community" element={<Community />} />
               <Route path="pulse" element={<PulseChat />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="passport" element={<BiodiversityPassport />} />
+              <Route path="missions" element={<NatureMissions />} />
+              <Route path="community-map" element={<CommunityBiodiversityMap />} />
+              <Route path="recap" element={<WeeklyRecap />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
