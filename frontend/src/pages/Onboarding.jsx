@@ -60,7 +60,7 @@ export default function Onboarding() {
       await apiFetch('/api/missions', { method: 'POST', body: JSON.stringify({ generate: true, minutes }) }, token).catch(() => {});
       nav('/app');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save');
+      nav('/app');
     } finally {
       setBusy(false);
     }

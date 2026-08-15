@@ -17,7 +17,7 @@ function GoogleIcon() {
 }
 
 export default function Login() {
-  const { user, loading } = useAuth();
+  const { user, loading, enterDemoMode } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -205,9 +205,23 @@ export default function Login() {
             <span className="underline cursor-pointer hover:text-forest/70">Privacy Policy</span>
           </p>
 
-          <p className="text-center text-[11px] text-mist mt-3">
-            Demo: demo@naturepulse.app / naturepulse
-          </p>
+          {/* ── 1-CLICK DEMO LOGIN ── */}
+          <div className="mt-6 rounded-2xl border-2 border-dashed border-gold/40 bg-gold/10 p-4">
+            <p className="text-[11px] uppercase tracking-[0.18em] text-gold font-semibold mb-1 text-center">
+              🎭 Hackathon Instant Demo
+            </p>
+            <p className="text-xs text-forest/70 text-center mb-3">
+              One-click entry to explore all features instantly without authentication.
+            </p>
+            <button
+              type="button"
+              onClick={enterDemoMode}
+              className="w-full rounded-xl bg-forest text-cream text-sm font-semibold py-3 hover:bg-ink transition-all shadow-md flex items-center justify-center gap-2"
+            >
+              🚀 Launch Demo Mode (1-Click Login) →
+            </button>
+          </div>
+
         </div>
       </div>
     </div>

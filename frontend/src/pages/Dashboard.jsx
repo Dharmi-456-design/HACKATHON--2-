@@ -4,6 +4,7 @@ import { ArrowRight, Check, RefreshCw, MapPin, Clock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
 import { Badge, Card, ConnectionRing, DimBars, GhostButton, PrimaryButton, Skeleton, TYPE_LABEL } from '../components/ui';
+import BestTimeToExplore from '../components/BestTimeToExplore';
 
 export default function Dashboard() {
   const { session, user } = useAuth();
@@ -106,6 +107,11 @@ export default function Dashboard() {
       </div>
 
       {error && <p className="mb-4 text-sm text-red-700 dark:text-red-400">{error}</p>}
+
+      {/* Best time to explore widget */}
+      <div className="mb-5">
+        <BestTimeToExplore />
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-5">
         <Card className="lg:col-span-2 overflow-hidden">
