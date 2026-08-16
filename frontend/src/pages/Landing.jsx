@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Eye, Compass, BookOpen, HandHeart, RotateCcw, Sparkles } from 'lucide-react';
 import { PulseOrb } from '../components/ui';
 import ThemeToggle from '../components/ThemeToggle';
-import InteractiveHeroSphere from '../components/InteractiveHeroSphere';
+import FrameSequenceHero from '../components/FrameSequenceHero';
 import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
 import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 import AnimatedStatCard from '../components/AnimatedStatCard';
@@ -27,7 +27,7 @@ export default function Landing() {
             <span className="font-display text-xl tracking-tight text-white font-semibold">NaturePulse</span>
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm text-white/80">
-            <a href="#hero" className="hover:text-white transition-colors">3D Experience</a>
+            <a href="#hero" className="hover:text-white transition-colors">Moss Experience</a>
             <a href="#journey" className="hover:text-white transition-colors">The journey</a>
             <a href="#pulse" className="hover:text-white transition-colors">Pulse AI</a>
             <a href="#reviews" className="hover:text-white transition-colors">Community</a>
@@ -35,16 +35,16 @@ export default function Landing() {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Link to="/login" className="hidden sm:inline-flex text-sm px-3 py-2 text-white/80 hover:text-white transition-colors">Sign in</Link>
-            <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full bg-[#97CDAB] text-[#0A1610] font-semibold text-sm px-4 py-2 hover:bg-white transition-colors">
+            <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full bg-[#96CD7B] text-[#0A1610] font-semibold text-sm px-4 py-2 hover:bg-white transition-colors">
               Begin <ArrowRight size={14} />
             </Link>
           </div>
         </div>
       </header>
 
-      {/* ────────────────────── 1. 3D INTERACTIVE HERO SPHERE ────────────────────── */}
+      {/* ────────────────────── 1. 24FPS MOSS ANIMATION SEQUENCE HERO ────────────────────── */}
       <section id="hero" className="pt-16">
-        <InteractiveHeroSphere />
+        <FrameSequenceHero />
       </section>
 
       {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER ────────────────────── */}
