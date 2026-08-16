@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [places, setPlaces] = useState([]);
   const [discoveries, setDiscoveries] = useState([]);
   const [actions, setActions] = useState([]);
+  const [streak, setStreak] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -28,30 +29,39 @@ export default function Dashboard() {
       return;
     }
     setError('');
+    let failed = 0;
+    // Keep one failing endpoint from wiping the whole dashboard, but never
+    // fabricate data: failed slices stay empty and the failure is surfaced.
+    const safe = (promise) => Promise.resolve(promise).catch(() => {
+      failed += 1;
+      return null;
+    });
     try {
-      const [p, s, m, pl, d, a] = await Promise.all([
-        apiFetch('/api/profile', {}, token).catch(() => null),
-        apiFetch('/api/connection', {}, token).catch(() => null),
-        apiFetch('/api/missions', {}, token).catch(() => null),
-        apiFetch('/api/places').catch(() => null),
-        apiFetch('/api/discoveries', {}, token).catch(() => null),
-        apiFetch('/api/actions', {}, token).catch(() => null),
+      const [p, s, m, pl, d, a, st] = await Promise.all([
+        safe(apiFetch('/api/profile', {}, token)),
+        safe(apiFetch('/api/connection', {}, token)),
+        safe(apiFetch('/api/missions', {}, token)),
+        safe(apiFetch('/api/places')),
+        safe(apiFetch('/api/discoveries', {}, token)),
+        safe(apiFetch('/api/actions', {}, token)),
+        safe(apiFetch('/api/streak', {}, token)),
       ]);
-      setProfile(p && typeof p === 'object' ? p : { name: user?.name || 'Explorer', points: 120 });
-      setScore(s && typeof s === 'object' && s.overall !== undefined ? s : { observe: 78, explore: 65, learn: 82, act: 54, return_dim: 70, overall: 74 });
-      setMissions(Array.isArray(m) && m.length > 0 ? m : [
-        { id: 'm1', title: 'Find 3 Leaf Textures Under Peepal Shade', category: 'Habitat', minutes: 15, status: 'pending', xp: 50, location: 'Sabarmati Riverfront Park' },
-        { id: 'm2', title: 'Record Morning Songbird Chirps', category: 'Avian', minutes: 10, status: 'pending', xp: 40, location: 'Law Garden' },
-      ]);
-      setPlaces(Array.isArray(pl) && pl.length > 0 ? pl : []);
+      setProfile(p && typeof p === 'object' ? p : null);
+      setScore(s && typeof s === 'object' && s.overall !== undefined ? s : EMPTY_SCORE);
+      setMissions(Array.isArray(m) ? m : []);
+      setPlaces(Array.isArray(pl) ? pl : []);
       setDiscoveries(Array.isArray(d) ? d : []);
       setActions(Array.isArray(a) ? a : []);
+      setStreak(st && typeof st === 'object' && typeof st.streak === 'number' ? st.streak : null);
+      if (failed > 0) {
+        setError('Some parts of your dashboard could not be loaded. Please check your connection and try again.');
+      }
     } catch (err) {
-      console.warn('Dashboard load fallback:', err);
+      setError(err instanceof Error ? err.message : 'Could not load your dashboard. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  }, [token, user]);
+  }, [token]);
 
   useEffect(() => {
     load();
@@ -136,11 +146,13 @@ export default function Dashboard() {
           {/* Right Top Generate Missions Button */}
           <div className="relative z-10 pt-4 flex flex-wrap items-center justify-between gap-4 border-t border-[#20422E]/80">
             <div className="flex items-center gap-4 text-xs font-semibold text-slate-300">
-              <span className="flex items-center gap-1.5 text-amber-400">
-                <Flame className="w-4 h-4" /> 7 Day Streak
-              </span>
+              {typeof streak === 'number' && (
+                <span className="flex items-center gap-1.5 text-amber-400">
+                  <Flame className="w-4 h-4" /> {streak} Day Streak
+                </span>
+              )}
               <span className="flex items-center gap-1.5 text-[#4ADE80]">
-                <Trophy className="w-4 h-4" /> Level 4 Eco Explorer
+                <Trophy className="w-4 h-4" /> Level {score.overall >= 80 ? 4 : score.overall >= 60 ? 3 : score.overall >= 40 ? 2 : 1} Eco Explorer
               </span>
             </div>
 
