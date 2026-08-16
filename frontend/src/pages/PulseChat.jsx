@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Send, Sparkles, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { chatWithPulse } from '../lib/openrouter';
+import { chatWithPulse } from '../lib/gemini';
 import { ErrorBanner, PulseOrb } from '../components/ui';
 
 // Suggested starter prompts
@@ -38,7 +38,7 @@ export default function PulseChat() {
     setMessages(nextMessages);
 
     try {
-      // Build conversation history for OpenRouter (only role + content)
+      // Build conversation history (only role + content)
       const history = nextMessages.map((m) => ({ role: m.role, content: m.content }));
       const reply = await chatWithPulse(history);
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
