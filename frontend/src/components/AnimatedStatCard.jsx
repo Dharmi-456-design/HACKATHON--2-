@@ -3,8 +3,8 @@ import { useInView, animate } from 'framer-motion';
 
 export default function AnimatedStatCard({ value, label, suffix = '', prefix = '' }) {
   const ref = useRef(null);
-  // Only trigger when at least 50% of the stat card is clearly inside the viewport
-  const isInView = useInView(ref, { amount: 0.5, once: true });
+  // once: false allows the counter animation to restart repeatedly whenever scrolled into view
+  const isInView = useInView(ref, { amount: 0.3, once: false });
   const [displayValue, setDisplayValue] = useState(0);
 
   // Extract numeric target from values like "12k+", "450+", "80k", "100%"
@@ -14,22 +14,20 @@ export default function AnimatedStatCard({ value, label, suffix = '', prefix = '
   const isPercent = value.includes('%');
 
   useEffect(() => {
-    if (!isInView) return;
-
-    // Short 250ms delay after scrolling into view so user catches the start of the counter!
-    const timer = setTimeout(() => {
+    if (isInView) {
+      setDisplayValue(0);
       const controls = animate(0, numericTarget, {
-        duration: 2.2,
-        ease: [0.16, 1, 0.3, 1], // Cubic-bezier for smooth acceleration & ease-out finish
+        duration: 1.8,
+        ease: [0.16, 1, 0.3, 1], // Smooth acceleration & fast count up to target
         onUpdate(latest) {
           setDisplayValue(Math.floor(latest));
         },
       });
 
       return () => controls.stop();
-    }, 250);
-
-    return () => clearTimeout(timer);
+    } else {
+      setDisplayValue(0);
+    }
   }, [isInView, numericTarget]);
 
   return (

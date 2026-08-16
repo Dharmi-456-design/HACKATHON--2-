@@ -4,25 +4,28 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 const TEXT = "A relationship with nature is recognized long before it is defined. Your everyday surroundings shape how you perceive, protect, and reconnect with the living world. We help cultivate that difference.";
 
 function Word({ children, progress, range }) {
-  const opacity = useTransform(progress, range, [0.2, 1]);
-  const color = useTransform(progress, range, ['rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 1)']);
+  const opacity = useTransform(progress, range, [0.22, 1]);
+  const color = useTransform(progress, range, ['rgba(255, 255, 255, 0.22)', 'rgba(255, 255, 255, 1)']);
+  const y = useTransform(progress, range, [4, 0]);
 
   return (
-    <motion.span style={{ opacity, color }} className="inline-block mr-3 transition-colors">
+    <motion.span style={{ opacity, color, y }} className="inline-block mr-3 transition-colors duration-150">
       {children}
     </motion.span>
   );
 }
 
 export default function ScrollTypographyHighlight() {
-  const containerRef = useRef(null);
+  const textRef = useRef(null);
   
+  // Target the text container directly so progress reaches 100% synchronously as the text scrolls through view
   const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start 0.8', 'end 0.3'],
+    target: textRef,
+    offset: ['start 0.85', 'end 0.45'],
   });
 
   const words = TEXT.split(' ');
+  const total = words.length;
 
   const SHOWCASE = [
     { title: 'Ancient Forest Canopy', category: 'Forest Park Edge', img: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&q=80' },
@@ -32,17 +35,18 @@ export default function ScrollTypographyHighlight() {
   ];
 
   return (
-    <section ref={containerRef} className="py-32 bg-[#0E1E15] text-white px-6 relative overflow-hidden">
+    <section className="py-32 bg-[#0E1E15] text-white px-6 relative overflow-hidden">
       {/* Scroll illuminated headline */}
-      <div className="max-w-5xl mx-auto text-center">
+      <div ref={textRef} className="max-w-5xl mx-auto text-center py-4">
         <p className="text-[11px] uppercase tracking-[0.28em] text-[#E6C176] font-semibold mb-6">
           THE PHILOSOPHY
         </p>
 
-        <h2 className="font-display text-3xl sm:text-5xl lg:text-6xl font-semibold leading-[1.25] tracking-tight">
+        <h2 className="font-display text-3xl sm:text-5xl lg:text-6xl font-semibold leading-[1.28] tracking-tight">
           {words.map((word, i) => {
-            const start = i / words.length;
-            const end = start + 1 / words.length;
+            // Calculate overlapping progress range for smooth, continuous line-by-line highlight
+            const start = (i / total) * 0.75;
+            const end = Math.min(start + 0.28, 1);
             return (
               <Word key={i} progress={scrollYProgress} range={[start, end]}>
                 {word}
@@ -83,3 +87,4 @@ export default function ScrollTypographyHighlight() {
     </section>
   );
 }
+
