@@ -1,11 +1,31 @@
 import { motion } from 'framer-motion';
 
-export function PulseOrb({ size = 56, className = '' }) {
+export function PulseOrb({ size = 56, className = '', active = false }) {
   return (
     <div className={`relative inline-flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
-      <span className="absolute inset-0 rounded-full bg-moss/20 animate-pulse-ring" />
-      <span className="absolute inset-[18%] rounded-full bg-moss/30 animate-pulse-ring" style={{ animationDelay: '0.6s' }} />
-      <span className="relative rounded-full bg-gradient-to-br from-sage to-forest shadow-inner" style={{ width: size * 0.42, height: size * 0.42 }} />
+      {/* Outer ambient wave */}
+      <motion.span
+        animate={active ? { scale: [1, 1.45, 1], opacity: [0.2, 0.6, 0.2] } : { scale: [0.9, 1.25, 0.9], opacity: [0.2, 0.45, 0.2] }}
+        transition={{ duration: active ? 1.6 : 3, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute inset-0 rounded-full bg-sage/25 blur-xs"
+      />
+      {/* Inner pulsing ring */}
+      <motion.span
+        animate={active ? { scale: [1, 1.3, 1], opacity: [0.3, 0.7, 0.3] } : { scale: [0.95, 1.15, 0.95], opacity: [0.25, 0.5, 0.25] }}
+        transition={{ duration: active ? 1.6 : 3, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+        className="absolute inset-[14%] rounded-full bg-moss/35 blur-[2px]"
+      />
+      {/* Rotating core gradient ring */}
+      <motion.div
+        animate={{ rotate: active ? 720 : 360 }}
+        transition={{ duration: active ? 4 : 14, repeat: Infinity, ease: 'linear' }}
+        className="relative rounded-full p-[2px] bg-gradient-to-tr from-sage via-moss to-gold shadow-md flex items-center justify-center"
+        style={{ width: size * 0.48, height: size * 0.48 }}
+      >
+        <span className="w-full h-full rounded-full bg-gradient-to-br from-[#96CD7B] via-[#355E45] to-[#1C3727] flex items-center justify-center shadow-inner">
+          <span className="w-2/5 h-2/5 rounded-full bg-cream/80 blur-[1px]" />
+        </span>
+      </motion.div>
     </div>
   );
 }
