@@ -1,4 +1,4 @@
-export const GEMINI_MODEL = 'gemini-2.0-flash';
+export const GEMINI_MODEL = 'gemini-flash-lite-latest';
 
 export function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

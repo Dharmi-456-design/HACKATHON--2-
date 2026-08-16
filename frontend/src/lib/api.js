@@ -263,11 +263,22 @@ function getMockData(path, options = {}) {
       const userMsg = {
         id: Date.now(),
         role: 'user',
-        content: body.content || '',
+        content: body.content || '[Attached Image Observation]',
         created_at: new Date().toISOString(),
       };
 
-      const replyContent = generatePulseResponse(body.content, body.language);
+      let replyContent;
+      if (body.imageBase64) {
+        if (body.language === 'gu') {
+          replyContent = 'તમે તમારી આસપાસની એક તસવીર મોકલી છે. હું હાલમાં ડેમો મોડમાં છું — વાસ્તવિક છબી વિશ્લેષણ માટે Vercel ડેપ્લોયમેન્ટ પર GEMINI_API_KEY સેટ કરો.';
+        } else if (body.language === 'hi') {
+          replyContent = 'आपने अपने आस-पास की एक तस्वीर भेजी है। मैं अभी डेमो मोड में हूं — वास्तविक छवि विश्लेषण के लिए Vercel डेप्लॉयमेंट पर GEMINI_API_KEY सेट करें।';
+        } else {
+          replyContent = 'You shared a photo from your surroundings. I am in demo mode right now — set GEMINI_API_KEY on the Vercel deployment for real image analysis.';
+        }
+      } else {
+        replyContent = generatePulseResponse(body.content, body.language);
+      }
 
       const assistantMsg = {
         id: Date.now() + 1,
