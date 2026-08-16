@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef, useState } from 'react';
+import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { ArrowRight, Star, Quote } from 'lucide-react';
 
 const REVIEWS = [
@@ -22,7 +22,7 @@ const REVIEWS = [
     name: 'Nathan Graville',
     role: 'Gaviti',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&q=80',
-    quote: 'Alex has been amazing. Only a month in, but Produx Design very active role in our operation already in terms of web, UI/UX, and eventual marketing.',
+    quote: 'Alex has been amazing. Only a month in, but Produx Design took a very active role in our operation already in terms of web, UI/UX, and eventual marketing.',
   },
   {
     id: 4,
@@ -36,84 +36,161 @@ const REVIEWS = [
     name: 'Arianna Armelli',
     role: 'Dorothy Tech',
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&q=80',
-    quote: 'Profound impact on our product identity. The level of craftsmanship and speed of execution completely transformed our user engagement metrics.',
+    quote: 'Produx brand sprint exceeded our expectations. They captured our vision perfectly, delivering a cohesive and impactful brand.',
+  },
+  {
+    id: 6,
+    name: 'Fawaz Buqammaz',
+    role: 'SOOR',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&q=80',
+    quote: 'Honestly, we were given a better design than we asked for. Highly responsive, professional, and delivered top tier craftsmanship.',
   },
 ];
 
+const TOTAL_TICKS = 110;
+
 export default function HorizontalReviewsTicker() {
   const sectionRef = useRef(null);
-  
+  const [scrollFraction, setScrollFraction] = useState(0);
+  const [hoveredId, setHoveredId] = useState(null);
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ['start end', 'end start'],
+    offset: ['start start', 'end end'],
   });
 
-  const x = useTransform(scrollYProgress, [0, 1], ['0%', '-45%']);
+  // Track progress fraction (0 to 1) for mini-line scrubber peak
+  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
+    setScrollFraction(Math.min(Math.max(latest, 0), 1));
+  });
+
+  // Horizontal translate lock from 0% to -72%
+  const x = useTransform(scrollYProgress, [0, 1], ['0%', '-72%']);
+
+  // Calculate active tick index for the moving equalizer peak
+  const activeTickIndex = Math.floor(scrollFraction * (TOTAL_TICKS - 1));
 
   return (
-    <section ref={sectionRef} className="py-24 bg-[#1C3727] text-white overflow-hidden relative">
-      {/* Section Header */}
-      <div className="max-w-7xl mx-auto px-6 mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.25em] text-[#96CD7B] font-semibold mb-2">COMMUNITY TRUST</p>
-          <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-white">
-            Beyond clients.<br />Trusted partners.
-          </h2>
+    <section ref={sectionRef} className="relative h-[320vh] bg-[#1C3727] text-white">
+      {/* Sticky Fullscreen Container */}
+      <div className="sticky top-0 h-screen w-full flex flex-col justify-between overflow-hidden py-10 px-6 sm:px-12 select-none">
+        
+        {/* Section Header */}
+        <div className="max-w-7xl w-full mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-4 z-10 shrink-0">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.25em] text-[#96CD7B] font-semibold mb-1">
+              COMMUNITY TRUST
+            </p>
+            <h2 className="font-display text-3xl sm:text-5xl font-bold tracking-tight text-white">
+              Beyond clients. Trusted partners.
+            </h2>
+          </div>
+
+          <a
+            href="#community"
+            className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-semibold text-white/70 hover:text-[#96CD7B] transition-colors group mb-1"
+          >
+            Read all reviews <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+          </a>
         </div>
 
-        <a
-          href="#community"
-          className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-semibold text-white/70 hover:text-[#96CD7B] transition-colors group"
-        >
-          Read all reviews <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-        </a>
-      </div>
+        {/* ────────────────── MINI-LINE EQUALIZER SCRUBBER (Matching Images 2, 3, 4) ────────────────── */}
+        <div className="w-full max-w-7xl mx-auto my-6 px-2 flex items-center justify-between gap-1 z-10">
+          {[...Array(TOTAL_TICKS)].map((_, i) => {
+            const dist = Math.abs(i - activeTickIndex);
+            
+            // Peak waveform heights matching image 2, 3, 4
+            let heightClass = 'h-2.5 bg-white/20';
+            if (dist === 0) heightClass = 'h-8 bg-white shadow-lg scale-110';
+            else if (dist === 1) heightClass = 'h-6 bg-white/90';
+            else if (dist === 2) heightClass = 'h-4.5 bg-white/70';
+            else if (dist === 3) heightClass = 'h-3.5 bg-white/40';
 
-      {/* Horizontal Carousel Track */}
-      <div className="w-full overflow-hidden cursor-grab active:cursor-grabbing py-4">
-        <motion.div style={{ x }} className="flex gap-6 pl-6 w-max">
-          {REVIEWS.concat(REVIEWS).map((rev, idx) => (
-            <div
-              key={`${rev.id}-${idx}`}
-              className="w-[360px] sm:w-[420px] shrink-0 bg-[#162C20] border border-white/8 hover:border-[#96CD7B]/40 rounded-3xl p-7 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col justify-between group"
-            >
-              <div>
-                {/* Author Info */}
-                <div className="flex items-center gap-3 mb-5">
-                  <img
-                    src={rev.avatar}
-                    alt={rev.name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-[#96CD7B]/30"
-                  />
+            return (
+              <div
+                key={i}
+                className={`w-[2px] sm:w-[3px] rounded-full transition-all duration-150 ease-out ${heightClass}`}
+              />
+            );
+          })}
+        </div>
+
+        {/* ────────────────── STICKY HORIZONTAL CAROUSEL WITH STAIRCASE & HOVER FADE ────────────────── */}
+        <div className="w-full flex-1 flex items-center overflow-hidden">
+          <motion.div style={{ x }} className="flex gap-8 pl-4 sm:pl-12 w-max items-center">
+            {REVIEWS.map((rev, idx) => {
+              const isHovered = hoveredId === rev.id;
+              const hasHover = hoveredId !== null;
+
+              // Staircase offset effect (alternating heights as seen in Image 3 & 4)
+              const staircaseOffsets = [0, 36, 18, 50, 10, 42];
+              const yOffset = staircaseOffsets[idx % staircaseOffsets.length];
+
+              return (
+                <motion.div
+                  key={rev.id}
+                  onMouseEnter={() => setHoveredId(rev.id)}
+                  onMouseLeave={() => setHoveredId(null)}
+                  style={{ transform: `translateY(${yOffset}px)` }}
+                  animate={{
+                    opacity: hasHover ? (isHovered ? 1 : 0.25) : 1,
+                    scale: isHovered ? 1.04 : hasHover ? 0.96 : 1,
+                    filter: hasHover && !isHovered ? 'blur(2px)' : 'blur(0px)',
+                  }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className={`w-[340px] sm:w-[400px] lg:w-[440px] shrink-0 rounded-3xl p-8 sm:p-9 shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer border ${
+                    isHovered
+                      ? 'bg-[#E5E0DC] text-[#14261C] border-white shadow-2xl z-30'
+                      : 'bg-[#DCD7D3] text-[#14261C] border-white/40 hover:border-white'
+                  }`}
+                >
                   <div>
-                    <h4 className="font-semibold text-base text-white group-hover:text-[#96CD7B] transition-colors">
-                      {rev.name}
-                    </h4>
-                    <p className="text-xs text-white/50">{rev.role}</p>
+                    {/* User Profile Header */}
+                    <div className="flex items-center gap-3.5 mb-6">
+                      <img
+                        src={rev.avatar}
+                        alt={rev.name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-[#14261C]/20 shrink-0"
+                      />
+                      <div className="truncate">
+                        <h4 className="font-semibold text-base sm:text-lg leading-tight text-[#14261C]">
+                          {rev.name}
+                        </h4>
+                        <p className="text-xs text-[#14261C]/60 mt-0.5">{rev.role}</p>
+                      </div>
+
+                      <div className="ml-auto flex gap-0.5 text-[#C49535]">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={13} fill="currentColor" />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Review Quote */}
+                    <p className="text-base sm:text-lg text-[#14261C]/90 leading-relaxed font-normal">
+                      "{rev.quote}"
+                    </p>
                   </div>
 
-                  <div className="ml-auto flex gap-0.5 text-[#E6C176]">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={13} fill="currentColor" />
-                    ))}
+                  {/* Card Bottom Meta */}
+                  <div className="mt-8 pt-5 border-t border-[#14261C]/10 flex items-center justify-between text-xs text-[#14261C]/60 font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <Quote size={13} className="text-[#1C3727]" /> Verified Partner
+                    </span>
+                    <span>Nature Explorer</span>
                   </div>
-                </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
 
-                {/* Quote */}
-                <p className="text-sm sm:text-base text-white/80 leading-relaxed font-light italic">
-                  "{rev.quote}"
-                </p>
-              </div>
+        {/* Scroll Progress Hint Bar */}
+        <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/50 pt-3 border-t border-white/10 z-10 shrink-0">
+          <span>Scroll to navigate comments</span>
+          <span>{Math.round(scrollFraction * 100)}% viewed</span>
+        </div>
 
-              <div className="mt-6 pt-4 border-t border-white/6 flex items-center justify-between text-xs text-white/40">
-                <span className="flex items-center gap-1">
-                  <Quote size={12} className="text-[#96CD7B]" /> Verified Feedback
-                </span>
-                <span>Nature Explorer Partner</span>
-              </div>
-            </div>
-          ))}
-        </motion.div>
       </div>
     </section>
   );
