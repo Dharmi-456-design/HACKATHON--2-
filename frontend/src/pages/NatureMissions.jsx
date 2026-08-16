@@ -178,12 +178,14 @@ export default function NatureMissions() {
         setTotalXP(ui.filter((m) => m.status === 'completed').reduce((sum, m) => sum + m.xpReward, 0));
         if (streakData && typeof streakData.streak === 'number') setStreakDays(streakData.streak);
       })
-      .catch(() => {});
+      .catch(() => setMissionError('Could not load your missions. Please check your connection and try again.'));
   }, [token]);
 
   const pushMissionStatus = (mission) => {
     if (!token || !mission.id || String(mission.id).startsWith('m-')) return;
-    apiFetch(`/api/missions/${mission.id}`, { method: 'PATCH', body: JSON.stringify({ status: mission.status }) }, token).catch(() => {});
+    apiFetch(`/api/missions/${mission.id}`, { method: 'PATCH', body: JSON.stringify({ status: mission.status }) }, token).catch(() => {
+      setMissionError('Your mission progress could not be saved. Please check your connection and try again.');
+    });
   };
 
   // Toggle Step Completion
@@ -294,7 +296,9 @@ export default function NatureMissions() {
     setMissions((prev) => prev.filter((m) => m.id !== missionId));
     if (selectedMission?.id === missionId) setSelectedMission(null);
     if (token && missionId && !String(missionId).startsWith('m-')) {
-      apiFetch(`/api/missions/${missionId}`, { method: 'DELETE' }, token).catch(() => {});
+      apiFetch(`/api/missions/${missionId}`, { method: 'DELETE' }, token).catch(() => {
+        setMissionError('The mission could not be deleted. Please check your connection and try again.');
+      });
     }
   };
 

@@ -8,6 +8,7 @@ const {
   Story,
   CommunityPost,
   Action,
+  ChatThread,
 } = require('../models/Nature');
 const { sanitizeText, sanitizeMultiline } = require('../utils/sanitize');
 
@@ -72,6 +73,8 @@ const profileAllowlist = [
   'available_minutes',
   'interests',
   'onboarding_complete',
+  'saved_places',
+  'weekly_goals',
 ];
 
 const discoveryAllowlist = [
@@ -189,6 +192,39 @@ const updateProfile = async (req, res) => {
   if (updates.region !== undefined) updates.region = sanitizeText(updates.region, 80);
   if (updates.interests !== undefined && Array.isArray(updates.interests)) {
     updates.interests = updates.interests.map((i) => sanitizeText(String(i), 40)).filter(Boolean).slice(0, 20);
+  }
+  if (updates.saved_places !== undefined) {
+    if (!Array.isArray(updates.saved_places)) {
+      return res.status(400).json({ error: 'saved_places must be an array of place ids.' });
+    }
+    const seen = new Set();
+    const places = [];
+    for (const p of updates.saved_places) {
+      const cleaned = sanitizeText(String(p), 100);
+      if (cleaned && !seen.has(cleaned)) {
+        seen.add(cleaned);
+        places.push(cleaned);
+      }
+      if (places.length >= 200) break;
+    }
+    updates.saved_places = places;
+  }
+  if (updates.weekly_goals !== undefined) {
+    if (!Array.isArray(updates.weekly_goals)) {
+      return res.status(400).json({ error: 'weekly_goals must be an array.' });
+    }
+    const goals = [];
+    for (const g of updates.weekly_goals.slice(0, 50)) {
+      const text = sanitizeText(String(g?.text || g), 300);
+      if (!text) continue;
+      goals.push({
+        id: sanitizeText(String(g?.id || `g-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`), 60),
+        text,
+        done: Boolean(g?.done),
+        created_at: g?.created_at ? new Date(g.created_at) : new Date(),
+      });
+    }
+    updates.weekly_goals = goals;
   }
   Object.assign(profile, updates);
   await profile.save();
@@ -898,6 +934,100 @@ Rules:
   });
 };
 
+// Pulse Chat threads (private, user-owned)
+const toClientThread = (thread) => ({
+  id: thread._id,
+  title: thread.title || 'Ecological Inquiry',
+  created_at: thread.createdAt,
+  updated_at: thread.updatedAt,
+  messages: (thread.messages || []).map((m) => ({
+    id: m._id || `${thread._id}-${m.created_at?.getTime?.() || Date.now()}-${m.role}`,
+    role: m.role,
+    content: m.content,
+    created_at: m.created_at,
+  })),
+});
+
+const getPulseThreads = async (req, res) => {
+  const threads = await ChatThread.find({ user: req.user._id }).sort({ updatedAt: -1 });
+  res.json(threads.map(toClientThread));
+};
+
+const createPulseThread = async (req, res) => {
+  const title = sanitizeText(req.body?.title, 120) || 'Ecological Inquiry';
+  const thread = await ChatThread.create({ user: req.user._id, title, messages: [] });
+  res.status(201).json(toClientThread(thread));
+};
+
+const renamePulseThread = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid thread id.' });
+  }
+  const title = sanitizeText(req.body?.title, 120);
+  if (!title) {
+    return res.status(400).json({ error: 'A thread title is required.' });
+  }
+  const thread = await ChatThread.findOneAndUpdate(
+    { _id: id, user: req.user._id },
+    { title },
+    { new: true }
+  );
+  if (!thread) {
+    return res.status(404).json({ error: 'Thread not found or not yours.' });
+  }
+  res.json(toClientThread(thread));
+};
+
+const deletePulseThread = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid thread id.' });
+  }
+  const thread = await ChatThread.findOne({ _id: id, user: req.user._id });
+  if (!thread) {
+    return res.status(404).json({ error: 'Thread not found or not yours.' });
+  }
+  await thread.deleteOne();
+  res.json({ success: true });
+};
+
+const clearPulseThreads = async (req, res) => {
+  await ChatThread.deleteMany({ user: req.user._id });
+  res.json({ success: true });
+};
+
+const updatePulseThreadMessages = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid thread id.' });
+  }
+  const raw = req.body?.messages;
+  if (!Array.isArray(raw)) {
+    return res.status(400).json({ error: 'messages must be an array.' });
+  }
+  const messages = [];
+  for (const m of raw.slice(0, 200)) {
+    const role = m?.role === 'assistant' ? 'assistant' : 'user';
+    const content = sanitizeText(String(m?.content || ''), 20000);
+    if (!content) continue;
+    messages.push({
+      role,
+      content,
+      created_at: m?.created_at ? new Date(m.created_at) : new Date(),
+    });
+  }
+  const thread = await ChatThread.findOneAndUpdate(
+    { _id: id, user: req.user._id },
+    { $set: { messages } },
+    { new: true }
+  );
+  if (!thread) {
+    return res.status(404).json({ error: 'Thread not found or not yours.' });
+  }
+  res.json(toClientThread(thread));
+};
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -929,4 +1059,10 @@ module.exports = {
   getConnection,
   handlePulseChat,
   handleImageAnalyze,
+  getPulseThreads,
+  createPulseThread,
+  renamePulseThread,
+  deletePulseThread,
+  clearPulseThreads,
+  updatePulseThreadMessages,
 };

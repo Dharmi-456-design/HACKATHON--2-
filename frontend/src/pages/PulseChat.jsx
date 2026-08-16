@@ -193,18 +193,8 @@ export default function PulseChat() {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
 
-  const [threads, setThreads] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_saved_threads');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [activeThreadId, setActiveThreadId] = useState(() => {
-    return localStorage.getItem('pulse_active_thread_id') || '';
-  });
+  const [threads, setThreads] = useState([]);
+  const [activeThreadId, setActiveThreadId] = useState('');
 
   const [editingThreadId, setEditingThreadId] = useState(null);
   const [editTitleText, setEditTitleText] = useState('');
@@ -218,53 +208,107 @@ export default function PulseChat() {
 
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
+  const localThreadId = () => `local-${Date.now()}`;
+
+  // Load chat threads from the backend on mount (server-side persistence)
   useEffect(() => {
-    let currentThreads = [...threads];
-    if (!currentThreads.length) {
-      const defaultThread = {
-        id: `thread-${Date.now()}`,
-        title: 'Ecological Inquiry',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        messages: [],
-      };
-      currentThreads = [defaultThread];
-      setThreads(currentThreads);
-      setActiveThreadId(defaultThread.id);
-      localStorage.setItem('pulse_saved_threads', JSON.stringify(currentThreads));
-      localStorage.setItem('pulse_active_thread_id', defaultThread.id);
-      setMessages([]);
-    } else {
-      const active = currentThreads.find((th) => th.id === activeThreadId) || currentThreads[0];
-      setActiveThreadId(active.id);
-      localStorage.setItem('pulse_active_thread_id', active.id);
-      setMessages(active.messages || []);
-    }
-    setLoading(false);
-  }, []);
-
-  const saveActiveThreadMessages = (updatedMsgs, targetId = activeThreadId) => {
-    // Chat images are transient by design: strip them before persisting so
-    // localStorage threads never balloon with base64 payloads.
-    const persistable = updatedMsgs.map(({ image, imageBase64, ...rest }) => rest);
-    const currId = targetId || activeThreadId || `thread-${Date.now()}`;
-
-    setThreads((prevThreads) => {
-      const exists = prevThreads.some((th) => th.id === currId);
-      const firstUserMsg = persistable.find((m) => m.role === 'user')?.content?.trim();
-      const autoTitle = firstUserMsg
-        ? (firstUserMsg.length > 30 ? firstUserMsg.slice(0, 30) + '…' : firstUserMsg)
-        : 'Nature Conversation';
-
-      let nextThreads;
-      if (!exists) {
-        const newTh = {
-          id: currId,
-          title: autoTitle,
+    let mounted = true;
+    const boot = async () => {
+      try {
+        if (!token) {
+          if (!mounted) return;
+          const defaultThread = {
+            id: localThreadId(),
+            title: 'Ecological Inquiry',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            messages: [],
+          };
+          setThreads([defaultThread]);
+          setActiveThreadId(defaultThread.id);
+          setMessages([]);
+          setError('Sign in to save your conversations. Chat works, but nothing will be stored.');
+          return;
+        }
+        const list = await apiFetch('/api/pulse/threads', {}, token);
+        if (!mounted) return;
+        const serverThreads = Array.isArray(list) ? list : [];
+        if (serverThreads.length === 0) {
+          const created = await apiFetch(
+            '/api/pulse/threads',
+            { method: 'POST', body: JSON.stringify({ title: 'Ecological Inquiry' }) },
+            token
+          );
+          if (!mounted) return;
+          setThreads(created && created.id ? [created] : []);
+          setActiveThreadId(created?.id || '');
+          setMessages([]);
+        } else {
+          setThreads(serverThreads);
+          const active = serverThreads.find((th) => th.id === activeThreadId) || serverThreads[0];
+          setActiveThreadId(active.id);
+          setMessages(active.messages || []);
+        }
+      } catch (err) {
+        if (!mounted) return;
+        const defaultThread = {
+          id: localThreadId(),
+          title: 'Ecological Inquiry',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          messages: persistable,
+          messages: [],
         };
+        setThreads([defaultThread]);
+        setActiveThreadId(defaultThread.id);
+        setMessages([]);
+        setError('Could not load your chat history. Your conversation will not be saved until the server is reachable.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    boot();
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  // Create the thread on the server when it only exists locally (e.g. the
+  // backend was unreachable at load time), then return a server-backed thread.
+  const ensureThreadOnServer = async (thread) => {
+    if (thread && thread.id && !thread.id.startsWith('local-')) return thread;
+    const created = await apiFetch(
+      '/api/pulse/threads',
+      { method: 'POST', body: JSON.stringify({ title: thread?.title || 'Ecological Inquiry' }) },
+      token
+    );
+    if (created && created.id) {
+      setThreads((prev) => prev.map((th) => (th.id === thread.id ? { ...created, messages: thread.messages || [] } : th)));
+      setActiveThreadId((prev) => (prev === thread.id ? created.id : prev));
+      return { ...created, messages: thread.messages || [] };
+    }
+    return thread;
+  };
+
+  const saveActiveThreadMessages = async (updatedMsgs, targetId = activeThreadId) => {
+    // Chat images are transient by design: strip them before persisting so
+    // stored threads never balloon with base64 payloads.
+    const persistable = updatedMsgs.map(({ image, imageBase64, ...rest }) => rest);
+    const currId = targetId || activeThreadId;
+    if (!currId) return;
+
+    const firstUserMsg = persistable.find((m) => m.role === 'user')?.content?.trim();
+    const autoTitle = firstUserMsg
+      ? (firstUserMsg.length > 30 ? firstUserMsg.slice(0, 30) + '…' : firstUserMsg)
+      : 'Nature Conversation';
+
+    // Optimistically update local state
+    setThreads((prevThreads) => {
+      const exists = prevThreads.some((th) => th.id === currId);
+      const now = new Date().toISOString();
+      let nextThreads;
+      if (!exists) {
+        const newTh = { id: currId, title: autoTitle, created_at: now, updated_at: now, messages: persistable };
         nextThreads = [newTh, ...prevThreads];
       } else {
         nextThreads = prevThreads.map((th) => {
@@ -277,24 +321,32 @@ export default function PulseChat() {
             return {
               ...th,
               title: hasCustomTitle ? th.title : autoTitle,
-              updated_at: new Date().toISOString(),
+              updated_at: now,
               messages: persistable,
             };
           }
           return th;
         });
       }
-
-      // Sort with newest on top
       nextThreads.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
-
-      try {
-        localStorage.setItem('pulse_saved_threads', JSON.stringify(nextThreads));
-      } catch (err) {
-        console.error('Failed to save threads:', err);
-      }
       return nextThreads;
     });
+
+    if (!token) return;
+    try {
+      const target = threads.find((th) => th.id === currId) || { id: currId, title: autoTitle };
+      const serverThread = await ensureThreadOnServer(target);
+      const saved = await apiFetch(
+        `/api/pulse/threads/${serverThread.id}/messages`,
+        { method: 'PUT', body: JSON.stringify({ messages: persistable }) },
+        token
+      );
+      if (saved && saved.id) {
+        setThreads((prev) => prev.map((th) => (th.id === serverThread.id ? { ...saved, messages: persistable } : th)));
+      }
+    } catch (err) {
+      setError('Your conversation could not be saved to the server. Please check your connection.');
+    }
   };
 
   const selectLanguage = (code) => {
@@ -406,33 +458,39 @@ export default function PulseChat() {
     }
   };
 
-  const startNewChat = () => {
-    const newThreadId = `thread-${Date.now()}`;
-    const newThread = {
-      id: newThreadId,
+  const startNewChat = async () => {
+    setError('');
+    let freshThread = {
+      id: localThreadId(),
       title: 'New Conversation',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       messages: [],
     };
+    if (token) {
+      try {
+        const created = await apiFetch(
+          '/api/pulse/threads',
+          { method: 'POST', body: JSON.stringify({ title: 'New Conversation' }) },
+          token
+        );
+        if (created && created.id) freshThread = created;
+      } catch {
+        setError('Could not start a new chat on the server. It will not be saved until the server is reachable.');
+      }
+    } else {
+      setError('Sign in to save your conversations. Chat works, but nothing will be stored.');
+    }
     setThreads((prev) => {
       // Keep only threads that have messages, plus this fresh new thread
-      const filtered = prev.filter((t) => t.messages && t.messages.length > 0);
-      const nextThreads = [newThread, ...filtered];
-      try {
-        localStorage.setItem('pulse_saved_threads', JSON.stringify(nextThreads));
-      } catch {}
-      return nextThreads;
+      const filtered = prev.filter((th) => th.id !== freshThread.id && th.messages && th.messages.length > 0);
+      return [freshThread, ...filtered];
     });
-    setActiveThreadId(newThreadId);
+    setActiveThreadId(freshThread.id);
     setMessages([]);
     setText('');
-    setError('');
     setAttachedImage(null);
     setAttachedPayload(null);
-    try {
-      localStorage.setItem('pulse_active_thread_id', newThreadId);
-    } catch {}
     setShowHistoryDrawer(false);
   };
 
@@ -444,9 +502,6 @@ export default function PulseChat() {
     setError('');
     setAttachedImage(null);
     setAttachedPayload(null);
-    try {
-      localStorage.setItem('pulse_active_thread_id', th.id);
-    } catch {}
     setShowHistoryDrawer(false);
   };
 
@@ -454,58 +509,67 @@ export default function PulseChat() {
     e.stopPropagation();
     const nextThreads = threads.filter((t) => t.id !== threadId);
     setThreads(nextThreads);
-    try {
-      localStorage.setItem('pulse_saved_threads', JSON.stringify(nextThreads));
-    } catch {}
+
+    if (token && threadId && !threadId.startsWith('local-')) {
+      apiFetch(`/api/pulse/threads/${threadId}`, { method: 'DELETE' }, token).catch(() => {
+        setError('The conversation could not be deleted on the server. Please check your connection.');
+      });
+    }
 
     if (activeThreadId === threadId) {
       if (nextThreads.length > 0) {
         setActiveThreadId(nextThreads[0].id);
         setMessages(nextThreads[0].messages || []);
-        try {
-          localStorage.setItem('pulse_active_thread_id', nextThreads[0].id);
-        } catch {}
       } else {
         startNewChat();
       }
     }
   };
 
-  const clearAllHistory = () => {
-    if (window.confirm('Are you sure you want to clear all conversation history?')) {
-      const freshId = `thread-${Date.now()}`;
-      const freshThread = {
-        id: freshId,
-        title: 'New Conversation',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        messages: [],
-      };
-      setThreads([freshThread]);
-      setActiveThreadId(freshId);
-      setMessages([]);
-      setText('');
-      setError('');
-      setAttachedImage(null);
-      setAttachedPayload(null);
+  const clearAllHistory = async () => {
+    if (!window.confirm('Are you sure you want to clear all conversation history?')) return;
+    setError('');
+    let freshThread = {
+      id: localThreadId(),
+      title: 'New Conversation',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      messages: [],
+    };
+    if (token) {
       try {
-        localStorage.setItem('pulse_saved_threads', JSON.stringify([freshThread]));
-        localStorage.setItem('pulse_active_thread_id', freshId);
-      } catch {}
-      setShowHistoryDrawer(false);
+        await apiFetch('/api/pulse/threads', { method: 'DELETE' }, token);
+        const created = await apiFetch(
+          '/api/pulse/threads',
+          { method: 'POST', body: JSON.stringify({ title: 'New Conversation' }) },
+          token
+        );
+        if (created && created.id) freshThread = created;
+      } catch {
+        setError('Could not clear your history on the server. Please check your connection.');
+      }
     }
+    setThreads([freshThread]);
+    setActiveThreadId(freshThread.id);
+    setMessages([]);
+    setText('');
+    setAttachedImage(null);
+    setAttachedPayload(null);
+    setShowHistoryDrawer(false);
   };
 
   const handleRenameThread = (e, threadId) => {
     e.stopPropagation();
     if (!editTitleText.trim()) return;
-    setThreads((prev) => {
-      const updated = prev.map((th) => (th.id === threadId ? { ...th, title: editTitleText.trim() } : th));
-      localStorage.setItem('pulse_saved_threads', JSON.stringify(updated));
-      return updated;
-    });
+    const title = editTitleText.trim();
+    setThreads((prev) => prev.map((th) => (th.id === threadId ? { ...th, title } : th)));
     setEditingThreadId(null);
     setEditTitleText('');
+    if (token && threadId && !threadId.startsWith('local-')) {
+      apiFetch(`/api/pulse/threads/${threadId}`, { method: 'PATCH', body: JSON.stringify({ title }) }, token).catch(() => {
+        setError('The conversation could not be renamed on the server. Please check your connection.');
+      });
+    }
   };
 
   useEffect(() => {
