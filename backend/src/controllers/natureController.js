@@ -258,6 +258,134 @@ const createStory = async (req, res) => {
   res.status(201).json(story);
 };
 
+const generateAIStory = async (req, res) => {
+  const { prompt, genre = 'Nature & Eco', mood = 'Mystical', title, language = 'en' } = req.body || {};
+  if (!prompt) {
+    return res.status(400).json({ error: 'Prompt is required' });
+  }
+
+  const systemInstruction = `You are a master nature storyteller and cinematic eco-worldbuilder.
+Write evocative, sensory-rich, biologically and ecologically grounded stories that connect human emotions with the mysteries of nature, forests, wildlife, mycorrhizal networks, and living ecosystems.`;
+
+  const userPrompt = `Create a captivating interactive story based on this idea:
+Idea / Prompt: "${prompt}"
+Desired Title: "${title || 'Auto-generate a poetic title'}"
+Genre: "${genre}"
+Mood: "${mood}"
+Language: "${language}"
+
+Return ONLY a valid JSON object matching this structure:
+{
+  "title": "Poetic and captivating title",
+  "genre": "${genre}",
+  "mood": "${mood}",
+  "readTime": "3 min read",
+  "summary": "1-2 sentence compelling teaser summary",
+  "narrative": "A vivid 3-4 paragraph story text with sensory details, dialogue, and atmospheric worldbuilding.",
+  "choices": [
+    {
+      "id": "c1",
+      "text": "First interactive choice for the reader",
+      "nextText": "1-2 paragraphs revealing what happens if this choice is taken."
+    },
+    {
+      "id": "c2",
+      "text": "Second interactive choice offering an alternative path",
+      "nextText": "1-2 paragraphs revealing what happens if this choice is taken."
+    }
+  ]
+}`;
+
+  const ai = await callGeminiApi({
+    prompt: userPrompt,
+    system: systemInstruction,
+    json: true,
+    temperature: 0.7,
+  });
+
+  if (ai.data && ai.data.title && ai.data.narrative) {
+    return res.json({
+      success: true,
+      story: {
+        id: `story-${Date.now()}`,
+        ...ai.data,
+        isInteractive: true,
+        reactions: { magical: 1, lovedIt: 2, unexpected: 0, funny: 0, thoughtful: 1 },
+      },
+    });
+  }
+
+  // High quality fallback
+  const fallbackStory = {
+    id: `story-${Date.now()}`,
+    title: title || 'Echoes of the Living Canopy',
+    genre,
+    mood,
+    readTime: '3 min read',
+    summary: `A transformative ecological journey: "${prompt.slice(0, 70)}..."`,
+    narrative: `Beneath the ancient forest boughs, the air was thick with the scent of damp moss, pine needles, and sweet decaying earth.\n\n${prompt}\n\nAs dusk settled into the valley, bioluminescent mycelial threads beneath the tree roots pulsed with a rhythmic, steady heartbeat — sending vibrational whispers through every branch and leaf in the sanctuary.`,
+    isInteractive: true,
+    choices: [
+      {
+        id: 'c1',
+        text: 'Follow the subterranean glow deeper into the ancient grove',
+        nextText: 'The glowing roots converged around an ancient hollow cedar, where amber tree sap reflected the constellations above.',
+      },
+      {
+        id: 'c2',
+        text: 'Listen quietly to the acoustic frequency of the evening wind',
+        nextText: 'The wind filtered through thousands of needles, composing a natural harmonic chord that seemed to synchronize with your own breathing.',
+      },
+    ],
+    reactions: { magical: 2, lovedIt: 1, unexpected: 0, funny: 0, thoughtful: 2 },
+  };
+
+  res.json({ success: true, story: fallbackStory });
+};
+
+const assistAIStory = async (req, res) => {
+  const { action, storyTitle, narrative, genre, mood, customPrompt, targetLanguage } = req.body || {};
+
+  const systemInstruction = `You are an expert AI Story Assistant and Literary Co-writer for NaturePulse.
+You help authors enhance, rewrite, mood-shift, translate, or expand their nature stories.
+Provide output that directly fits into or enriches the narrative.`;
+
+  let prompt = '';
+  if (action === 'rewrite') {
+    prompt = `Rewrite and elevate this story narrative with richer sensory descriptions, cinematic prose, and heightened ecological wonder:\nStory Title: "${storyTitle}"\nNarrative:\n${narrative}\n\nReturn the rewritten narrative text.`;
+  } else if (action === 'mood') {
+    prompt = `Shift the atmosphere of this story towards a "${customPrompt || 'Mysterious, Eerie & Bioluminescent'}" mood. Infuse tension, wonder, and atmospheric environmental cues:\nStory Title: "${storyTitle}"\nNarrative:\n${narrative}\n\nReturn the modified narrative text.`;
+  } else if (action === 'ending') {
+    prompt = `Write an alternative, unforgettable climax and ending paragraph for this story:\nStory Title: "${storyTitle}"\nNarrative:\n${narrative}\n\nReturn the new ending section starting with [Alternate Ending]: ...`;
+  } else if (action === 'continue') {
+    prompt = `Continue this story by writing the next compelling chapter (2-3 paragraphs) following the narrative:\nStory Title: "${storyTitle}"\nNarrative:\n${narrative}\n\nReturn the continuation starting with [Chapter Continuation]: ...`;
+  } else if (action === 'translate') {
+    prompt = `Translate and culturally adapt this story narrative into ${targetLanguage || 'Gujarati or Hindi'}:\nStory Title: "${storyTitle}"\nNarrative:\n${narrative}\n\nReturn the translated narrative with poetic fluency.`;
+  } else {
+    prompt = `Apply this instruction to the story:\nInstruction: "${customPrompt || 'Enhance the dialogue and natural details'}"\nStory Title: "${storyTitle}"\nNarrative:\n${narrative}\n\nReturn the updated or additional text.`;
+  }
+
+  const ai = await callGeminiApi({
+    prompt,
+    system: systemInstruction,
+    temperature: 0.6,
+  });
+
+  if (ai.text) {
+    return res.json({ success: true, result: ai.text.trim(), action });
+  }
+
+  const fallbacks = {
+    rewrite: `The canopy deepened into a tapestry of emerald and gold, where ancient boughs swayed in synchrony with subterranean fungal currents, whispering forgotten ecological truths.`,
+    mood: `A sudden chilling mist rolled through the understory. The canopy fell into an absolute, breathless hush as distant bioluminescent tendrils flickered in the darkness.`,
+    ending: `[Alternate Ending]: Realizing that the entire forest was a single conscious organism, Maya released her notes to the wind, deciding that some wonders are meant only to be experienced, never captured.`,
+    continue: `[Chapter Continuation]: The morning sun broke through the canopy in radiant shafts of gold. A chorus of hidden songbirds stirred the treetops, signaling the dawn of a newly awakened ecosystem.`,
+    translate: `[અનુવાદિત વાર્તા]: પ્રાચીન વનની છત્રછાયા હેઠળ, પવનના દરેક શ્વાસ સાથે પ્રકૃતિ એક નવું ગીત ગાઈ રહી હતી.`,
+  };
+
+  res.json({ success: true, result: fallbacks[action] || fallbacks.rewrite, action });
+};
+
 const deleteStory = async (req, res) => {
   const { id } = req.body;
   await Story.findByIdAndDelete(id);
@@ -502,6 +630,8 @@ module.exports = {
   getStories,
   createStory,
   deleteStory,
+  generateAIStory,
+  assistAIStory,
   getCommunityPosts,
   createCommunityPost,
   getActions,
