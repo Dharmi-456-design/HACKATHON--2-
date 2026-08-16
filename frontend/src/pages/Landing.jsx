@@ -35,7 +35,7 @@ const PHILOSOPHY_PHOTOS = [
   {
     title: 'Urban Canopy Moss',
     location: 'Pacific Northwest Forest',
-    img: 'https://images.unsplash.com/photo-1511497584788-876761c144ee?auto=format&fit=crop&w=600&q=80',
+    img: 'https://images.unsplash.com/photo-1682018673550-c70a28c9c447?auto=format&fit=crop&w=800&q=80',
   },
   {
     title: 'Dawn Avian Haven',
