@@ -135,11 +135,3 @@ export function demoStreak() {
     setTimeout(() => resolve({ streak: 4, last_active: new Date().toISOString() }), 400)
   );
 }
-
-export function wrapWithFallback(realApiFn, demoFallbackFn) {
-  if (isDemoMode()) return demoFallbackFn();
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), 6000)
-  );
-  return Promise.race([realApiFn(), timeout]).catch(() => demoFallbackFn());
-}

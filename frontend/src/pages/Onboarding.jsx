@@ -6,10 +6,9 @@ import { PulseOrb, Field, inputCls, PrimaryButton, ErrorBanner } from '../compon
 import ThemeToggle from '../components/ThemeToggle';
 
 export default function Onboarding() {
-  const { session, user } = useAuth();
+  const { token, user } = useAuth();
   const nav = useNavigate();
-  const token = session?.access_token;
-  const [name, setName] = useState(user?.user_metadata?.full_name || user?.user_metadata?.name || '');
+  const [name, setName] = useState(user?.name || '');
   const [city, setCity] = useState('Portland');
   const [region, setRegion] = useState('Oregon');
   const [minutes, setMinutes] = useState(20);
@@ -81,7 +80,7 @@ export default function Onboarding() {
       await apiFetch('/api/missions', { method: 'POST', body: JSON.stringify({ generate: true, minutes }) }, token).catch(() => {});
       nav('/app');
     } catch (err) {
-      nav('/app');
+      setError(err instanceof Error ? err.message : 'Could not save your profile. Please try again.');
     } finally {
       setBusy(false);
     }

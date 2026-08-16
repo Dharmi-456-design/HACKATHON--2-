@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
+import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Living Botanical Parchment Journal
@@ -122,9 +123,12 @@ export default function Journal() {
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = JOURNAL_TRANSLATIONS[lang] || JOURNAL_TRANSLATIONS.en;
+  const token = session?.access_token;
+  const demoMode = isDemoMode();
 
   // Persistent State
   const [entries, setEntries] = useState(() => {
+    if (!demoMode) return [];
     try {
       const saved = localStorage.getItem('pulse_journal_entries_v1');
       return saved ? JSON.parse(saved) : SEED_ENTRIES;
@@ -145,15 +149,22 @@ export default function Journal() {
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
 
   useEffect(() => {
-    localStorage.setItem('pulse_journal_entries_v1', JSON.stringify(entries));
-  }, [entries]);
+    if (!token) return;
+    apiFetch('/api/journal', {}, token)
+      .then((list) => setEntries(Array.isArray(list) ? list.map((x) => ({ ...x, id: x._id || x.id })) : []))
+      .catch(() => {});
+  }, [token]);
+
+  useEffect(() => {
+    if (demoMode) localStorage.setItem('pulse_journal_entries_v1', JSON.stringify(entries));
+  }, [entries, demoMode]);
 
   // Save Note Submit
-  const handleSaveNote = (e) => {
+  const handleSaveNote = async (e) => {
     e.preventDefault();
     if (!body.trim()) return;
 
-    const newEntry = {
+    const localEntry = {
       id: `j-${Date.now()}`,
       title: title.trim() || 'Untitled Reflection',
       body: body.trim(),
@@ -165,17 +176,37 @@ export default function Journal() {
       aiReflection: `Key Theme: ${title.trim() || 'Nature reflection'}`,
     };
 
-    setEntries([newEntry, ...entries]);
+    setEntries([localEntry, ...entries]);
     setTitle('');
     setBody('');
-    setAutoSaveStatus('Saved to Private Vault ✓');
-    setTimeout(() => setAutoSaveStatus(''), 2500);
+    setAutoSaveStatus('Saving…');
     if (isZenMode) setIsZenMode(false);
+
+    if (token) {
+      try {
+        const created = await apiFetch(
+          '/api/journal',
+          { method: 'POST', body: JSON.stringify({ title: localEntry.title, body: localEntry.body, mood: selectedMood }) },
+          token
+        );
+        setEntries((prev) => [{ ...created, id: created._id || created.id }, ...prev.filter((x) => x.id !== localEntry.id)]);
+        setAutoSaveStatus('Saved to Private Vault ✓');
+      } catch {
+        setEntries((prev) => prev.filter((x) => x.id !== localEntry.id));
+        setAutoSaveStatus('Could not save — please try again.');
+      }
+    } else {
+      setAutoSaveStatus('Saved locally (demo) ✓');
+    }
+    setTimeout(() => setAutoSaveStatus(''), 2500);
   };
 
   // Delete Note
   const deleteEntry = (id) => {
     setEntries((prev) => prev.filter((e) => e.id !== id));
+    if (token && id && !String(id).startsWith('j-')) {
+      apiFetch(`/api/journal/${id}`, { method: 'DELETE' }, token).catch(() => {});
+    }
   };
 
   // Mood Options Array
