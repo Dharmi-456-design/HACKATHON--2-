@@ -155,7 +155,7 @@ const COMMUNITY_TRANSLATIONS = {
   },
 };
 
-// Initial Rich Seed Posts
+// Initial Rich Seed Posts for All Categories & Tabs
 const INITIAL_POSTS = [
   {
     id: 'post-101',
@@ -167,7 +167,7 @@ const INITIAL_POSTS = [
     pinned: true,
     created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
     reactions: { like: 14, insightful: 9, ecoLove: 22, hot: 5, educational: 11 },
-    userReactions: {},
+    userReactions: { ecoLove: true },
     comments: [
       {
         id: 'c101',
@@ -194,9 +194,9 @@ const INITIAL_POSTS = [
     content: 'When using Nature Lens under low morning light, high ISO noise sometimes affects leaf pattern recognition. How can we leverage multi-frame stacking to improve accuracy?',
     tags: ['ai', 'computer-vision', 'nature-lens', 'tech'],
     pinned: false,
-    created_at: new Date(Date.now() - 3600000 * 8).toISOString(),
-    reactions: { like: 8, insightful: 15, ecoLove: 4, hot: 12, educational: 7 },
-    userReactions: {},
+    created_at: new Date(Date.now() - 3600000 * 6).toISOString(),
+    reactions: { like: 18, insightful: 25, ecoLove: 14, hot: 12, educational: 17 },
+    userReactions: { insightful: true },
     comments: [],
     aiSummary: null,
     aiAnswer: null,
@@ -209,9 +209,65 @@ const INITIAL_POSTS = [
     content: 'As temperature rises across urban areas, small shallow water dishes placed in shaded garden corners provide critical hydration for migratory birds and pollinators.',
     tags: ['community-act', 'wildlife', 'conservation'],
     pinned: false,
+    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
+    reactions: { like: 25, insightful: 16, ecoLove: 38, hot: 9, educational: 18 },
+    userReactions: { like: true },
+    comments: [],
+    aiSummary: null,
+  },
+  {
+    id: 'post-104',
+    author: { id: 'u4', name: 'Kavita Shah', city: 'Vadodara', avatar: '🦋', bio: 'Micro-climate Specialist' },
+    title: 'Sharing Local Neighborhood Micro-Climate Experiences',
+    category: 'General Discussion',
+    content: 'Notice how humidity levels increase dramatically near urban parks during early morning hours. Let us share observations on micro-climates in your city!',
+    tags: ['microclimate', 'humidity', 'urban-parks'],
+    pinned: false,
+    created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
+    reactions: { like: 18, insightful: 12, ecoLove: 20, hot: 6, educational: 14 },
+    userReactions: { ecoLove: true },
+    comments: [],
+    aiSummary: null,
+  },
+  {
+    id: 'post-105',
+    author: { id: 'u1', name: 'Dr. Aarav Patel', city: 'Ahmedabad', avatar: '🌱', bio: 'Botanist & Urban Forest Researcher' },
+    title: 'Understanding Seasonal Leaf Color Variations & Photosynthesis Efficiency',
+    category: 'Education & Learning',
+    content: 'A comprehensive guide for students and nature enthusiasts on how chlorophyll breakdown reveals carotenoid and anthocyanin pigments during seasonal transitions.',
+    tags: ['photosynthesis', 'botany', 'education'],
+    pinned: false,
     created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
-    reactions: { like: 25, insightful: 6, ecoLove: 38, hot: 9, educational: 18 },
-    userReactions: {},
+    reactions: { like: 30, insightful: 22, ecoLove: 15, hot: 8, educational: 25 },
+    userReactions: { educational: true },
+    comments: [],
+    aiSummary: null,
+  },
+  {
+    id: 'post-106',
+    author: { id: 'u2', name: 'Rohan Mehta', city: 'Surat', avatar: '🦅', bio: 'Wildlife Photographer' },
+    title: 'Which species of butterflies visit urban flowering plants in morning hours?',
+    category: 'Questions & Answers',
+    content: 'Looking for identification pointers on common swallowtail and monarch butterflies observed around city garden flowers between 7 AM and 9 AM.',
+    tags: ['butterflies', 'pollinators', 'qa'],
+    pinned: false,
+    created_at: new Date(Date.now() - 3600000 * 30).toISOString(),
+    reactions: { like: 12, insightful: 18, ecoLove: 14, hot: 7, educational: 16 },
+    userReactions: { insightful: true },
+    comments: [],
+    aiSummary: null,
+  },
+  {
+    id: 'post-107',
+    author: { id: 'my-user-id', name: 'My Explorer', city: 'Local Region', avatar: '🌳', bio: 'Passionate Nature Explorer' },
+    title: 'My Neighborhood Tree Canopy & Bird Sanctuary Journal',
+    category: 'Nature & Ecology',
+    content: 'Documenting 5 native trees and bird activity in my neighborhood. Observed Sunbirds and Parakeets feeding on flower nectar early this morning!',
+    tags: ['my-journal', 'birds', 'trees'],
+    pinned: false,
+    created_at: new Date(Date.now() - 3600000 * 36).toISOString(),
+    reactions: { like: 19, insightful: 11, ecoLove: 24, hot: 5, educational: 9 },
+    userReactions: { ecoLove: true },
     comments: [],
     aiSummary: null,
   }
@@ -225,7 +281,7 @@ export default function Community() {
   // Persistent States
   const [posts, setPosts] = useState(() => {
     try {
-      const saved = localStorage.getItem('pulse_community_posts_v2');
+      const saved = localStorage.getItem('pulse_community_posts_v4');
       return saved ? JSON.parse(saved) : INITIAL_POSTS;
     } catch {
       return INITIAL_POSTS;
@@ -234,8 +290,8 @@ export default function Community() {
 
   const [savedPostIds, setSavedPostIds] = useState(() => {
     try {
-      const saved = localStorage.getItem('pulse_community_saved_v2');
-      return saved ? JSON.parse(saved) : ['post-101'];
+      const saved = localStorage.getItem('pulse_community_saved_v4');
+      return saved ? JSON.parse(saved) : ['post-101', 'post-103', 'post-105', 'post-107'];
     } catch {
       return ['post-101'];
     }
@@ -243,8 +299,8 @@ export default function Community() {
 
   const [followedUserIds, setFollowedUserIds] = useState(() => {
     try {
-      const saved = localStorage.getItem('pulse_community_follows_v2');
-      return saved ? JSON.parse(saved) : ['u1'];
+      const saved = localStorage.getItem('pulse_community_follows_v4');
+      return saved ? JSON.parse(saved) : ['u1', 'u2', 'u3', 'u4'];
     } catch {
       return ['u1'];
     }
@@ -252,7 +308,7 @@ export default function Community() {
 
   const [notifications, setNotifications] = useState(() => {
     try {
-      const saved = localStorage.getItem('pulse_community_notifications_v2');
+      const saved = localStorage.getItem('pulse_community_notifications_v4');
       return saved
         ? JSON.parse(saved)
         : [
@@ -292,19 +348,19 @@ export default function Community() {
 
   // Save Posts to LocalStorage
   useEffect(() => {
-    localStorage.setItem('pulse_community_posts_v2', JSON.stringify(posts));
+    localStorage.setItem('pulse_community_posts_v4', JSON.stringify(posts));
   }, [posts]);
 
   useEffect(() => {
-    localStorage.setItem('pulse_community_saved_v2', JSON.stringify(savedPostIds));
+    localStorage.setItem('pulse_community_saved_v4', JSON.stringify(savedPostIds));
   }, [savedPostIds]);
 
   useEffect(() => {
-    localStorage.setItem('pulse_community_follows_v2', JSON.stringify(followedUserIds));
+    localStorage.setItem('pulse_community_follows_v4', JSON.stringify(followedUserIds));
   }, [followedUserIds]);
 
   useEffect(() => {
-    localStorage.setItem('pulse_community_notifications_v2', JSON.stringify(notifications));
+    localStorage.setItem('pulse_community_notifications_v4', JSON.stringify(notifications));
   }, [notifications]);
 
   // Reaction Toggle Handler
