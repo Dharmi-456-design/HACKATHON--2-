@@ -229,7 +229,16 @@ export default function Places() {
           const merged = data.map((apiItem) => ({
             ...apiItem,
             id: apiItem.id || apiItem._id,
+            name: apiItem.name || apiItem.title || 'Ecological Sanctuary',
+            category: apiItem.category || 'Park',
             image: apiItem.image || apiItem.image_url || '',
+            description: apiItem.description || '',
+            address: apiItem.address || apiItem.city || 'Oregon, USA',
+            distance: apiItem.distance || '0.8 km',
+            walkTime: apiItem.walkTime || '10 min walk',
+            rating: apiItem.rating || 4.8,
+            reviewsCount: apiItem.reviewsCount || apiItem.review_count || 120,
+            isOpen: apiItem.isOpen !== undefined ? apiItem.isOpen : true,
           }));
           setPlaces(merged);
         }
@@ -294,9 +303,9 @@ export default function Places() {
       cum += durMin + 45;
       return {
         order: i + 1,
-        name: p.name,
+        name: p.name || p.title || 'Sanctuary Stop',
         time: `${start} - ${timeString(cum)}`,
-        note: p.whyRecommend || `Visit ${p.name}.`,
+        note: p.whyRecommend || `Visit ${p.name || 'this sanctuary'}.`,
       };
     });
     const totalWalk = routePlaces.reduce((s, p) => s + (p.realDistanceKm || 0), 0);
@@ -313,14 +322,16 @@ export default function Places() {
   };
 
   // Filtered Places
-  const filteredPlaces = places.filter((p) => {
-    if (selectedCategory !== 'All' && p.category !== selectedCategory) return false;
-    if (onlyOpenNow && !p.isOpen) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchName = p.name.toLowerCase().includes(q);
-      const matchCat = p.category.toLowerCase().includes(q);
-      if (!matchName && !matchCat) return false;
+  const filteredPlaces = dynamicPlaces.filter((p) => {
+    if (selectedCategory !== 'All' && (p?.category || '') !== selectedCategory) return false;
+    if (onlyOpenNow && !p?.isOpen) return false;
+    if (searchQuery && searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchName = String(p?.name || p?.title || '').toLowerCase().includes(q);
+      const matchCat = String(p?.category || '').toLowerCase().includes(q);
+      const matchDesc = String(p?.description || '').toLowerCase().includes(q);
+      const matchCity = String(p?.city || p?.address || '').toLowerCase().includes(q);
+      if (!matchName && !matchCat && !matchDesc && !matchCity) return false;
     }
     return true;
   });
