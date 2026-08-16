@@ -60,6 +60,8 @@ npm run preview
 
 The app is deployed on Vercel. The `api/` directory holds the serverless routes that talk to Supabase (they need `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` at runtime).
 
+**Image uploads** (Nature Lens and Pulse Chat attachments) go through the serverless `api/` routes, so the Gemini key stays server-side. Set `GEMINI_API_KEY` in the Vercel dashboard — never in a `VITE_*` variable or the browser bundle. To call the serverless routes from a custom domain, set `VITE_API_URL` to the deployment origin (e.g. `https://your-app.vercel.app`). Without it the app runs in demo/mock mode.
+
 ## Scripts
 
 | Script | Description |

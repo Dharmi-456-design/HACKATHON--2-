@@ -175,6 +175,6 @@ curl -X POST http://localhost:5000/api/issues \
 
 - Passwords hashed with bcrypt (10 rounds), never returned by any endpoint.
 - JWT role checks happen server-side from the verified token payload — client-supplied roles are never trusted.
-- Rate limiting on auth routes (100 requests / 10 min).
-- Uploads restricted to image MIME types, max 5MB.
+- Rate limiting on auth routes (100 requests / 10 min) and uploads (20 / 10 min per IP).
+- Uploads restricted to image MIME types, max 5MB, with magic-byte content sniffing so a client cannot spoof the declared MIME type (SVG/HTML/JS disguised as an image is rejected).
 - All write endpoints validated server-side with express-validator.

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Send, RotateCcw, Copy, Check, Sparkles, Sun, Bell, User, Image as ImageIcon, Mic, CheckCheck, Globe, ChevronDown, History, Plus, Edit2, Trash2, X, MessageSquare, MicOff, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import { chatWithPulse } from '../lib/openrouter';
+import { apiFetch, fileToResizedBase64 } from '../lib/api';
 import { ErrorBanner } from '../components/ui';
 
 // Multilingual UI Translations Dictionary
@@ -217,6 +219,8 @@ const STARTERS = [
 
 export default function PulseChat() {
   const { toggleTheme } = useTheme();
+  const { session } = useAuth();
+  const token = session?.access_token || null;
 
   const [lang, setLang] = useState(() => localStorage.getItem('pulse_chat_lang') || 'en');
   const [showLangModal, setShowLangModal] = useState(() => !localStorage.getItem('pulse_lang_selected'));
@@ -226,6 +230,7 @@ export default function PulseChat() {
   // File Upload & Speech Recognition state
   const fileInputRef = useRef(null);
   const [attachedImage, setAttachedImage] = useState(null);
+  const [attachedPayload, setAttachedPayload] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
 
@@ -280,18 +285,21 @@ export default function PulseChat() {
   }, []);
 
   const saveActiveThreadMessages = (updatedMsgs) => {
+    // Chat images are transient by design: strip them before persisting so
+    // localStorage threads never balloon with base64 payloads.
+    const persistable = updatedMsgs.map(({ image, ...rest }) => rest);
     setThreads((prevThreads) => {
       const nextThreads = prevThreads.map((th) => {
         if (th.id === activeThreadId) {
           const autoTitle =
             th.title && th.title !== 'Ecological Inquiry' && th.title !== 'New Conversation'
               ? th.title
-              : updatedMsgs.find((m) => m.role === 'user')?.content.slice(0, 28) || 'Ecological Inquiry';
+              : persistable.find((m) => m.role === 'user')?.content.slice(0, 28) || 'Ecological Inquiry';
           return {
             ...th,
             title: autoTitle,
             updated_at: new Date().toISOString(),
-            messages: updatedMsgs,
+            messages: persistable,
           };
         }
         return th;
@@ -322,15 +330,30 @@ export default function PulseChat() {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setAttachedImage(event.target?.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Only jpeg, png, gif or webp images are supported.');
+      e.target.value = '';
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Images must be 5 MB or smaller.');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      const payload = await fileToResizedBase64(file, 1200);
+      setAttachedPayload(payload);
+      setAttachedImage(`data:${payload.mime};base64,${payload.base64}`);
+    } catch {
+      setError('That file could not be read as an image.');
+    }
+    e.target.value = '';
   };
 
   // Multilingual Voice Input Handler with Animated Modal Popup
@@ -460,21 +483,48 @@ export default function PulseChat() {
 
     setText('');
     setAttachedImage(null);
+    setAttachedPayload(null);
     setBusy(true);
     setError('');
 
-    const newMsgs = [
-      ...messages,
-      { id: Date.now(), user_id: '', role: 'user', content: fullMessageContent, created_at: new Date().toISOString() },
-    ];
+    const userMsg = {
+      id: Date.now(),
+      user_id: '',
+      role: 'user',
+      content: fullMessageContent,
+      created_at: new Date().toISOString(),
+    };
+    if (attachedImage) userMsg.image = attachedImage;
+
+    const newMsgs = [...messages, userMsg];
     setMessages(newMsgs);
     saveActiveThreadMessages(newMsgs);
 
     try {
-      const history = newMsgs
-        .filter((m) => m.role === 'user' || m.role === 'assistant')
-        .map((m) => ({ role: m.role, content: m.content }));
-      const replyContent = await chatWithPulse(history);
+      let replyContent;
+      if (attachedPayload) {
+        // Images go through the serverless Gemini proxy (key stays server-side).
+        const data = await apiFetch(
+          '/api/pulse',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              content,
+              imageBase64: attachedPayload.base64,
+              contentType: attachedPayload.mime,
+              language: lang,
+            }),
+          },
+          token
+        );
+        replyContent = data?.content || data?.text || 'Pulse could not read that image. Try again.';
+      } else {
+        const history = newMsgs
+          .filter((m) => m.role === 'user' || m.role === 'assistant')
+          .map((m) => ({ role: m.role, content: m.content }));
+        replyContent = await chatWithPulse(history);
+      }
+
       const reply = {
         id: Date.now() + 1,
         role: 'assistant',
@@ -942,6 +992,13 @@ export default function PulseChat() {
                       : 'bg-[#13271C] border border-[#20422E] border-l-4 border-l-[#4ADE80] text-slate-100 rounded-2xl rounded-tl-xs'
                   }`}
                 >
+                  {m.image && (
+                    <img
+                      src={m.image}
+                      alt="Attached observation"
+                      className="rounded-xl mb-2 max-h-48 w-auto object-cover border border-[#4ADE80]/40"
+                    />
+                  )}
                   <div className={m.role !== 'user' ? 'pr-6' : ''}>{m.content}</div>
 
                   {m.role !== 'user' && (
