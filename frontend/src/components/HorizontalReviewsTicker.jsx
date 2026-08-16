@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion';
 import { ArrowRight, Star, Quote } from 'lucide-react';
 
 const REVIEWS = [
@@ -42,8 +42,29 @@ const REVIEWS = [
     id: 6,
     name: 'Fawaz Buqammaz',
     role: 'SOOR',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&q=80',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&q=80',
     quote: 'Honestly, we were given a better design than we asked for. Highly responsive, professional, and delivered top tier craftsmanship.',
+  },
+  {
+    id: 7,
+    name: 'Marcus Vance',
+    role: 'Vance EcoLabs',
+    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&q=80',
+    quote: 'The attention to detail and interaction physics is unbelievable. They transformed our platform user experience completely within days.',
+  },
+  {
+    id: 8,
+    name: 'Elena Rostova',
+    role: 'BioTrack Systems',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
+    quote: 'Outstanding brand identity and UI execution. The team exceeded all our performance and aesthetic expectations by a mile.',
+  },
+  {
+    id: 9,
+    name: 'Devin Sterling',
+    role: 'Atlas AI',
+    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&q=80',
+    quote: 'Working with this team felt like pair programming with world-class product designers. Highly recommended for any serious venture!',
   },
 ];
 
@@ -59,19 +80,26 @@ export default function HorizontalReviewsTicker() {
     offset: ['start start', 'end end'],
   });
 
-  // Track progress fraction (0 to 1) for mini-line scrubber peak
-  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
+  // Physics spring for super silky smooth horizontal movement
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 90,
+    damping: 24,
+    restDelta: 0.0001,
+  });
+
+  // Track spring progress value for mini-line equalizer peak
+  useMotionValueEvent(smoothProgress, 'change', (latest) => {
     setScrollFraction(Math.min(Math.max(latest, 0), 1));
   });
 
-  // Horizontal translate lock from 0% to -72%
-  const x = useTransform(scrollYProgress, [0, 1], ['0%', '-72%']);
+  // Smooth horizontal translation from 0% to -80%
+  const x = useTransform(smoothProgress, [0, 1], ['0%', '-80%']);
 
-  // Calculate active tick index for the moving equalizer peak
-  const activeTickIndex = Math.floor(scrollFraction * (TOTAL_TICKS - 1));
+  // Continuous float center index (no integer snapping) for liquid smooth wave peak
+  const floatCenterIndex = scrollFraction * (TOTAL_TICKS - 1);
 
   return (
-    <section ref={sectionRef} className="relative h-[320vh] bg-[#1C3727] text-white">
+    <section ref={sectionRef} className="relative h-[360vh] bg-[#1C3727] text-white">
       {/* Sticky Fullscreen Container */}
       <div className="sticky top-0 h-screen w-full flex flex-col justify-between overflow-hidden py-10 px-6 sm:px-12 select-none">
         
@@ -94,22 +122,26 @@ export default function HorizontalReviewsTicker() {
           </a>
         </div>
 
-        {/* ────────────────── MINI-LINE EQUALIZER SCRUBBER (Matching Images 2, 3, 4) ────────────────── */}
-        <div className="w-full max-w-7xl mx-auto my-6 px-2 flex items-center justify-between gap-1 z-10">
+        {/* ────────────────── LIQUID SMOOTH MINI-LINE EQUALIZER SCRUBBER ────────────────── */}
+        <div className="w-full max-w-7xl mx-auto my-6 px-2 flex items-center justify-between gap-[2px] z-10 h-10">
           {[...Array(TOTAL_TICKS)].map((_, i) => {
-            const dist = Math.abs(i - activeTickIndex);
+            const dist = Math.abs(i - floatCenterIndex);
             
-            // Peak waveform heights matching image 2, 3, 4
-            let heightClass = 'h-2.5 bg-white/20';
-            if (dist === 0) heightClass = 'h-8 bg-white shadow-lg scale-110';
-            else if (dist === 1) heightClass = 'h-6 bg-white/90';
-            else if (dist === 2) heightClass = 'h-4.5 bg-white/70';
-            else if (dist === 3) heightClass = 'h-3.5 bg-white/40';
+            // Continuous Gaussian smooth bell curve (no skipping/stepping!)
+            const intensity = Math.max(0, 1 - dist / 5.5);
+            const heightPx = 8 + Math.pow(intensity, 1.8) * 24;
+            const opacity = 0.2 + intensity * 0.8;
+            const isPeak = intensity > 0.6;
 
             return (
               <div
                 key={i}
-                className={`w-[2px] sm:w-[3px] rounded-full transition-all duration-150 ease-out ${heightClass}`}
+                style={{
+                  height: `${heightPx}px`,
+                  opacity: opacity,
+                  backgroundColor: isPeak ? '#FFFFFF' : 'rgba(255, 255, 255, 0.45)',
+                }}
+                className="w-[2px] sm:w-[3px] rounded-full transition-all duration-75 ease-out shadow-xs"
               />
             );
           })}
@@ -123,7 +155,7 @@ export default function HorizontalReviewsTicker() {
               const hasHover = hoveredId !== null;
 
               // Staircase offset effect (alternating heights as seen in Image 3 & 4)
-              const staircaseOffsets = [0, 36, 18, 50, 10, 42];
+              const staircaseOffsets = [0, 36, 18, 50, 10, 42, 22, 48, 14];
               const yOffset = staircaseOffsets[idx % staircaseOffsets.length];
 
               return (
@@ -133,9 +165,9 @@ export default function HorizontalReviewsTicker() {
                   onMouseLeave={() => setHoveredId(null)}
                   style={{ transform: `translateY(${yOffset}px)` }}
                   animate={{
-                    opacity: hasHover ? (isHovered ? 1 : 0.25) : 1,
+                    opacity: hasHover ? (isHovered ? 1 : 0.22) : 1,
                     scale: isHovered ? 1.04 : hasHover ? 0.96 : 1,
-                    filter: hasHover && !isHovered ? 'blur(2px)' : 'blur(0px)',
+                    filter: hasHover && !isHovered ? 'blur(2.5px)' : 'blur(0px)',
                   }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
                   className={`w-[340px] sm:w-[400px] lg:w-[440px] shrink-0 rounded-3xl p-8 sm:p-9 shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer border ${
