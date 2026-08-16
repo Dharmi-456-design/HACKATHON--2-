@@ -6,6 +6,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch } from '../lib/api';
+import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Act Page
@@ -111,9 +112,23 @@ export default function Act() {
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = ACT_TRANSLATIONS[lang] || ACT_TRANSLATIONS.en;
+  const token = session?.access_token;
+  const demoMode = isDemoMode();
+
+  const toUiAction = (a) => ({
+    id: a._id || a.id,
+    title: a.title,
+    category: a.category,
+    minutes: a.minutes,
+    status: a.status || 'pending',
+    image: a.image_url || 'https://images.unsplash.com/photo-1511497584788-8767611136f6?auto=format&fit=crop&w=800&q=80',
+    description: a.description,
+    impactNote: a.impact_note || a.description,
+  });
 
   // Persistent States
   const [actions, setActions] = useState(() => {
+    if (!demoMode) return [];
     try {
       const saved = localStorage.getItem('pulse_act_actions_v1');
       const list = saved ? JSON.parse(saved) : SEED_ACTIONS;
@@ -132,43 +147,77 @@ export default function Act() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [flippedCardId, setFlippedCardId] = useState(null);
   const [activeTab, setActiveTab] = useState('suggested');
+  const [actError, setActError] = useState('');
 
   useEffect(() => {
-    localStorage.setItem('pulse_act_actions_v1', JSON.stringify(actions));
-  }, [actions]);
+    if (!token) return;
+    apiFetch('/api/actions', {}, token)
+      .then((list) => setActions(Array.isArray(list) ? list.map(toUiAction) : []))
+      .catch(() => {});
+  }, [token]);
+
+  useEffect(() => {
+    if (demoMode) localStorage.setItem('pulse_act_actions_v1', JSON.stringify(actions));
+  }, [actions, demoMode]);
 
   // Complete Action
   const completeAction = (id) => {
-    setActions((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: 'completed' } : a))
-    );
+    setActError('');
+    setActions((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'completed' } : a)));
+    if (token && id && !String(id).startsWith('act-')) {
+      apiFetch(`/api/actions/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'completed' }) }, token).catch(() => {
+        setActError('Could not save that action to your log.');
+      });
+    }
   };
 
   // Generate New Actions
-  const handleGenerateActions = () => {
+  const handleGenerateActions = async () => {
     setIsGenerating(true);
-    setTimeout(() => {
-      const newAction = {
-        id: `act-${Date.now()}`,
-        title: `Explore ${minutes}-Min Eco Observation`,
-        category: 'Habitat',
-        minutes: minutes,
-        status: 'pending',
-        image: 'https://images.unsplash.com/photo-1767783094429-c1ccbea11599?auto=format&fit=crop&w=800&q=80',
-        description: `Dedicated ${minutes} minutes of field observation to document local shade canopy patterns.`,
-        impactNote: 'Helps map urban biodiversity corridors.',
-      };
-      setActions((prev) => {
-        const updated = [newAction, ...prev].map((act) => {
-          if (act.title.includes('Eco Observation')) {
-            return { ...act, image: 'https://images.unsplash.com/photo-1767783094429-c1ccbea11599?auto=format&fit=crop&w=800&q=80' };
-          }
-          return act;
-        });
-        return updated;
-      });
+    setActError('');
+
+    if (!token || demoMode) {
+      setTimeout(() => {
+        const newAction = {
+          id: `act-${Date.now()}`,
+          title: `Explore ${minutes}-Min Eco Observation`,
+          category: 'Habitat',
+          minutes,
+          status: 'pending',
+          image: 'https://images.unsplash.com/photo-1767783094429-c1ccbea11599?auto=format&fit=crop&w=800&q=80',
+          description: `Dedicated ${minutes} minutes of field observation to document local shade canopy patterns.`,
+          impactNote: 'Helps map urban biodiversity corridors.',
+        };
+        setActions((prev) => [newAction, ...prev]);
+        setIsGenerating(false);
+      }, 600);
+      return;
+    }
+
+    try {
+      const created = await apiFetch(
+        '/api/actions',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            title: `Explore ${minutes}-Min Eco Observation`,
+            category: 'Habitat',
+            minutes,
+            status: 'pending',
+            description: `Dedicated ${minutes} minutes of field observation to document local shade canopy patterns.`,
+            impact_note: 'Helps map urban biodiversity corridors.',
+          }),
+        },
+        token
+      );
+      if (created) {
+        setActions((prev) => [typeof toUiAction === 'function' ? toUiAction(created) : created, ...prev]);
+      }
+    } catch (err) {
+      setActError(err instanceof Error ? err.message : 'Pulse could not generate an action right now.');
+    } finally {
       setIsGenerating(false);
-    }, 1000);
+    }
   };
 
   const pendingActions = actions.filter((a) => a.status !== 'completed');
@@ -350,7 +399,22 @@ export default function Act() {
 
         {/* ──────────────── ACTION CARDS GRID WITH REAL HD IMAGES & 3D FLIP ──────────────── */}
         {activeTab === 'suggested' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+          <div className="relative z-10">
+            {actError && (
+              <div className="mb-5 bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200">
+                {actError}
+              </div>
+            )}
+            {pendingActions.length === 0 && (
+              <div className="bg-[#13271C] border border-dashed border-[#20422E] rounded-3xl p-10 text-center space-y-3">
+                <p className="text-3xl">🌿</p>
+                <p className="font-display text-lg font-bold text-white">No suggested actions</p>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                  Pick a time window above and generate an eco action to get started.
+                </p>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {pendingActions.map((action) => {
               const isFlipped = flippedCardId === action.id;
               return (
@@ -426,6 +490,7 @@ export default function Act() {
                 </div>
               );
             })}
+            </div>
           </div>
         )}
 

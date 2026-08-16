@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
+import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual Translations Dictionary for Community Page
@@ -274,12 +275,40 @@ const INITIAL_POSTS = [
 ];
 
 export default function Community() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = COMMUNITY_TRANSLATIONS[lang] || COMMUNITY_TRANSLATIONS.en;
+  const demoMode = isDemoMode();
+  const myId = user?.id || user?._id || 'my-user-id';
+  const tokenFromSession = session?.access_token;
+
+  const toUiPost = (p) => ({
+    id: p._id || p.id,
+    author: {
+      id: p.user || 'community',
+      name: 'Nature Explorer',
+      city: p.city || 'Shared Field',
+      avatar: '🌿',
+      bio: 'Shared field observation',
+    },
+    title: p.common_name || p.title || 'Community Observation',
+    category: ['Nature & Ecology', 'AI & Technology', 'General Discussion', 'Education & Learning', 'Questions & Answers', 'Ideas & Suggestions'].includes(p.category)
+      ? p.category
+      : 'Nature & Ecology',
+    content: p.note || p.description || p.content || '',
+    tags: Array.isArray(p.tags) ? p.tags : [],
+    pinned: false,
+    created_at: p.createdAt || p.created_at || new Date().toISOString(),
+    reactions: { like: 0, insightful: 0, ecoLove: 0, hot: 0, educational: 0 },
+    userReactions: {},
+    comments: [],
+    aiSummary: null,
+    image_url: p.image_url,
+  });
 
   // Persistent States
   const [posts, setPosts] = useState(() => {
+    if (!demoMode) return [];
     try {
       const saved = localStorage.getItem('pulse_community_posts_v4');
       return saved ? JSON.parse(saved) : INITIAL_POSTS;
@@ -289,6 +318,7 @@ export default function Community() {
   });
 
   const [savedPostIds, setSavedPostIds] = useState(() => {
+    if (!demoMode) return [];
     try {
       const saved = localStorage.getItem('pulse_community_saved_v4');
       return saved ? JSON.parse(saved) : ['post-101', 'post-103', 'post-105', 'post-107'];
@@ -298,6 +328,7 @@ export default function Community() {
   });
 
   const [followedUserIds, setFollowedUserIds] = useState(() => {
+    if (!demoMode) return [];
     try {
       const saved = localStorage.getItem('pulse_community_follows_v4');
       return saved ? JSON.parse(saved) : ['u1', 'u2', 'u3', 'u4'];
@@ -307,6 +338,7 @@ export default function Community() {
   });
 
   const [notifications, setNotifications] = useState(() => {
+    if (!demoMode) return [];
     try {
       const saved = localStorage.getItem('pulse_community_notifications_v4');
       return saved
@@ -331,6 +363,7 @@ export default function Community() {
   const [showNotifDrawer, setShowNotifDrawer] = useState(false);
   const [selectedProfileUser, setSelectedProfileUser] = useState(null);
   const [reportingPostId, setReportingPostId] = useState(null);
+  const [communityError, setCommunityError] = useState('');
 
   // New Post Form State
   const [postTitle, setPostTitle] = useState('');
@@ -346,22 +379,34 @@ export default function Community() {
   const [replyInputs, setReplyInputs] = useState({});
   const [activeReplyId, setActiveReplyId] = useState(null);
 
-  // Save Posts to LocalStorage
+  // Save Posts to LocalStorage (demo mode only)
   useEffect(() => {
+    if (!demoMode) return;
     localStorage.setItem('pulse_community_posts_v4', JSON.stringify(posts));
-  }, [posts]);
+  }, [posts, demoMode]);
 
   useEffect(() => {
+    if (!demoMode) return;
     localStorage.setItem('pulse_community_saved_v4', JSON.stringify(savedPostIds));
-  }, [savedPostIds]);
+  }, [savedPostIds, demoMode]);
 
   useEffect(() => {
+    if (!demoMode) return;
     localStorage.setItem('pulse_community_follows_v4', JSON.stringify(followedUserIds));
-  }, [followedUserIds]);
+  }, [followedUserIds, demoMode]);
 
   useEffect(() => {
+    if (!demoMode) return;
     localStorage.setItem('pulse_community_notifications_v4', JSON.stringify(notifications));
-  }, [notifications]);
+  }, [notifications, demoMode]);
+
+  // Load the real shared feed from the backend
+  useEffect(() => {
+    if (demoMode) return;
+    apiFetch('/api/community', {}, null)
+      .then((list) => setPosts(Array.isArray(list) ? list.map(toUiPost) : []))
+      .catch(() => {});
+  }, [demoMode]);
 
   // Reaction Toggle Handler
   const handleReaction = (postId, rxKey) => {
@@ -417,32 +462,29 @@ export default function Community() {
 
   // AI Summarize Post
   const handleAISummarize = (postId) => {
+    setCommunityError('AI summaries are not available on the shared feed right now.');
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id !== postId) return p;
-        const summary = `AI Summary: ${p.title} highlights key field observations on local species shelter patterns and urban biodiversity rhythms.`;
-        return { ...p, aiSummary: summary };
+        return { ...p, aiSummary: null };
       })
     );
   };
 
   // AI Suggested Answer for Q&A
   const handleAISuggestedAnswer = (postId) => {
+    setCommunityError('AI answers are not available on the shared feed right now.');
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id !== postId) return p;
-        const answer = `AI Solution: Based on multi-frame camera sensor parameters, increasing shutter speed while maintaining ISO 400 under foliage produces optimal feature edges for species recognition.`;
-        return { ...p, aiAnswer: answer };
+        return { ...p, aiAnswer: null };
       })
     );
   };
 
   // AI Suggest Tags
   const handleAISuggestTags = () => {
-    const suggested = ['urban-nature', 'ecological-notes', 'field-observation'];
-    const currentList = postTags ? postTags.split(',').map((t) => t.trim()) : [];
-    const combined = Array.from(new Set([...currentList, ...suggested])).join(', ');
-    setPostTags(combined);
+    setCommunityError('AI tag suggestions are not available right now. Add tags manually.');
   };
 
   // Create Post Submit Handler
@@ -453,9 +495,9 @@ export default function Community() {
     const newPost = {
       id: `post-${Date.now()}`,
       author: {
-        id: user?.id || 'my-user-id',
-        name: user?.email?.split('@')[0] || 'My Explorer',
-        city: 'Local Region',
+        id: myId,
+        name: user?.name || user?.email?.split('@')[0] || 'My Explorer',
+        city: 'Shared Field',
         avatar: '🌳',
         bio: 'Passionate Nature Explorer',
       },
@@ -466,8 +508,8 @@ export default function Community() {
       image_url: postImage,
       pinned: false,
       created_at: new Date().toISOString(),
-      reactions: { like: 1, insightful: 0, ecoLove: 1, hot: 0, educational: 0 },
-      userReactions: { ecoLove: true },
+      reactions: { like: 0, insightful: 0, ecoLove: 0, hot: 0, educational: 0 },
+      userReactions: {},
       comments: [],
       aiSummary: null,
     };
@@ -480,11 +522,35 @@ export default function Community() {
     setPostTags('');
     setPostImage(null);
     addNotification('Your post has been published successfully!');
+
+    if (demoMode) return;
+    apiFetch(
+      '/api/community',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          common_name: newPost.title,
+          category: newPost.category,
+          note: newPost.content,
+          image_url: newPost.image_url,
+          city: user?.city || '',
+        }),
+      },
+      tokenFromSession
+    )
+      .then((created) => {
+        setPosts((prev) => [toUiPost(created), ...prev.filter((p) => p.id !== newPost.id)]);
+      })
+      .catch((err) => {
+        setCommunityError(err instanceof Error ? err.message : 'Could not publish your post.');
+      });
   };
 
   // Delete Post
   const handleDeletePost = (postId) => {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
+    if (demoMode) return;
+    apiFetch(`/api/community/${postId}`, { method: 'DELETE' }, tokenFromSession).catch(() => {});
   };
 
   // Add Comment Handler
@@ -563,7 +629,7 @@ export default function Community() {
         return savedPostIds.includes(p.id);
       }
       if (activeTab === 'my_posts') {
-        return p.author?.id === (user?.id || 'my-user-id') || p.author?.name === user?.email?.split('@')[0];
+        return String(p.author?.id) === String(myId) || p.author?.name === user?.email?.split('@')[0];
       }
       return true;
     })
@@ -1031,6 +1097,11 @@ export default function Community() {
 
         {/* ──────────────── POSTS FEED ──────────────── */}
         <div className="space-y-5">
+          {communityError && (
+            <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200">
+              {communityError}
+            </div>
+          )}
           {!filteredPosts.length ? (
             <div className="bg-[#112318] border border-[#20452F] rounded-3xl p-12 text-center space-y-3">
               <Sparkles className="w-10 h-10 text-slate-500 mx-auto animate-pulse" />
@@ -1104,7 +1175,7 @@ export default function Community() {
                     </button>
 
                     {/* Delete if owner */}
-                    {post.author?.id === (user?.id || 'my-user-id') && (
+                    {String(post.author?.id) === String(myId) && (
                       <button
                         onClick={() => handleDeletePost(post.id)}
                         className="p-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 cursor-pointer"

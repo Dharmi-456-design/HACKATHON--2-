@@ -17,59 +17,63 @@ const profileSchema = new mongoose.Schema(
 // Discovery Schema
 const discoverySchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    common_name: { type: String, required: true },
-    scientific_name: { type: String, default: '' },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+    common_name: { type: String, required: true, trim: true, maxlength: 200 },
+    scientific_name: { type: String, default: '', trim: true, maxlength: 200 },
     confidence: { type: String, enum: ['high', 'medium', 'low', 'uncertain'], default: 'high' },
-    confidence_pct: { type: Number, default: 90 },
+    confidence_pct: { type: Number, default: 90, min: 0, max: 100 },
     category: {
       type: String,
       enum: ['birds', 'trees', 'flowers', 'insects', 'fungi', 'moss', 'mammals', 'reptiles', 'other'],
       default: 'other',
     },
-    description: { type: String, default: '' },
-    why_it_matters: { type: String, default: '' },
-    experience_suggestion: { type: String, default: '' },
-    place_name: { type: String, default: '' },
-    city: { type: String, default: '' },
+    description: { type: String, default: '', maxlength: 5000 },
+    why_it_matters: { type: String, default: '', maxlength: 5000 },
+    experience_suggestion: { type: String, default: '', maxlength: 5000 },
+    place_name: { type: String, default: '', maxlength: 200 },
+    city: { type: String, default: '', maxlength: 200 },
     image_url: { type: String, default: '' },
     is_public: { type: Boolean, default: true },
-    notes: { type: String, default: '' },
+    notes: { type: String, default: '', maxlength: 5000 },
     raw_analysis: { type: Object },
   },
   { timestamps: true }
 );
+discoverySchema.index({ is_public: 1, createdAt: -1 });
+discoverySchema.index({ user: 1, createdAt: -1 });
 
 // Journal Entry Schema
 const journalSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    title: { type: String, required: true },
-    body: { type: String, required: true },
-    mood: { type: String, default: 'quiet' },
-    weather: { type: String, default: '' },
-    place_name: { type: String, default: '' },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+    title: { type: String, required: true, trim: true, maxlength: 300 },
+    body: { type: String, required: true, maxlength: 30000 },
+    mood: { type: String, default: 'quiet', maxlength: 100 },
+    weather: { type: String, default: '', maxlength: 150 },
+    place_name: { type: String, default: '', maxlength: 200 },
     image_url: { type: String, default: '' },
   },
   { timestamps: true }
 );
+journalSchema.index({ user: 1, createdAt: -1 });
 
 // Mission Schema
 const missionSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    title: { type: String, required: true },
-    description: { type: String, required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+    title: { type: String, required: true, trim: true, maxlength: 300 },
+    description: { type: String, default: '', maxlength: 5000 },
     mission_type: { type: String, enum: ['observe', 'explore', 'learn', 'act', 'return'], default: 'observe' },
-    duration_minutes: { type: Number, default: 15 },
+    duration_minutes: { type: Number, default: 15, min: 1, max: 1440 },
     status: { type: String, enum: ['scheduled', 'in_progress', 'completed'], default: 'scheduled' },
-    location_hint: { type: String, default: '' },
-    why_it_matters: { type: String, default: '' },
+    location_hint: { type: String, default: '', maxlength: 300 },
+    why_it_matters: { type: String, default: '', maxlength: 5000 },
     scheduled_date: { type: String, default: () => new Date().toISOString().slice(0, 10) },
     completed_at: { type: Date },
   },
   { timestamps: true }
 );
+missionSchema.index({ user: 1, status: 1, createdAt: -1 });
 
 // Place Schema
 const placeSchema = new mongoose.Schema(
@@ -123,14 +127,19 @@ const communityPostSchema = new mongoose.Schema(
 // Action Schema
 const actionSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    title: { type: String, required: true },
-    category: { type: String, default: 'conservation' },
-    status: { type: String, enum: ['todo', 'in_progress', 'done'], default: 'todo' },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+    title: { type: String, required: true, trim: true, maxlength: 300 },
+    category: { type: String, default: 'conservation', maxlength: 100 },
+    status: { type: String, enum: ['todo', 'in_progress', 'done', 'recommended'], default: 'todo' },
     points: { type: Number, default: 10 },
+    minutes: { type: Number, default: 15 },
+    description: { type: String, default: '', maxlength: 5000 },
+    image_url: { type: String, default: '' },
+    impact_note: { type: String, default: '', maxlength: 5000 },
   },
   { timestamps: true }
 );
+actionSchema.index({ user: 1, createdAt: -1 });
 
 module.exports = {
   Profile: mongoose.model('Profile', profileSchema),

@@ -4,7 +4,7 @@ import { Camera, Save, Share2, Trash2, RefreshCw, Leaf, Eye, Lightbulb } from 'l
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, fileToResizedBase64, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Field, GhostButton, PrimaryButton, Skeleton, inputCls } from '../components/ui';
-import { isDemoMode, demoAnalyze, wrapWithFallback } from '../utils/demoMode';
+import { isDemoMode, demoAnalyze } from '../utils/demoMode';
 import ShareCard from '../components/ShareCard';
 
 const prefersReducedMotion = () =>
@@ -164,13 +164,12 @@ export default function Lens() {
     setAnalyzing(true);
     setError('');
     try {
-      const data = await wrapWithFallback(
-        () => apiFetch('/api/analyze', {
-          method: 'POST',
-          body: JSON.stringify({ imageBase64: filePayload.base64, contentType: filePayload.mime, city: profile?.city, note: notes }),
-        }, token),
-        demoAnalyze
-      );
+      const data = demoMode
+        ? await demoAnalyze()
+        : await apiFetch('/api/analyze', {
+            method: 'POST',
+            body: JSON.stringify({ imageBase64: filePayload.base64, contentType: filePayload.mime, city: profile?.city, note: notes }),
+          }, token);
       setAnalysis(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Pulse could not read this image');
@@ -225,7 +224,7 @@ export default function Lens() {
 
   const remove = async (id) => {
     try {
-      await apiFetch('/api/discoveries', { method: 'DELETE', body: JSON.stringify({ id }) }, token);
+      await apiFetch(`/api/discoveries/${id}`, { method: 'DELETE' }, token);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not delete');
