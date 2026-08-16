@@ -128,7 +128,7 @@ export default function NatureMissions() {
     const status = m.status || 'not_started';
     const xpReward = type === 'learn' ? 250 : type === 'explore' ? 180 : type === 'act' ? 200 : 100;
     const categoryMap = { observe: 'Exploration', explore: 'Learning', learn: 'Challenges', act: 'Personal Goals' };
-    const difficulty = !m.duration_minutes ? '🟡 Medium' : m.duration_minutes <= 10 ? '🟢 Easy' : m.duration_minutes <= 20 ? '🟡 Medium' : '🔴 Hard';
+    const difficulty = !m.duration_minutes ? 'Medium' : m.duration_minutes <= 10 ? 'Easy' : m.duration_minutes <= 20 ? 'Medium' : 'Hard';
     const steps = Array.isArray(m.steps) && m.steps.length
       ? m.steps
       : [
@@ -165,7 +165,7 @@ export default function NatureMissions() {
   // Custom Mission Creator State
   const [customTitle, setCustomTitle] = useState('');
   const [customCategory, setCustomCategory] = useState('Exploration');
-  const [customDifficulty, setCustomDifficulty] = useState('🟢 Easy');
+  const [customDifficulty, setCustomDifficulty] = useState('Easy');
 
   useEffect(() => {
     if (!token) return;
@@ -523,11 +523,10 @@ export default function NatureMissions() {
                       const progressPct = Math.round((completedStepsCount / mission.steps.length) * 100);
 
                       return (
-                        <motion.div
+                        <div
                           key={mission.id}
-                          whileHover={{ scale: 1.04 }}
                           onClick={() => setSelectedMission(mission)}
-                          className={`p-5 rounded-3xl border transition-all cursor-pointer shadow-xl relative overflow-hidden flex flex-col justify-between h-56 ${
+                          className={`p-5 rounded-3xl border transition-all duration-300 cursor-pointer shadow-xl relative overflow-hidden flex flex-col justify-between h-56 hover:-translate-y-1 hover:shadow-2xl ${
                             isSelected
                               ? 'bg-[#1A3827] border-[#4ADE80] ring-2 ring-[#4ADE80]'
                               : isDark ? 'bg-[#07150C] border-[#20422E] hover:border-[#4ADE80]/50' : 'bg-[#F4F7F4] border-slate-200 hover:border-emerald-500'
@@ -552,7 +551,7 @@ export default function NatureMissions() {
                               <div className="bg-[#4ADE80] h-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
                             </div>
                           </div>
-                        </motion.div>
+                        </div>
                       );
                     })}
                   </div>
@@ -679,9 +678,9 @@ export default function NatureMissions() {
                     onChange={(e) => setCustomDifficulty(e.target.value)}
                     className="w-full bg-[#13271C] border border-[#20422E] text-xs text-white rounded-2xl px-4 py-3 outline-none focus:border-[#4ADE80]"
                   >
-                    <option value="🟢 Easy">🟢 Easy (100 XP)</option>
-                    <option value="🟡 Medium">🟡 Medium (180 XP)</option>
-                    <option value="🔴 Hard">🔴 Hard (250 XP)</option>
+                    <option value="Easy">Easy (100 XP)</option>
+                    <option value="Medium">Medium (180 XP)</option>
+                    <option value="Hard">Hard (250 XP)</option>
                   </select>
                 </div>
               </div>
