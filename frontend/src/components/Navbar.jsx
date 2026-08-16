@@ -59,6 +59,12 @@ export default function Navbar() {
             Explore
           </a>
           <a
+            href="#reviews"
+            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            Community
+          </a>
+          <a
             href="#journey"
             className="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
           >
@@ -135,6 +141,13 @@ export default function Navbar() {
             className="block text-sm font-medium text-white/80 hover:text-[#96CD7B]"
           >
             Explore
+          </a>
+          <a
+            href="#reviews"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-sm font-medium text-white/80 hover:text-[#96CD7B]"
+          >
+            Community
           </a>
           <a
             href="#journey"
