@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Star, ShieldCheck, ChevronRight } from 'lucide-react';
 import ReviewsModal from './ReviewsModal';
@@ -116,51 +116,32 @@ const REVIEWS = [
   },
 ];
 
+// Duplicated arrays for infinite seamless left -> right loop
+const LOOP_REVIEWS = [...REVIEWS, ...REVIEWS];
 const NUM_TICKS = 120;
 
 export default function HorizontalReviewsTicker() {
-  const wrapperRef = useRef(null);
   const [hoveredId, setHoveredId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [scrollPos, setScrollPos] = useState(0);
 
-  // Trigger smooth 1-second auto-scroll when component enters viewport or on mouse hover
+  // Dynamic wave position update during marquee loop
   useEffect(() => {
-    const el = wrapperRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          // Trigger smooth 1-second left-to-right scroll
-          setProgress(1);
-        }
-      },
-      { threshold: 0.2 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
+    const interval = setInterval(() => {
+      setScrollPos((prev) => (prev >= 1 ? 0 : prev + 0.003));
+    }, 45);
+    return () => clearInterval(interval);
   }, []);
-
-  const handleMouseEnter = () => {
-    // Fast & smooth 1-second scroll transition on hover
-    setProgress((prev) => (prev >= 0.9 ? 0 : 1));
-  };
-
-  const translateX = -progress * 72;
 
   return (
     <>
-      <div
-        ref={wrapperRef}
-        onMouseEnter={handleMouseEnter}
-        className="relative bg-[#0E1E15] text-white overflow-hidden py-8 select-none"
-      >
-        <div className="w-full flex flex-col justify-between py-4 px-6 sm:px-12 space-y-6">
+      {/* Compact Section with ZERO Extra Vertical Height or Empty Spaces */}
+      <div className="relative bg-[#0E1E15] text-white py-10 overflow-hidden select-none">
+        
+        <div className="w-full flex flex-col justify-between px-6 sm:px-12 space-y-6">
           
           {/* Header Bar */}
-          <div className="max-w-7xl w-full mx-auto flex items-end justify-between z-20">
+          <div className="max-w-7xl w-full mx-auto flex items-end justify-between z-20 pt-2 shrink-0">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-wider mb-2">
                 <ShieldCheck size={14} /> VERIFIED COMMUNITY IMPACT
@@ -173,19 +154,20 @@ export default function HorizontalReviewsTicker() {
             {/* Read All Reviews Button */}
             <button
               onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] text-sm font-semibold border border-white/20 transition-all cursor-pointer shadow-lg hover:scale-[1.03]"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] text-sm font-semibold border border-white/20 transition-all cursor-pointer shadow-lg hover:scale-[1.03] shrink-0"
             >
               Read all reviews <ChevronRight size={16} />
             </button>
           </div>
 
-          {/* Linear Group of Mini Lines (Wave Scrubber Bar) */}
-          <div className="relative max-w-7xl w-full mx-auto z-20">
+          {/* PREVIOUS EXACT LINEAR WAVE SCRUBBER BAR (RESTORED EXACTLY) */}
+          <div className="relative max-w-7xl w-full mx-auto my-2 sm:my-4 z-20 shrink-0">
             <div className="flex items-center justify-between gap-1 h-12 px-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
               {Array.from({ length: NUM_TICKS }).map((_, i) => {
                 const tickProgress = i / (NUM_TICKS - 1);
-                const distance = Math.abs(tickProgress - progress);
+                const distance = Math.abs(tickProgress - scrollPos);
                 
+                // Continuous Smooth Gaussian Wave Peak
                 const wave = Math.exp(-Math.pow(distance / 0.065, 2));
                 const heightPx = Math.max(8, Math.round(wave * 32 + 8));
                 const opacity = 0.3 + wave * 0.7;
@@ -198,7 +180,7 @@ export default function HorizontalReviewsTicker() {
                       height: `${heightPx}px`,
                       opacity,
                     }}
-                    className={`w-1 rounded-full transition-all duration-300 ${
+                    className={`w-1 rounded-full transition-all duration-100 ${
                       isWaveActive
                         ? 'bg-[#96CD7B] shadow-[0_0_10px_#96CD7B]'
                         : 'bg-white/35'
@@ -211,31 +193,38 @@ export default function HorizontalReviewsTicker() {
             {/* Scrubber Label */}
             <div className="flex items-center justify-between text-[11px] font-mono text-white/50 px-3 mt-1.5 uppercase tracking-widest">
               <span>01 / START</span>
-              <span className="text-[#96CD7B]">AUTOMATIC 1-SEC SMOOTH SCROLL</span>
+              <span className="text-[#96CD7B]">SCROLL LEFT TO RIGHT</span>
               <span>10 / END</span>
             </div>
           </div>
 
-          {/* Horizontal Staircase Ticker Cards (1-Second Ultra-Smooth Framer Motion Transition) */}
+          {/* Continuous Ultra-Smooth Left -> Right Infinite Loop Cards Marquee */}
           <div className="relative w-full overflow-hidden z-10 py-4">
             <motion.div
-              animate={{ x: `${translateX}%` }}
-              transition={{ duration: 1.2, ease: [0.25, 1, 0.5, 1] }}
-              className="flex gap-6 sm:gap-8 items-center pl-4 pr-32"
+              animate={{ x: ['-50%', '0%'] }}
+              transition={{
+                x: {
+                  repeat: Infinity,
+                  repeatType: 'loop',
+                  duration: 35,
+                  ease: 'linear',
+                },
+              }}
+              className="flex gap-6 sm:gap-8 items-center w-max"
             >
-              {REVIEWS.map((r) => {
-                const isHovered = hoveredId === r.id;
+              {LOOP_REVIEWS.map((r, index) => {
+                const isHovered = hoveredId === `${r.id}-${index}`;
                 const isAnyHovered = hoveredId !== null;
                 const isBlur = isAnyHovered && !isHovered;
 
                 return (
                   <motion.div
-                    key={r.id}
-                    onMouseEnter={() => setHoveredId(r.id)}
+                    key={`${r.id}-${index}`}
+                    onMouseEnter={() => setHoveredId(`${r.id}-${index}`)}
                     onMouseLeave={() => setHoveredId(null)}
                     style={{
                       filter: isBlur ? 'blur(3px)' : 'blur(0px)',
-                      opacity: isBlur ? 0.22 : 1,
+                      opacity: isBlur ? 0.25 : 1,
                       scale: isHovered ? 1.05 : 1,
                     }}
                     className={`w-[320px] sm:w-[360px] h-[280px] shrink-0 bg-[#E8E6E1] text-[#1A1A1A] rounded-2xl p-6 shadow-2xl flex flex-col justify-between transition-all duration-300 ${r.yOffset} ${
@@ -278,8 +267,8 @@ export default function HorizontalReviewsTicker() {
           </div>
 
           {/* Bottom Hint */}
-          <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/40 z-20">
-            <span>Automatic smooth 1-second card translation</span>
+          <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/40 z-20 pb-2 shrink-0">
+            <span>Hover card to pause & focus · Continuous Left → Right flow</span>
             <span>10 Verified Explorer Reports</span>
           </div>
 
