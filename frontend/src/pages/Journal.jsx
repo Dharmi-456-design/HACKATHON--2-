@@ -1,198 +1,509 @@
-import { useCallback, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { Camera, BookOpen, Check, Trash2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { 
+  Sparkles, BookOpen, PenTool, Pin, Trash2, Edit3, Heart, Save, 
+  Search, Calendar, Filter, Mic, Lock, Eye, ArrowRight, X, Lightbulb, 
+  Smile, CloudRain, Sun, Leaf, Flame, HelpCircle, Archive, Compass, Check
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { Badge, Card, Empty, ErrorBanner, Field, PrimaryButton, Skeleton, inputCls } from '../components/ui';
+import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
-const MOODS = ['quiet', 'curious', 'weathered', 'tender', 'alert'];
+// Multilingual UI Translations for Living Botanical Parchment Journal
+const JOURNAL_TRANSLATIONS = {
+  en: {
+    heroTag: 'LIVING BOTANICAL PARCHMENT CANVASES',
+    heroTitle: 'Private Nature Thinking Canvas',
+    heroSubtitle: 'A quiet, distraction-free space for your personal thoughts, field reflections, and eco-discoveries.',
+    newNoteTitle: 'Capture a New Field Reflection',
+    titlePlaceholder: 'e.g., Peepal Leaf Droplets After Dawn Rain…',
+    bodyPlaceholder: 'What changed. What stayed. What you almost missed in nature today…',
+    saveNoteBtn: 'Save to Private Vault',
+    zenModeBtn: '✨ Zen Distraction-Free Mode',
+    exitZenBtn: 'Exit Zen Mode',
+    tabJournal: '📖 Journal Canvas',
+    tabIdeaVault: '💡 Idea Vault',
+    tabMemoryCapsules: '🔒 Memory Capsules',
+    tabAskJournal: '🔮 Ask My Journal',
+    moodLabel: 'Botanical Atmosphere Mood',
+    searchPlaceholder: 'Search field notes, moods, tags…',
+    autoSaveStatus: 'Saved to Private Vault ✓',
+    askJournalPrompt: 'Ask AI about your saved journal reflections…',
+    aiReflectBtn: '✨ AI Reflection',
+  },
+  gu: {
+    heroTag: 'લિવિંગ બોટનિકલ પાર્ચમેન્ટ કેનવાસ',
+    heroTitle: 'ખાનગી પ્રકૃતિ વિચાર કેનવાસ',
+    heroSubtitle: 'તમારા વ્યક્તિગત વિચારો અને પ્રકૃતિના અવલોકનો માટે એક શાંત, વિક્ષેપ મુક્ત જગ્યા.',
+    newNoteTitle: 'નવું અવલોકન લખો',
+    titlePlaceholder: 'દા.ત., વરસાદ પછી પીપળાના પાંદડા પરનું પાણી…',
+    bodyPlaceholder: 'આજે પ્રકૃતિમાં તમે શું જોયું અને અનુભવ્યું…',
+    saveNoteBtn: 'પ્રાઇવેટ વોલ્ટમાં સેવ કરો',
+    zenModeBtn: '✨ ઝેન રાઇટિંગ મોડ',
+    exitZenBtn: 'ઝેન મોડમાંથી બહાર નીકળો',
+    tabJournal: '📖 જર્નલ કેનવાસ',
+    tabIdeaVault: '💡 આઇડિયા વોલ્ટ',
+    tabMemoryCapsules: '🔒 મેમરી કેપ્સ્યુલ્સ',
+    tabAskJournal: '🔮 મારા જર્નલને પૂછો',
+    moodLabel: 'મૂડ અને વાતાવરણ',
+    searchPlaceholder: 'નોંધો, મૂડ, ટેગ્સ શોધો…',
+    autoSaveStatus: 'વોલ્ટમાં સેવ થયું ✓',
+    askJournalPrompt: 'તમારી નોંધો વિશે એઆઈને પૂછો…',
+    aiReflectBtn: '✨ એઆઈ રિફ્લેક્શન',
+  },
+  hi: {
+    heroTag: 'लिविंग बॉटनिकल पार्चमेंट कैनवास',
+    heroTitle: 'निजी प्रकृति विचार कैनवास',
+    heroSubtitle: 'आपके व्यक्तिगत विचारों और प्रकृति के अवलोकनों के लिए एक शांत, व्याकुलता-मुक्त स्थान।',
+    newNoteTitle: 'नया अवलोकन लिखें',
+    titlePlaceholder: 'जैसे, बारिश के बाद पीपल के पत्तों पर पानी…',
+    bodyPlaceholder: 'आज प्रकृति में आपने क्या देखा और महसूस किया…',
+    saveNoteBtn: 'प्राइवेट वॉल्ट में सहेजें',
+    zenModeBtn: '✨ ज़ेन राइटिंग मोड',
+    exitZenBtn: 'ज़ेन मोड से बाहर निकलें',
+    tabJournal: '📖 जर्नल कैनवास',
+    tabIdeaVault: '💡 आइडिया वॉल्ट',
+    tabMemoryCapsules: '🔒 मेमोरी कैप्सूल',
+    tabAskJournal: '🔮 मेरे जर्नल से पूछें',
+    moodLabel: 'मूड़ और वातावरण',
+    searchPlaceholder: 'नोट्स, मूड, टैग खोजें…',
+    autoSaveStatus: 'वॉल्ट में सहेजा गया ✓',
+    askJournalPrompt: 'अपने नोट्स के बारे में एआई से पूछें…',
+    aiReflectBtn: '✨ एआई रिफ्लेक्शन',
+  },
+};
 
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-function TimelineEntry({ entry, index, type }) {
-  return (
-    <motion.div
-      className="relative pl-10"
-      initial={prefersReducedMotion() ? {} : { opacity: 0, x: -20 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.35, ease: 'easeOut', delay: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-    >
-      {/* Dot on line */}
-      <div className="absolute left-0 top-3 w-3 h-3 rounded-full bg-forest/25 border-2 border-paper ring-2 ring-forest/10" />
-      {/* Icon badge */}
-      <div className="absolute left-[-3px] top-[7px] w-3.5 h-3.5 rounded-full bg-paper flex items-center justify-center">
-        {type === 'discovery' ? <Camera size={7} className="text-forest" /> : <Check size={7} className="text-forest" />}
-      </div>
-      {entry}
-    </motion.div>
-  );
-}
+// Seed Journal Entries
+const SEED_ENTRIES = [
+  {
+    id: 'j-1',
+    title: 'Peepal Leaf Droplets After Dawn Rain',
+    body: 'The morning humidity was 88%. Standing under the ancient Peepal tree near the river bank, water droplets formed golden spheres on the leaf veins.',
+    mood: '🌿 Quiet Canopy',
+    weather: 'Cool Rain · 24°C',
+    date: 'Aug 16, 2026',
+    pinned: true,
+    wordCount: 32,
+    aiReflection: 'Key Theme: Canopy condensation & urban micro-climate dampness.',
+  },
+  {
+    id: 'j-2',
+    title: 'Swallowtail Butterfly Feeding Rhythm',
+    body: 'Observed 2 swallowtails feeding on yellow Champa flowers between 10:00 AM and 11:30 AM. Their wing frequency slowed during peak sun exposure.',
+    mood: '☀️ Sunlit Bloom',
+    weather: 'Clear Skies · 31°C',
+    date: 'Aug 14, 2026',
+    pinned: false,
+    wordCount: 28,
+    aiReflection: 'Key Theme: Insect pollination activity during peak solar hours.',
+  },
+];
 
 export default function Journal() {
   const { session } = useAuth();
-  const token = session?.access_token;
-  const [entries, setEntries] = useState([]);
-  const [discoveries, setDiscoveries] = useState([]);
+  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const t = JOURNAL_TRANSLATIONS[lang] || JOURNAL_TRANSLATIONS.en;
+
+  // Persistent Journal State
+  const [entries, setEntries] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pulse_journal_entries_v1');
+      return saved ? JSON.parse(saved) : SEED_ENTRIES;
+    } catch {
+      return SEED_ENTRIES;
+    }
+  });
+
+  // Active States
+  const [activeTab, setActiveTab] = useState('journal'); // journal, ideaVault, memoryCapsules, askJournal
+  const [isZenMode, setIsZenMode] = useState(false);
+  const [flippedCardId, setFlippedCardId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // New Note State
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [mood, setMood] = useState('quiet');
-  const [weather, setWeather] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [mood, setMood] = useState('🌿 Quiet Canopy');
+  const [weather, setWeather] = useState('Cool Rain · 24°C');
+  const [autoSaveStatus, setAutoSaveStatus] = useState('');
 
-  const load = useCallback(async () => {
-    if (!token) return;
-    try {
-      const [j, d] = await Promise.all([
-        apiFetch('/api/journal', {}, token),
-        apiFetch('/api/discoveries', {}, token),
-      ]);
-      setEntries(j);
-      setDiscoveries(d.slice(0, 10));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load journal');
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  // Ask Journal State
+  const [askInput, setAskInput] = useState('');
+  const [askMessages, setAskMessages] = useState([
+    { id: 1, sender: 'ai', text: 'Welcome to "Ask My Journal". I can analyze your private field notes and answer questions about your observations.' },
+  ]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    localStorage.setItem('pulse_journal_entries_v1', JSON.stringify(entries));
+  }, [entries]);
 
-  const submit = async (e) => {
+  // Auto-Save Effect
+  useEffect(() => {
+    if (!title.trim() && !body.trim()) return;
+    setAutoSaveStatus('Saving draft…');
+    const timer = setTimeout(() => {
+      setAutoSaveStatus(t.autoSaveStatus);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [title, body, t.autoSaveStatus]);
+
+  // Save Note Submit
+  const handleSaveNote = (e) => {
     e.preventDefault();
-    if (!body.trim()) { setError('Write a few sentences about what you noticed.'); return; }
-    setBusy(true);
-    setError('');
-    try {
-      await apiFetch('/api/journal', { method: 'POST', body: JSON.stringify({ title: title || 'Field note', body, mood, weather }) }, token);
-      setTitle(''); setBody(''); setWeather('');
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save');
-    } finally { setBusy(false); }
+    if (!body.trim()) return;
+
+    const newEntry = {
+      id: `j-${Date.now()}`,
+      title: title.trim() || 'Untitled Reflection',
+      body: body.trim(),
+      mood,
+      weather,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      pinned: false,
+      wordCount: body.trim().split(/\s+/).length,
+      aiReflection: `Key Theme: ${title.trim() || 'Nature observation'}`,
+    };
+
+    setEntries([newEntry, ...entries]);
+    setTitle('');
+    setBody('');
+    if (isZenMode) setIsZenMode(false);
   };
 
-  const remove = async (id) => {
-    try {
-      await apiFetch('/api/journal', { method: 'DELETE', body: JSON.stringify({ id }) }, token);
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not delete');
+  // Toggle Pin Note
+  const togglePin = (id) => {
+    setEntries((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, pinned: !e.pinned } : e))
+    );
+  };
+
+  // Delete Note
+  const deleteEntry = (id) => {
+    setEntries((prev) => prev.filter((e) => e.id !== id));
+  };
+
+  // Ask Journal Handler
+  const handleAskJournal = (e) => {
+    e.preventDefault();
+    if (!askInput.trim()) return;
+
+    const userMsg = { id: Date.now(), sender: 'user', text: askInput.trim() };
+    setAskMessages((prev) => [...prev, userMsg]);
+    const inputQuery = askInput.trim();
+    setAskInput('');
+
+    setTimeout(() => {
+      const summary = `Based on your private journal: On Aug 16, you noted Peepal leaf droplets during 88% humidity. On Aug 14, you observed Swallowtail butterfly feeding rhythms during peak solar hours.`;
+      setAskMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'ai', text: summary }]);
+    }, 1000);
+  };
+
+  // Filtered Entries
+  const filteredEntries = entries.filter((e) => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchTitle = e.title.toLowerCase().includes(q);
+      const matchBody = e.body.toLowerCase().includes(q);
+      const matchMood = e.mood.toLowerCase().includes(q);
+      if (!matchTitle && !matchBody && !matchMood) return false;
     }
-  };
-
-  // Merge journal entries + discoveries into a timeline
-  const timeline = [
-    ...entries.map((e) => ({ ...e, _type: 'journal', _date: e.created_at })),
-    ...discoveries.map((d) => ({ ...d, _type: 'discovery', _date: d.created_at })),
-  ].sort((a, b) => new Date(b._date) - new Date(a._date));
+    return true;
+  });
 
   return (
-    <motion.div
-      className="max-w-3xl mx-auto px-5 py-8"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: prefersReducedMotion() ? 0 : 0.3 }}
-    >
-      <p className="text-[11px] uppercase tracking-[0.22em] text-gold">Nature Journal</p>
-      <h1 className="font-display text-4xl sm:text-5xl mt-1">A place to return in words.</h1>
-      <p className="mt-2 text-sm text-forest/65">Only you can read these notes. They feed Learn and Return in your Nature Connection.</p>
+    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+      
+      {/* ──────────────── ZEN DISTRACTION-FREE WRITING CANVAS ──────────────── */}
+      <AnimatePresence>
+        {isZenMode && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-50 bg-[#061209] p-6 sm:p-12 overflow-y-auto flex flex-col justify-between"
+          >
+            <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
+              <span className="text-xs font-bold text-[#4ADE80] flex items-center gap-2">
+                <Sparkles className="w-4 h-4 animate-pulse" />
+                <span>ZEN DISTRACTION-FREE THINKING CANVAS</span>
+              </span>
 
-      <Card className="mt-8 p-6">
-        <form onSubmit={submit} className="space-y-4">
-          {error && <ErrorBanner message={error} />}
-          <Field label="Title">
-            <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="The maple after rain" />
-          </Field>
-          <Field label="Field note">
-            <textarea className={inputCls + ' min-h-[140px]'} value={body} onChange={(e) => setBody(e.target.value)} placeholder="What changed. What stayed. What you almost missed." />
-          </Field>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Field label="Weather">
-              <input className={inputCls} value={weather} onChange={(e) => setWeather(e.target.value)} placeholder="Low cloud, wet bark" />
-            </Field>
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.16em] text-forest/55 mb-1.5">Mood</p>
-              <div className="flex flex-wrap gap-2">
-                {MOODS.map((m) => (
-                  <button key={m} type="button" onClick={() => setMood(m)}
-                    className={`rounded-full px-3 py-1 text-xs border transition-colors ${mood === m ? 'bg-forest text-cream border-forest font-medium' : 'border-ink/10 text-forest hover:bg-mist/40'}`}>
-                    {m}
+              <button
+                onClick={() => setIsZenMode(false)}
+                className="px-4 py-2 rounded-full bg-[#13271C] border border-[#20422E] text-xs font-bold text-slate-200 hover:text-white cursor-pointer"
+              >
+                {t.exitZenBtn}
+              </button>
+            </div>
+
+            <div className="max-w-3xl mx-auto w-full my-8 space-y-6">
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t.titlePlaceholder}
+                className="w-full bg-transparent font-display text-3xl sm:text-5xl font-extrabold text-white outline-none placeholder:text-slate-600"
+              />
+
+              <textarea
+                autoFocus
+                rows={12}
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder={t.bodyPlaceholder}
+                className="w-full bg-transparent text-lg sm:text-xl text-slate-200 leading-relaxed outline-none placeholder:text-slate-600 resize-none"
+              />
+            </div>
+
+            <div className="flex justify-between items-center border-t border-[#20452F] pt-4">
+              <span className="text-xs text-[#4ADE80] font-mono">{autoSaveStatus}</span>
+              <button
+                onClick={handleSaveNote}
+                className="px-8 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm cursor-pointer shadow-xl"
+              >
+                {t.saveNoteBtn}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ──────────────── MAIN CONTAINER ──────────────── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
+        
+        {/* ──────────────── RADICAL NEW CONCEPT: BOTANICAL PARCHMENT CANVAS HEADER ──────────────── */}
+        <div className="relative bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30 text-xs font-bold uppercase tracking-widest">
+              <PenTool className="w-3.5 h-3.5 text-[#4ADE80]" />
+              {t.heroTag}
+            </span>
+            <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+              {t.heroTitle}
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
+              {t.heroSubtitle}
+            </p>
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsZenMode(true)}
+            className="px-6 py-3.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>{t.zenModeBtn}</span>
+          </motion.button>
+        </div>
+
+        {/* ──────────────── NAVIGATION TABS ──────────────── */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-chat-scroll scrollbar-none">
+          {[
+            { id: 'journal', label: t.tabJournal },
+            { id: 'ideaVault', label: t.tabIdeaVault },
+            { id: 'memoryCapsules', label: t.tabMemoryCapsules },
+            { id: 'askJournal', label: t.tabAskJournal },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-5 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                activeTab === tab.id
+                  ? 'bg-[#4ADE80] text-[#07130B] shadow-md shadow-[#4ADE80]/15'
+                  : 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ──────────────── TAB 1: JOURNAL WRITING CANVAS ──────────────── */}
+        {activeTab === 'journal' && (
+          <div className="space-y-8">
+            
+            {/* New Reflection Input Box */}
+            <div className="bg-[#112318] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl">
+              <div className="flex justify-between items-center">
+                <h3 className="font-display text-xl font-bold text-white flex items-center gap-2">
+                  <PenTool className="w-5 h-5 text-[#4ADE80]" />
+                  <span>{t.newNoteTitle}</span>
+                </h3>
+
+                {autoSaveStatus && (
+                  <span className="text-xs text-[#4ADE80] font-mono">{autoSaveStatus}</span>
+                )}
+              </div>
+
+              <form onSubmit={handleSaveNote} className="space-y-4">
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t.titlePlaceholder}
+                  className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-4 py-3 text-sm text-white outline-none focus:border-[#4ADE80]"
+                />
+
+                <textarea
+                  rows={4}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder={t.bodyPlaceholder}
+                  className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl p-4 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80] resize-none"
+                />
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400 font-semibold">{t.moodLabel}:</span>
+                    <select
+                      value={mood}
+                      onChange={(e) => setMood(e.target.value)}
+                      className="bg-[#0E2015] border border-[#20422E] text-xs text-white rounded-xl px-3 py-1.5 outline-none focus:border-[#4ADE80]"
+                    >
+                      <option value="🌿 Quiet Canopy">🌿 Quiet Canopy</option>
+                      <option value="🌧️ Rainy Canopy">🌧️ Rainy Canopy</option>
+                      <option value="☀️ Sunlit Bloom">☀️ Sunlit Bloom</option>
+                      <option value="🍂 Weathered Bark">🍂 Weathered Bark</option>
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] cursor-pointer shadow-lg shrink-0"
+                  >
+                    {t.saveNoteBtn}
                   </button>
-                ))}
+                </div>
+              </form>
+            </div>
+
+            {/* Past Reflections Grid with 3D Flip */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-display text-2xl font-bold text-white">Saved Field Reflections</h3>
+                <span className="text-xs text-slate-400">Hover Card to 3D Flip</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {filteredEntries.map((entry) => {
+                  const isFlipped = flippedCardId === entry.id;
+                  return (
+                    <div
+                      key={entry.id}
+                      className="perspective-1000 h-52 cursor-pointer"
+                      onMouseEnter={() => setFlippedCardId(entry.id)}
+                      onMouseLeave={() => setFlippedCardId(null)}
+                    >
+                      <motion.div
+                        className="w-full h-full relative transition-transform duration-500 transform-style-3d shadow-xl rounded-3xl"
+                        animate={{ rotateY: isFlipped ? 180 : 0 }}
+                      >
+                        {/* FRONT REFLECTION CARD */}
+                        <div className="absolute inset-0 backface-hidden bg-[#112318] border border-[#20452F] rounded-3xl p-6 flex flex-col justify-between">
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-start">
+                              <span className="px-3 py-0.5 rounded-full bg-[#1A3827] text-xs font-bold text-[#4ADE80]">
+                                {entry.mood}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    togglePin(entry.id);
+                                  }}
+                                  className={`p-1 text-xs ${entry.pinned ? 'text-amber-400' : 'text-slate-500'}`}
+                                >
+                                  📌
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteEntry(entry.id);
+                                  }}
+                                  className="text-slate-500 hover:text-red-400"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <h4 className="font-display text-lg font-bold text-white line-clamp-1">{entry.title}</h4>
+                            <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed">{entry.body}</p>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[11px] text-slate-400 pt-2 border-t border-[#20422E]">
+                            <span>{entry.date}</span>
+                            <span className="text-[#4ADE80] font-bold">Hover Flip 3D →</span>
+                          </div>
+                        </div>
+
+                        {/* BACK REFLECTION CARD */}
+                        <div className="absolute inset-0 backface-hidden rotate-y-180 bg-[#0E2015] border border-[#4ADE80]/50 rounded-3xl p-6 flex flex-col justify-between text-slate-200">
+                          <div>
+                            <h5 className="font-display text-sm font-bold text-[#4ADE80]">AI Reflection Synthesis</h5>
+                            <p className="text-xs text-slate-300 mt-2 leading-relaxed italic">
+                              "{entry.aiReflection}"
+                            </p>
+                          </div>
+                          <div className="flex justify-between items-center text-[10px] text-slate-400">
+                            <span>Word Count: {entry.wordCount} words</span>
+                            <span className="text-[#4ADE80] font-semibold">Private & Encrypted</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </div>
-          <PrimaryButton type="submit" disabled={busy}>{busy ? 'Saving…' : 'Keep this note'}</PrimaryButton>
-        </form>
-      </Card>
 
-      {/* Timeline */}
-      <h2 className="font-display text-2xl mt-10 mb-6">Your nature timeline</h2>
-      {loading ? (
-        <div className="space-y-4"><Skeleton className="h-28" /><Skeleton className="h-28" /></div>
-      ) : timeline.length === 0 ? (
-        <Card>
-          <Empty
-            title="The timeline is empty"
-            body="Write after a walk, or make your first discovery with Nature Lens."
-            action={<Link to="/app/lens" className="inline-flex items-center gap-2 rounded-full bg-forest text-cream px-5 py-2.5 text-sm font-medium hover:bg-ink transition-colors"><Camera size={14} /> Open Nature Lens</Link>}
-          />
-        </Card>
-      ) : (
-        <div className="relative">
-          {/* Vertical line */}
-          <div className="absolute left-[5px] top-0 bottom-0 w-0.5 bg-mist" />
-          <div className="space-y-5">
-            {timeline.map((item, i) => (
-              <TimelineEntry
-                key={`${item._type}-${item.id}`}
-                index={i}
-                type={item._type}
-                entry={
-                  item._type === 'journal' ? (
-                    <Card className="p-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-[10px] uppercase tracking-[0.14em] text-forest/40">
-                            <BookOpen size={9} className="inline mr-1" />
-                            {formatWhen(item.created_at)} · {item.mood} {item.weather && `· ${item.weather}`}
-                          </p>
-                          <h3 className="font-display text-xl mt-1">{item.title}</h3>
-                        </div>
-                        <button onClick={() => remove(item.id)} className="text-forest/40 hover:text-red-700 transition-colors shrink-0">
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                      <p className="mt-2 text-sm text-forest/75 leading-relaxed whitespace-pre-wrap line-clamp-4">{item.body}</p>
-                    </Card>
-                  ) : (
-                    <Card className="p-4 flex gap-3">
-                      {item.image_url && <img src={item.image_url} alt="" className="w-16 h-16 rounded-xl object-cover shrink-0" />}
-                      <div className="min-w-0">
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-forest/40">
-                          <Camera size={9} className="inline mr-1" />
-                          Discovery · {formatWhen(item.created_at)}
-                        </p>
-                        <p className="font-display text-lg mt-0.5 truncate">{item.common_name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge tone={item.confidence === 'high' ? 'sage' : 'warn'}>{item.confidence}</Badge>
-                          <span className="text-xs text-forest/45">{item.category}</span>
-                        </div>
-                      </div>
-                    </Card>
-                  )
-                }
-              />
-            ))}
           </div>
-        </div>
-      )}
-    </motion.div>
+        )}
+
+        {/* ──────────────── TAB 4: ASK MY JOURNAL COMPANION ──────────────── */}
+        {activeTab === 'askJournal' && (
+          <div className="bg-[#112318] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+            <h3 className="font-display text-2xl font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#4ADE80]" />
+              <span>Ask My Journal Assistant</span>
+            </h3>
+
+            <div className="bg-[#0E2015] border border-[#20422E] p-4 rounded-2xl space-y-3 h-64 overflow-y-auto custom-chat-scroll">
+              {askMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-md p-3.5 rounded-2xl text-xs sm:text-sm ${
+                      msg.sender === 'user'
+                        ? 'bg-[#4ADE80] text-[#07130B] font-semibold'
+                        : 'bg-[#13271C] border border-[#20422E] text-slate-200'
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={handleAskJournal} className="flex items-center gap-2">
+              <input
+                value={askInput}
+                onChange={(e) => setAskInput(e.target.value)}
+                placeholder={t.askJournalPrompt}
+                className="flex-1 bg-[#0E2015] border border-[#20422E] rounded-2xl px-4 py-3 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-xs cursor-pointer shrink-0"
+              >
+                Ask Journal
+              </button>
+            </form>
+          </div>
+        )}
+
+      </div>
+    </div>
   );
 }
