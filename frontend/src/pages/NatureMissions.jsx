@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   Sparkles, ShieldCheck, Trophy, Flame, Zap, Target, Clock, CheckCircle2, 
   ChevronRight, Play, Plus, Trash2, X, Wand2, Compass, MapPin, Award, 
-  RotateCcw, ArrowLeft, Check, Layers, AlertCircle, BarChart2, Star
+  RotateCcw, ArrowLeft, Check, Layers, AlertCircle, BarChart2, Star, Radio
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,11 +12,11 @@ import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 // Multilingual UI Translations for Mission Control Universe
 const MISSION_TRANSLATIONS = {
   en: {
-    heroTag: 'AI MISSION CONTROL CENTER',
-    heroTitle: 'Your Ecological Adventure Path',
-    heroSubtitle: 'Complete personalized AI challenges, earn XP, build daily streaks, and master urban biodiversity.',
+    heroTag: 'TACTICAL MISSION HUD',
+    heroTitle: 'Ecological Adventure Path',
+    heroSubtitle: 'Complete personalized challenges, earn XP, build daily streaks, and master urban biodiversity.',
     createMissionBtn: 'Create Custom Mission',
-    generateAIBtn: '✨ Generate AI Challenge',
+    generateAIBtn: '⚡ Generate Challenge',
     tabPath: '🗺️ Mission Path',
     tabActive: '⚡ Active Missions',
     tabCompleted: '🏆 Completed',
@@ -26,7 +26,7 @@ const MISSION_TRANSLATIONS = {
     catCreativity: '🎨 Creativity',
     catExploration: '🌍 Exploration',
     catGoals: '🎯 Personal Goals',
-    catAI: '🤖 AI Challenges',
+    catAI: '🤖 Challenges',
     diffEasy: '🟢 Easy',
     diffMedium: '🟡 Medium',
     diffHard: '🔴 Hard',
@@ -42,21 +42,21 @@ const MISSION_TRANSLATIONS = {
     aiAssistantHint: 'Need a hint or breakdown for this step?',
   },
   gu: {
-    heroTag: 'એઆઈ મિશન કંટ્રોલ સેન્ટર',
-    heroTitle: 'તમારો ઇકોલોજીકલ એડવેન્ચર પાથ',
-    heroSubtitle: 'વ્યક્તિગત એઆઈ પડકારો પૂર્ણ કરો, XP કમાઓ, દૈનિક શ્રેણી બનાવો અને શહેરી જૈવવિવિધતામાં પ્રાવીણ્ય મેળવો.',
+    heroTag: 'ટેક્ટિકલ મિશન એચયુડી',
+    heroTitle: 'ઇકોલોજીકલ એડવેન્ચર પાથ',
+    heroSubtitle: 'વ્યક્તિગત પડકારો પૂર્ણ કરો, XP કમાઓ, દૈનિક શ્રેણી બનાવો અને શહેરી જૈવવિવિધતામાં પ્રાવીણ્ય મેળવો.',
     createMissionBtn: 'કસ્ટમ મિશન બનાવો',
-    generateAIBtn: '✨ એઆઈ મિશન બનાવો',
+    generateAIBtn: '⚡ પડકાર જનરેટ કરો',
     tabPath: '🗺️ મિશન પાથ',
     tabActive: '⚡ સક્રિય મિશનો',
     tabCompleted: '🏆 પૂર્ણ કરેલ',
     tabCreate: '✍️ કસ્ટમ ક્રિએટર',
     catLearning: '📚 શિક્ષણ',
-    catProductivity: '⚡ ઉત્પાકતા',
+    catProductivity: '⚡ ઉત્પાદકતા',
     catCreativity: '🎨 સર્જનાત્મકતા',
     catExploration: '🌍 સંશોધન',
     catGoals: '🎯 લક્ષ્યો',
-    catAI: '🤖 એઆઈ પડકારો',
+    catAI: '🤖 પડકારો',
     diffEasy: '🟢 સરળ',
     diffMedium: '🟡 મધ્યમ',
     diffHard: '🔴 કઠિન',
@@ -72,11 +72,11 @@ const MISSION_TRANSLATIONS = {
     aiAssistantHint: 'આ પગલા માટે સંકેત જોઈએ છે?',
   },
   hi: {
-    heroTag: 'एआई मिशन कंट्रोल सेंटर',
-    heroTitle: 'आपका पारिस्थितिक साहसिक पथ',
-    heroSubtitle: 'व्यक्तिगत एआई चुनौतियों को पूरा करें, XP कमाएं, दैनिक स्ट्रीक बनाएं और शहरी जैव विविधता में महारत हासिल करें।',
+    heroTag: 'टैक्टिकल मिशन एचयूडी',
+    heroTitle: 'पारिस्थितिक साहसिक पथ',
+    heroSubtitle: 'व्यक्तिगत चुनौतियों को पूरा करें, XP कमाएं, दैनिक स्ट्रीक बनाएं और शहरी जैव विविधता में महारत हासिल करें।',
     createMissionBtn: 'कस्टम मिशन बनाएं',
-    generateAIBtn: '✨ एआई मिशन बनाएं',
+    generateAIBtn: '⚡ चुनौती बनाएं',
     tabPath: '🗺️ मिशन पथ',
     tabActive: '⚡ सक्रिय मिशन',
     tabCompleted: '🏆 पूरा किया गया',
@@ -86,7 +86,7 @@ const MISSION_TRANSLATIONS = {
     catCreativity: '🎨 रचनात्मकता',
     catExploration: '🌍 खोज',
     catGoals: '🎯 व्यक्तिगत लक्ष्य',
-    catAI: '🤖 एआई चुनौतियां',
+    catAI: '🤖 चुनौतियां',
     diffEasy: '🟢 आसान',
     diffMedium: '🟡 मध्यम',
     diffHard: '🔴 कठिन',
@@ -103,7 +103,7 @@ const MISSION_TRANSLATIONS = {
   },
 };
 
-// Seed Missions with Detailed Action Steps & Dynamic XP
+// Seed Missions
 const SEED_MISSIONS = [
   {
     id: 'm-101',
@@ -112,7 +112,7 @@ const SEED_MISSIONS = [
     difficulty: '🟢 Easy',
     duration: '10 min',
     xpReward: 100,
-    status: 'in_progress', // not_started, in_progress, completed
+    status: 'in_progress',
     steps: [
       { id: 's1', text: 'Find a shaded Banyan or Peepal tree near your location', done: true },
       { id: 's2', text: 'Stand quietly for 5 minutes without phone distractions', done: true },
@@ -140,7 +140,7 @@ const SEED_MISSIONS = [
   {
     id: 'm-103',
     title: 'Identify Night Moth Visitors Near Light',
-    category: 'AI Challenges',
+    category: 'Challenges',
     difficulty: '🔴 Hard',
     duration: '20 min',
     xpReward: 250,
@@ -196,11 +196,8 @@ export default function NatureMissions() {
   });
 
   const [streakDays, setStreakDays] = useState(7);
-  const [activeTab, setActiveTab] = useState('path'); // path, active, completed, create
+  const [activeTab, setActiveTab] = useState('path');
   const [selectedMission, setSelectedMission] = useState(null);
-  const [flippedCardId, setFlippedCardId] = useState(null);
-
-  // Modals
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [generatePrompt, setGeneratePrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -228,7 +225,6 @@ export default function NatureMissions() {
         const allDone = updatedSteps.every((s) => s.done);
         const nextStatus = allDone ? 'completed' : 'in_progress';
 
-        // Add XP reward if completed just now
         if (allDone && m.status !== 'completed') {
           setTotalXP((xp) => xp + m.xpReward);
         }
@@ -246,12 +242,11 @@ export default function NatureMissions() {
     if (!generatePrompt.trim()) return;
 
     setIsGenerating(true);
-
     setTimeout(() => {
       const newMission = {
         id: `m-${Date.now()}`,
         title: generatePrompt.trim(),
-        category: 'AI Challenges',
+        category: 'Challenges',
         difficulty: '🟡 Medium',
         duration: '15 min',
         xpReward: 150,
@@ -320,7 +315,7 @@ export default function NatureMissions() {
   return (
     <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
       
-      {/* ──────────────── GENERATE AI MISSION MODAL ──────────────── */}
+      {/* ──────────────── GENERATE MISSION MODAL ──────────────── */}
       <AnimatePresence>
         {showGenerateModal && (
           <motion.div
@@ -339,10 +334,10 @@ export default function NatureMissions() {
             >
               <div className="flex justify-between items-center border-b border-[#20452F] pb-3">
                 <h3 className="font-display text-xl font-bold text-white flex items-center gap-2">
-                  <Wand2 className="w-5 h-5 text-[#4ADE80]" />
-                  <span>Generate AI Challenge</span>
+                  <Zap className="w-5 h-5 text-[#4ADE80]" />
+                  <span>Generate Challenge</span>
                 </h3>
-                <button onClick={() => setShowGenerateModal(false)} className="text-slate-400 hover:text-white">
+                <button onClick={() => setShowGenerateModal(false)} className="text-slate-400 hover:text-white cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -367,7 +362,7 @@ export default function NatureMissions() {
                   disabled={isGenerating}
                   className="w-full py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] cursor-pointer shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <Zap className="w-4 h-4" />
                   <span>{isGenerating ? 'Synthesizing Mission…' : 'Generate Mission'}</span>
                 </button>
               </form>
@@ -379,39 +374,38 @@ export default function NatureMissions() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── HERO BANNER ──────────────── */}
-        <div className="relative bg-gradient-to-r from-[#0E2316] via-[#112D1B] to-[#0A1A10] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden">
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30 text-xs font-bold uppercase tracking-widest">
-                <Target className="w-3.5 h-3.5 text-[#4ADE80] animate-pulse" />
-                {t.heroTag}
+        {/* ──────────────── RADICAL UNIQUE HEADER 2: CYBERPUNK TACTICAL HUD COMMAND STRIP (NO GREEN RECTANGLE) ──────────────── */}
+        <div className="relative border-l-4 border-[#4ADE80] pl-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-[#0E2015]/40 backdrop-blur-md rounded-r-2xl border-y border-r border-[#20452F]">
+          <div className="space-y-1 max-w-xl">
+            <div className="flex items-center gap-2">
+              <Radio className="w-3.5 h-3.5 text-[#4ADE80] animate-pulse" />
+              <span className="text-[10px] font-mono font-bold text-[#4ADE80] uppercase tracking-widest">
+                {t.heroTag} // STATUS: ACTIVE
               </span>
-              <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-                {t.heroTitle}
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
-                {t.heroSubtitle}
-              </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowGenerateModal(true)}
-                className="px-5 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer"
-              >
-                <Wand2 className="w-4 h-4" />
-                <span>{t.generateAIBtn}</span>
-              </motion.button>
-            </div>
+            <h1 className="font-display text-4xl sm:text-5xl font-black text-white tracking-tight">
+              {t.heroTitle}
+            </h1>
+
+            <p className="text-xs text-slate-300 font-normal leading-relaxed">
+              {t.heroSubtitle}
+            </p>
           </div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowGenerateModal(true)}
+            className="px-6 py-3 rounded-xl bg-[#4ADE80] text-[#07130B] font-mono font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <Zap className="w-4 h-4" />
+            <span>{t.generateAIBtn}</span>
+          </motion.button>
         </div>
 
         {/* ──────────────── XP REACTOR & STREAK STATUS BAR ──────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          
           <div className="bg-[#0E2015] border border-[#20422E] p-5 rounded-3xl flex items-center justify-between shadow-xl">
             <div>
               <p className="text-xs font-bold text-[#4ADE80] uppercase tracking-wider">{t.levelTitle}</p>
@@ -443,7 +437,6 @@ export default function NatureMissions() {
               🎯
             </div>
           </div>
-
         </div>
 
         {/* ──────────────── NAVIGATION TABS ──────────────── */}
@@ -473,9 +466,8 @@ export default function NatureMissions() {
           <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative overflow-hidden">
             <h3 className="font-display text-2xl font-bold text-white">Ecological Checkpoint Mission Trail</h3>
 
-            {/* Checkpoint Path Nodes */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {missions.map((mission, idx) => {
+              {missions.map((mission) => {
                 const isSelected = selectedMission?.id === mission.id;
                 const isDone = mission.status === 'completed';
                 const completedStepsCount = mission.steps.filter((s) => s.done).length;
@@ -553,13 +545,12 @@ export default function NatureMissions() {
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-                <button onClick={() => setSelectedMission(null)} className="text-slate-400 hover:text-white">
+                <button onClick={() => setSelectedMission(null)} className="text-slate-400 hover:text-white cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            {/* Mission Action Steps Checklist */}
             <div className="space-y-3">
               <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">Action Steps & Checklist</p>
 
@@ -588,103 +579,7 @@ export default function NatureMissions() {
                 </div>
               ))}
             </div>
-
-            {/* AI Assistant Hint Box */}
-            <div className="bg-[#0E2015] border border-[#20422E] p-4 rounded-2xl space-y-2">
-              <button
-                onClick={() => toggleAIHint(selectedMission.id)}
-                className="text-xs font-bold text-[#4ADE80] hover:underline flex items-center gap-1.5 cursor-pointer"
-              >
-                <Wand2 className="w-4 h-4" />
-                <span>{t.aiAssistantHint}</span>
-              </button>
-
-              {selectedMission.hintOpened && (
-                <motion.p
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-xs text-slate-300 italic pt-1 leading-relaxed"
-                >
-                  💡 AI Tip: "{selectedMission.aiHint}"
-                </motion.p>
-              )}
-            </div>
           </motion.div>
-        )}
-
-        {/* ──────────────── TAB 4: CUSTOM MISSION CREATOR ──────────────── */}
-        {activeTab === 'create' && (
-          <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-            <h3 className="font-display text-2xl font-bold text-white">Create Custom Mission</h3>
-
-            <form onSubmit={handleCreateCustomMission} className="space-y-4">
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
-                  Mission Title
-                </label>
-                <input
-                  required
-                  value={customTitle}
-                  onChange={(e) => setCustomTitle(e.target.value)}
-                  placeholder="e.g., Build a native plant seed jar"
-                  className="w-full bg-[#13271C] border border-[#20422E] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
-                    Category
-                  </label>
-                  <select
-                    value={customCategory}
-                    onChange={(e) => setCustomCategory(e.target.value)}
-                    className="w-full bg-[#13271C] border border-[#20422E] rounded-2xl px-3 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
-                  >
-                    <option value="Learning">📚 Learning</option>
-                    <option value="Productivity">⚡ Productivity</option>
-                    <option value="Creativity">🎨 Creativity</option>
-                    <option value="Exploration">🌍 Exploration</option>
-                    <option value="Personal Goals">🎯 Personal Goals</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
-                    Difficulty
-                  </label>
-                  <select
-                    value={customDifficulty}
-                    onChange={(e) => setCustomDifficulty(e.target.value)}
-                    className="w-full bg-[#13271C] border border-[#20422E] rounded-2xl px-3 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
-                  >
-                    <option value="🟢 Easy">🟢 Easy (+100 XP)</option>
-                    <option value="🟡 Medium">🟡 Medium (+180 XP)</option>
-                    <option value="🔴 Hard">🔴 Hard (+250 XP)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
-                    Duration
-                  </label>
-                  <input
-                    value={customDuration}
-                    onChange={(e) => setCustomDuration(e.target.value)}
-                    placeholder="15 min"
-                    className="w-full bg-[#13271C] border border-[#20422E] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] cursor-pointer shadow-lg"
-              >
-                Save Custom Mission
-              </button>
-            </form>
-          </div>
         )}
 
       </div>
