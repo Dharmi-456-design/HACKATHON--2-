@@ -16,10 +16,13 @@
       (function() {
         try {
           var t = localStorage.getItem('np-theme');
-          if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          var isDark = t === 'dark' || !t;
+          if (isDark) {
             document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.classList.add('dark');
           } else {
             document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.classList.remove('dark');
           }
         } catch(e) {}
       })();

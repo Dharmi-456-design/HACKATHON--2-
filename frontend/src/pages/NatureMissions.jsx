@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
@@ -313,8 +314,12 @@ export default function NatureMissions() {
     { rank: 1, name: user?.name || 'You', xp: `${totalXP.toLocaleString()} XP`, streak: `${streakDays} Day${streakDays === 1 ? '' : 's'}`, badge: 'Your Mission Path' },
   ];
 
+  const { isDark } = useTheme();
+
   return (
-    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+    }`}>
       
       {/* ──────────────── GENERATE MISSION MODAL ──────────────── */}
       <AnimatePresence>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch } from '../lib/api';
 import { useLiveLocation, calculateHaversineDistance, formatDistance, formatTravelTime } from '../hooks/useLiveLocation';
 
@@ -324,8 +325,12 @@ export default function Places() {
     return true;
   });
 
+  const { isDark } = useTheme();
+
   return (
-    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+    }`}>
       
       {/* ──────────────── VIEW ALL PLACES MODAL DRAWER ──────────────── */}
       <AnimatePresence>

@@ -1,6 +1,7 @@
 import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion';
 import { Star, ShieldCheck, ChevronRight } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 import ReviewsModal from './ReviewsModal';
 
 const REVIEWS = [
@@ -168,10 +169,12 @@ export default function HorizontalReviewsTicker() {
   const cardsY = useTransform(smoothProgress, [0, 0.15], [35, 0]);
   const cardsOpacity = useTransform(smoothProgress, [0, 0.1], [0.3, 1]);
 
+  const { isDark } = useTheme();
+
   return (
     <>
       {/* Outer Section - Pinning duration tuned to 120vh to guarantee zero empty space between sections */}
-      <div ref={targetRef} className="relative h-[120vh] bg-[#0E1E15] text-white">
+      <div ref={targetRef} className={`relative h-[120vh] transition-colors duration-300 ${isDark ? 'bg-[#0E1E15] text-white' : 'bg-[#F4F7F4] text-slate-900'}`}>
         
         {/* Sticky Viewport Container - Pins section while user completes Card 1 -> Card 10 */}
         <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-6 px-6 sm:px-12 select-none">
@@ -179,10 +182,12 @@ export default function HorizontalReviewsTicker() {
           {/* Header Bar */}
           <div className="max-w-7xl w-full mx-auto flex items-end justify-between z-20 pt-2 shrink-0">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-wider mb-2">
+              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-wider mb-2 ${
+                isDark ? 'bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B]' : 'bg-emerald-800/15 border border-emerald-800/30 text-emerald-800'
+              }`}>
                 <ShieldCheck size={14} /> VERIFIED COMMUNITY IMPACT
               </div>
-              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
+              <h2 className={`font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 Loved by 12,000+ urban explorers
               </h2>
             </div>
@@ -190,7 +195,9 @@ export default function HorizontalReviewsTicker() {
             {/* Read All Reviews Button */}
             <button
               onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] text-sm font-semibold border border-white/20 transition-all cursor-pointer shadow-lg hover:scale-[1.03] shrink-0"
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border transition-all cursor-pointer shadow-lg hover:scale-[1.03] shrink-0 ${
+                isDark ? 'bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] border-white/20' : 'bg-slate-900/10 hover:bg-[#1C3727] text-slate-900 hover:text-white border-slate-900/20'
+              }`}
             >
               Read all reviews <ChevronRight size={16} />
             </button>
