@@ -17,15 +17,13 @@ function GoogleIcon() {
 }
 
 export default function Login() {
-  const { user, loading, enterDemoMode } = useAuth();
+  const { user, loading, enterDemoMode, exitDemoMode } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
-
-  if (!loading && user) return <Navigate to="/app" replace />;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -112,6 +110,27 @@ export default function Login() {
               </Link>
             </p>
           </div>
+
+          {user && (
+            <div className="mb-5 p-4 rounded-xl bg-forest/10 border border-forest/20 text-xs flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-forest/80 font-medium truncate">Signed in as <b>{user.email || 'Current User'}</b></span>
+                <button
+                  type="button"
+                  onClick={exitDemoMode}
+                  className="text-red-600 hover:underline font-semibold ml-2 shrink-0 cursor-pointer"
+                >
+                  Sign out
+                </button>
+              </div>
+              <Link
+                to="/app"
+                className="w-full text-center py-2 rounded-lg bg-forest text-cream font-semibold hover:bg-ink transition-colors"
+              >
+                Go to Dashboard →
+              </Link>
+            </div>
+          )}
 
           {/* google button */}
           <button

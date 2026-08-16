@@ -92,7 +92,7 @@ export default function BiodiversityPassport() {
     if (!token) return;
     try {
       const d = await apiFetch('/api/discoveries', {}, token);
-      setDiscoveries(d);
+      setDiscoveries(Array.isArray(d) ? d : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load passport');
     } finally {
@@ -102,8 +102,9 @@ export default function BiodiversityPassport() {
 
   useEffect(() => { load(); }, [load]);
 
+  const safeDiscoveries = Array.isArray(discoveries) ? discoveries : [];
   const byCategory = CATEGORIES.reduce((acc, cat) => {
-    acc[cat] = discoveries.filter((d) => d.category === cat);
+    acc[cat] = safeDiscoveries.filter((d) => d && d.category === cat);
     return acc;
   }, {});
 

@@ -36,8 +36,8 @@ function Gate({ children }) {
       return;
     }
     apiFetch('/api/profile', {}, session.access_token)
-      .then((p) => setOnboarded(!!p.onboarding_complete))
-      .catch(() => setOnboarded(false))
+      .then((p) => setOnboarded(p?.onboarding_complete !== false))
+      .catch(() => setOnboarded(true))
       .finally(() => setReady(true));
   }, [session, loading]);
 

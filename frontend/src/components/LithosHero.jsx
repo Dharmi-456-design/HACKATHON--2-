@@ -8,63 +8,20 @@ const BG_IMAGE_2 = "https://images.higgs.ai/?default=1&output=webp&url=https%3A%
 const SPOTLIGHT_R = 260;
 
 function RevealLayer({ image, cursorX, cursorY }) {
-  const canvasRef = useRef(null);
-  const [maskUrl, setMaskUrl] = useState('');
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const updateSize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-
-    updateSize();
-    window.addEventListener('resize', updateSize);
-
-    return () => window.removeEventListener('resize', updateSize);
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || cursorX === -999 || cursorY === -999) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const grad = ctx.createRadialGradient(cursorX, cursorY, 0, cursorX, cursorY, SPOTLIGHT_R);
-    grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    grad.addColorStop(0.4, 'rgba(255, 255, 255, 1)');
-    grad.addColorStop(0.6, 'rgba(255, 255, 255, 0.75)');
-    grad.addColorStop(0.75, 'rgba(255, 255, 255, 0.4)');
-    grad.addColorStop(0.88, 'rgba(255, 255, 255, 0.12)');
-    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(cursorX, cursorY, SPOTLIGHT_R, 0, Math.PI * 2);
-    ctx.fill();
-
-    setMaskUrl(canvas.toDataURL());
-  }, [cursorX, cursorY]);
+  const active = cursorX !== -999 && cursorY !== -999;
+  const maskStyle = active
+    ? `radial-gradient(circle ${SPOTLIGHT_R}px at ${cursorX}px ${cursorY}px, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.12) 88%, rgba(0,0,0,0) 100%)`
+    : 'none';
 
   return (
-    <>
-      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ display: 'none' }} />
-      <div
-        className="absolute inset-0 bg-center bg-cover bg-no-repeat z-30 pointer-events-none"
-        style={{
-          backgroundImage: `url(${image})`,
-          maskImage: maskUrl ? `url(${maskUrl})` : 'none',
-          WebkitMaskImage: maskUrl ? `url(${maskUrl})` : 'none',
-          maskSize: '100% 100%',
-          WebkitMaskSize: '100% 100%',
-        }}
-      />
-    </>
+    <div
+      className="absolute inset-0 bg-center bg-cover bg-no-repeat z-30 pointer-events-none"
+      style={{
+        backgroundImage: `url(${image})`,
+        maskImage: maskStyle,
+        WebkitMaskImage: maskStyle,
+      }}
+    />
   );
 }
 
@@ -93,13 +50,18 @@ export default function LithosHero() {
 
     const loop = () => {
       if (mouseRef.current.x !== -999) {
-        if (smoothRef.current.x === -999) {
-          smoothRef.current = { ...mouseRef.current };
-        } else {
-          smoothRef.current.x += (mouseRef.current.x - smoothRef.current.x) * 0.1;
-          smoothRef.current.y += (mouseRef.current.y - smoothRef.current.y) * 0.1;
+        const prev = smoothRef.current;
+        const next =
+          prev.x === -999
+            ? { ...mouseRef.current }
+            : {
+                x: prev.x + (mouseRef.current.x - prev.x) * 0.1,
+                y: prev.y + (mouseRef.current.y - prev.y) * 0.1,
+              };
+        smoothRef.current = next;
+        if (prev.x === -999 || Math.abs(next.x - prev.x) > 0.5 || Math.abs(next.y - prev.y) > 0.5) {
+          setCursorPos({ x: next.x, y: next.y });
         }
-        setCursorPos({ x: smoothRef.current.x, y: smoothRef.current.y });
       }
       rafRef.current = requestAnimationFrame(loop);
     };
