@@ -127,7 +127,7 @@ export default function NatureMissions() {
     setError('');
     try {
       const data = await apiFetch('/api/missions', {}, token);
-      setMissions(data);
+      setMissions(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load missions');
     } finally {

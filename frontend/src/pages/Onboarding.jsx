@@ -6,10 +6,10 @@ import { PulseOrb, Field, inputCls, PrimaryButton, ErrorBanner } from '../compon
 import ThemeToggle from '../components/ThemeToggle';
 
 export default function Onboarding() {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const nav = useNavigate();
   const token = session?.access_token;
-  const [name, setName] = useState('');
+  const [name, setName] = useState(user?.user_metadata?.full_name || user?.user_metadata?.name || '');
   const [city, setCity] = useState('Portland');
   const [region, setRegion] = useState('Oregon');
   const [minutes, setMinutes] = useState(20);
@@ -28,6 +28,27 @@ export default function Onboarding() {
       })
       .catch(() => {});
   }, [token, nav]);
+
+  const handleSkip = async () => {
+    try {
+      await apiFetch(
+        '/api/profile',
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            display_name: name.trim() || 'Explorer',
+            city: city.trim() || 'Portland',
+            region: region.trim() || 'Oregon',
+            available_minutes: minutes,
+            interests,
+            onboarding_complete: true,
+          }),
+        },
+        token
+      );
+    } catch {}
+    nav('/app', { replace: true });
+  };
 
   const toggle = (i) => {
     setInterests((prev) => (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]));
@@ -111,9 +132,18 @@ export default function Onboarding() {
             </div>
           </div>
         </div>
-        <PrimaryButton type="submit" disabled={busy} className="w-full mt-8">
-          {busy ? 'Preparing your first missions…' : 'Enter the field'}
-        </PrimaryButton>
+        <div className="mt-8 space-y-3">
+          <PrimaryButton type="submit" disabled={busy} className="w-full">
+            {busy ? 'Preparing your first missions…' : 'Enter the field →'}
+          </PrimaryButton>
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="w-full text-center text-xs text-forest/50 hover:text-forest transition-colors py-2 cursor-pointer"
+          >
+            Skip for now &amp; go directly to Dashboard →
+          </button>
+        </div>
       </form>
     </div>
   );

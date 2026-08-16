@@ -16,7 +16,8 @@ export default function Act() {
   const load = useCallback(async () => {
     if (!token) return;
     try {
-      setActions(await apiFetch('/api/actions', {}, token));
+      const data = await apiFetch('/api/actions', {}, token);
+      setActions(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load actions');
     } finally {
@@ -33,7 +34,7 @@ export default function Act() {
     setError('');
     try {
       const data = await apiFetch('/api/actions', { method: 'POST', body: JSON.stringify({ generate: true, minutes }) }, token);
-      setActions(data);
+      setActions(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not generate');
     } finally {
@@ -50,8 +51,9 @@ export default function Act() {
     }
   };
 
-  const suggested = actions.filter((a) => a.status !== 'completed');
-  const done = actions.filter((a) => a.status === 'completed');
+  const safeActions = Array.isArray(actions) ? actions : [];
+  const suggested = safeActions.filter((a) => a && a.status !== 'completed');
+  const done = safeActions.filter((a) => a && a.status === 'completed');
 
   return (
     <div className="max-w-5xl mx-auto px-5 py-8">
