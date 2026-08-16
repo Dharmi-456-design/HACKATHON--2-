@@ -3,7 +3,8 @@ import { useInView, animate } from 'framer-motion';
 
 export default function AnimatedStatCard({ value, label, suffix = '', prefix = '' }) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  // Only trigger when at least 50% of the stat card is clearly inside the viewport
+  const isInView = useInView(ref, { amount: 0.5, once: true });
   const [displayValue, setDisplayValue] = useState(0);
 
   // Extract numeric target from values like "12k+", "450+", "80k", "100%"
@@ -15,15 +16,20 @@ export default function AnimatedStatCard({ value, label, suffix = '', prefix = '
   useEffect(() => {
     if (!isInView) return;
 
-    const controls = animate(0, numericTarget, {
-      duration: 2.2,
-      ease: [0.16, 1, 0.3, 1], // Custom cubic-bezier for smooth acceleration & friction ease-out
-      onUpdate(latest) {
-        setDisplayValue(Math.floor(latest));
-      },
-    });
+    // Short 250ms delay after scrolling into view so user catches the start of the counter!
+    const timer = setTimeout(() => {
+      const controls = animate(0, numericTarget, {
+        duration: 2.2,
+        ease: [0.16, 1, 0.3, 1], // Cubic-bezier for smooth acceleration & ease-out finish
+        onUpdate(latest) {
+          setDisplayValue(Math.floor(latest));
+        },
+      });
 
-    return () => controls.stop();
+      return () => controls.stop();
+    }, 250);
+
+    return () => clearTimeout(timer);
   }, [isInView, numericTarget]);
 
   return (
