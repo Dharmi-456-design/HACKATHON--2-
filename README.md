@@ -17,7 +17,6 @@
 [![Express](https://img.shields.io/badge/Express-4.21-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com)
 [![Gemini AI](https://img.shields.io/badge/Gemini-Vision_AI-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev)
-[![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_DB-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 <br/>
@@ -39,7 +38,7 @@ In modern urban life, people walk past living ecosystems every day without a sim
 
 **NaturePulse solves this with a two-tier architecture:**
 1. **NaturePulse Web Application (`/frontend`)**: An immersive, dark-themed React 19 SPA featuring a spotlight spotlight reveal hero, 3D flip card loops, interactive AI species vision (Nature Lens), spatial radar compass for 7 curated local sanctuaries, and 5-dimensional nature connection telemetry.
-2. **GreenWatch Engine & REST API (`/backend`)**: A robust Node.js + Express + MongoDB backend empowering citizens to report local environmental issues (*water logging, illegal dumping, canopy damage*), track status resolution (`reported` → `acknowledged` → `in_progress` → `resolved`), and participate in civic stewardship.
+2. **GreenWatch Engine & REST API (`/backend`)**: A Node.js + Express + MongoDB backend powering both the NaturePulse app (auth, missions, journal, actions, discoveries, community, AI) and GreenWatch civic reporting (litter, pollution, illegal dumping tracked `reported` → `acknowledged` → `in_progress` → `resolved`).
 
 ---
 
@@ -301,10 +300,10 @@ cp .env.example .env
 
 Configure your `frontend/.env` file:
 ```env
-VITE_SUPABASE_URL=https://your-supabase-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-VITE_API_URL=http://localhost:5000/api
+# Backend API base URL (defaults to http://localhost:5000 when unset)
+VITE_API_URL=http://localhost:5000
+# Set to "true" only to run with fabricated sample data and no backend calls
+VITE_DEMO_MODE=false
 ```
 
 Start the Vite development server:

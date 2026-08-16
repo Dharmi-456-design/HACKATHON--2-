@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
+import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Weekly Recap
@@ -109,14 +110,17 @@ export default function WeeklyRecap() {
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = RECAP_TRANSLATIONS[lang] || RECAP_TRANSLATIONS.en;
+  const token = session?.access_token;
+  const demoMode = isDemoMode();
 
   // Active States
   const [activeTab, setActiveTab] = useState('timeline'); // timeline, topics, goals, archive
-  const [selectedDayNode, setSelectedDayNode] = useState(WEEKLY_TIMELINE_NODES[2]); // Default Wednesday
+  const [selectedDayNode, setSelectedDayNode] = useState(null);
   const [flippedCardId, setFlippedCardId] = useState(null);
 
   // Weekly Goals State
   const [goals, setGoals] = useState(() => {
+    if (!demoMode) return [];
     try {
       const saved = localStorage.getItem('pulse_weekly_goals_v1');
       return saved
@@ -135,13 +139,113 @@ export default function WeeklyRecap() {
   const [showGoalInput, setShowGoalInput] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
+  // Real weekly data (non-demo mode)
+  const [recap, setRecap] = useState(null);
+  const [dayCounts, setDayCounts] = useState({});
+
+  useEffect(() => {
+    if (demoMode || !token) return;
+    apiFetch('/api/weekly-recap', {}, token).then(setRecap).catch(() => {});
+    apiFetch('/api/discoveries', {}, token)
+      .then((list) => {
+        if (!Array.isArray(list)) return;
+        const counts = {};
+        const start = new Date();
+        start.setHours(0, 0, 0, 0);
+        start.setDate(start.getDate() - 6);
+        const startKey = start.toISOString().slice(0, 10);
+        for (const d of list) {
+          const key = new Date(d.createdAt || d.created_at).toISOString().slice(0, 10);
+          if (key >= startKey) counts[key] = (counts[key] || 0) + 1;
+        }
+        setDayCounts(counts);
+      })
+      .catch(() => {});
+  }, [demoMode, token]);
+
   useEffect(() => {
     localStorage.setItem('pulse_weekly_goals_v1', JSON.stringify(goals));
   }, [goals]);
 
-  // Compute Stats from saved state if available
-  const totalMessagesCount = WEEKLY_TIMELINE_NODES.reduce((a, b) => a + b.messages, 0);
-  const totalChatsCount = WEEKLY_TIMELINE_NODES.reduce((a, b) => a + b.chats, 0);
+  // Build the 7-day nodes from real per-day observation counts (non-demo)
+  const weekNodes = demoMode
+    ? WEEKLY_TIMELINE_NODES
+    : (() => {
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const out = [];
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() - 6);
+        for (let i = 0; i < 7; i++) {
+          const key = d.toISOString().slice(0, 10);
+          const count = dayCounts[key] || 0;
+          out.push({
+            day: dayNames[d.getDay()],
+            fullDay: d.toLocaleDateString('en-US', { weekday: 'long' }),
+            chats: count,
+            messages: 0,
+            obs: count,
+            topTopic: '',
+            intensity: Math.min(100, count * 30),
+            highlight: count ? `${count} observation${count === 1 ? '' : 's'} recorded` : 'No observations recorded',
+          });
+          d.setDate(d.getDate() + 1);
+        }
+        return out;
+      })();
+
+  const totalSpecies = recap?.total_species || 0;
+  const totalDays = recap?.total_days || 0;
+  const speciesNames = recap?.slides?.[1]?.species_list || [];
+
+  const totalChatsCount = demoMode
+    ? WEEKLY_TIMELINE_NODES.reduce((a, b) => a + b.chats, 0)
+    : totalSpecies;
+  const totalMessagesCount = demoMode
+    ? WEEKLY_TIMELINE_NODES.reduce((a, b) => a + b.messages, 0)
+    : totalDays;
+
+  const mostActiveKey = Object.keys(dayCounts).reduce((a, b) => (dayCounts[a] >= dayCounts[b] ? a : b), '');
+  const mostActiveDay = mostActiveKey ? new Date(mostActiveKey).toLocaleDateString('en-US', { weekday: 'long' }) : '—';
+  const mostActiveCount = mostActiveKey ? dayCounts[mostActiveKey] : 0;
+
+  const summaryTitle = demoMode ? t.aiSummaryTitle : 'Weekly Activity Summary';
+  const summaryText = demoMode
+    ? t.aiSummaryText
+    : totalSpecies > 0
+      ? `You recorded ${totalSpecies} species across ${totalDays} day${totalDays === 1 ? '' : 's'} this week${speciesNames.length ? ', including ' + speciesNames.slice(0, 3).join(', ') : ''}.`
+      : 'No observations recorded this week yet. Head out with the Lens to make your first discovery.';
+
+  const weekLabel = (() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 6);
+    const fmt = (x) => x.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `Week of ${fmt(start)} – ${fmt(new Date())}`;
+  })();
+
+  const ecoScore = demoMode ? '98%' : `${Math.round((totalDays / 7) * 100)}%`;
+  const ecoSubtitle = demoMode ? '7 Days Active 🔥' : `${totalDays} Day${totalDays === 1 ? '' : 's'} Active`;
+
+  const topicNodes = demoMode
+    ? TOPIC_NODES
+    : speciesNames.map((s, i) => ({
+        id: `sp-${i}`,
+        name: s,
+        count: 1,
+        percent: 100,
+        color: 'from-[#4ADE80] to-[#254B35]',
+        desc: 'Species recorded this week',
+      }));
+
+  const archiveItems = demoMode
+    ? [
+        { week: 'Aug 10 - Aug 16, 2026', chats: '27 Chats', top: 'Photosynthesis & Canopy', status: 'Current Week' },
+        { week: 'Aug 03 - Aug 09, 2026', chats: '22 Chats', top: 'Migratory Sunbirds', status: 'Completed' },
+        { week: 'Jul 27 - Aug 02, 2026', chats: '19 Chats', top: 'Micro-climate Research', status: 'Completed' },
+      ]
+    : [];
+
+  const activeNode = selectedDayNode || weekNodes[weekNodes.length - 1];
 
   // Toggle Goal Status
   const toggleGoal = (id) => {
@@ -168,17 +272,16 @@ export default function WeeklyRecap() {
   const handleExportRecap = () => {
     setIsExporting(true);
     setTimeout(() => {
-      const summaryText = `🌱 Nature Pulse Weekly Recap (${new Date().toLocaleDateString()})
-• Total Conversations: ${totalChatsCount}
-• Messages Exchanged: ${totalMessagesCount}
-• Most Active Day: Wednesday (6 chats)
-• Top Topic: Nature & Botany
-• Active Streak: 7 Days 🔥`;
+      const summaryText2 = `🌱 Nature Pulse Weekly Recap (${new Date().toLocaleDateString()})
+• Species Logged: ${totalSpecies}
+• Active Days: ${totalDays}
+${mostActiveDay !== '—' ? `• Most Active Day: ${mostActiveDay} (${mostActiveCount} observations)` : ''}
+• Top Species: ${speciesNames.slice(0, 3).join(', ') || 'None yet'}`;
 
-      navigator.clipboard.writeText(summaryText);
+      navigator.clipboard.writeText(summaryText2);
       alert('Weekly Recap Summary copied to clipboard!');
       setIsExporting(false);
-    }, 1000);
+    }, 300);
   };
 
   return (
@@ -235,12 +338,12 @@ export default function WeeklyRecap() {
 
             <div className="w-40 h-40 rounded-full bg-gradient-to-br from-[#1A3827] via-[#0E2015] to-[#040B06] border-2 border-[#4ADE80] flex flex-col items-center justify-center text-center shadow-2xl relative z-10 space-y-0.5">
               <span className="text-[10px] uppercase font-bold text-slate-400">Eco Score</span>
-              <span className="font-display text-4xl font-extrabold text-[#4ADE80] tracking-tight">98%</span>
-              <span className="text-[10px] text-emerald-300 font-semibold">7 Days Active 🔥</span>
+              <span className="font-display text-4xl font-extrabold text-[#4ADE80] tracking-tight">{ecoScore}</span>
+              <span className="text-[10px] text-emerald-300 font-semibold">{ecoSubtitle}</span>
             </div>
 
             {/* 7 Orbiting Weekday Satellite Nodes */}
-            {WEEKLY_TIMELINE_NODES.map((n, idx) => {
+            {weekNodes.map((n, idx) => {
               const angle = (idx * 360) / 7;
               const rad = (angle * Math.PI) / 180;
               const radius = 115; // px from center
@@ -252,11 +355,11 @@ export default function WeeklyRecap() {
                   onClick={() => setSelectedDayNode(n)}
                   style={{ transform: `translate(${x}px, ${y}px)` }}
                   className={`absolute w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-bold transition-all cursor-pointer z-20 ${
-                    selectedDayNode.day === n.day
+                    activeNode.day === n.day
                       ? 'bg-[#4ADE80] text-[#07130B] border-white shadow-lg shadow-[#4ADE80]/40 scale-125'
                       : 'bg-[#13271C] text-slate-200 border-[#20422E] hover:border-[#4ADE80]'
                   }`}
-                  title={`${n.fullDay}: ${n.chats} chats`}
+                  title={`${n.fullDay}: ${n.chats} ${demoMode ? 'chats' : 'observations'}`}
                 >
                   {n.day[0]}
                 </button>
@@ -271,15 +374,15 @@ export default function WeeklyRecap() {
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-[#4ADE80] animate-pulse" />
-              <h3 className="font-display text-lg sm:text-xl font-bold text-white">{t.aiSummaryTitle}</h3>
+              <h3 className="font-display text-lg sm:text-xl font-bold text-white">{summaryTitle}</h3>
             </div>
             <p className="text-xs sm:text-sm text-slate-200 italic font-normal leading-relaxed">
-              "{t.aiSummaryText}"
+              "{summaryText}"
             </p>
           </div>
 
           <span className="px-3.5 py-1.5 rounded-full bg-[#1A3827] text-xs font-semibold text-[#4ADE80] border border-[#4ADE80]/40 shrink-0">
-            Week of Aug 10 - Aug 16
+            {weekLabel}
           </span>
         </div>
 
@@ -291,26 +394,30 @@ export default function WeeklyRecap() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-xs font-semibold text-[#4ADE80] uppercase tracking-wider">{t.mostActiveDay}</p>
-                <h3 className="font-display text-3xl sm:text-4xl font-extrabold text-white mt-1">Wednesday</h3>
+                <h3 className="font-display text-3xl sm:text-4xl font-extrabold text-white mt-1">{demoMode ? 'Wednesday' : mostActiveDay}</h3>
               </div>
               <span className="px-3 py-1 rounded-full bg-[#1A3827] text-xs text-[#4ADE80] border border-[#4ADE80]/30 font-bold">
-                6 Chats · 24 Messages
+                {demoMode ? '6 Chats · 24 Messages' : `${mostActiveCount} Observation${mostActiveCount === 1 ? '' : 's'}`}
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-              Peak activity recorded between 6:00 PM and 8:30 PM discussing Urban Micro-climates and Canopy Shade.
+              {demoMode
+                ? 'Peak activity recorded between 6:00 PM and 8:30 PM discussing Urban Micro-climates and Canopy Shade.'
+                : mostActiveDay !== '—'
+                  ? `Most of this week's observations were recorded on ${mostActiveDay}.`
+                  : 'No observations recorded yet this week.'}
             </p>
           </div>
 
           {/* Capsule 2: Vertical Interaction Velocity */}
           <div className="bg-[#0E2015] border border-[#20422E] hover:border-[#4ADE80]/60 rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-4 transition-all">
             <div>
-              <p className="text-xs font-semibold text-[#4ADE80] uppercase tracking-wider">{t.totalChats}</p>
-              <h3 className="font-display text-3xl font-extrabold text-white mt-1">{totalChatsCount} Chats</h3>
-              <p className="text-xs text-emerald-400 font-medium mt-1">+18% vs Last Week</p>
+              <p className="text-xs font-semibold text-[#4ADE80] uppercase tracking-wider">{demoMode ? t.totalChats : 'Species Logged'}</p>
+              <h3 className="font-display text-3xl font-extrabold text-white mt-1">{totalChatsCount} {demoMode ? 'Chats' : 'Species'}</h3>
+              {demoMode && <p className="text-xs text-emerald-400 font-medium mt-1">+18% vs Last Week</p>}
             </div>
             <div className="border-t border-[#20422E] pt-3 text-[11px] text-slate-400">
-              High interaction across Nature Lens & Pulse Chat.
+              {demoMode ? 'High interaction across Nature Lens & Pulse Chat.' : 'Field observations logged in the past 7 days.'}
             </div>
           </div>
 
@@ -344,8 +451,8 @@ export default function WeeklyRecap() {
             <h3 className="font-display text-2xl font-bold text-white">S-Curve Weekly Timeline Journey</h3>
 
             <div className="grid grid-cols-7 gap-2 sm:gap-4 items-center">
-              {WEEKLY_TIMELINE_NODES.map((node) => {
-                const isSelected = selectedDayNode.day === node.day;
+              {weekNodes.map((node) => {
+                const isSelected = activeNode.day === node.day;
                 return (
                   <motion.button
                     key={node.day}
@@ -362,30 +469,30 @@ export default function WeeklyRecap() {
                     <div className="w-7 h-7 rounded-full bg-[#1A3827] border border-[#4ADE80] flex items-center justify-center text-[10px] font-bold text-white">
                       {node.chats}
                     </div>
-                    <span className="text-[10px] text-slate-400">{node.messages} msgs</span>
+                    <span className="text-[10px] text-slate-400">{demoMode ? `${node.messages} msgs` : `${node.obs} obs`}</span>
                   </motion.button>
                 );
               })}
             </div>
 
-            {selectedDayNode && (
+            {activeNode && (
               <motion.div
-                key={selectedDayNode.day}
+                key={activeNode.day}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-[#13271C] border border-[#4ADE80]/40 rounded-2xl p-5 space-y-3"
               >
                 <div className="flex justify-between items-center border-b border-[#20422E] pb-3">
                   <div>
-                    <h4 className="font-display text-lg font-bold text-white">{selectedDayNode.fullDay} Activity Breakdown</h4>
-                    <p className="text-xs text-slate-400">Focus: {selectedDayNode.topTopic}</p>
+                    <h4 className="font-display text-lg font-bold text-white">{activeNode.fullDay} Activity Breakdown</h4>
+                    <p className="text-xs text-slate-400">Focus: {activeNode.topTopic || 'Field observations'}</p>
                   </div>
                   <span className="px-3 py-1 rounded-full bg-[#1A3827] text-xs font-bold text-[#4ADE80] border border-[#4ADE80]/30">
-                    {selectedDayNode.intensity}% Intensity
+                    {activeNode.intensity}% Intensity
                   </span>
                 </div>
 
-                <p className="text-sm text-slate-200 font-medium">💡 Highlight: {selectedDayNode.highlight}</p>
+                <p className="text-sm text-slate-200 font-medium">💡 Highlight: {activeNode.highlight}</p>
               </motion.div>
             )}
           </div>
@@ -396,8 +503,13 @@ export default function WeeklyRecap() {
           <div className="bg-[#0E2015] border border-[#20422E] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
             <h3 className="font-display text-2xl font-bold text-white">Topic Constellation Galaxy</h3>
 
+            {topicNodes.length === 0 ? (
+              <p className="text-xs text-slate-400 bg-[#13271C] border border-dashed border-[#20422E] rounded-2xl p-6 text-center">
+                Record a few observations this week and the species you find will appear here.
+              </p>
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {TOPIC_NODES.map((tNode) => (
+              {topicNodes.map((tNode) => (
                 <motion.div
                   key={tNode.id}
                   whileHover={{ scale: 1.04 }}
@@ -415,6 +527,7 @@ export default function WeeklyRecap() {
                 </motion.div>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -492,12 +605,13 @@ export default function WeeklyRecap() {
           <div className="bg-[#0E2015] border border-[#20422E] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
             <h3 className="font-display text-2xl font-bold text-white">Recap Vault Archive</h3>
 
+            {archiveItems.length === 0 ? (
+              <p className="text-xs text-slate-400 bg-[#13271C] border border-dashed border-[#20422E] rounded-2xl p-6 text-center">
+                Weekly recaps are generated from your real observations. Your archive will appear here after your first week with Nature Pulse.
+              </p>
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { week: 'Aug 10 - Aug 16, 2026', chats: '27 Chats', top: 'Photosynthesis & Canopy', status: 'Current Week' },
-                { week: 'Aug 03 - Aug 09, 2026', chats: '22 Chats', top: 'Migratory Sunbirds', status: 'Completed' },
-                { week: 'Jul 27 - Aug 02, 2026', chats: '19 Chats', top: 'Micro-climate Research', status: 'Completed' },
-              ].map((arc, idx) => (
+              {archiveItems.map((arc, idx) => (
                 <div key={idx} className="bg-[#13271C] border border-[#20422E] p-5 rounded-2xl space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-[#4ADE80]">{arc.week}</span>
@@ -510,6 +624,7 @@ export default function WeeklyRecap() {
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 

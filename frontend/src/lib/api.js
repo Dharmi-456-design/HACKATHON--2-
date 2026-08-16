@@ -1,6 +1,24 @@
 import { isDemoMode, DEMO_SPECIES } from '../utils/demoMode';
 
-// In-memory mock state for demo mode
+const TOKEN_KEY = 'np_token';
+
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || '';
+}
+
+export function setToken(token) {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+export function clearToken() {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+// ── Demo mode mock state (ONLY used when demo mode is explicitly enabled) ────
 let mockProfile = {
   display_name: 'Demo Explorer',
   city: 'Portland',
@@ -15,6 +33,7 @@ let mockDiscoveries = DEMO_SPECIES.map((s, idx) => ({
   common_name: s.common_name,
   scientific_name: s.scientific_name,
   confidence: s.confidence,
+  confidence_pct: s.confidence_pct,
   category: s.category,
   description: s.description,
   why_it_matters: s.why_it_matters,
@@ -23,12 +42,6 @@ let mockDiscoveries = DEMO_SPECIES.map((s, idx) => ({
   city: 'Portland',
   created_at: new Date(Date.now() - idx * 86400000).toISOString(),
   is_public: true,
-  image_url:
-    idx === 0
-      ? 'https://images.unsplash.com/photo-1555532538-dcdbd01d373d?w=600&q=80'
-      : idx === 1
-      ? 'https://images.unsplash.com/photo-1596073413225-300dd1d416c2?w=600&q=80'
-      : 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600&q=80',
 }));
 
 let mockMissions = [
@@ -62,6 +75,7 @@ let mockMissions = [
     duration_minutes: 20,
     status: 'scheduled',
     location_hint: 'Porch light or park lamp',
+    why_it_matters: 'Moths are essential nocturnal pollinators often overlooked.',
     scheduled_date: new Date().toISOString().slice(0, 10),
   },
 ];
@@ -131,74 +145,6 @@ let mockStories = [
 
 let mockPulse = [];
 
-export async function callGeminiDirectly({ prompt, imageBase64, contentType, language = 'en', json = false }) {
-  const key = import.meta.env.VITE_GEMINI_API_KEY || '';
-  if (!key) return null;
-
-  const models = ['gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'];
-  const parts = [];
-
-  let formattedPrompt = prompt;
-  if (language && language !== 'en') {
-    formattedPrompt += ` (Please reply in ${language === 'gu' ? 'Gujarati' : language === 'hi' ? 'Hindi' : language} language)`;
-  }
-
-  if (formattedPrompt) parts.push({ text: formattedPrompt });
-  if (imageBase64) {
-    parts.push({
-      inline_data: {
-        mime_type: contentType || 'image/jpeg',
-        data: imageBase64,
-      },
-    });
-  }
-
-  const body = {
-    contents: [{ role: 'user', parts }],
-    generationConfig: {
-      temperature: json ? 0.2 : 0.6,
-      maxOutputTokens: 2048,
-      ...(json ? { responseMimeType: 'application/json' } : {}),
-    },
-    systemInstruction: {
-      parts: [
-        {
-          text: `You are Pulse, the guide inside NaturePulse, an AI-powered Nature Relationship Platform.
-Your purpose is to help people notice, understand, experience, and care for the living world already around them.
-Voice: calm, encouraging, intelligent, practical. Never preachy, never cute, never corporate.
-Speak in grounded paragraphs. Prefer specific sensory cues over slogans.
-Never invent a species identification, toxicity claim, rarity status, or exact location.
-If you are unsure, say so and describe only what is knowable.
-Offer one clear next step when useful. Keep replies under 180 words unless the user asks for more.`
-        }
-      ]
-    }
-  };
-
-  for (const model of models) {
-    try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
-        if (text) {
-          if (json) {
-            try { return JSON.parse(text); } catch(e) {}
-          }
-          return text;
-        }
-      }
-    } catch(e) {
-      console.warn(`Gemini client fallback trying next model after ${model}:`, e.message);
-    }
-  }
-  return null;
-}
-
 async function getMockData(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
   let body = {};
@@ -207,11 +153,14 @@ async function getMockData(path, options = {}) {
   } catch {}
 
   if (path.startsWith('/api/stories')) {
+    if (path.endsWith('/generate') || path.endsWith('/assist')) {
+      return { success: true, story: mockStories[0] };
+    }
     if (method === 'POST') {
       const newStory = {
         id: `s-${Date.now()}`,
-        title: 'Thread of Urban Adaptation',
-        narrative: 'Across your latest notes, native flora and urban wildlife show an interconnected rhythm.',
+        title: body.title || 'Thread of Urban Adaptation',
+        narrative: body.narrative || 'Across your latest notes, native flora and urban wildlife show an interconnected rhythm.',
         created_at: new Date().toISOString(),
       };
       mockStories = [newStory, ...mockStories];
@@ -225,32 +174,7 @@ async function getMockData(path, options = {}) {
   }
 
   if (path.startsWith('/api/analyze')) {
-    const key = import.meta.env.VITE_GEMINI_API_KEY || '';
-    if (body.imageBase64) {
-      try {
-        const parts = [
-          { text: 'Analyze this outdoor photograph for Nature Lens. Return ONLY JSON with fields: identified (boolean), confidence ("high"|"medium"|"low"|"uncertain"), common_name (string or null), scientific_name (string or null), category ("plant"|"bird"|"insect"|"fungi"|"mammal"|"habitat"|"water"|"other"), visible_features (array of strings), description (string), why_it_matters (string), experience_suggestion (string), ecological_role (string), uncertainty_note (string or null).' },
-          { inline_data: { mime_type: body.contentType || 'image/jpeg', data: body.imageBase64 } }
-        ];
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${key}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts }],
-            generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
-          })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const raw = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            return { ...parsed, ai_available: true };
-          }
-        }
-      } catch (e) {}
-    }
-    return demoAnalyze(body.imageBase64);
+    return { ...DEMO_SPECIES[Math.floor(Math.random() * DEMO_SPECIES.length)], ai_available: false };
   }
 
   if (path.startsWith('/api/pulse')) {
@@ -261,22 +185,10 @@ async function getMockData(path, options = {}) {
         content: body.content || '[Attached Image Observation]',
         created_at: new Date().toISOString(),
       };
-
-      let replyContent = await callGeminiDirectly({
-        prompt: body.content || 'Look at this observation and describe what you notice.',
-        imageBase64: body.imageBase64,
-        contentType: body.contentType,
-        language: body.language || 'en',
-      });
-
-      if (!replyContent) {
-        replyContent = 'I noticed your observation. Let us explore the fine living details of the flora and fauna in your area.';
-      }
-
       const assistantMsg = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: replyContent,
+        content: 'Demo Mode: this reply is a sample. Connect to the live server for real Pulse responses.',
         created_at: new Date().toISOString(),
       };
       mockPulse = [...mockPulse, userMsg, assistantMsg];
@@ -301,13 +213,27 @@ async function getMockData(path, options = {}) {
   }
 
   if (path.startsWith('/api/missions')) {
+    if (path.startsWith('/api/missions/') && method === 'PATCH') {
+      const id = path.split('/').pop();
+      mockMissions = mockMissions.map((m) => (m.id === id ? { ...m, ...body } : m));
+      return mockMissions.find((m) => m.id === id);
+    }
+    if (method === 'POST') {
+      const mission = { id: `m-${Date.now()}`, ...body, scheduled_date: new Date().toISOString().slice(0, 10) };
+      mockMissions = [mission, ...mockMissions];
+      return mission;
+    }
     if (method === 'PUT' && body.id) {
-      mockMissions = mockMissions.map((m) => (m.id === body.id ? { ...m, status: 'completed' } : m));
+      mockMissions = mockMissions.map((m) => (m.id === body.id ? { ...m, ...body } : m));
     }
     return mockMissions;
   }
 
   if (path.startsWith('/api/places')) {
+    if (method === 'GET' && path.split('/').length === 4) {
+      const id = path.split('/').pop();
+      return mockPlaces.find((p) => p.id === id) || { error: 'Place not found' };
+    }
     return mockPlaces;
   }
 
@@ -322,7 +248,7 @@ async function getMockData(path, options = {}) {
       return newDisc;
     }
     if (method === 'DELETE') {
-      mockDiscoveries = mockDiscoveries.filter((d) => d.id !== body.id);
+      mockDiscoveries = mockDiscoveries.filter((d) => d.id !== (body.id || path.split('/').pop()));
       return { success: true };
     }
     return mockDiscoveries;
@@ -339,20 +265,39 @@ async function getMockData(path, options = {}) {
     if (method === 'POST') {
       const entry = { id: `j-${Date.now()}`, created_at: new Date().toISOString(), ...body };
       mockJournal = [entry, ...mockJournal];
-      return mockJournal;
+      return entry;
     }
     if (method === 'DELETE') {
-      mockJournal = mockJournal.filter((j) => j.id !== body.id);
+      mockJournal = mockJournal.filter((j) => j.id !== (body.id || path.split('/').pop()));
       return mockJournal;
     }
     return mockJournal;
   }
 
   if (path.startsWith('/api/actions')) {
+    if (path.startsWith('/api/actions/')) {
+      const id = path.split('/').pop();
+      if (method === 'PATCH') {
+        mockActions = mockActions.map((a) => (a.id === id ? { ...a, ...body } : a));
+        return mockActions.find((a) => a.id === id);
+      }
+      if (method === 'DELETE') {
+        mockActions = mockActions.filter((a) => a.id !== id);
+        return { success: true };
+      }
+    }
+    if (method === 'POST') {
+      const action = { id: `a-${Date.now()}`, ...body };
+      mockActions = [action, ...mockActions];
+      return action;
+    }
     return mockActions;
   }
 
   if (path.startsWith('/api/community')) {
+    if (method === 'POST') {
+      return { id: `post-${Date.now()}`, created_at: new Date().toISOString(), ...body };
+    }
     return mockDiscoveries.map((d) => ({
       id: d.id,
       common_name: d.common_name,
@@ -390,22 +335,42 @@ export async function apiFetch(path, options = {}, token = null) {
   const apiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   const url = `${apiUrl}${cleanPath}`;
+  const authToken = token || getToken();
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
-  try {
-    const res = await fetch(url, { ...options, headers });
-    if (res.ok) {
-      const data = await res.json().catch(() => ({}));
-      return data;
-    }
-  } catch (err) {
-    // Graceful fallback if backend is momentarily unreachable
+  if (isDemoMode()) {
+    return getMockData(path, options);
   }
-  return await getMockData(path, options);
+
+  let res;
+  try {
+    res = await fetch(url, { ...options, headers });
+  } catch (err) {
+    throw new Error('Cannot reach the NaturePulse server. Please try again.');
+  }
+
+  const data = await res.json().catch(() => ({}));
+
+  if (res.ok) return data;
+
+  if (res.status === 401 && !path.startsWith('/auth/')) {
+    clearToken();
+  }
+
+  if (data?.error) {
+    const err = new Error(data.error);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  const err = new Error(`Request failed (${res.status})`);
+  err.status = res.status;
+  err.data = data;
+  throw err;
 }
 
 export function fileToResizedBase64(file, max = 1400) {

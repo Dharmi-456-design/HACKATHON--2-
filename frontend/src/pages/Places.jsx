@@ -418,17 +418,37 @@ export default function Places() {
 
   // Build Route
   const handleBuildRoute = () => {
+    const routePlaces = dynamicPlaces.slice(0, 3);
+    if (routePlaces.length === 0) {
+      setBuiltRoute(null);
+      return;
+    }
     setIsBuildingRoute(true);
+    const now = new Date();
+    const timeString = (minsOffset) => {
+      const d = new Date(now.getTime() + minsOffset * 60000);
+      return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    };
+    let cum = 0;
+    const stops = routePlaces.map((p, i) => {
+      const durWalk = p.realDistanceKm != null ? formatTravelTime(p.realDistanceKm, 'walk') : '15 min';
+      const start = timeString(cum);
+      const durMin = parseInt(durWalk) || 15;
+      cum += durMin + 45;
+      return {
+        order: i + 1,
+        name: p.name,
+        time: `${start} - ${timeString(cum)}`,
+        note: p.whyRecommend || `Visit ${p.name}.`,
+      };
+    });
+    const totalWalk = routePlaces.reduce((s, p) => s + (p.realDistanceKm || 0), 0);
     setTimeout(() => {
       setBuiltRoute({
-        title: '2-Hour Afternoon Eco-Discovery Route',
-        duration: '2 Hours 15 Mins',
-        totalDistance: '2.8 km walking',
-        stops: [
-          { order: 1, name: 'Peepal Canopy Study Sanctuary', time: '1:00 PM - 1:45 PM', note: 'Start with quiet study under Peepal shade.' },
-          { order: 2, name: 'Sunset Hill Café', time: '1:50 PM - 2:30 PM', note: 'Coffee break & organic herbal tea.' },
-          { order: 3, name: 'Heritage Textiles Pavilion', time: '2:35 PM - 3:15 PM', note: 'Cultural art tour.' },
-        ],
+        title: `${routePlaces.length} Spot Eco-Discovery Route`,
+        duration: `${Math.max(1, Math.round(cum / 60))} hr ${cum % 60} mins`,
+        totalDistance: `${formatDistance(totalWalk)} total walking`,
+        stops,
       });
       setIsBuildingRoute(false);
       setActiveTab('route');
