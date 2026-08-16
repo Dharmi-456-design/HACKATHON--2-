@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
@@ -181,8 +182,12 @@ export default function Journal() {
     { id: 'Evening Hush', label: 'Evening Hush', icon: <Moon className="w-4 h-4 text-indigo-400" /> },
   ];
 
+  const { isDark } = useTheme();
+
   return (
-    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+    }`}>
       
       {/* ──────────────── ZEN DISTRACTION-FREE WRITING CANVAS ──────────────── */}
       <AnimatePresence>

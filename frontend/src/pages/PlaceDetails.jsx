@@ -7,6 +7,7 @@ import {
   Calendar, Wifi, Trees, Coffee, VolumeX, Heart, Layers, Eye
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch } from '../lib/api';
 
 export default function PlaceDetails() {
@@ -104,21 +105,23 @@ export default function PlaceDetails() {
     }
   };
 
+  const { isDark } = useTheme();
+
   // Loading Skeleton State
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#040B06] text-slate-100 px-4 sm:px-6 py-8">
+      <div className={`min-h-screen px-4 sm:px-6 py-8 ${isDark ? 'bg-[#040B06] text-slate-100' : 'bg-[#F8F9FA] text-slate-800'}`}>
         <div className="max-w-4xl mx-auto space-y-6 animate-pulse">
-          <div className="h-6 w-32 bg-[#13271C] rounded-xl" />
-          <div className="h-72 w-full bg-[#13271C] rounded-3xl" />
-          <div className="h-10 w-3/4 bg-[#13271C] rounded-2xl" />
+          <div className="h-6 w-32 bg-emerald-950/20 rounded-xl" />
+          <div className="h-72 w-full bg-emerald-950/20 rounded-3xl" />
+          <div className="h-10 w-3/4 bg-emerald-950/20 rounded-2xl" />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="h-20 bg-[#13271C] rounded-2xl" />
-            <div className="h-20 bg-[#13271C] rounded-2xl" />
-            <div className="h-20 bg-[#13271C] rounded-2xl" />
-            <div className="h-20 bg-[#13271C] rounded-2xl" />
+            <div className="h-20 bg-emerald-950/20 rounded-2xl" />
+            <div className="h-20 bg-emerald-950/20 rounded-2xl" />
+            <div className="h-20 bg-emerald-950/20 rounded-2xl" />
+            <div className="h-20 bg-emerald-950/20 rounded-2xl" />
           </div>
-          <div className="h-36 bg-[#13271C] rounded-3xl" />
+          <div className="h-36 bg-emerald-950/20 rounded-3xl" />
         </div>
       </div>
     );
@@ -127,15 +130,17 @@ export default function PlaceDetails() {
   // Not Found / Error State
   if (error || !place) {
     return (
-      <div className="min-h-screen bg-[#040B06] text-slate-100 flex items-center justify-center px-4 py-16">
-        <div className="max-w-md w-full text-center bg-[#0E2015] border border-[#20452F] rounded-3xl p-8 shadow-2xl space-y-5">
+      <div className={`min-h-screen flex items-center justify-center px-4 py-16 ${isDark ? 'bg-[#040B06] text-slate-100' : 'bg-[#F8F9FA] text-slate-800'}`}>
+        <div className={`max-w-md w-full text-center border rounded-3xl p-8 shadow-2xl space-y-5 ${
+          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-white border-emerald-900/15'
+        }`}>
           <div className="w-16 h-16 rounded-full bg-[#13271C] border border-[#4ADE80]/40 flex items-center justify-center mx-auto text-[#4ADE80]">
             <Compass className="w-8 h-8 animate-pulse" />
           </div>
-          <h2 className="font-display text-2xl font-bold text-white">
+          <h2 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
             {error === 'Place not found' ? 'Place Not Found' : 'Unable to Load Place'}
           </h2>
-          <p className="text-sm text-slate-300">
+          <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
             {error === 'Place not found'
               ? 'The discovery spot you are looking for does not exist or has moved.'
               : 'We could not load this discovery spot. Please verify your connection or try again.'}
@@ -162,7 +167,9 @@ export default function PlaceDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24">
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 ${
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+    }`}>
       
       {/* ──────────────── TOP NAVIGATION BAR ──────────────── */}
       <div className="border-b border-[#20452F] bg-[#0E2015]/80 backdrop-blur-md sticky top-0 z-30">
