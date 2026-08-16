@@ -111,4 +111,71 @@ const getMe = asyncHandler(async (req, res) => {
   res.json({ user });
 });
 
-module.exports = { register, login, getMe };
+const googleOAuth = asyncHandler(async (req, res, next) => {
+  const { access_token } = req.body || {};
+  if (!access_token) {
+    res.status(400);
+    throw new Error('Missing Google access token');
+  }
+
+  const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+  const anonKey = process.env.SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !anonKey) {
+    res.status(503);
+    throw new Error('Google sign-in is not configured on the server');
+  }
+
+  // Verify the Supabase session by asking GoTrue who owns this access token.
+  let sbUser;
+  try {
+    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
+    if (!response.ok) {
+      res.status(401);
+      throw new Error('Invalid or expired Google session');
+    }
+    sbUser = await response.json();
+  } catch (err) {
+    if (err.message === 'Invalid or expired Google session') throw err;
+    res.status(502);
+    throw new Error('Could not verify Google session');
+  }
+
+  const email = sbUser.email;
+  if (!email) {
+    res.status(400);
+    throw new Error('Google account has no email address');
+  }
+
+  let user = await User.findOne({ email });
+  if (!user) {
+    user = await User.create({
+      name:
+        sbUser.user_metadata?.full_name ||
+        sbUser.user_metadata?.name ||
+        email.split('@')[0] ||
+        'Explorer',
+      email,
+      provider: 'google',
+    });
+  }
+
+  const token = generateToken(user);
+
+  res.json({
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      points: user.points,
+    },
+    token,
+  });
+});
+
+module.exports = { register, login, getMe, googleOAuth };

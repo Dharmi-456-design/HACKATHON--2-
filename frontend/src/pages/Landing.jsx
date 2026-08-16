@@ -215,7 +215,7 @@ function FaqAccordionItem({ faq, index }) {
 }
 
 export default function Landing() {
-  const { user, isDemoUser } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [pulsePrompt, setPulsePrompt] = useState(
     'I have 10 minutes near a park stream. What should I observe right now?'
