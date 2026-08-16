@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Eye, Compass, BookOpen, HandHeart, RotateCcw, Sparkles, ChevronDown } from 'lucide-react';
 import { PulseOrb } from '../components/ui';
 import ThemeToggle from '../components/ThemeToggle';
-import MeasuredHero from '../components/MeasuredHero';
+import LithosHero from '../components/LithosHero';
 import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
 import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 import AnimatedStatCard from '../components/AnimatedStatCard';
@@ -263,7 +263,7 @@ export default function Landing() {
 
       {/* ────────────────────── 1. LITHOS CURSOR-FOLLOWING SPOTLIGHT HERO SECTION ────────────────────── */}
       <section id="hero">
-        <MeasuredHero />
+        <LithosHero />
       </section>
 
       {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER ────────────────────── */}
