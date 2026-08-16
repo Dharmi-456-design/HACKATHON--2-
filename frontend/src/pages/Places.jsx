@@ -105,12 +105,15 @@ const SEED_NEARBY_PLACES = [
     name: 'Peepal Canopy Study Sanctuary',
     category: 'Study',
     icon: '🎓',
+    lat: 23.0304,
+    lng: 72.5802,
     distance: '450 m',
     walkTime: '6 min walk',
     rating: 4.9,
     isOpen: true,
     hours: '7:00 AM - 9:00 PM',
     address: 'Sabarmati Riverfront Park, Block B',
+    city: 'Ahmedabad',
     mapX: 220,
     mapY: 280,
     image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=800&q=80',
@@ -122,12 +125,15 @@ const SEED_NEARBY_PLACES = [
     name: 'Sunset Hill Café',
     category: 'Cafés',
     icon: '☕',
+    lat: 23.0270,
+    lng: 72.5560,
     distance: '1.3 km',
     walkTime: '12 min walk',
     rating: 4.8,
     isOpen: true,
     hours: '8:00 AM - 10:00 PM',
     address: 'Law Garden Road, Opposite Museum',
+    city: 'Ahmedabad',
     mapX: 520,
     mapY: 310,
     image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
@@ -139,12 +145,15 @@ const SEED_NEARBY_PLACES = [
     name: 'Heritage Textiles & Art Pavilion',
     category: 'Culture',
     icon: '🏛️',
+    lat: 23.0258,
+    lng: 72.5873,
     distance: '2.1 km',
     walkTime: '8 min drive',
     rating: 4.7,
     isOpen: false,
     hours: 'Opens tomorrow 10:00 AM',
     address: 'Old City Cultural Promenade',
+    city: 'Ahmedabad',
     mapX: 440,
     mapY: 140,
     image: 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=800&q=80',
@@ -156,12 +165,15 @@ const SEED_NEARBY_PLACES = [
     name: 'Whispering Woods Nature Reserve',
     category: 'Parks',
     icon: '🌲',
+    lat: 23.0410,
+    lng: 72.5690,
     distance: '0.8 km',
     walkTime: '10 min walk',
     rating: 4.7,
     isOpen: true,
     hours: '6:00 AM - 8:00 PM',
     address: 'Eco Park North Sector',
+    city: 'Ahmedabad',
     mapX: 300,
     mapY: 120,
     image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80',
@@ -173,12 +185,15 @@ const SEED_NEARBY_PLACES = [
     name: 'Green Brew Organic Roastery',
     category: 'Cafés',
     icon: '☕',
+    lat: 23.0350,
+    lng: 72.5450,
     distance: '1.1 km',
     walkTime: '14 min walk',
     rating: 4.6,
     isOpen: true,
     hours: '8:00 AM - 9:00 PM',
     address: 'University Road Block 4',
+    city: 'Ahmedabad',
     mapX: 180,
     mapY: 340,
     image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
@@ -190,12 +205,15 @@ const SEED_NEARBY_PLACES = [
     name: 'Lotus Lake Botanical Park',
     category: 'Parks',
     icon: '🌲',
+    lat: 22.9970,
+    lng: 72.6025,
     distance: '1.6 km',
     walkTime: '20 min walk',
     rating: 4.8,
     isOpen: true,
     hours: '5:30 AM - 7:30 PM',
     address: 'East City Wetland Corridor',
+    city: 'Ahmedabad',
     mapX: 580,
     mapY: 200,
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
@@ -207,12 +225,15 @@ const SEED_NEARBY_PLACES = [
     name: 'Banyan Tree Quiet Reading Nook',
     category: 'Study',
     icon: '🎓',
+    lat: 23.0330,
+    lng: 72.5620,
     distance: '650 m',
     walkTime: '8 min walk',
     rating: 4.9,
     isOpen: true,
     hours: '24 Hours',
     address: 'Central Library Courtyard',
+    city: 'Ahmedabad',
     mapX: 380,
     mapY: 260,
     image: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=800&q=80',
@@ -220,6 +241,43 @@ const SEED_NEARBY_PLACES = [
     price: 'Free',
   },
 ];
+
+// Calculate Haversine distance in KM between two coordinates
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Earth radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function formatDistanceKm(distKm) {
+  if (distKm == null) return null;
+  if (distKm < 1) {
+    const meters = Math.round(distKm * 1000);
+    return `${meters} m`;
+  }
+  return `${distKm.toFixed(1)} km`;
+}
+
+function formatWalkTimeFromKm(distKm) {
+  if (distKm == null) return null;
+  const walkingSpeedKmH = 4.5;
+  const minutes = Math.max(1, Math.round((distKm / walkingSpeedKmH) * 60));
+  if (minutes < 60) {
+    return `${minutes} min walk`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remMin = minutes % 60;
+  return `${hours} hr ${remMin > 0 ? remMin + 'm' : ''} walk`;
+}
 
 export default function Places() {
   const navigate = useNavigate();
@@ -246,6 +304,26 @@ export default function Places() {
     }
   });
 
+  // Live Location State
+  const [userCoords, setUserCoords] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pulse_user_coords');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState(() => {
+    try {
+      return localStorage.getItem('pulse_user_coords') ? 'active' : 'idle';
+    } catch {
+      return 'idle';
+    }
+  });
+  const [locationAddress, setLocationAddress] = useState('Ahmedabad, Gujarat');
+  const [locationError, setLocationError] = useState(null);
+
   // Controls
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -257,6 +335,86 @@ export default function Places() {
   const [showAllPlacesModal, setShowAllPlacesModal] = useState(false);
   const [isBuildingRoute, setIsBuildingRoute] = useState(false);
   const [builtRoute, setBuiltRoute] = useState(null);
+
+  // Function to Request and Lock Live GPS Location
+  const requestLiveLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      setLocationStatus('error');
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationStatus('locating');
+    setLocationError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        const coords = { lat: latitude, lng: longitude, accuracy };
+        setUserCoords(coords);
+        setLocationStatus('active');
+        setIsLocating(false);
+        try {
+          localStorage.setItem('pulse_user_coords', JSON.stringify(coords));
+        } catch {}
+
+        // Reverse Geocoding with OpenStreetMap Nominatim
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (data && data.address) {
+              const loc = data.address.suburb || data.address.neighbourhood || data.address.city || data.address.town || 'Your Location';
+              setLocationAddress(`${loc}, ${data.address.state || 'Gujarat'}`);
+            }
+          })
+          .catch(() => {
+            setLocationAddress(`${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E`);
+          });
+      },
+      (err) => {
+        setIsLocating(false);
+        setLocationStatus('error');
+        let msg = 'Unable to retrieve location.';
+        if (err.code === 1) msg = 'Location permission denied. Please allow location access.';
+        else if (err.code === 2) msg = 'GPS position unavailable.';
+        else if (err.code === 3) msg = 'Location request timed out.';
+        setLocationError(msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  };
+
+  // Auto request location on first mount if not already granted
+  useEffect(() => {
+    if (navigator.geolocation && !userCoords) {
+      navigator.permissions?.query?.({ name: 'geolocation' }).then((result) => {
+        if (result.state === 'granted') {
+          requestLiveLocation();
+        }
+      }).catch(() => {});
+    }
+  }, []);
+
+  // Update places dynamically with real calculated distance from userCoords
+  useEffect(() => {
+    if (userCoords && userCoords.lat && userCoords.lng) {
+      setPlaces((prevPlaces) => {
+        return prevPlaces.map((p) => {
+          if (p.lat && p.lng) {
+            const distKm = calculateDistance(userCoords.lat, userCoords.lng, p.lat, p.lng);
+            return {
+              ...p,
+              realDistanceKm: distKm,
+              distance: formatDistanceKm(distKm) || p.distance,
+              walkTime: formatWalkTimeFromKm(distKm) || p.walkTime,
+            };
+          }
+          return p;
+        });
+      });
+    }
+  }, [userCoords]);
 
   // Sync places with API if available
   useEffect(() => {
@@ -500,18 +658,71 @@ export default function Places() {
               </p>
             </div>
 
-            {/* Build Afternoon Route Button */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleBuildRoute}
-              disabled={isBuildingRoute}
-              className="px-6 py-3.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>{isBuildingRoute ? 'Building Route…' : t.buildRouteBtn}</span>
-            </motion.button>
+            {/* Action Buttons: Live Location & Build Afternoon Route */}
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={requestLiveLocation}
+                disabled={isLocating}
+                className={`px-5 py-3.5 rounded-full font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center gap-2 cursor-pointer ${
+                  locationStatus === 'active'
+                    ? 'bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80] shadow-[#4ADE80]/20'
+                    : 'bg-[#0E2015]/90 text-white border border-[#20452F] hover:border-[#4ADE80]/60'
+                }`}
+              >
+                <Radio className={`w-4 h-4 text-[#4ADE80] ${isLocating ? 'animate-spin' : locationStatus === 'active' ? 'animate-pulse' : ''}`} />
+                <span>
+                  {isLocating
+                    ? 'Acquiring GPS…'
+                    : locationStatus === 'active'
+                    ? '📍 Live GPS Active'
+                    : '📍 Use My Live Location'}
+                </span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleBuildRoute}
+                disabled={isBuildingRoute}
+                className="px-6 py-3.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>{isBuildingRoute ? 'Building Route…' : t.buildRouteBtn}</span>
+              </motion.button>
+            </div>
           </div>
+
+          {/* Live GPS Active Status Bar if Available */}
+          {locationStatus === 'active' && userCoords && (
+            <div className="mt-4 pt-3 border-t border-[#4ADE80]/20 flex flex-wrap items-center justify-between text-xs text-slate-200 relative z-10 gap-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#4ADE80] animate-ping" />
+                <span className="font-bold text-[#4ADE80]">Live Location Locked:</span>
+                <span>{locationAddress}</span>
+                <span className="text-[10px] text-slate-400 font-mono">({userCoords.lat.toFixed(4)}°N, {userCoords.lng.toFixed(4)}°E)</span>
+              </div>
+              <button
+                onClick={requestLiveLocation}
+                className="text-[11px] text-[#4ADE80] hover:underline cursor-pointer flex items-center gap-1"
+              >
+                <RotateCcw className="w-3 h-3" /> Refresh GPS
+              </button>
+            </div>
+          )}
+
+          {locationError && (
+            <div className="mt-3 p-3 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-300 flex items-center justify-between relative z-10">
+              <span>⚠️ {locationError}</span>
+              <button
+                onClick={requestLiveLocation}
+                className="text-white underline font-bold ml-2 cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
         </div>
 
@@ -528,8 +739,17 @@ export default function Places() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.askNearbyPlaceholder}
-                className="w-full bg-[#07150C] border border-[#20422E] rounded-2xl pl-11 pr-4 py-3.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
+                className="w-full bg-[#07150C] border border-[#20422E] rounded-2xl pl-11 pr-28 py-3.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
               />
+              <button
+                onClick={requestLiveLocation}
+                disabled={isLocating}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-[#13271C] border border-[#20422E] hover:border-[#4ADE80]/60 text-[11px] font-bold text-[#4ADE80] flex items-center gap-1.5 cursor-pointer transition-all"
+                title="Get live GPS location"
+              >
+                <Radio className={`w-3 h-3 ${isLocating ? 'animate-spin' : ''}`} />
+                <span>{locationStatus === 'active' ? 'GPS ON' : 'GPS'}</span>
+              </button>
             </div>
 
             <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-[#07150C] border border-[#20422E] shrink-0">
@@ -648,17 +868,23 @@ export default function Places() {
                           ? `${selectedPlace.name}, ${selectedPlace.address || selectedPlace.city || 'Ahmedabad'}`
                           : searchQuery.trim() 
                             ? `${searchQuery}, Ahmedabad`
-                            : 'Sabarmati Riverfront Park, Ahmedabad'
-                      )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                            : userCoords
+                              ? `${userCoords.lat},${userCoords.lng}`
+                              : 'Sabarmati Riverfront Park, Ahmedabad'
+                      )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
                     />
                     
-                    {/* Active Selected Pin Overlay Badge */}
-                    {selectedPlace && (
-                      <div className="absolute top-3 left-3 bg-[#07130B]/90 backdrop-blur-md border border-[#4ADE80]/50 px-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-xl flex items-center gap-2 pointer-events-none">
-                        <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-ping" />
-                        <span>Focused: {selectedPlace.name}</span>
-                      </div>
-                    )}
+                    {/* Active Selected Pin or Live GPS Overlay Badge */}
+                    <div className="absolute top-3 left-3 bg-[#07130B]/90 backdrop-blur-md border border-[#4ADE80]/50 px-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-xl flex items-center gap-2 pointer-events-none">
+                      <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-ping" />
+                      <span>
+                        {selectedPlace
+                          ? `Focused: ${selectedPlace.name}`
+                          : userCoords
+                          ? `Live GPS: ${locationAddress}`
+                          : 'Live Discovery Map'}
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <div className="relative w-full h-[400px]">
@@ -675,8 +901,10 @@ export default function Places() {
                       className="absolute left-1/2 top-3/5 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-gradient-to-br from-[#2E6141] to-[#040B06] border-2 border-[#4ADE80] flex flex-col items-center justify-center text-center shadow-2xl z-20 cursor-pointer"
                       onClick={() => setSelectedPlace(null)}
                     >
-                      <Navigation className="w-5 h-5 text-[#4ADE80]" />
-                      <span className="text-[9px] font-bold text-white tracking-widest uppercase">YOU</span>
+                      <Navigation className={`w-5 h-5 text-[#4ADE80] ${locationStatus === 'active' ? 'rotate-45' : ''}`} />
+                      <span className="text-[9px] font-bold text-white tracking-widest uppercase">
+                        {locationStatus === 'active' ? 'GPS' : 'YOU'}
+                      </span>
                     </motion.div>
 
                     {filteredPlaces.map((place) => {
