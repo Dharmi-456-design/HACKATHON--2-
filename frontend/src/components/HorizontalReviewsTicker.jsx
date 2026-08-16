@@ -168,8 +168,8 @@ export default function HorizontalReviewsTicker() {
 
   return (
     <>
-      {/* Outer Section - Pinning duration tuned to 400vh for scroll distance */}
-      <div ref={targetRef} className="relative h-[400vh] bg-[#0E1E15] text-white">
+      {/* Outer Section - Pinning duration tuned to 250vh for faster scroll distance */}
+      <div ref={targetRef} className="relative h-[250vh] bg-[#0E1E15] text-white">
         
         {/* Sticky Viewport Container */}
         <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-center py-10 px-6 sm:px-12 select-none">
@@ -231,8 +231,8 @@ export default function HorizontalReviewsTicker() {
                         opacity: isBlur ? 0.4 : 1,
                         scale: isHovered ? 1.02 : 1,
                       }}
-                      className={`w-[320px] sm:w-[380px] h-[300px] shrink-0 bg-[#A39F98]/20 backdrop-blur-sm border border-white/10 text-white rounded-xl p-8 shadow-2xl flex flex-col justify-between transition-all duration-300 ${r.yOffset} ${
-                        isHovered ? 'shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-white/30' : ''
+                      className={`w-[320px] sm:w-[380px] h-[300px] shrink-0 bg-[#DCD8D2] border border-[#C5BFAF] text-[#1E2521] rounded-sm p-8 shadow-xl flex flex-col justify-between transition-all duration-300 ${r.yOffset} ${
+                        isHovered ? 'shadow-2xl border-[#A8A08D] bg-[#E3E0DB]' : ''
                       }`}
                     >
                       <div>
@@ -241,16 +241,16 @@ export default function HorizontalReviewsTicker() {
                             <img
                               src={r.avatar}
                               alt={r.name}
-                              className="w-12 h-12 rounded-full object-cover border border-white/20"
+                              className="w-12 h-12 rounded-full object-cover border border-[#1E2521]/10 shadow-sm"
                             />
                             <div className="flex flex-col">
-                              <h4 className="text-base font-bold text-white font-sans leading-tight">{r.name}</h4>
-                              <p className="text-xs text-white/60 font-medium">{r.handle}</p>
+                              <h4 className="text-base font-bold text-[#1E2521] font-sans leading-tight">{r.name}</h4>
+                              <p className="text-xs text-[#1E2521]/60 font-medium">{r.handle}</p>
                             </div>
                           </div>
                         </div>
 
-                        <p className="text-[15px] text-white/90 leading-relaxed font-light">
+                        <p className="text-[15px] text-[#1E2521]/90 leading-relaxed font-normal">
                           "{r.quote}"
                         </p>
                       </div>
