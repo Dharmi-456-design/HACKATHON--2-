@@ -48,10 +48,10 @@ export default function Dashboard() {
       ]);
       setProfile(p && typeof p === 'object' ? p : null);
       setScore(s && typeof s === 'object' && s.overall !== undefined ? s : EMPTY_SCORE);
-      setMissions(Array.isArray(m) ? m : []);
-      setPlaces(Array.isArray(pl) ? pl : []);
-      setDiscoveries(Array.isArray(d) ? d : []);
-      setActions(Array.isArray(a) ? a : []);
+      setMissions(Array.isArray(m) ? m.map((x) => ({ ...x, id: x.id || x._id })) : []);
+      setPlaces(Array.isArray(pl) ? pl.map((x) => ({ ...x, id: x.id || x._id })) : []);
+      setDiscoveries(Array.isArray(d) ? d.map((x) => ({ ...x, id: x.id || x._id })) : []);
+      setActions(Array.isArray(a) ? a.map((x) => ({ ...x, id: x.id || x._id })) : []);
       setStreak(st && typeof st === 'object' && typeof st.streak === 'number' ? st.streak : null);
       if (failed > 0) {
         setError('Some parts of your dashboard could not be loaded. Please check your connection and try again.');
