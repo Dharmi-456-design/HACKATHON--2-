@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Compass, ShieldCheck, Leaf, Globe, Twitter, Github, Linkedin, Mail } from 'lucide-react';
 import * as THREE from 'three';
+import { usePublicStats } from '../hooks/usePublicStats';
 
 export default function Interactive3DFooter() {
   const canvasRef = useRef(null);
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const stats = usePublicStats();
 
   // 3D Canvas Spore Field, Eco-Sphere & Ambient Ring effect
   useEffect(() => {
@@ -296,7 +298,11 @@ export default function Interactive3DFooter() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
-            <span className="font-semibold text-white/80">12,000+ Ecological Habitats Active</span>
+            <span className="font-semibold text-white/80">
+              {stats && typeof stats.habitats === 'number'
+                ? `${stats.habitats.toLocaleString()} Ecological Habitats Active`
+                : 'Ecological Habitats Active'}
+            </span>
           </div>
 
           {/* Brand Copyright */}
