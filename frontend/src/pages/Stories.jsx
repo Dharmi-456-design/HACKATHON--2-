@@ -273,8 +273,9 @@ export default function Stories() {
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [aiAssistantMode, setAIAssistantMode] = useState('');
 
-  // 3D Card Hover Tracking state
+  // 3D Card Hover & Hero Title Flip state
   const [flippedCardId, setFlippedCardId] = useState(null);
+  const [isTitleFlipped, setIsTitleFlipped] = useState(false);
 
   // New Story Form State
   const [newTitle, setNewTitle] = useState('');
@@ -723,9 +724,21 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
                 <Sparkles className="w-3.5 h-3.5 text-[#4ADE80] animate-pulse" />
                 {t.heroTag}
               </span>
-              <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-                {t.heroTitle}
-              </h1>
+              <motion.h1
+                whileHover={{ scale: 1.02, rotateX: 6 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsTitleFlipped((v) => !v)}
+                className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight cursor-pointer select-none perspective-500"
+                title="Click to flip title!"
+              >
+                <motion.span
+                  animate={{ rotateY: isTitleFlipped ? 360 : 0 }}
+                  transition={{ duration: 0.7, ease: 'easeInOut' }}
+                  className="inline-block bg-gradient-to-r from-white via-emerald-200 to-[#4ADE80] bg-clip-text text-transparent drop-shadow-md"
+                >
+                  {isTitleFlipped ? '✨ Neural Ecosystem Stories ✨' : t.heroTitle}
+                </motion.span>
+              </motion.h1>
               <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
                 {t.heroSubtitle}
               </p>
