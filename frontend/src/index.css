@@ -4,25 +4,26 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --color-cream: #F8F9FA;
-  --color-cream-deep: #EFF2EE;
-  --color-paper: #FFFFFF;
-  --color-forest: #1C3727;
-  --color-ink: #0E1E15;
-  --color-moss: #355E45;
-  --color-sage: #96CD7B;
-  --color-mist: #D9EAD4;
-  --color-gold: #E6C176;
-  --color-pistachio: #96CD7B;
-  --shadow-soft: 0 12px 40px -18px rgb(28 55 39 / 0.16);
-  --shadow-lift: 0 24px 60px -24px rgb(28 55 39 / 0.25);
-  --border-subtle: rgba(28, 55, 39, 0.08);
+  --color-cream: #FAF7F0;
+  --color-cream-deep: #EDE6D8;
+  --color-paper: #FDFBF7;
+  --color-forest: #183B28;
+  --color-ink: #0F2418;
+  --color-moss: #2D5E40;
+  --color-sage: #78B868;
+  --color-mist: #E1EFE0;
+  --color-gold: #D4A359;
+  --color-pistachio: #86CD75;
+  --shadow-soft: 0 12px 40px -18px rgb(24 59 40 / 0.14);
+  --shadow-lift: 0 24px 60px -24px rgb(24 59 40 / 0.22);
+  --border-subtle: rgba(24, 59, 40, 0.1);
   --error-bg: #FEF2F2;
   --error-text: #991B1B;
   --error-border: #FEE2E2;
 }
 
-[data-theme="dark"] {
+[data-theme="dark"],
+.dark {
   --color-cream: #0E1E15;
   --color-cream-deep: #14281C;
   --color-paper: #1B3527;
@@ -42,19 +43,19 @@
 }
 
 [data-theme="light"] {
-  --color-cream: #F8F9FA;
-  --color-cream-deep: #EFF2EE;
-  --color-paper: #FFFFFF;
-  --color-forest: #1C3727;
-  --color-ink: #0E1E15;
-  --color-moss: #355E45;
-  --color-sage: #96CD7B;
-  --color-mist: #D9EAD4;
-  --color-gold: #E6C176;
-  --color-pistachio: #96CD7B;
-  --shadow-soft: 0 12px 40px -18px rgb(28 55 39 / 0.16);
-  --shadow-lift: 0 24px 60px -24px rgb(28 55 39 / 0.25);
-  --border-subtle: rgba(28, 55, 39, 0.08);
+  --color-cream: #FAF7F0;
+  --color-cream-deep: #EDE6D8;
+  --color-paper: #FDFBF7;
+  --color-forest: #183B28;
+  --color-ink: #0F2418;
+  --color-moss: #2D5E40;
+  --color-sage: #78B868;
+  --color-mist: #E1EFE0;
+  --color-gold: #D4A359;
+  --color-pistachio: #86CD75;
+  --shadow-soft: 0 12px 40px -18px rgb(24 59 40 / 0.14);
+  --shadow-lift: 0 24px 60px -24px rgb(24 59 40 / 0.22);
+  --border-subtle: rgba(24, 59, 40, 0.1);
   --error-bg: #FEF2F2;
   --error-text: #991B1B;
   --error-border: #FEE2E2;

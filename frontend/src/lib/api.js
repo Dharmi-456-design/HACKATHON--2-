@@ -47,8 +47,8 @@ export async function apiFetch(path, options = {}, token = null) {
     clearToken();
   }
 
-  if (data?.error) {
-    const err = new Error(data.error);
+  if (data?.message || data?.error) {
+    const err = new Error(data.message || data.error);
     err.status = res.status;
     err.data = data;
     throw err;

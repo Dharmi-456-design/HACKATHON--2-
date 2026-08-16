@@ -13,6 +13,7 @@ import PricingSection from '../components/PricingSection';
 import CtaSection from '../components/CtaSection';
 import Interactive3DFooter from '../components/Interactive3DFooter';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const JOURNEY = [
   { icon: Eye, title: 'Observe', body: 'Notice what is already beside you — bark, birdsong, a wet seam of moss.' },
@@ -64,6 +65,7 @@ const FAQS = [
 
 function JourneyHoverCard({ step, i }) {
   const [isHovered, setIsHovered] = useState(false);
+  const { isDark } = useTheme();
 
   return (
     <div
@@ -91,7 +93,11 @@ function JourneyHoverCard({ step, i }) {
         {/* FRONT FACE */}
         <div
           style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-          className="absolute inset-0 w-full h-full rounded-3xl bg-[#162C20] border border-white/10 p-7 shadow-xl flex flex-col justify-between overflow-hidden group-hover:border-[#96CD7B]/50 transition-colors gpu-layer"
+          className={`absolute inset-0 w-full h-full rounded-3xl p-7 shadow-xl flex flex-col justify-between overflow-hidden transition-colors gpu-layer ${
+            isDark
+              ? 'bg-[#162C20] border border-white/10 group-hover:border-[#96CD7B]/50'
+              : 'bg-[#FDFBF7] border border-[#E3DDD1] group-hover:border-[#183B28]/50 shadow-sm'
+          }`}
         >
           {/* Top Glowing Beam */}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#96CD7B] via-[#E6C176] to-[#96CD7B] rounded-t-3xl opacity-80" />
@@ -101,21 +107,31 @@ function JourneyHoverCard({ step, i }) {
 
           <div>
             <div className="relative z-10 flex items-start justify-between mb-5">
-              <div className="w-12 h-12 rounded-2xl bg-[#96CD7B]/15 border border-[#96CD7B]/20 flex items-center justify-center text-[#96CD7B] group-hover:scale-110 transition-transform">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ${
+                isDark ? 'bg-[#96CD7B]/15 border border-[#96CD7B]/20 text-[#96CD7B]' : 'bg-[#E1EFE0] border border-[#C3DEC0] text-[#183B28]'
+              }`}>
                 <step.icon size={20} />
               </div>
-              <span className="text-xs uppercase tracking-[0.2em] font-mono font-bold text-[#96CD7B]/70 group-hover:text-[#E6C176] transition-colors">
+              <span className={`text-xs uppercase tracking-[0.2em] font-mono font-bold transition-colors ${
+                isDark ? 'text-[#96CD7B]/70 group-hover:text-[#E6C176]' : 'text-[#183B28]/70 group-hover:text-[#C89B48]'
+              }`}>
                 0{i + 1}
               </span>
             </div>
 
             <div className="relative z-10">
-              <h3 className="font-display text-2xl text-white font-semibold group-hover:text-[#96CD7B] transition-colors">{step.title}</h3>
-              <p className="mt-2 text-sm text-white/75 leading-relaxed">{step.body}</p>
+              <h3 className={`font-display text-2xl font-semibold transition-colors ${
+                isDark ? 'text-white group-hover:text-[#96CD7B]' : 'text-[#0F2418] group-hover:text-[#183B28]'
+              }`}>{step.title}</h3>
+              <p className={`mt-2 text-sm leading-relaxed ${
+                isDark ? 'text-white/75' : 'text-[#3E5C48]'
+              }`}>{step.body}</p>
             </div>
           </div>
 
-          <div className="relative z-10 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-[#96CD7B] font-semibold uppercase tracking-wider">
+          <div className={`relative z-10 pt-3 border-t flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider ${
+            isDark ? 'border-white/10 text-[#96CD7B]' : 'border-[#E3DDD1] text-[#183B28]'
+          }`}>
             <span>Hover to reveal field practice</span>
             <RotateCcw size={13} className="group-hover:rotate-180 transition-transform duration-700" />
           </div>
@@ -128,7 +144,7 @@ function JourneyHoverCard({ step, i }) {
             WebkitBackfaceVisibility: 'hidden',
             transform: 'rotateY(180deg) translateZ(1px)',
           }}
-          className="absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-br from-[#1C3727] via-[#14281C] to-[#0E1E15] p-7 border-2 border-[#96CD7B] shadow-2xl flex flex-col justify-between overflow-hidden gpu-layer"
+          className="absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-br from-[#1C3727] via-[#14281C] to-[#0E1E15] p-7 border-2 border-[#96CD7B] shadow-2xl flex flex-col justify-between overflow-hidden gpu-layer text-white"
         >
           {/* Glowing Back Accent */}
           <div className="absolute -left-10 -bottom-10 w-36 h-36 bg-[#E6C176]/20 rounded-full blur-2xl pointer-events-none" />
@@ -161,13 +177,18 @@ function JourneyHoverCard({ step, i }) {
 
 function FaqAccordionItem({ faq, index }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { isDark } = useTheme();
 
   return (
     <div
       className={`rounded-2xl border transition-all duration-300 overflow-hidden gpu-layer ${
         isOpen
-          ? 'bg-[#162E20] border-[#96CD7B]/60 shadow-[0_16px_36px_rgba(150,205,123,0.2)] -translate-y-1'
-          : 'bg-[#14281C] border-white/10 hover:border-[#96CD7B]/40'
+          ? isDark
+            ? 'bg-[#162E20] border-[#96CD7B]/60 shadow-[0_16px_36px_rgba(150,205,123,0.2)] -translate-y-1'
+            : 'bg-[#FDFBF7] border-[#183B28] shadow-md -translate-y-1'
+          : isDark
+            ? 'bg-[#14281C] border-white/10 hover:border-[#96CD7B]/40'
+            : 'bg-[#FAF7F0] border-[#E3DDD1] hover:border-[#183B28]/40 shadow-xs'
       }`}
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
@@ -180,8 +201,12 @@ function FaqAccordionItem({ faq, index }) {
         className="w-full p-6 text-left flex items-center justify-between gap-4 cursor-pointer select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#96CD7B]"
       >
         <div className="flex items-center gap-3.5">
-          <span className="text-xs font-mono font-bold text-[#E6C176]">0{index + 1}</span>
-          <h3 className={`font-display text-lg sm:text-xl font-semibold transition-colors ${isOpen ? 'text-[#96CD7B]' : 'text-white group-hover:text-[#96CD7B]'}`}>
+          <span className={`text-xs font-mono font-bold ${isDark ? 'text-[#E6C176]' : 'text-[#C89B48]'}`}>0{index + 1}</span>
+          <h3 className={`font-display text-lg sm:text-xl font-semibold transition-colors ${
+            isOpen
+              ? isDark ? 'text-[#96CD7B]' : 'text-[#183B28]'
+              : isDark ? 'text-white group-hover:text-[#96CD7B]' : 'text-[#0F2418] group-hover:text-[#183B28]'
+          }`}>
             {faq.q}
           </h3>
         </div>
@@ -189,7 +214,9 @@ function FaqAccordionItem({ faq, index }) {
         <div className="flex items-center gap-3 shrink-0">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-              isOpen ? 'bg-[#96CD7B] text-[#0A1610] rotate-180 scale-110' : 'bg-white/10 text-[#96CD7B]'
+              isOpen
+                ? isDark ? 'bg-[#96CD7B] text-[#0A1610] rotate-180 scale-110' : 'bg-[#183B28] text-white rotate-180 scale-110'
+                : isDark ? 'bg-white/10 text-[#96CD7B]' : 'bg-[#EDE6D8] text-[#183B28]'
             }`}
           >
             <ChevronDown size={18} aria-hidden="true" />
@@ -207,9 +234,13 @@ function FaqAccordionItem({ faq, index }) {
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
-            <div className="p-6 pt-0 border-t border-white/10 mt-1">
-              <div className="pt-4 pl-4 border-l-2 border-[#96CD7B] bg-white/[0.02] rounded-r-xl">
-                <p className="text-sm sm:text-base text-white/90 leading-relaxed font-normal">
+            <div className={`p-6 pt-0 border-t mt-1 ${isDark ? 'border-white/10' : 'border-[#E3DDD1]'}`}>
+              <div className={`pt-4 pl-4 border-l-2 rounded-r-xl ${
+                isDark ? 'border-[#96CD7B] bg-white/[0.02]' : 'border-[#183B28] bg-[#E1EFE0]/40'
+              }`}>
+                <p className={`text-sm sm:text-base leading-relaxed font-normal ${
+                  isDark ? 'text-white/90' : 'text-[#2D4536]'
+                }`}>
                   {faq.a}
                 </p>
               </div>
@@ -223,6 +254,7 @@ function FaqAccordionItem({ faq, index }) {
 
 export default function Landing() {
   const { user } = useAuth();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
   const [pulsePrompt, setPulsePrompt] = useState(
     'I have 10 minutes near a park stream. What should I observe right now?'
@@ -239,7 +271,9 @@ export default function Landing() {
   const [splashDone, setSplashDone] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#0A1610] text-white overflow-clip">
+    <div className={`min-h-screen transition-colors duration-300 overflow-x-hidden ${
+      isDark ? 'bg-[#0A1610] text-white' : 'bg-[#FAF7F0] text-[#0F2418]'
+    }`}>
       {/* ────────────────────── 0. INITIAL SPLASH INTRO ANIMATION ────────────────────── */}
       <SplashIntro onComplete={() => setSplashDone(true)} />
 
@@ -252,7 +286,7 @@ export default function Landing() {
         <LithosHero />
       </section>
 
-      {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER ────────────────────── */}
+      {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER & STAIRCASE CARDS ────────────────────── */}
       <section id="reviews">
         <HorizontalReviewsTicker />
       </section>
@@ -263,19 +297,27 @@ export default function Landing() {
       </section>
 
       {/* ────────────────────── 4. THE PHILOSOPHY SECTION (ENHANCED TEXT & 4-PHOTO GRID) ────────────────────── */}
-      <section className="py-10 bg-[#0E1E15] text-white select-none">
+      <section className={`py-16 transition-colors duration-300 select-none ${
+        isDark ? 'bg-[#0E1E15] text-white' : 'bg-[#F2ECE1] text-[#0F2418]'
+      }`}>
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-widest">
-              <Sparkles size={14} aria-hidden="true" /> ECOLOGICAL FOUNDATION
+            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-widest ${
+              isDark ? 'bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B]' : 'bg-[#E1EFE0] border border-[#C3DEC0] text-[#183B28]'
+            }`}>
+              <Sparkles size={14} /> ECOLOGICAL FOUNDATION
             </div>
 
             {/* Increased prominent size for "The Philosophy" */}
-            <h2 className="font-display text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white">
+            <h2 className={`font-display text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight ${
+              isDark ? 'text-white' : 'text-[#0F2418]'
+            }`}>
               The Philosophy
             </h2>
 
-            <p className="text-base sm:text-xl text-white/80 font-light leading-relaxed max-w-2xl mx-auto">
+            <p className={`text-base sm:text-xl font-light leading-relaxed max-w-2xl mx-auto ${
+              isDark ? 'text-white/80' : 'text-[#3E5C48]'
+            }`}>
               Nature connection is not about memorizing Latin names or building a streak. It is a quiet, continuous conversation with the living world right outside your doorstep.
             </p>
           </div>
@@ -290,7 +332,9 @@ export default function Landing() {
                 viewport={{ once: true }}
                 whileHover={{ y: -8, scale: 1.02 }}
                 transition={{ duration: 0.4, delay: idx * 0.1 }}
-                className="group relative rounded-3xl overflow-hidden border border-white/15 shadow-2xl h-80 bg-black/40 cursor-pointer"
+                className={`group relative rounded-3xl overflow-hidden shadow-2xl h-80 cursor-pointer ${
+                  isDark ? 'border border-white/15 bg-black/40' : 'border border-[#E3DDD1] bg-[#EDE6D8]/50'
+                }`}
               >
                 <img
                   src={photo.img}
@@ -319,14 +363,22 @@ export default function Landing() {
       </section>
 
       {/* ────────────────────── 5. THE LOOP (REBUILT 3D FLIP CARDS) ────────────────────── */}
-      <section id="journey" className="py-24 border-t border-white/10 bg-[#0E1E15] select-none">
+      <section id="journey" className={`py-24 border-t transition-colors duration-300 select-none ${
+        isDark ? 'bg-[#0E1E15] border-white/10 text-white' : 'bg-[#FAF7F0] border-[#E3DDD1] text-[#0F2418]'
+      }`}>
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <div className="max-w-3xl mb-14">
-            <p className="text-xs font-mono uppercase tracking-[0.24em] text-[#E6C176] font-semibold">The Nature Loop</p>
-            <h2 className="font-display text-4xl sm:text-6xl font-bold mt-2 text-white">
+            <p className={`text-xs font-mono uppercase tracking-[0.24em] font-semibold ${
+              isDark ? 'text-[#E6C176]' : 'text-[#C89B48]'
+            }`}>The Nature Loop</p>
+            <h2 className={`font-display text-4xl sm:text-6xl font-bold mt-2 ${
+              isDark ? 'text-white' : 'text-[#0F2418]'
+            }`}>
               A living relationship, not a gamified streak.
             </h2>
-            <p className="mt-4 text-base sm:text-lg text-white/75 font-light leading-relaxed">
+            <p className={`mt-4 text-base sm:text-lg font-light leading-relaxed ${
+              isDark ? 'text-white/75' : 'text-[#3E5C48]'
+            }`}>
               Hover over each phase to unlock practical field protocol tips crafted for urban observers.
             </p>
           </div>
@@ -340,47 +392,55 @@ export default function Landing() {
       </section>
 
       {/* ────────────────────── 6. MEET PULSE AI (REWRITTEN & INTERACTIVE DEMO) ────────────────────── */}
-      <section id="pulse" className="py-24 bg-[#14281C] text-white border-t border-white/10 select-none">
+      <section id="pulse" className={`py-24 border-t transition-colors duration-300 select-none ${
+        isDark ? 'bg-[#14281C] text-white border-white/10' : 'bg-[#EDE4D5] text-[#0F2418] border-[#D8D0BE]'
+      }`}>
         <div className="max-w-7xl mx-auto px-5 sm:px-6 grid lg:grid-cols-12 gap-12 items-center">
           
           {/* Left Description */}
           <div className="lg:col-span-6 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-widest">
+            <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-widest ${
+              isDark ? 'bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B]' : 'bg-[#E1EFE0] border border-[#C3DEC0] text-[#183B28]'
+            }`}>
               <PulseOrb size={16} /> MEET PULSE AI ASSISTANT
             </div>
 
-            <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+            <h2 className={`font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight ${
+              isDark ? 'text-white' : 'text-[#0F2418]'
+            }`}>
               Calm. Intelligent. Built for the field.
             </h2>
 
-            <p className="text-base sm:text-lg text-white/80 leading-relaxed font-light">
+            <p className={`text-base sm:text-lg leading-relaxed font-light ${
+              isDark ? 'text-white/80' : 'text-[#3E5C48]'
+            }`}>
               Pulse AI is your intelligent ecological companion. It crafts personalized daily field tasks based on your city, local weather, and what you’ve already logged. It reads photographs cautiously — when it isn’t sure, it admits it instead of guessing.
             </p>
 
             <div className="space-y-3 pt-2">
-              <div className="flex items-start gap-3 text-sm text-white/85 font-light">
-                <div className="w-5 h-5 rounded-full bg-[#96CD7B]/20 flex items-center justify-center text-[#96CD7B] shrink-0 mt-0.5">
-                  <Check size={12} />
+              {[
+                'Tailored field missions designed for 10-minute urban breaks',
+                'Cautious species vision telemetry — zero hallucinated Latin names',
+                '5-dimensional nature connection telemetry tracking',
+              ].map((feat, idx) => (
+                <div key={idx} className={`flex items-start gap-3 text-sm font-light ${
+                  isDark ? 'text-white/85' : 'text-[#2D4536]'
+                }`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                    isDark ? 'bg-[#96CD7B]/20 text-[#96CD7B]' : 'bg-[#183B28] text-white'
+                  }`}>
+                    <Check size={12} />
+                  </div>
+                  <span>{feat}</span>
                 </div>
-                <span>Tailored field missions designed for 10-minute urban breaks</span>
-              </div>
-              <div className="flex items-start gap-3 text-sm text-white/85 font-light">
-                <div className="w-5 h-5 rounded-full bg-[#96CD7B]/20 flex items-center justify-center text-[#96CD7B] shrink-0 mt-0.5">
-                  <Check size={12} />
-                </div>
-                <span>Cautious species vision telemetry — zero hallucinated Latin names</span>
-              </div>
-              <div className="flex items-start gap-3 text-sm text-white/85 font-light">
-                <div className="w-5 h-5 rounded-full bg-[#96CD7B]/20 flex items-center justify-center text-[#96CD7B] shrink-0 mt-0.5">
-                  <Check size={12} />
-                </div>
-                <span>5-dimensional nature connection telemetry tracking</span>
-              </div>
+              ))}
             </div>
 
             {/* Quick Sample Triggers */}
             <div className="pt-4 space-y-2">
-              <p className="text-xs font-mono text-[#E6C176] uppercase tracking-wider font-semibold">Try sample questions:</p>
+              <p className={`text-xs font-mono uppercase tracking-wider font-semibold ${
+                isDark ? 'text-[#E6C176]' : 'text-[#C89B48]'
+              }`}>Try sample questions:</p>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() =>
@@ -389,7 +449,11 @@ export default function Landing() {
                       'In North American urban canopies, dawn calls around 6 AM are typically Robin territorial chirps, American Goldfinch notes, and Black-capped Chickadee calls.'
                     )
                   }
-                  className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] text-xs font-medium transition-colors cursor-pointer"
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                    isDark
+                      ? 'bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610]'
+                      : 'bg-[#DCD4C4] hover:bg-[#183B28] text-[#183B28] hover:text-white'
+                  }`}
                 >
                   Dawn Avian Calls
                 </button>
@@ -400,7 +464,11 @@ export default function Landing() {
                       'Look for green cushions along damp mortar joints. True mosses have small leaf-like structures, while lichens form flat, crusty patches.'
                     )
                   }
-                  className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] text-xs font-medium transition-colors cursor-pointer"
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                    isDark
+                      ? 'bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610]'
+                      : 'bg-[#DCD4C4] hover:bg-[#183B28] text-[#183B28] hover:text-white'
+                  }`}
                 >
                   Moss Seams
                 </button>
@@ -410,18 +478,28 @@ export default function Landing() {
 
           {/* Right Live Interactive Chat Box */}
           <div className="lg:col-span-6">
-            <div className="rounded-3xl bg-[#08080A]/80 border border-white/20 p-6 shadow-2xl backdrop-blur-xl">
-              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+            <div className={`rounded-3xl p-6 shadow-2xl backdrop-blur-xl ${
+              isDark ? 'bg-[#08080A]/80 border border-white/20' : 'bg-[#FDFBF7] border border-[#DDD5C5]'
+            }`}>
+              <div className={`flex items-center gap-3 mb-6 pb-4 border-b ${
+                isDark ? 'border-white/10' : 'border-[#E3DDD1]'
+              }`}>
                 <PulseOrb size={38} />
                 <div>
-                  <h3 className="font-display text-lg font-bold text-white">Pulse AI Companion</h3>
-                  <p className="text-xs text-[#96CD7B] font-mono">Status: Connected & Field Ready</p>
+                  <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
+                    Pulse AI Companion
+                  </h3>
+                  <p className={`text-xs font-mono ${isDark ? 'text-[#96CD7B]' : 'text-[#183B28] font-semibold'}`}>
+                    Status: Connected &amp; Field Ready
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-4 mb-4">
                 {/* User Bubble */}
-                <div className="ml-auto max-w-[90%] rounded-2xl bg-white/15 p-4 text-xs sm:text-sm text-white/90 text-right leading-relaxed font-light">
+                <div className={`ml-auto max-w-[90%] rounded-2xl p-4 text-xs sm:text-sm text-right leading-relaxed font-light ${
+                  isDark ? 'bg-white/15 text-white/90' : 'bg-[#EDE5D6] text-[#0F2418] border border-[#DDD5C5]'
+                }`}>
                   {pulsePrompt}
                 </div>
 
@@ -434,9 +512,13 @@ export default function Landing() {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-white/50">
+              <div className={`pt-3 border-t flex items-center justify-between text-xs ${
+                isDark ? 'border-white/10 text-white/50' : 'border-[#E3DDD1] text-[#3E5C48]'
+              }`}>
                 <span>Interactive Live Preview</span>
-                <span className="text-[#96CD7B]">Powered by Gemini AI</span>
+                <span className={isDark ? 'text-[#96CD7B]' : 'text-[#183B28] font-semibold'}>
+                  Powered by Gemini AI
+                </span>
               </div>
             </div>
           </div>
@@ -445,22 +527,32 @@ export default function Landing() {
       </section>
 
       {/* ────────────────────── 7. DASHBOARD PREVIEW SECTION ────────────────────── */}
-      <section className="py-24 bg-[#0E1E15] text-white border-t border-white/10">
+      <section className={`py-24 border-t transition-colors duration-300 ${
+        isDark ? 'bg-[#0E1E15] text-white border-white/10' : 'bg-[#FAF7F0] text-[#0F2418] border-[#E3DDD1]'
+      }`}>
         <div className="max-w-7xl mx-auto px-5 sm:px-6 text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-widest">
+          <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-widest ${
+            isDark ? 'bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B]' : 'bg-[#E1EFE0] border border-[#C3DEC0] text-[#183B28]'
+          }`}>
             <ShieldCheck size={14} /> ECOLOGICAL HOME BASE
           </div>
 
-          <h2 className="font-display text-4xl sm:text-6xl font-bold tracking-tight text-white">
+          <h2 className={`font-display text-4xl sm:text-6xl font-bold tracking-tight ${
+            isDark ? 'text-white' : 'text-[#0F2418]'
+          }`}>
             Your NaturePulse Control Center
           </h2>
 
-          <p className="text-base sm:text-xl text-white/80 font-light max-w-3xl mx-auto leading-relaxed">
+          <p className={`text-base sm:text-xl font-light max-w-3xl mx-auto leading-relaxed ${
+            isDark ? 'text-white/80' : 'text-[#3E5C48]'
+          }`}>
             Track your 5-dimensional nature connection score, log daily species discoveries, monitor local habitat telemetry, and share verified observations with a thriving community.
           </p>
 
           {/* Rich Dashboard Screenshot Frame */}
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 max-w-5xl mx-auto mt-10 group">
+          <div className={`relative rounded-3xl overflow-hidden shadow-2xl max-w-5xl mx-auto mt-10 group border ${
+            isDark ? 'border-white/20' : 'border-[#D4CBB8]'
+          }`}>
             <img
               src="/landing_preview.jpg"
               alt="NaturePulse Dashboard Preview"
@@ -470,13 +562,15 @@ export default function Landing() {
               height="576"
               className="w-full h-auto object-cover group-hover:scale-102 transition-transform duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0A1610] via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A1610]/70 via-transparent to-transparent pointer-events-none" />
           </div>
         </div>
       </section>
 
       {/* ────────────────────── 8. STATISTICS ────────────────────── */}
-      <section className="py-20 bg-[#14281C] text-white border-t border-white/10">
+      <section className={`py-20 border-t transition-colors duration-300 ${
+        isDark ? 'bg-[#14281C] text-white border-white/10' : 'bg-[#1C3727] text-white border-emerald-950/20'
+      }`}>
         <div className="max-w-6xl mx-auto px-5 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
             { val: '12k+', label: 'Active Observers' },
@@ -490,9 +584,13 @@ export default function Landing() {
       </section>
 
       {/* ────────────────────── 9. WHY CHOOSE US (HIGH-RES NATURE PHOTO) ────────────────────── */}
-      <section className="py-24 bg-[#0E1E15] text-white border-t border-white/10">
+      <section className={`py-24 border-t transition-colors duration-300 ${
+        isDark ? 'bg-[#0E1E15] text-white border-white/10' : 'bg-[#F2ECE1] text-[#0F2418] border-[#E0D8C8]'
+      }`}>
         <div className="max-w-7xl mx-auto px-5 sm:px-6 grid lg:grid-cols-2 gap-16 items-center">
-          <div className="rounded-3xl overflow-hidden border border-white/20 shadow-2xl relative group h-[480px]">
+          <div className={`rounded-3xl overflow-hidden shadow-2xl relative group h-[480px] border ${
+            isDark ? 'border-white/20' : 'border-[#D4CBB8]'
+          }`}>
             <img
               src="/login_nature.jpg"
               alt="Calm Nature Observation Path"
@@ -505,7 +603,7 @@ export default function Landing() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A1610]/80 via-transparent to-transparent" />
             <div className="absolute bottom-6 left-6 right-6 text-white z-10">
               <span className="text-xs font-mono text-[#96CD7B] uppercase tracking-wider font-semibold">
-                Calm & Grounded Reality
+                Calm &amp; Grounded Reality
               </span>
               <p className="text-sm text-white/80 mt-1 font-light">
                 Designed to guide your eyes away from glowing screens and into living green spaces.
@@ -514,8 +612,12 @@ export default function Landing() {
           </div>
 
           <div className="space-y-6">
-            <p className="text-xs font-mono uppercase tracking-[0.24em] text-[#E6C176] font-semibold">Why Choose Us</p>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold text-white leading-tight">
+            <p className={`text-xs font-mono uppercase tracking-[0.24em] font-semibold ${
+              isDark ? 'text-[#E6C176]' : 'text-[#C89B48]'
+            }`}>Why Choose Us</p>
+            <h2 className={`font-display text-4xl sm:text-5xl font-bold leading-tight ${
+              isDark ? 'text-white' : 'text-[#0F2418]'
+            }`}>
               Designed for actual reality.
             </h2>
             <div className="space-y-6">
@@ -525,12 +627,18 @@ export default function Landing() {
                 { title: 'Scientific yet accessible', desc: 'We bridge rigorous ecological science with everyday walks, making nature understandable for everyone.' }
               ].map((b) => (
                 <div key={b.title} className="flex gap-4">
-                  <div className="w-7 h-7 rounded-full bg-[#96CD7B]/20 flex flex-shrink-0 items-center justify-center mt-1 text-[#96CD7B]">
+                  <div className={`w-7 h-7 rounded-full flex flex-shrink-0 items-center justify-center mt-1 ${
+                    isDark ? 'bg-[#96CD7B]/20 text-[#96CD7B]' : 'bg-[#183B28] text-white'
+                  }`}>
                     <ArrowRight size={14} />
                   </div>
                   <div>
-                    <h3 className="font-display text-xl text-white font-semibold">{b.title}</h3>
-                    <p className="mt-1.5 text-sm text-white/75 leading-relaxed font-light">{b.desc}</p>
+                    <h4 className={`font-display text-xl font-semibold ${
+                      isDark ? 'text-white' : 'text-[#0F2418]'
+                    }`}>{b.title}</h4>
+                    <p className={`mt-1.5 text-sm leading-relaxed font-light ${
+                      isDark ? 'text-white/75' : 'text-[#3E5C48]'
+                    }`}>{b.desc}</p>
                   </div>
                 </div>
               ))}
@@ -539,14 +647,110 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ────────────────────── 10. COMMUNITY TESTIMONIALS (CSS BORDER FIX) ────────────────────── */}
+      <section className={`py-24 border-t transition-colors duration-300 select-none ${
+        isDark ? 'bg-[#14281C] text-white border-white/10' : 'bg-[#FAF7F0] text-[#0F2418] border-[#E3DDD1]'
+      }`}>
+        <div className="max-w-7xl mx-auto px-5 sm:px-6">
+          <p className={`text-xs font-mono uppercase tracking-[0.24em] text-center font-semibold mb-2 ${
+            isDark ? 'text-[#E6C176]' : 'text-[#C89B48]'
+          }`}>
+            COMMUNITY TESTIMONIALS
+          </p>
+
+          <h2 className={`font-display text-4xl sm:text-6xl text-center mb-16 font-bold flex justify-center flex-wrap gap-x-3 sm:gap-x-4 select-none [perspective:800px] ${
+            isDark ? 'text-white' : 'text-[#0F2418]'
+          }`}>
+            {"Stories from the field.".split(" ").map((word, wIdx) => (
+              <span key={wIdx} className="inline-block whitespace-nowrap">
+                {word.split("").map((char, cIdx) => (
+                  <motion.span
+                    key={cIdx}
+                    whileHover={{ rotateY: 360, y: -8, scale: 1.25, color: isDark ? '#96CD7B' : '#1C3727' }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ transformStyle: 'preserve-3d', display: 'inline-block' }}
+                    className="inline-block transition-colors cursor-pointer font-bold"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </span>
+            ))}
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
+            {[
+              { text: "It completely changed how I walk to work. I notice the moss on the brick walls now.", name: "Sarah L.", loc: "Urban Ecologist", role: "Verified Observer" },
+              { text: "The missions are perfectly sized. 10 minutes is actually 10 minutes. It respects my time.", name: "Marcus T.", loc: "Software Engineer", role: "Habitat Explorer" },
+              { text: "I love that it doesn't force me to pretend I know the exact Latin name of every bird.", name: "Elena R.", loc: "Amateur Birdwatcher", role: "Field Journaler" }
+            ].map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -10, scale: 1.02 }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className={`group relative p-8 rounded-3xl shadow-2xl transition-all cursor-pointer overflow-hidden box-border border ${
+                  isDark
+                    ? 'bg-white/5 border-white/15 hover:border-[#96CD7B] text-white'
+                    : 'bg-[#FDFBF7] border-[#E3DDD1] hover:border-[#183B28] text-[#0F2418] shadow-sm'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex gap-1 text-amber-500">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <span key={s} className="text-sm">★</span>
+                    ))}
+                  </div>
+                  <span className={`text-[10px] uppercase font-mono tracking-wider px-3 py-1 rounded-full border ${
+                    isDark ? 'bg-[#96CD7B]/20 text-[#96CD7B] border-[#96CD7B]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+                  }`}>
+                    {t.role}
+                  </span>
+                </div>
+
+                <p className={`italic mb-6 leading-relaxed text-sm sm:text-base font-light ${
+                  isDark ? 'text-white/90' : 'text-[#2D4536]'
+                }`}>
+                  "{t.text}"
+                </p>
+
+                <div className={`pt-4 border-t flex items-center justify-between ${
+                  isDark ? 'border-white/10' : 'border-[#E3DDD1]'
+                }`}>
+                  <div>
+                    <p className={`font-display font-bold text-base transition-colors ${
+                      isDark ? 'text-white group-hover:text-[#96CD7B]' : 'text-[#0F2418] group-hover:text-[#183B28]'
+                    }`}>{t.name}</p>
+                    <p className={`text-xs ${isDark ? 'text-white/60' : 'text-[#3E5C48]'}`}>{t.loc}</p>
+                  </div>
+                  <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${
+                    isDark ? 'bg-white/10 border-white/20 text-[#96CD7B]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
+                  }`}>
+                    <Sparkles size={15} />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ────────────────────── 11. HACKATHON PRICING SECTION ────────────────────── */}
       <PricingSection />
 
       {/* ────────────────────── 12. FAQ / COMMON INQUIRIES ────────────────────── */}
-      <section className="py-24 bg-[#0E1E15] text-white border-t border-white/10">
+      <section className={`py-24 border-t transition-colors duration-300 ${
+        isDark ? 'bg-[#0E1E15] text-white border-white/10' : 'bg-[#F2ECE1] text-[#0F2418] border-[#E0D8C8]'
+      }`}>
         <div className="max-w-3xl mx-auto px-5">
-          <p className="text-xs font-mono uppercase tracking-[0.24em] text-[#E6C176] text-center font-semibold mb-2">Questions</p>
-          <h2 className="font-display text-4xl sm:text-5xl mt-2 text-center mb-12 text-white font-semibold">Common inquiries.</h2>
+          <p className={`text-xs font-mono uppercase tracking-[0.24em] text-center font-semibold mb-2 ${
+            isDark ? 'text-[#E6C176]' : 'text-[#C89B48]'
+          }`}>Questions</p>
+          <h2 className={`font-display text-4xl sm:text-5xl mt-2 text-center mb-12 font-semibold ${
+            isDark ? 'text-white' : 'text-[#0F2418]'
+          }`}>Common inquiries.</h2>
           <div className="space-y-4">
             {FAQS.map((faq, i) => (
               <FaqAccordionItem key={i} faq={faq} index={i} />

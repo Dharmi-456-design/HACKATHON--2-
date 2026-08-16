@@ -147,16 +147,16 @@ export default function Act() {
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
-      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#FAF7F0] text-[#0F2418] selection:bg-emerald-200 selection:text-emerald-900'
     }`}>
       
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── LUSH MEDIUM LIGHT-GREEN SUNLIT FOREST CANOPY BACKGROUND (NO BROWN TONES!) COVERING ALL TOP + SLIDER ──────────────── */}
+        {/* ──────────────── HERO BANNER + SLIDER ──────────────── */}
         <div className="relative pt-6 pb-8 space-y-8">
           
-          {/* Vibrant Medium Light-Green Sunlit Forest Canopy Backdrop */}
+          {/* Forest Backdrop */}
           <div 
             className="absolute -top-12 -left-12 -right-12 bottom-0 bg-cover bg-center pointer-events-none opacity-85"
             style={{ 
@@ -166,8 +166,10 @@ export default function Act() {
             }}
           />
 
-          {/* Emerald Gradient Blend Overlay */}
-          <div className="absolute -top-12 -left-12 -right-12 bottom-0 bg-gradient-to-b from-[#040C07]/75 via-[#040C07]/80 to-[#040B06] pointer-events-none" />
+          {/* Gradient Blend Overlay */}
+          <div className={`absolute -top-12 -left-12 -right-12 bottom-0 pointer-events-none ${
+            isDark ? 'bg-gradient-to-b from-[#040C07]/75 via-[#040C07]/80 to-[#040B06]' : 'bg-gradient-to-b from-[#040C07]/60 via-[#040C07]/40 to-[#FAF7F0]'
+          }`} />
 
           {/* Top Hero Row */}
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -204,19 +206,21 @@ export default function Act() {
                 <div className="absolute top-6 right-8 w-2.5 h-2.5 rounded-full bg-[#4ADE80] shadow-[0_0_12px_#4ADE80]" />
               </motion.div>
 
-              <div className="w-48 h-48 sm:w-52 sm:h-52 rounded-full bg-[#0E2015]/95 border border-[#4ADE80]/40 flex flex-col items-center justify-center text-center p-4 shadow-2xl backdrop-blur-md z-10 space-y-2">
-                <Leaf className="w-5 h-5 text-[#4ADE80]" />
+              <div className={`w-48 h-48 sm:w-52 sm:h-52 rounded-full flex flex-col items-center justify-center text-center p-4 shadow-2xl backdrop-blur-md z-10 space-y-2 border ${
+                isDark ? 'bg-[#0E2015]/95 border-[#4ADE80]/40 text-white' : 'bg-[#FDFBF7]/95 border-[#E3DDD1] text-[#0F2418] shadow-lg'
+              }`}>
+                <Leaf className={`w-5 h-5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                 
                 <div>
-                  <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">{t.actionsDoneCount}</p>
-                  <p className="font-display text-3xl font-black text-white">{completedActions.length}</p>
+                  <p className={`text-[9px] uppercase font-bold tracking-wider ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.actionsDoneCount}</p>
+                  <p className={`font-display text-3xl font-black ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{completedActions.length}</p>
                 </div>
 
-                <div className="w-12 h-px bg-[#20422E]" />
+                <div className={`w-12 h-px ${isDark ? 'bg-[#20422E]' : 'bg-[#E3DDD1]'}`} />
 
                 <div>
-                  <p className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">{t.minutesContributed}</p>
-                  <p className="font-display text-2xl font-black text-white">{totalMinutesGiven} <span className="text-xs font-normal text-slate-400">MIN</span></p>
+                  <p className={`text-[9px] uppercase font-bold tracking-wider ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.minutesContributed}</p>
+                  <p className={`font-display text-2xl font-black ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{totalMinutesGiven} <span className={`text-xs font-normal ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>MIN</span></p>
                 </div>
               </div>
 
@@ -229,13 +233,15 @@ export default function Act() {
 
           </div>
 
-          {/* ──────────────── WAVY NEON GREEN ENERGY SLIDER STRIP (SEAMLESS INTEGRATED OVER BACKGROUND) ──────────────── */}
-          <div className="relative z-10 pt-4 border-t border-[#20452F]/60 space-y-6">
+          {/* ──────────────── NEON GREEN ENERGY SLIDER STRIP ──────────────── */}
+          <div className={`relative z-10 pt-4 border-t space-y-6 ${
+            isDark ? 'border-[#20452F]/60' : 'border-[#E3DDD1]'
+          }`}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{t.sliderLabel}</p>
-                <h3 className="font-display text-4xl sm:text-5xl font-black text-white mt-1">
-                  {minutes} <span className="text-[#4ADE80] font-normal text-2xl sm:text-3xl">{t.minutesSuffix}</span>
+                <p className={`text-[11px] font-bold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.sliderLabel}</p>
+                <h3 className={`font-display text-4xl sm:text-5xl font-black mt-1 ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
+                  {minutes} <span className={`font-normal text-2xl sm:text-3xl ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>{t.minutesSuffix}</span>
                 </h3>
               </div>
 
@@ -246,12 +252,18 @@ export default function Act() {
                 disabled={isGenerating}
                 className="flex items-center gap-3 bg-transparent cursor-pointer group"
               >
-                <div className="w-14 h-14 rounded-full bg-[#13271C]/90 border border-[#4ADE80]/50 flex items-center justify-center text-[#4ADE80] group-hover:bg-[#4ADE80] group-hover:text-black transition-all shadow-lg backdrop-blur-md">
+                <div className={`w-14 h-14 rounded-full border flex items-center justify-center transition-all shadow-lg backdrop-blur-md ${
+                  isDark
+                    ? 'bg-[#13271C]/90 border-[#4ADE80]/50 text-[#4ADE80] group-hover:bg-[#4ADE80] group-hover:text-black'
+                    : 'bg-[#FDFBF7] border-[#C3DEC0] text-[#183B28] group-hover:bg-[#183B28] group-hover:text-white shadow-sm'
+                }`}>
                   <RefreshCw className={`w-6 h-6 ${isGenerating ? 'animate-spin' : ''}`} />
                 </div>
                 <div className="text-left">
-                  <p className="font-bold text-sm text-white group-hover:text-[#4ADE80] transition-colors">{t.generateBtnTitle}</p>
-                  <p className="text-[11px] text-slate-400">{t.generateBtnSub}</p>
+                  <p className={`font-bold text-sm transition-colors ${
+                    isDark ? 'text-white group-hover:text-[#4ADE80]' : 'text-[#0F2418] group-hover:text-[#183B28]'
+                  }`}>{t.generateBtnTitle}</p>
+                  <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.generateBtnSub}</p>
                 </div>
               </motion.button>
             </div>
@@ -261,13 +273,13 @@ export default function Act() {
                 <path
                   d="M 0 15 Q 200 25, 400 15 T 800 15"
                   fill="none"
-                  stroke="#20422E"
+                  stroke={isDark ? '#20422E' : '#E0D8C8'}
                   strokeWidth="3"
                 />
                 <path
                   d={`M 0 15 Q 200 25, ${minutes * 13} 15`}
                   fill="none"
-                  stroke="#4ADE80"
+                  stroke={isDark ? '#4ADE80' : '#183B28'}
                   strokeWidth="3"
                   className="filter drop-shadow-[0_0_8px_#4ADE80]"
                 />
@@ -283,7 +295,9 @@ export default function Act() {
               />
 
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#4ADE80] border-4 border-[#040B06] shadow-[0_0_15px_#4ADE80] pointer-events-none transition-all"
+                className={`absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-4 shadow-md pointer-events-none transition-all ${
+                  isDark ? 'bg-[#4ADE80] border-[#040B06] shadow-[0_0_15px_#4ADE80]' : 'bg-[#183B28] border-white'
+                }`}
                 style={{ left: `calc(${(minutes / 60) * 95}% + 10px)` }}
               />
             </div>
@@ -292,30 +306,40 @@ export default function Act() {
         </div>
 
         {/* ──────────────── UNDERLINE TAB NAVIGATION ──────────────── */}
-        <div className="flex items-center gap-8 border-b border-[#20452F] pb-4 relative z-10">
+        <div className={`flex items-center gap-8 border-b pb-4 relative z-10 ${
+          isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+        }`}>
           <button
             onClick={() => setActiveTab('suggested')}
             className={`flex items-center gap-2 text-sm font-bold transition-all relative pb-2 cursor-pointer ${
-              activeTab === 'suggested' ? 'text-[#4ADE80]' : 'text-slate-400 hover:text-white'
+              activeTab === 'suggested'
+                ? isDark ? 'text-[#4ADE80]' : 'text-[#183B28] font-extrabold'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
             }`}
           >
             <Leaf className="w-4 h-4" />
             <span>{t.tabSuggested} ({pendingActions.length})</span>
             {activeTab === 'suggested' && (
-              <motion.div layoutId="actTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4ADE80]" />
+              <motion.div layoutId="actTab" className={`absolute bottom-0 left-0 right-0 h-0.5 ${
+                isDark ? 'bg-[#4ADE80]' : 'bg-[#183B28]'
+              }`} />
             )}
           </button>
 
           <button
             onClick={() => setActiveTab('completed')}
             className={`flex items-center gap-2 text-sm font-bold transition-all relative pb-2 cursor-pointer ${
-              activeTab === 'completed' ? 'text-[#4ADE80]' : 'text-slate-400 hover:text-white'
+              activeTab === 'completed'
+                ? isDark ? 'text-[#4ADE80]' : 'text-[#183B28] font-extrabold'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
             }`}
           >
             <FileText className="w-4 h-4" />
             <span>{t.tabCompleted} ({completedActions.length})</span>
             {activeTab === 'completed' && (
-              <motion.div layoutId="actTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4ADE80]" />
+              <motion.div layoutId="actTab" className={`absolute bottom-0 left-0 right-0 h-0.5 ${
+                isDark ? 'bg-[#4ADE80]' : 'bg-[#183B28]'
+              }`} />
             )}
           </button>
         </div>
@@ -324,15 +348,17 @@ export default function Act() {
         {activeTab === 'suggested' && (
           <div className="relative z-10">
             {actError && (
-              <div className="mb-5 bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200">
+              <div className="mb-5 bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-500">
                 {actError}
               </div>
             )}
             {pendingActions.length === 0 && (
-              <div className="bg-[#13271C] border border-dashed border-[#20422E] rounded-3xl p-10 text-center space-y-3">
+              <div className={`border border-dashed rounded-3xl p-10 text-center space-y-3 ${
+                isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
+              }`}>
                 <p className="text-3xl">🌿</p>
-                <p className="font-display text-lg font-bold text-white">No suggested actions</p>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                <p className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>No suggested actions</p>
+                <p className={`text-xs max-w-sm mx-auto ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
                   Pick a time window above and generate an eco action to get started.
                 </p>
               </div>
@@ -352,7 +378,9 @@ export default function Act() {
                     animate={{ rotateY: isFlipped ? 180 : 0 }}
                   >
                     {/* FRONT ACTION CARD */}
-                    <div className="absolute inset-0 backface-hidden bg-[#0E2015] border border-[#20452F] rounded-3xl overflow-hidden flex flex-col justify-between">
+                    <div className={`absolute inset-0 backface-hidden rounded-3xl overflow-hidden flex flex-col justify-between border transition-colors ${
+                      isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+                    }`}>
                       <div className="relative h-44 overflow-hidden">
                         <img
                           src={action.image}
@@ -360,7 +388,9 @@ export default function Act() {
                           className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                         />
                         <div className="absolute top-3 left-3 flex gap-2">
-                          <span className="px-3 py-1 rounded-full bg-[#07130B]/80 backdrop-blur-md text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/40">
+                          <span className={`px-3 py-1 rounded-full backdrop-blur-md text-[10px] font-bold border ${
+                            isDark ? 'bg-[#07130B]/80 text-[#4ADE80] border-[#4ADE80]/40' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+                          }`}>
                             {action.category}
                           </span>
                         </div>
@@ -371,10 +401,14 @@ export default function Act() {
 
                       <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
                         <div>
-                          <h3 className="font-display text-lg font-bold text-white leading-tight">
+                          <h3 className={`font-display text-lg font-bold leading-tight ${
+                            isDark ? 'text-white' : 'text-[#0F2418]'
+                          }`}>
                             {action.title}
                           </h3>
-                          <p className="text-xs text-slate-300 mt-2 line-clamp-2 leading-relaxed">
+                          <p className={`text-xs mt-2 line-clamp-2 leading-relaxed ${
+                            isDark ? 'text-slate-300' : 'text-[#3E5C48]'
+                          }`}>
                             {action.description}
                           </p>
                         </div>
@@ -384,7 +418,9 @@ export default function Act() {
                             e.stopPropagation();
                             completeAction(action.id);
                           }}
-                          className="w-full py-2.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                          className={`w-full py-2.5 rounded-full font-bold text-xs transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer ${
+                            isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                          }`}
                         >
                           <Check className="w-4 h-4 stroke-[3]" />
                           <span>{t.completeActionBtn}</span>
@@ -393,20 +429,26 @@ export default function Act() {
                     </div>
 
                     {/* BACK ACTION CARD */}
-                    <div className="absolute inset-0 backface-hidden rotate-y-180 bg-[#112318] border border-[#4ADE80]/50 rounded-3xl p-6 flex flex-col justify-between text-slate-200">
+                    <div className={`absolute inset-0 backface-hidden rotate-y-180 rounded-3xl p-6 flex flex-col justify-between border transition-colors ${
+                      isDark ? 'bg-[#112318] border-[#4ADE80]/50 text-slate-200' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] shadow-sm'
+                    }`}>
                       <div className="space-y-3">
-                        <span className="px-3 py-1 rounded-full bg-[#1A3827] text-xs font-bold text-[#4ADE80]">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          isDark ? 'bg-[#1A3827] text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28]'
+                        }`}>
                           Eco Impact Analysis
                         </span>
-                        <h4 className="font-display text-base font-bold text-white">{action.title}</h4>
-                        <p className="text-xs text-slate-300 italic leading-relaxed">
+                        <h4 className={`font-display text-base font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{action.title}</h4>
+                        <p className={`text-xs italic leading-relaxed ${isDark ? 'text-slate-300' : 'text-[#2D4536]'}`}>
                           "{action.impactNote}"
                         </p>
                       </div>
 
-                      <div className="pt-2 border-t border-[#20422E] flex justify-between items-center text-[10px] text-slate-400">
+                      <div className={`pt-2 border-t flex justify-between items-center text-[10px] ${
+                        isDark ? 'border-[#20422E] text-slate-400' : 'border-[#E0D8C8] text-[#3E5C48]'
+                      }`}>
                         <span>Real Field Action</span>
-                        <span className="text-[#4ADE80] font-bold">Nature Connection +15</span>
+                        <span className={`font-bold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>Nature Connection +15</span>
                       </div>
                     </div>
                   </motion.div>
@@ -423,17 +465,21 @@ export default function Act() {
             {completedActions.map((action) => (
               <div
                 key={action.id}
-                className="bg-[#0E2015] border border-[#4ADE80]/40 p-5 rounded-2xl flex items-center justify-between shadow-md"
+                className={`p-5 rounded-2xl flex items-center justify-between shadow-md border transition-colors ${
+                  isDark ? 'bg-[#0E2015] border-[#4ADE80]/40 text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+                }`}
               >
                 <div className="flex items-center gap-4">
                   <img src={action.image} alt="" className="w-14 h-14 rounded-xl object-cover" />
                   <div>
-                    <h4 className="font-display text-base font-bold text-white">{action.title}</h4>
-                    <p className="text-xs text-slate-400">{action.category} · {action.minutes} minutes</p>
+                    <h4 className={`font-display text-base font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{action.title}</h4>
+                    <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{action.category} · {action.minutes} minutes</p>
                   </div>
                 </div>
 
-                <span className="px-3 py-1 rounded-full bg-[#1A3827] text-xs font-bold text-[#4ADE80] border border-[#4ADE80]/30">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                  isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+                }`}>
                   {t.completedBadge}
                 </span>
               </div>
