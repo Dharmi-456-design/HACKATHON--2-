@@ -27,21 +27,21 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from './lib/api';
 
 function Gate({ children }) {
-  const { session, loading } = useAuth();
+  const { token, loading } = useAuth();
   const [ready, setReady] = useState(false);
   const [onboarded, setOnboarded] = useState(true);
 
   useEffect(() => {
     if (loading) return;
-    if (!session?.access_token) {
+    if (!token) {
       setReady(true);
       return;
     }
-    apiFetch('/api/profile', {}, session.access_token)
+    apiFetch('/api/profile', {}, token)
       .then((p) => setOnboarded(p?.onboarding_complete !== false))
       .catch(() => setOnboarded(true))
       .finally(() => setReady(true));
-  }, [session, loading]);
+  }, [token, loading]);
 
   if (!ready) {
     return (

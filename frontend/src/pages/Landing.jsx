@@ -424,7 +424,7 @@ export default function Landing() {
 
               <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-white/50">
                 <span>Interactive Live Preview</span>
-                <span className="text-[#96CD7B]">Powered by OpenRouter AI</span>
+                <span className="text-[#96CD7B]">Powered by Gemini AI</span>
               </div>
             </div>
           </div>

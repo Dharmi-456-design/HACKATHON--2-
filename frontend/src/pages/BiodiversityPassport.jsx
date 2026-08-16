@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
+import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Leather & Gold Passport
@@ -64,13 +65,16 @@ const SEED_STAMPS = [
 ];
 
 export default function BiodiversityPassport() {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = PASSPORT_TRANSLATIONS[lang] || PASSPORT_TRANSLATIONS.en;
+  const token = session?.access_token;
+  const demoMode = isDemoMode();
 
   // Book Spread State (0: Cover & Overview, 1: Stamps & Trail, 2: AI Guide)
   const [spreadIndex, setSpreadIndex] = useState(0);
   const [stamps, setStamps] = useState(() => {
+    if (!demoMode) return [];
     try {
       const saved = localStorage.getItem('pulse_passport_stamps_v1');
       return saved ? JSON.parse(saved) : SEED_STAMPS;
@@ -82,17 +86,108 @@ export default function BiodiversityPassport() {
   const [flippedStampId, setFlippedStampId] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
 
+  // Real achievement data (non-demo)
+  const [profile, setProfile] = useState(null);
+  const [discoveries, setDiscoveries] = useState([]);
+  const [missions, setMissions] = useState([]);
+  const [entries, setEntries] = useState([]);
+  const [actions, setActions] = useState([]);
+  const [streakData, setStreakData] = useState(null);
+  const [connection, setConnection] = useState(null);
+
   useEffect(() => {
-    localStorage.setItem('pulse_passport_stamps_v1', JSON.stringify(stamps));
-  }, [stamps]);
+    if (demoMode || !token) return;
+    Promise.all([
+      apiFetch('/api/profile', {}, token),
+      apiFetch('/api/discoveries', {}, token),
+      apiFetch('/api/missions', {}, token),
+      apiFetch('/api/journal', {}, token),
+      apiFetch('/api/actions', {}, token),
+      apiFetch('/api/streak', {}, token),
+      apiFetch('/api/connection', {}, token),
+    ])
+      .then(([p, d, m, j, a, s, c]) => {
+        setProfile(p);
+        setDiscoveries(Array.isArray(d) ? d : []);
+        setMissions(Array.isArray(m) ? m : []);
+        setEntries(Array.isArray(j) ? j : []);
+        setActions(Array.isArray(a) ? a : []);
+        setStreakData(s);
+        setConnection(c);
+      })
+      .catch(() => {});
+  }, [demoMode, token]);
+
+  useEffect(() => {
+    if (demoMode) localStorage.setItem('pulse_passport_stamps_v1', JSON.stringify(stamps));
+  }, [stamps, demoMode]);
+
+  const completedMissions = missions.filter((m) => m.status === 'completed');
+  const actionsDone = actions.filter((a) => a.status === 'done' || a.status === 'completed');
+  const streakDays = demoMode ? 7 : streakData?.streak || 0;
+  const xp = completedMissions.length * 150 + actionsDone.length * 25;
+  const score = demoMode ? 98 : connection?.overall || 0;
+
+  const fmtDate = (iso) => {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+  const issueDate = demoMode
+    ? 'ISSUED: AUG 2026'
+    : `ISSUED: ${fmtDate(profile?.createdAt || new Date().toISOString()).toUpperCase()}`;
+
+  const realStamps = demoMode
+    ? []
+    : [
+        discoveries.length > 0 && { id: 'st-d', title: 'ECO DISCOVERY 🌿', date: fmtDate(discoveries[discoveries.length - 1]?.createdAt), category: 'Discoveries', xp: 220, desc: `${discoveries.length} field observation${discoveries.length === 1 ? '' : 's'} recorded with the Lens.`, icon: '🌿' },
+        completedMissions.length > 0 && { id: 'st-m', title: 'MISSION MASTER ⚡', date: fmtDate(completedMissions[completedMissions.length - 1]?.completed_at || completedMissions[completedMissions.length - 1]?.createdAt), category: 'Missions', xp: 250, desc: `Completed ${completedMissions.length} challenge${completedMissions.length === 1 ? '' : 's'}.`, icon: '⚡' },
+        entries.length > 0 && { id: 'st-j', title: 'FIELD NOTES 📖', date: fmtDate(entries[entries.length - 1]?.createdAt), category: 'Journal', xp: 150, desc: `${entries.length} private reflection${entries.length === 1 ? '' : 's'} written.`, icon: '📖' },
+        actionsDone.length > 0 && { id: 'st-a', title: 'ACTIVE GUARDIAN 🛡️', date: fmtDate(actionsDone[actionsDone.length - 1]?.updatedAt || actionsDone[actionsDone.length - 1]?.createdAt), category: 'Actions', xp: 200, desc: `${actionsDone.length} eco action${actionsDone.length === 1 ? '' : 's'} logged.`, icon: '🛡️' },
+        streakDays > 0 && { id: 'st-k', title: `${Math.min(streakDays, 7)}-DAY STREAK 🔥`, date: 'Current', category: 'Streaks', xp: 300, desc: `Active ${streakDays} day${streakDays === 1 ? '' : 's'} in a row.`, icon: '🔥' },
+      ].filter(Boolean);
+
+  const displayStamps = demoMode ? stamps : realStamps;
+
+  const level = demoMode
+    ? t.passportLevel
+    : score >= 80
+      ? 'Eco Guardian'
+      : score >= 50
+        ? 'Level 3 Explorer'
+        : score > 0
+          ? 'Level 1 Beginner'
+          : 'Ready to Begin';
+
+  const journeyItems = demoMode
+    ? [
+        { title: 'First Conversation', desc: 'Discussed Peepal canopy cooling effect on Monday.', date: 'Aug 10, 2026' },
+        { title: 'Completed First Mission', desc: 'Finished dawn listening challenge (+100 XP).', date: 'Aug 12, 2026' },
+        { title: 'Read Interactive Story', desc: 'Explored 3D choice paths in Cedar Forest.', date: 'Aug 14, 2026' },
+        { title: 'Bio Map Unlocked', desc: 'Saved 6 micro-climate observation nodes.', date: 'Aug 16, 2026' },
+      ]
+    : [
+        discoveries.length > 0 && { title: 'First Observation', desc: `${discoveries[discoveries.length - 1]?.common_name || 'Field observation'} recorded with Nature Lens.`, date: fmtDate(discoveries[discoveries.length - 1]?.createdAt) },
+        completedMissions.length > 0 && { title: 'First Completed Mission', desc: `Completed "${completedMissions[completedMissions.length - 1]?.title}".`, date: fmtDate(completedMissions[completedMissions.length - 1]?.completed_at || completedMissions[completedMissions.length - 1]?.createdAt) },
+        entries.length > 0 && { title: 'First Field Note', desc: 'Wrote your first private reflection.', date: fmtDate(entries[entries.length - 1]?.createdAt) },
+        actionsDone.length > 0 && { title: 'First Eco Action', desc: `Logged "${actionsDone[actionsDone.length - 1]?.title}".`, date: fmtDate(actionsDone[actionsDone.length - 1]?.updatedAt || actionsDone[actionsDone.length - 1]?.createdAt) },
+      ].filter(Boolean);
+
+  const progressPct = demoMode ? 68 : Math.min(100, displayStamps.length * 15 + (score > 0 ? 10 : 0));
 
   // Export Passport Handler
   const handleExportPassport = () => {
     setIsExporting(true);
     setTimeout(() => {
+      const text = `🌍 Nature Pulse Biodiversity Passport (${new Date().toLocaleDateString()})
+• Explorer: ${profile?.display_name || user?.name || 'Explorer'}
+• Stamps: ${displayStamps.length}
+• Missions Completed: ${completedMissions.length}
+• Active Streak: ${streakDays} days
+• Eco Score: ${score}%`;
+      navigator.clipboard.writeText(text);
       alert('Gold Embossed Passport Summary exported cleanly!');
       setIsExporting(false);
-    }, 1000);
+    }, 300);
   };
 
   return (
@@ -185,9 +280,9 @@ export default function BiodiversityPassport() {
                       👤
                     </div>
                     <div>
-                      <h3 className="font-display text-xl font-black text-white">Nature Pulse Explorer</h3>
-                      <p className="text-xs text-[#E6C176] font-semibold">{t.passportLevel}</p>
-                      <p className="text-[10px] text-slate-400 mt-1">{t.issueDate}</p>
+                      <h3 className="font-display text-xl font-black text-white">{profile?.display_name || user?.name || 'Nature Pulse Explorer'}</h3>
+                      <p className="text-xs text-[#E6C176] font-semibold">{level}</p>
+                      <p className="text-[10px] text-slate-400 mt-1">{issueDate}</p>
                     </div>
                   </div>
 
@@ -198,11 +293,11 @@ export default function BiodiversityPassport() {
                     </div>
                     <div className="flex justify-between py-1 border-b border-[#20422E]">
                       <span>Active Streak:</span>
-                      <span className="text-emerald-400 font-bold">7 Days 🔥</span>
+                      <span className="text-emerald-400 font-bold">{streakDays} Day{streakDays === 1 ? '' : 's'} 🔥</span>
                     </div>
                     <div className="flex justify-between py-1">
                       <span>Total Earned XP:</span>
-                      <span className="text-amber-400 font-bold">1,250 XP</span>
+                      <span className="text-amber-400 font-bold">{xp.toLocaleString()} XP</span>
                     </div>
                   </div>
                 </div>
@@ -218,10 +313,10 @@ export default function BiodiversityPassport() {
 
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { title: 'Stamps Earned', val: '6 Stamps', icon: '🎖️' },
-                      { title: 'Missions Completed', val: '4 Missions', icon: '⚡' },
-                      { title: 'Stories Explored', val: '3 Stories', icon: '📚' },
-                      { title: 'Eco Score', val: '98% Connection', icon: '🌿' },
+                      { title: 'Stamps Earned', val: `${displayStamps.length} Stamps`, icon: '🎖️' },
+                      { title: 'Missions Completed', val: `${completedMissions.length} Missions`, icon: '⚡' },
+                      { title: 'Field Notes', val: `${entries.length} Notes`, icon: '📚' },
+                      { title: 'Eco Score', val: `${score}% Connection`, icon: '🌿' },
                     ].map((m, i) => (
                       <div key={i} className="bg-[#0A1A10] border border-[#20422E] p-3.5 rounded-xl space-y-1">
                         <span className="text-lg">{m.icon}</span>
@@ -234,10 +329,10 @@ export default function BiodiversityPassport() {
                   <div className="bg-[#0A1A10] border border-[#E6C176]/30 p-4 rounded-xl space-y-2">
                     <div className="flex justify-between text-xs text-[#E6C176] font-bold">
                       <span>Passport Document Progress</span>
-                      <span>68% Complete</span>
+                      <span>{progressPct}% Complete</span>
                     </div>
                     <div className="w-full bg-[#12271C] h-2.5 rounded-full overflow-hidden">
-                      <div className="bg-gradient-to-r from-[#E6C176] to-[#4ADE80] h-full rounded-full" style={{ width: '68%' }} />
+                      <div className="bg-gradient-to-r from-[#E6C176] to-[#4ADE80] h-full rounded-full" style={{ width: `${progressPct}%` }} />
                     </div>
                   </div>
                 </div>
@@ -260,7 +355,12 @@ export default function BiodiversityPassport() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {stamps.map((st) => {
+                  {displayStamps.length === 0 ? (
+                    <p className="text-xs text-slate-400 bg-[#12271C] border border-dashed border-[#E6C176]/30 rounded-2xl p-6 text-center col-span-full">
+                      Your achievement stamps appear here as you record observations, finish missions, write journal notes, and log eco actions.
+                    </p>
+                  ) : (
+                  displayStamps.map((st) => {
                     const isFlipped = flippedStampId === st.id;
                     return (
                       <div
@@ -296,7 +396,7 @@ export default function BiodiversityPassport() {
                         </motion.div>
                       </div>
                     );
-                  })}
+                  }))}
                 </div>
               </motion.div>
             )}
@@ -316,12 +416,12 @@ export default function BiodiversityPassport() {
                 </h3>
 
                 <div className="space-y-3">
-                  {[
-                    { title: 'First Conversation', desc: 'Discussed Peepal canopy cooling effect on Monday.', date: 'Aug 10, 2026' },
-                    { title: 'Completed First Mission', desc: 'Finished dawn listening challenge (+100 XP).', date: 'Aug 12, 2026' },
-                    { title: 'Read Interactive Story', desc: 'Explored 3D choice paths in Cedar Forest.', date: 'Aug 14, 2026' },
-                    { title: 'Bio Map Unlocked', desc: 'Saved 6 micro-climate observation nodes.', date: 'Aug 16, 2026' },
-                  ].map((tr, idx) => (
+                  {journeyItems.length === 0 ? (
+                    <p className="text-xs text-slate-400 bg-[#12271C] border border-dashed border-[#E6C176]/30 rounded-2xl p-6 text-center">
+                      Your journey trail begins with your first observation.
+                    </p>
+                  ) : (
+                  journeyItems.map((tr, idx) => (
                     <div key={idx} className="flex items-center gap-4 bg-[#12271C] border border-[#20422E] p-4 rounded-2xl">
                       <div className="w-10 h-10 rounded-full bg-[#1D3828] border border-[#E6C176] flex items-center justify-center text-xs font-bold text-[#E6C176]">
                         0{idx + 1}
@@ -332,7 +432,8 @@ export default function BiodiversityPassport() {
                       </div>
                       <span className="text-[10px] text-[#E6C176] font-bold">{tr.date}</span>
                     </div>
-                  ))}
+                  ))
+                  )}
                 </div>
               </motion.div>
             )}

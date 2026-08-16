@@ -13,9 +13,15 @@ import {
   ShieldCheck,
   Globe2,
 } from 'lucide-react';
-import supabase from '../lib/supabase';
-import { signInWithGoogle } from '../lib/googleAuth';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+
+const PERKS = [
+  '42+ Native flora telemetry logs',
+  'AI Species & Bio-Acoustic Scanner',
+  'Free & open community passport',
+  'Real-time urban habitat mapping',
+];
 
 function GoogleIcon() {
   return (
@@ -28,17 +34,10 @@ function GoogleIcon() {
   );
 }
 
-const PERKS = [
-  '42+ Native flora telemetry logs',
-  'AI Species & Bio-Acoustic Scanner',
-  'Free & open community passport',
-  'Real-time urban habitat mapping',
-];
-
 export default function Auth({ initialMode = 'login' }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, enterDemoMode, exitDemoMode } = useAuth();
+  const { user, login, register, signInWithGoogle, enterDemoMode, logout } = useAuth();
 
   // Determine initial mode from path or prop
   const isRegisterPath =
@@ -65,8 +64,6 @@ export default function Auth({ initialMode = 'login' }) {
   const [info, setInfo] = useState('');
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
-
-  // Forgot password state
   const [showForgot, setShowForgot] = useState(false);
   const [resetBusy, setResetBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
@@ -79,6 +76,41 @@ export default function Auth({ initialMode = 'login' }) {
     setShowForgot(false);
     setMode(newMode);
     window.history.replaceState(null, '', newMode === 'register' ? '/register' : '/login');
+  };
+
+  const handleGoogle = async () => {
+    setError('');
+    setInfo('');
+    setGoogleBusy(true);
+    try {
+      await signInWithGoogle(`${window.location.origin}/app`);
+    } catch (err) {
+      setError(err?.message || 'Google sign-in failed. Please try again.');
+      setGoogleBusy(false);
+    }
+  };
+
+  const handleForgot = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!email.trim()) {
+      setError('Please enter your email address first.');
+      return;
+    }
+    setResetBusy(true);
+    try {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (err) throw err;
+      setResetSent(true);
+      setShowForgot(false);
+      setInfo('If an account exists for that email, a password recovery link is on its way.');
+    } catch (err) {
+      setError(err?.message || 'Could not send reset link. Please try again.');
+    } finally {
+      setResetBusy(false);
+    }
   };
 
   const handleLogin = async (e) => {
@@ -94,11 +126,7 @@ export default function Auth({ initialMode = 'login' }) {
     }
     setBusy(true);
     try {
-      const { error: err } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-      if (err) throw err;
+      await login(email.trim(), password);
       navigate('/app');
     } catch (err) {
       setError(err?.message || 'Sign in failed. Please check your credentials.');
@@ -121,52 +149,16 @@ export default function Auth({ initialMode = 'login' }) {
     }
     setBusy(true);
     try {
-      const { error: err } = await supabase.auth.signUp({
+      await register({
+        name: name.trim() || 'Explorer',
         email: email.trim(),
         password,
-        options: { data: { display_name: name.trim() || undefined } },
       });
-      if (err) throw err;
-      setInfo('Account created! Check your email to confirm, or sign in directly.');
+      navigate('/app');
     } catch (err) {
       setError(err?.message || 'Registration failed. Please try again.');
     } finally {
       setBusy(false);
-    }
-  };
-
-  const handleGoogle = async () => {
-    setError('');
-    setInfo('');
-    setGoogleBusy(true);
-    try {
-      await signInWithGoogle('NaturePulse');
-    } catch (err) {
-      setError(err?.message || 'Google authentication failed.');
-    } finally {
-      setGoogleBusy(false);
-    }
-  };
-
-  const handleForgot = async (e) => {
-    e.preventDefault();
-    setError('');
-    if (!email.trim()) {
-      setError('Enter your email address first.');
-      return;
-    }
-    setResetBusy(true);
-    try {
-      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (err) throw err;
-      setResetSent(true);
-      setShowForgot(false);
-    } catch (err) {
-      setError(err?.message || 'Could not send a reset link. Please try again.');
-    } finally {
-      setResetBusy(false);
     }
   };
 
@@ -313,7 +305,7 @@ export default function Auth({ initialMode = 'login' }) {
                         </span>
                         <button
                           type="button"
-                          onClick={exitDemoMode}
+                          onClick={logout}
                           className="text-red-400 hover:text-red-300 font-semibold ml-2 shrink-0 cursor-pointer underline"
                         >
                           Sign out
@@ -328,26 +320,28 @@ export default function Auth({ initialMode = 'login' }) {
                     </div>
                   )}
 
-                  {/* Google Sign-In Button */}
-                  <button
+                  {/* Google Sign In/Up Button */}
+                  <motion.button
                     type="button"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
                     onClick={handleGoogle}
                     disabled={isDisabled}
-                    className="w-full flex items-center justify-center gap-2.5 sm:gap-3 bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/20 rounded-2xl py-2.5 sm:py-3 px-4 text-xs sm:text-sm font-medium text-white transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mb-3.5 sm:mb-4"
+                    className="w-full flex items-center justify-center gap-3 bg-white/10 hover:bg-white/15 border border-white/20 hover:border-white/30 rounded-2xl py-2.5 sm:py-3 text-xs sm:text-sm font-semibold text-white transition-all duration-200 shadow-lg backdrop-blur-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mb-2"
                   >
                     {googleBusy ? (
-                      <Loader2 size={16} className="animate-spin text-[#96CD7B]" />
+                      <Loader2 size={16} className="animate-spin text-white" />
                     ) : (
                       <GoogleIcon />
                     )}
                     <span>
                       {googleBusy
-                        ? 'Connecting…'
+                        ? 'Connecting to Google…'
                         : isLogin
                         ? 'Continue with Google'
                         : 'Sign up with Google'}
                     </span>
-                  </button>
+                  </motion.button>
 
                   {/* Or with Email Divider */}
                   <div className="flex items-center gap-3 my-3 sm:my-4">
@@ -385,49 +379,6 @@ export default function Auth({ initialMode = 'login' }) {
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                  {/* Inline Forgot Password (Login mode only) */}
-                  {isLogin && resetSent && (
-                    <div className="mb-3.5 bg-[#96CD7B]/15 border border-[#96CD7B]/30 rounded-2xl px-3.5 py-2 text-xs text-[#96CD7B]">
-                      Password reset email sent! Check your inbox.
-                    </div>
-                  )}
-
-                  {isLogin && showForgot && (
-                    <motion.form
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      onSubmit={handleForgot}
-                      className="mb-3.5 p-3 rounded-2xl bg-white/5 border border-white/15 space-y-2"
-                    >
-                      <p className="text-xs text-white/70">
-                        Enter your email address to receive a secure recovery link:
-                      </p>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@example.com"
-                        className="w-full bg-black/40 border border-white/15 rounded-xl px-3 py-2 text-xs text-white placeholder:text-white/30 outline-none focus:border-[#96CD7B] focus:ring-1 focus:ring-[#96CD7B]/40"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          type="submit"
-                          disabled={resetBusy}
-                          className="flex-1 bg-[#96CD7B] hover:bg-[#86bd6b] text-[#0A1610] font-semibold text-xs py-1.5 rounded-xl transition-colors disabled:opacity-60 cursor-pointer"
-                        >
-                          {resetBusy ? 'Sending…' : 'Send Reset Link'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowForgot(false)}
-                          className="px-3 bg-white/10 hover:bg-white/15 text-white/70 text-xs py-1.5 rounded-xl transition-colors cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </motion.form>
-                  )}
 
                   {/* Main Form Fields */}
                   <form onSubmit={isLogin ? handleLogin : handleRegister} className="space-y-3">
@@ -480,7 +431,7 @@ export default function Auth({ initialMode = 'login' }) {
                           <button
                             type="button"
                             onClick={() => {
-                              setShowForgot(!showForgot);
+                              setShowForgot((prev) => !prev);
                               setError('');
                             }}
                             className="text-[10px] sm:text-[11px] text-[#96CD7B] hover:text-[#b4e69c] transition-colors cursor-pointer"
@@ -489,6 +440,30 @@ export default function Auth({ initialMode = 'login' }) {
                           </button>
                         )}
                       </div>
+
+                      {/* Inline Forgot Password Form */}
+                      <AnimatePresence>
+                        {isLogin && showForgot && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mb-2 p-3 rounded-2xl bg-white/5 border border-white/15 space-y-2 overflow-hidden"
+                          >
+                            <p className="text-xs text-white/70">
+                              Enter your email above and we'll send a password recovery link.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={handleForgot}
+                              disabled={resetBusy}
+                              className="w-full bg-[#96CD7B] hover:bg-[#86bd6b] text-[#0A1610] font-semibold text-xs py-1.5 rounded-xl transition-colors disabled:opacity-60 cursor-pointer"
+                            >
+                              {resetBusy ? 'Sending Link…' : 'Send Password Reset Link'}
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       <div className="relative">
                         <input

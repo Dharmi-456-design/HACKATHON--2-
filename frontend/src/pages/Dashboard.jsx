@@ -69,7 +69,7 @@ export default function Dashboard() {
 
   const complete = async (id) => {
     try {
-      await apiFetch('/api/missions', { method: 'PUT', body: JSON.stringify({ id, status: 'completed' }) }, token);
+      await apiFetch(`/api/missions/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'completed' }) }, token);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not complete');
