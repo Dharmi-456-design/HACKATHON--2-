@@ -125,7 +125,7 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
 
             {/* Reviews Grid */}
             <div className="overflow-y-auto pr-2 grid sm:grid-cols-2 gap-4 flex-1 scrollbar-hide">
-              {filteredReviews.map((r) => (
+              {filteredReports.map((r) => (
                 <div
                   key={r.id}
                   className={`rounded-2xl p-5 flex flex-col justify-between transition-all border ${
@@ -142,7 +142,7 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
                         {r.tag}
                       </span>
                       <div className="flex items-center gap-1 text-amber-500">
-                        {[...Array(r.rating)].map((_, i) => (
+                        {[...Array(r.rating || 5)].map((_, i) => (
                           <Star key={i} size={13} fill="currentColor" />
                         ))}
                       </div>
@@ -158,17 +158,23 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
                   <div className={`flex items-center gap-3 pt-3 border-t ${
                     isDark ? 'border-white/10' : 'border-[#E0D8C8]'
                   }`}>
-                    <img
-                      src={r.avatar}
-                      alt={r.name}
-                      className={`w-10 h-10 rounded-full object-cover border ${
-                        isDark ? 'border-white/20' : 'border-[#D4CBB8]'
-                      }`}
-                    />
+                    {r.avatar ? (
+                      <img
+                        src={r.avatar}
+                        alt={r.name}
+                        className={`w-10 h-10 rounded-full object-cover border ${
+                          isDark ? 'border-white/20' : 'border-[#D4CBB8]'
+                        }`}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-[#96CD7B]/20 border border-[#96CD7B]/40 flex items-center justify-center text-lg text-[#96CD7B]">
+                        🌿
+                      </div>
+                    )}
                     <div>
                       <h4 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{r.name}</h4>
                       <p className={`text-xs ${isDark ? 'text-white/60' : 'text-[#3E5C48]'}`}>
-                        {r.role} · <span className={isDark ? 'text-[#96CD7B]' : 'text-[#183B28] font-semibold'}>{r.city}</span>
+                        {r.role} {r.city ? `· ${r.city}` : ''}
                       </p>
                     </div>
                   </div>
@@ -180,7 +186,7 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
             <div className={`pt-4 mt-4 border-t text-center text-xs shrink-0 ${
               isDark ? 'border-white/10 text-white/50' : 'border-[#E3DDD1] text-[#3E5C48]'
             }`}>
-              Showing {filteredReviews.length} of {ALL_REVIEWS.length} community reviews
+              Showing {filteredReports.length} of {reports.length} community reports
             </div>
           </motion.div>
         </div>
