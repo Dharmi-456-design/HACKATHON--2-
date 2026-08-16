@@ -42,7 +42,6 @@ const LINKS = [
   { to: '/app/stories',        label: 'Stories',      icon: Sparkles },
   { to: '/app/community',      label: 'Community',    icon: Users },
   { to: '/app/pulse',          label: 'Pulse Chat',   icon: MessageCircle },
-  { to: '/app/green-watch',    label: 'Green Watch',  icon: ShieldAlert },
 ];
 
 const MOBILE_PRIMARY = [LINKS[0], LINKS[1], LINKS[2], LINKS[7]];
