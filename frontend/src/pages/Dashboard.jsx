@@ -13,12 +13,14 @@ export default function Dashboard() {
   const { session, user } = useAuth();
   const { isDark } = useTheme();
   const token = session?.access_token;
+  const EMPTY_SCORE = { observe: 0, explore: 0, learn: 0, act: 0, return_dim: 0, overall: 0 };
   const [profile, setProfile] = useState(null);
-  const [score, setScore] = useState({ observe: 78, explore: 65, learn: 82, act: 54, return_dim: 70, overall: 74 });
+  const [score, setScore] = useState(EMPTY_SCORE);
   const [missions, setMissions] = useState([]);
   const [places, setPlaces] = useState([]);
   const [discoveries, setDiscoveries] = useState([]);
   const [actions, setActions] = useState([]);
+  const [streak, setStreak] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -29,30 +31,39 @@ export default function Dashboard() {
       return;
     }
     setError('');
+    let failed = 0;
+    // Keep one failing endpoint from wiping the whole dashboard, but never
+    // fabricate data: failed slices stay empty and the failure is surfaced.
+    const safe = (promise) => Promise.resolve(promise).catch(() => {
+      failed += 1;
+      return null;
+    });
     try {
-      const [p, s, m, pl, d, a] = await Promise.all([
-        apiFetch('/api/profile', {}, token).catch(() => null),
-        apiFetch('/api/connection', {}, token).catch(() => null),
-        apiFetch('/api/missions', {}, token).catch(() => null),
-        apiFetch('/api/places').catch(() => null),
-        apiFetch('/api/discoveries', {}, token).catch(() => null),
-        apiFetch('/api/actions', {}, token).catch(() => null),
+      const [p, s, m, pl, d, a, st] = await Promise.all([
+        safe(apiFetch('/api/profile', {}, token)),
+        safe(apiFetch('/api/connection', {}, token)),
+        safe(apiFetch('/api/missions', {}, token)),
+        safe(apiFetch('/api/places')),
+        safe(apiFetch('/api/discoveries', {}, token)),
+        safe(apiFetch('/api/actions', {}, token)),
+        safe(apiFetch('/api/streak', {}, token)),
       ]);
-      setProfile(p && typeof p === 'object' ? p : { name: user?.name || 'Explorer', points: 120 });
-      setScore(s && typeof s === 'object' && s.overall !== undefined ? s : { observe: 78, explore: 65, learn: 82, act: 54, return_dim: 70, overall: 74 });
-      setMissions(Array.isArray(m) && m.length > 0 ? m : [
-        { id: 'm1', title: 'Find 3 Leaf Textures Under Peepal Shade', category: 'Habitat', minutes: 15, status: 'pending', xp: 50, location: 'Sabarmati Riverfront Park' },
-        { id: 'm2', title: 'Record Morning Songbird Chirps', category: 'Avian', minutes: 10, status: 'pending', xp: 40, location: 'Law Garden' },
-      ]);
-      setPlaces(Array.isArray(pl) && pl.length > 0 ? pl : []);
-      setDiscoveries(Array.isArray(d) ? d : []);
-      setActions(Array.isArray(a) ? a : []);
+      setProfile(p && typeof p === 'object' ? p : null);
+      setScore(s && typeof s === 'object' && s.overall !== undefined ? s : EMPTY_SCORE);
+      setMissions(Array.isArray(m) ? m.map((x) => ({ ...x, id: x.id || x._id })) : []);
+      setPlaces(Array.isArray(pl) ? pl.map((x) => ({ ...x, id: x.id || x._id })) : []);
+      setDiscoveries(Array.isArray(d) ? d.map((x) => ({ ...x, id: x.id || x._id })) : []);
+      setActions(Array.isArray(a) ? a.map((x) => ({ ...x, id: x.id || x._id })) : []);
+      setStreak(st && typeof st === 'object' && typeof st.streak === 'number' ? st.streak : null);
+      if (failed > 0) {
+        setError('Some parts of your dashboard could not be loaded. Please check your connection and try again.');
+      }
     } catch (err) {
-      console.warn('Dashboard load fallback:', err);
+      setError(err instanceof Error ? err.message : 'Could not load your dashboard. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
-  }, [token, user]);
+  }, [token]);
 
   useEffect(() => {
     load();
@@ -67,7 +78,7 @@ export default function Dashboard() {
     setBusy(true);
     try {
       const data = await apiFetch('/api/missions', { method: 'POST', body: JSON.stringify({ generate: true, force: true }) }, token);
-      setMissions(Array.isArray(data) ? data : []);
+      setMissions(Array.isArray(data) ? data.map((x) => ({ ...x, id: x.id || x._id })) : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Pulse could not write missions');
     } finally {
@@ -98,7 +109,6 @@ export default function Dashboard() {
 
   const hour = new Date().getHours();
   const greet = hour < 11 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const streak = profile?.streak || 4;
 
   const cardBg = isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/10 text-slate-800 shadow-xl';
   const subCardBg = isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-emerald-950/8';
