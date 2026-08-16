@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Eye, Compass, BookOpen, HandHeart, RotateCcw, Sparkles, ChevronDown } from 'lucide-react';
 import { PulseOrb } from '../components/ui';
 import ThemeToggle from '../components/ThemeToggle';
-import InteractiveHeroSphere from '../components/InteractiveHeroSphere';
+import FrameSequenceHero from '../components/FrameSequenceHero';
 import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
 import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 import AnimatedStatCard from '../components/AnimatedStatCard';
@@ -231,9 +231,9 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* ────────────────────── 1. 3D INTERACTIVE HERO SPHERE ────────────────────── */}
+      {/* ────────────────────── 1. 24FPS MOSS ANIMATION SEQUENCE HERO ────────────────────── */}
       <section id="hero" className="pt-16">
-        <InteractiveHeroSphere />
+        <FrameSequenceHero />
       </section>
 
       {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER ────────────────────── */}
