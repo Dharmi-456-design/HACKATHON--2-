@@ -899,14 +899,14 @@ export default function PulseChat() {
 
       {/* ──────────────── CHAT MESSAGES THREAD ──────────────── */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-4 pr-1.5 custom-chat-scroll">
-        {loading && (
+        {busy && (
           <div className="flex items-center justify-center py-10 gap-3 text-sm text-emerald-400/80">
             <EkgPulseOrb size={34} active={true} />
             <span className="animate-pulse">{t.notebookLoading}</span>
           </div>
         )}
 
-        {!loading && !messages.length && (
+        {!busy && !messages.length && (
           <div className="flex items-start gap-3.5 justify-start max-w-full">
             <EkgPulseOrb size={40} />
             <div className="max-w-lg bg-[#13271C] border border-[#20422E] border-l-4 border-l-[#4ADE80] text-slate-100 rounded-2xl rounded-tl-xs p-4.5 shadow-md space-y-2 relative">
