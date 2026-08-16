@@ -92,7 +92,7 @@ export default function AppShell() {
         animate={{ width: collapsed ? 68 : 240 }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         className={`hidden md:flex flex-col border-r sticky top-0 h-screen shrink-0 z-20 overflow-hidden select-none
-          ${isDark ? 'bg-[#111f17] border-white/8' : 'bg-white border-ink/8'}`}
+          ${isDark ? 'bg-[#1C3727] border-white/10' : 'bg-[#F8F9FA] border-ink/8'}`}
       >
         {/* Brand & Toggle Header */}
         <div className="h-16 px-3 flex items-center shrink-0 border-b border-transparent">
@@ -113,8 +113,8 @@ export default function AppShell() {
                   aria-label="Expand sidebar"
                   className={`p-2 rounded-xl transition-all duration-150 cursor-pointer ${
                     isDark
-                      ? 'text-[#97CDAB] hover:bg-white/10'
-                      : 'text-forest hover:bg-[#EDF2EA]'
+                      ? 'text-[#96CD7B] hover:bg-white/10'
+                      : 'text-[#1C3727] hover:bg-[#E2EFE0]'
                   }`}
                 >
                   <PanelLeftOpen size={20} strokeWidth={2} />
@@ -177,11 +177,11 @@ export default function AppShell() {
                 } ${
                   isActive
                     ? isDark
-                      ? 'bg-[#97CDAB]/15 text-[#97CDAB] font-semibold'
-                      : 'bg-[#1B3A2C] text-white font-semibold shadow-sm'
+                      ? 'bg-[#96CD7B]/20 text-[#96CD7B] font-semibold'
+                      : 'bg-[#1C3727] text-[#F8F9FA] font-semibold shadow-sm'
                     : isDark
                       ? 'text-white/60 hover:bg-white/6 hover:text-white/90'
-                      : 'text-forest/70 hover:bg-[#EDF2EA] hover:text-forest'
+                      : 'text-forest/70 hover:bg-[#E2EFE0] hover:text-forest'
                 }`
               }
             >

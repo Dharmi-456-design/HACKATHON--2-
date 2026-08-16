@@ -49,16 +49,15 @@ export default function InteractiveHeroSphere() {
     const ctx = canvasTexture.getContext('2d');
     if (ctx) {
       const grad = ctx.createLinearGradient(0, 0, 512, 512);
-      grad.addColorStop(0, '#1B3A2C');
-      grad.addColorStop(0.3, '#2D5A43');
-      grad.addColorStop(0.6, '#487A5B');
-      grad.addColorStop(0.85, '#97CDAB');
-      grad.addColorStop(1, '#C4A35A');
+      grad.addColorStop(0, '#1C3727');
+      grad.addColorStop(0.35, '#2D5A43');
+      grad.addColorStop(0.7, '#96CD7B');
+      grad.addColorStop(1, '#E6C176');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 512, 512);
 
       // Noise spots for moss/terrain details
-      ctx.fillStyle = 'rgba(15, 33, 24, 0.35)';
+      ctx.fillStyle = 'rgba(14, 30, 21, 0.35)';
       for (let i = 0; i < 400; i++) {
         const x = Math.random() * 512;
         const y = Math.random() * 512;
@@ -102,7 +101,7 @@ export default function InteractiveHeroSphere() {
     // Outer atmosphere glow ring
     const atmosphereGeo = new THREE.IcosahedronGeometry(1.92, 20);
     const atmosphereMat = new THREE.MeshBasicMaterial({
-      color: 0x97cdab,
+      color: 0x96cd7b,
       wireframe: true,
       transparent: true,
       opacity: 0.18,
@@ -121,7 +120,7 @@ export default function InteractiveHeroSphere() {
     }
     particlesGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
     const particleMat = new THREE.PointsMaterial({
-      color: 0xc4a35a,
+      color: 0xe6c176,
       size: 0.04,
       transparent: true,
       opacity: 0.7,
@@ -134,11 +133,11 @@ export default function InteractiveHeroSphere() {
     dirLight1.position.set(5, 5, 4);
     scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0x97cdab, 1.2);
+    const dirLight2 = new THREE.DirectionalLight(0x96cd7b, 1.2);
     dirLight2.position.set(-5, -3, -2);
     scene.add(dirLight2);
 
-    const ambientLight = new THREE.AmbientLight(0x1b3a2c, 1.5);
+    const ambientLight = new THREE.AmbientLight(0x1c3727, 1.5);
     scene.add(ambientLight);
 
     // Animation Loop
@@ -212,14 +211,14 @@ export default function InteractiveHeroSphere() {
   ];
 
   return (
-    <div ref={containerRef} className="relative min-h-[220vh] bg-[#0A1610] text-white">
+    <div ref={containerRef} className="relative min-h-[220vh] bg-[#0E1E15] text-white">
       {/* Sticky viewport container */}
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         
         {/* Glowing Background Radial Accents */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#97CDAB]/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-[C4A35A]/10 rounded-full blur-[140px]" />
+          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#96CD7B]/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[E6C176]/10 rounded-full blur-[140px]" />
         </div>
 
         <div className="max-w-7xl w-full mx-auto px-6 grid lg:grid-cols-12 gap-8 items-center z-10">
@@ -233,7 +232,7 @@ export default function InteractiveHeroSphere() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#97CDAB]/15 border border-[#97CDAB]/30 text-[#97CDAB] text-xs uppercase tracking-[0.2em] font-semibold mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs uppercase tracking-[0.2em] font-semibold mb-4">
                 <Sparkles size={13} />
                 {steps[activeStep].subtitle}
               </div>
@@ -252,7 +251,7 @@ export default function InteractiveHeroSphere() {
                   <div
                     key={idx}
                     className={`h-1.5 rounded-full transition-all duration-500 ${
-                      activeStep === idx ? 'w-8 bg-[#97CDAB]' : 'w-2 bg-white/20'
+                      activeStep === idx ? 'w-8 bg-[#96CD7B]' : 'w-2 bg-white/20'
                     }`}
                   />
                 ))}
@@ -276,7 +275,7 @@ export default function InteractiveHeroSphere() {
               className="absolute top-12 right-6 sm:right-12 backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-3.5 shadow-2xl z-30 max-w-[220px]"
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#97CDAB]/20 flex items-center justify-center text-[#97CDAB]">
+                <div className="w-8 h-8 rounded-xl bg-[#96CD7B]/20 flex items-center justify-center text-[#96CD7B]">
                   <ShieldCheck size={18} />
                 </div>
                 <div>

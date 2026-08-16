@@ -51,11 +51,11 @@ export default function HorizontalReviewsTicker() {
   const x = useTransform(scrollYProgress, [0, 1], ['0%', '-45%']);
 
   return (
-    <section ref={sectionRef} className="py-24 bg-[#111f17] text-white overflow-hidden relative">
+    <section ref={sectionRef} className="py-24 bg-[#1C3727] text-white overflow-hidden relative">
       {/* Section Header */}
       <div className="max-w-7xl mx-auto px-6 mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.25em] text-[#97CDAB] font-semibold mb-2">COMMUNITY TRUST</p>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-[#96CD7B] font-semibold mb-2">COMMUNITY TRUST</p>
           <h2 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-white">
             Beyond clients.<br />Trusted partners.
           </h2>
@@ -63,7 +63,7 @@ export default function HorizontalReviewsTicker() {
 
         <a
           href="#community"
-          className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-semibold text-white/70 hover:text-[#97CDAB] transition-colors group"
+          className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-semibold text-white/70 hover:text-[#96CD7B] transition-colors group"
         >
           Read all reviews <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
         </a>
@@ -75,7 +75,7 @@ export default function HorizontalReviewsTicker() {
           {REVIEWS.concat(REVIEWS).map((rev, idx) => (
             <div
               key={`${rev.id}-${idx}`}
-              className="w-[360px] sm:w-[420px] shrink-0 bg-[#16271F] border border-white/8 hover:border-[#97CDAB]/40 rounded-3xl p-7 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col justify-between group"
+              className="w-[360px] sm:w-[420px] shrink-0 bg-[#162C20] border border-white/8 hover:border-[#96CD7B]/40 rounded-3xl p-7 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col justify-between group"
             >
               <div>
                 {/* Author Info */}
@@ -83,16 +83,16 @@ export default function HorizontalReviewsTicker() {
                   <img
                     src={rev.avatar}
                     alt={rev.name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-[#97CDAB]/30"
+                    className="w-12 h-12 rounded-full object-cover border-2 border-[#96CD7B]/30"
                   />
                   <div>
-                    <h4 className="font-semibold text-base text-white group-hover:text-[#97CDAB] transition-colors">
+                    <h4 className="font-semibold text-base text-white group-hover:text-[#96CD7B] transition-colors">
                       {rev.name}
                     </h4>
                     <p className="text-xs text-white/50">{rev.role}</p>
                   </div>
 
-                  <div className="ml-auto flex gap-0.5 text-amber-400">
+                  <div className="ml-auto flex gap-0.5 text-[#E6C176]">
                     {[...Array(5)].map((_, i) => (
                       <Star key={i} size={13} fill="currentColor" />
                     ))}
@@ -107,7 +107,7 @@ export default function HorizontalReviewsTicker() {
 
               <div className="mt-6 pt-4 border-t border-white/6 flex items-center justify-between text-xs text-white/40">
                 <span className="flex items-center gap-1">
-                  <Quote size={12} className="text-[#97CDAB]" /> Verified Feedback
+                  <Quote size={12} className="text-[#96CD7B]" /> Verified Feedback
                 </span>
                 <span>Nature Explorer Partner</span>
               </div>

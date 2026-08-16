@@ -32,10 +32,10 @@ export default function ScrollTypographyHighlight() {
   ];
 
   return (
-    <section ref={containerRef} className="py-32 bg-[#0E1A13] text-white px-6 relative overflow-hidden">
+    <section ref={containerRef} className="py-32 bg-[#0E1E15] text-white px-6 relative overflow-hidden">
       {/* Scroll illuminated headline */}
       <div className="max-w-5xl mx-auto text-center">
-        <p className="text-[11px] uppercase tracking-[0.28em] text-[#C4A35A] font-semibold mb-6">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-[#E6C176] font-semibold mb-6">
           THE PHILOSOPHY
         </p>
 
@@ -70,7 +70,7 @@ export default function ScrollTypographyHighlight() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
             <div className="absolute bottom-0 inset-x-0 p-5">
-              <p className="text-[10px] uppercase tracking-[0.18em] text-[#97CDAB] font-semibold">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-[#96CD7B] font-semibold">
                 {item.category}
               </p>
               <h3 className="font-display text-lg text-white font-semibold mt-1">
