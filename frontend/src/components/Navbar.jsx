@@ -42,15 +42,9 @@ export default function Navbar() {
             <img
               src="/logo.webp"
               alt="NaturePulse Logo"
-<<<<<<< HEAD
               className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover shadow-md group-hover:scale-105 transition-transform ${
                 isDark ? 'border border-white/20' : 'border border-emerald-900/15'
               }`}
-=======
-              width="40"
-              height="40"
-              className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-white/20 shadow-md group-hover:scale-105 transition-transform"
->>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
             />
           </div>
           <div className="flex flex-col">
@@ -68,7 +62,6 @@ export default function Navbar() {
         </Link>
 
         {/* Center Pill Nav Links (Desktop) */}
-<<<<<<< HEAD
         <nav className={`hidden md:flex items-center gap-1 rounded-full px-3 py-1.5 backdrop-blur-md shadow-inner ${
           isDark ? 'bg-white/5 border border-white/10' : 'bg-slate-900/5 border border-slate-900/10'
         }`}>
@@ -91,39 +84,6 @@ export default function Navbar() {
               {item.label}
             </a>
           ))}
-=======
-        <nav className="hidden md:flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 backdrop-blur-md shadow-inner" aria-label="Main Navigation">
-          <a
-            href="#hero"
-            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            Explore
-          </a>
-          <a
-            href="#reviews"
-            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            Community
-          </a>
-          <a
-            href="#journey"
-            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            The Loop
-          </a>
-          <a
-            href="#pulse"
-            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            Pulse AI
-          </a>
-          <a
-            href="#pricing"
-            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            Pricing
-          </a>
->>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
         </nav>
 
         {/* Right CTA Actions */}
@@ -163,7 +123,6 @@ export default function Navbar() {
               >
                 Sign in
               </Link>
-<<<<<<< HEAD
               <button
                 onClick={handleDashboardClick}
                 className={`inline-flex items-center gap-1.5 rounded-full font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 transition-all cursor-pointer shadow-md hover:scale-[1.02] ${
@@ -171,14 +130,11 @@ export default function Navbar() {
                     ? 'bg-[#96CD7B] text-[#0A1610] hover:bg-white'
                     : 'bg-[#1C3727] text-white hover:bg-[#2A4D38]'
                 }`}
-=======
-              <Link
-                to={isLoggedIn ? '/app' : '/login'}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#96CD7B] text-[#0A1610] font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 hover:bg-white transition-all cursor-pointer shadow-md hover:scale-[1.02]"
->>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
               >
+                <Link>
                 Begin <ArrowRight size={14} />
-              </Link>
+                </Link>
+              </button>
             </div>
           )}
 

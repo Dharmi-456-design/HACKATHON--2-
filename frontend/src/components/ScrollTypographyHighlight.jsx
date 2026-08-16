@@ -4,7 +4,6 @@ import { useTheme } from '../contexts/ThemeContext';
 
 const TEXT = "A relationship with nature is recognized long before it is defined. Your everyday surroundings shape how you perceive, protect, and reconnect with the living world. We help cultivate that difference.";
 
-<<<<<<< HEAD
 function Word({ children, progress, range, isDark }) {
   const opacity = useTransform(progress, range, [0.22, 1]);
   const color = useTransform(
@@ -14,11 +13,6 @@ function Word({ children, progress, range, isDark }) {
       ? ['rgba(255, 255, 255, 0.25)', 'rgba(255, 255, 255, 1)']
       : ['rgba(15, 23, 42, 0.25)', 'rgba(15, 23, 42, 1)']
   );
-=======
-function Word({ children, progress, range }) {
-  const opacity = useTransform(progress, range, [0.72, 1]);
-  const color = useTransform(progress, range, ['rgba(255, 255, 255, 0.72)', 'rgba(255, 255, 255, 1)']);
->>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
   const y = useTransform(progress, range, [4, 0]);
 
   return (

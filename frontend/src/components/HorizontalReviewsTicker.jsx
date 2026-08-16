@@ -163,17 +163,8 @@ export default function HorizontalReviewsTicker() {
               isDark ? 'text-white/50' : 'text-slate-600'
             }`}>
               <span>01 / START</span>
-<<<<<<< HEAD
               <span className={isDark ? 'text-[#96CD7B]' : 'text-emerald-700 font-bold'}>
                 {scrollPos >= 0.98 ? '✓ ALL 10 CARDS COMPLETED' : 'SCROLL LEFT → RIGHT (10 CARDS)'}
-=======
-              <span className="text-[#96CD7B]">
-                {reports.length === 0
-                  ? 'NO REPORTS YET'
-                  : scrollPos >= 0.98
-                    ? `✓ ALL ${reports.length} CARDS COMPLETED`
-                    : `SCROLL LEFT → RIGHT (${reports.length} CARDS)`}
->>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
               </span>
               <span>{Math.max(10, reports.length)} / END</span>
             </div>
@@ -269,17 +260,11 @@ export default function HorizontalReviewsTicker() {
           </motion.div>
 
           {/* Bottom Hint */}
-<<<<<<< HEAD
           <div className={`max-w-7xl w-full mx-auto flex items-center justify-between text-xs z-20 pb-2 shrink-0 ${
             isDark ? 'text-white/40' : 'text-slate-500'
           }`}>
             <span>Scroll vertically to complete all 10 cards horizontally (LEFT → RIGHT)</span>
             <span>10 Verified Explorer Reports</span>
-=======
-          <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/75 z-20 pb-2 shrink-0">
-            <span>Scroll vertically to complete all cards horizontally (LEFT → RIGHT)</span>
-            <span>{reports.length} Real Community Field Reports</span>
->>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
           </div>
 
         </div>
