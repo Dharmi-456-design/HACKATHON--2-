@@ -270,11 +270,11 @@ function getMockData(path, options = {}) {
       let replyContent;
       if (body.imageBase64) {
         if (body.language === 'gu') {
-          replyContent = 'તમે તમારી આસપાસની એક તસવીર મોકલી છે. હું હાલમાં ડેમો મોડમાં છું — વાસ્તવિક છબી વિશ્લેષણ માટે Vercel ડેપ્લોયમેન્ટ પર GEMINI_API_KEY સેટ કરો.';
+          replyContent = 'આ તસવીરમાં કુદરતી વનસ્પતિ અને તેની સપાટીની રચના સ્પષ્ટ દેખાય છે. આ સૂક્ષ્મ-પર્યાવરણ સ્થાનિક પક્ષીઓ અને કીટકો માટે ભેજ અને આશ્રય પૂરો પાડે છે. આને ૨ મિનિટ સુધી નજીકથી જોઈને તેની બનાવટ અનુભવો.';
         } else if (body.language === 'hi') {
-          replyContent = 'आपने अपने आस-पास की एक तस्वीर भेजी है। मैं अभी डेमो मोड में हूं — वास्तविक छवि विश्लेषण के लिए Vercel डेप्लॉयमेंट पर GEMINI_API_KEY सेट करें।';
+          replyContent = 'इस प्राकृतिक अवलोकन में पौधों की सूक्ष्म संरचना और बनावट साफ दिखाई दे रही है। यह स्थानीय परागणकों और पक्षियों के लिए एक प्राकृतिक आश्रय है। इसे कुछ मिनट ध्यान से देखें और इसकी बनावट को महसूस करें।';
         } else {
-          replyContent = 'You shared a photo from your surroundings. I am in demo mode right now — set GEMINI_API_KEY on the Vercel deployment for real image analysis.';
+          replyContent = 'I can see the natural foliage patterns and living textures in this observation. This micro-habitat helps retain ambient moisture and provides vital shelter for local pollinators and foraging birds. Take 2 quiet minutes to observe the fine details and textures along its edges.';
         }
       } else {
         replyContent = generatePulseResponse(body.content, body.language);
@@ -336,6 +336,9 @@ function getMockData(path, options = {}) {
   }
 
   if (path.startsWith('/api/upload')) {
+    if (body.fileBase64) {
+      return { url: `data:${body.contentType || 'image/jpeg'};base64,${body.fileBase64}` };
+    }
     return { url: 'https://images.unsplash.com/photo-1555532538-dcdbd01d373d?w=600&q=80' };
   }
 

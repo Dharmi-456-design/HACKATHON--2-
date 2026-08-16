@@ -43,7 +43,7 @@ const validateCreateIssue = [
     .optional()
     .customSanitizer(sanitizeImages)
     .isArray().withMessage('images must be an array of URLs')
-    .isLength({ max: 4 }).withMessage('An issue can have at most 4 images'),
+    .custom((arr) => !Array.isArray(arr) || arr.length <= 4).withMessage('An issue can have at most 4 images'),
   body('address')
     .optional()
     .customSanitizer((v) => sanitizeText(v, 300))
@@ -80,7 +80,7 @@ const validateUpdateIssue = [
     .optional()
     .customSanitizer(sanitizeImages)
     .isArray().withMessage('images must be an array of URLs')
-    .isLength({ max: 4 }).withMessage('An issue can have at most 4 images'),
+    .custom((arr) => !Array.isArray(arr) || arr.length <= 4).withMessage('An issue can have at most 4 images'),
   body('address')
     .optional()
     .customSanitizer((v) => sanitizeText(v, 300))

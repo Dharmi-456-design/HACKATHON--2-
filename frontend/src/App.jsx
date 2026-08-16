@@ -21,6 +21,7 @@ import BiodiversityPassport from './pages/BiodiversityPassport';
 import NatureMissions from './pages/NatureMissions';
 import CommunityBiodiversityMap from './pages/CommunityBiodiversityMap';
 import WeeklyRecap from './pages/WeeklyRecap';
+import GreenWatch from './pages/GreenWatch';
 import LithosHero from './components/LithosHero';
 import { useEffect, useState } from 'react';
 import { apiFetch } from './lib/api';
@@ -95,6 +96,7 @@ export default function App() {
               <Route path="missions" element={<NatureMissions />} />
               <Route path="community-map" element={<CommunityBiodiversityMap />} />
               <Route path="recap" element={<WeeklyRecap />} />
+              <Route path="green-watch" element={<GreenWatch />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

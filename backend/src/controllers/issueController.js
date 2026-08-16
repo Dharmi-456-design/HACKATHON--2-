@@ -3,6 +3,7 @@ const { validationResult } = require('express-validator');
 const Issue = require('../models/Issue');
 const User = require('../models/User');
 const { listIssues } = require('../services/issueService');
+const { deleteCloudinaryImage } = require('./uploadController');
 const asyncHandler = require('../utils/asyncHandler');
 
 const checkValidation = (req) => {
@@ -96,10 +97,21 @@ const updateIssue = asyncHandler(async (req, res, next) => {
     throw new Error('You can only edit your own issues');
   }
 
+  const previousImages = issue.images || [];
   const allowed = ['title', 'description', 'category', 'images', 'location', 'address'];
   allowed.forEach((field) => {
     if (req.body[field] !== undefined) issue[field] = req.body[field];
   });
+
+  // When the caller explicitly replaces or removes images, clean up the
+  // Cloudinary assets that are no longer referenced. Never deletes images that
+  // were simply left untouched, and failures are non-fatal.
+  if (req.body.images !== undefined) {
+    const removed = previousImages.filter((url) => !req.body.images.includes(url));
+    removed.forEach((url) => {
+      deleteCloudinaryImage(url).catch(() => {});
+    });
+  }
 
   const updated = await issue.save();
   const populated = await updated.populate('reportedBy', 'name points role');
