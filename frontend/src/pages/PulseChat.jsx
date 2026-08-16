@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Send, RotateCcw, Copy, Check, Sparkles, Sun, Bell, User, Image as ImageIcon, Mic, CheckCheck, Globe, ChevronDown, History, Plus, Edit2, Trash2, X, MessageSquare, MicOff, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { apiFetch } from '../lib/api';
+import { chatWithPulse } from '../lib/openrouter';
 import { ErrorBanner } from '../components/ui';
 
 // Multilingual UI Translations Dictionary
@@ -217,9 +216,7 @@ const STARTERS = [
 ];
 
 export default function PulseChat() {
-  const { session } = useAuth();
   const { toggleTheme } = useTheme();
-  const token = session?.access_token;
 
   const [lang, setLang] = useState(() => localStorage.getItem('pulse_chat_lang') || 'en');
   const [showLangModal, setShowLangModal] = useState(() => !localStorage.getItem('pulse_lang_selected'));
@@ -473,11 +470,16 @@ export default function PulseChat() {
     saveActiveThreadMessages(newMsgs);
 
     try {
-      const reply = await apiFetch(
-        '/api/pulse',
-        { method: 'POST', body: JSON.stringify({ content: fullMessageContent, language: lang }) },
-        token
-      );
+      const history = newMsgs
+        .filter((m) => m.role === 'user' || m.role === 'assistant')
+        .map((m) => ({ role: m.role, content: m.content }));
+      const replyContent = await chatWithPulse(history);
+      const reply = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: replyContent,
+        created_at: new Date().toISOString(),
+      };
       const finalMsgs = [...newMsgs, reply];
       setMessages(finalMsgs);
       saveActiveThreadMessages(finalMsgs);
@@ -897,14 +899,14 @@ export default function PulseChat() {
 
       {/* ──────────────── CHAT MESSAGES THREAD ──────────────── */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-4 pr-1.5 custom-chat-scroll">
-        {loading && (
+        {busy && (
           <div className="flex items-center justify-center py-10 gap-3 text-sm text-emerald-400/80">
             <EkgPulseOrb size={34} active={true} />
             <span className="animate-pulse">{t.notebookLoading}</span>
           </div>
         )}
 
-        {!loading && !messages.length && (
+        {!busy && !messages.length && (
           <div className="flex items-start gap-3.5 justify-start max-w-full">
             <EkgPulseOrb size={40} />
             <div className="max-w-lg bg-[#13271C] border border-[#20422E] border-l-4 border-l-[#4ADE80] text-slate-100 rounded-2xl rounded-tl-xs p-4.5 shadow-md space-y-2 relative">

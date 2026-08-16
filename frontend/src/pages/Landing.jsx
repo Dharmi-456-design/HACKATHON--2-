@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Eye, Compass, BookOpen, HandHeart, RotateCcw, Sparkles, ChevronDown } from 'lucide-react';
 import { PulseOrb } from '../components/ui';
 import ThemeToggle from '../components/ThemeToggle';
-import FrameSequenceHero from '../components/FrameSequenceHero';
+import LithosHero from '../components/LithosHero';
 import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
 import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 import AnimatedStatCard from '../components/AnimatedStatCard';
@@ -231,9 +231,9 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* ────────────────────── 1. 24FPS MOSS ANIMATION SEQUENCE HERO ────────────────────── */}
-      <section id="hero" className="pt-16">
-        <FrameSequenceHero />
+      {/* ────────────────────── 1. LITHOS CURSOR-FOLLOWING SPOTLIGHT HERO SECTION ────────────────────── */}
+      <section id="hero">
+        <LithosHero />
       </section>
 
       {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER ────────────────────── */}

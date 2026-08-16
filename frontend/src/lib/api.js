@@ -380,10 +380,14 @@ function getMockData(path, options = {}) {
 }
 
 export async function apiFetch(path, options = {}, token = null) {
-  if (isDemoMode() || sessionStorage.getItem('np_demo_login') === '1') {
+  const apiUrl = import.meta.env.VITE_API_URL;
+
+  // If in demo mode or no remote API backend configured, use rich local mock data
+  if (!apiUrl || isDemoMode() || sessionStorage.getItem('np_demo_login') === '1') {
     return getMockData(path, options);
   }
 
+  const url = apiUrl.endsWith('/') ? `${apiUrl.slice(0, -1)}${path}` : `${apiUrl}${path}`;
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
@@ -391,7 +395,7 @@ export async function apiFetch(path, options = {}, token = null) {
   if (token) headers.Authorization = `Bearer ${token}`;
 
   try {
-    const res = await fetch(path, { ...options, headers });
+    const res = await fetch(url, { ...options, headers });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       return getMockData(path, options);
