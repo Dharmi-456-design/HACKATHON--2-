@@ -477,88 +477,88 @@ export default function NatureMissions() {
           ))}
         </div>
 
-        {/* Filtered Missions depending on active tab */}
-        {(() => {
-          const displayMissions = activeTab === 'active'
-            ? missions.filter((m) => m.status !== 'completed')
-            : activeTab === 'completed'
-            ? missions.filter((m) => m.status === 'completed')
-            : missions;
+        {/* ──────────────── TABS 1, 2, 3: PATH, ACTIVE & COMPLETED ──────────────── */}
+        {(activeTab === 'path' || activeTab === 'active' || activeTab === 'completed') && (
+          <div className="space-y-8">
+            {/* Missions Grid */}
+            <div className={`border rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative overflow-hidden ${
+              isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-white border-emerald-900/15'
+            }`}>
+              <div className="flex justify-between items-center">
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {activeTab === 'active' ? '⚡ Active In-Progress Quests' : activeTab === 'completed' ? '🏆 Completed Achievements' : 'Ecological Checkpoint Mission Trail'}
+                </h3>
+                <span className="text-xs text-[#4ADE80] font-semibold">Tap any Mission to Expand Checklist</span>
+              </div>
 
-          if (activeTab === 'path' || activeTab === 'active' || activeTab === 'completed') {
-            return (
-              <div className="space-y-8">
-                {/* Missions Grid */}
-                <div className={`border rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative overflow-hidden ${
-                  isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-white border-emerald-900/15'
+              {((activeTab === 'active'
+                ? missions.filter((m) => m.status !== 'completed')
+                : activeTab === 'completed'
+                ? missions.filter((m) => m.status === 'completed')
+                : missions).length === 0) && (
+                <div className={`border border-dashed rounded-3xl p-10 text-center space-y-3 ${
+                  isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-emerald-50 border-emerald-200'
                 }`}>
-                  <div className="flex justify-between items-center">
-                    <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {activeTab === 'active' ? '⚡ Active In-Progress Quests' : activeTab === 'completed' ? '🏆 Completed Achievements' : 'Ecological Checkpoint Mission Trail'}
-                    </h3>
-                    <span className="text-xs text-[#4ADE80] font-semibold">Tap any Mission to Expand Checklist</span>
-                  </div>
-
-                  {displayMissions.length === 0 && (
-                    <div className={`border border-dashed rounded-3xl p-10 text-center space-y-3 ${
-                      isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-emerald-50 border-emerald-200'
-                    }`}>
-                      <p className="text-3xl">🌿</p>
-                      <p className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                        {activeTab === 'completed' ? 'No completed missions yet' : 'No active missions'}
-                      </p>
-                      <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                        {activeTab === 'completed'
-                          ? 'Complete action items on any active mission card to earn XP and move them here.'
-                          : 'Create a custom mission or click Generate Challenge to start your next quest!'}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                    {displayMissions.map((mission) => {
-                      const isSelected = selectedMission?.id === mission.id;
-                      const isDone = mission.status === 'completed';
-                      const completedStepsCount = mission.steps.filter((s) => s.done).length;
-                      const progressPct = Math.round((completedStepsCount / mission.steps.length) * 100);
-
-                      return (
-                        <motion.div
-                          key={mission.id}
-                          whileHover={{ scale: 1.04 }}
-                          onClick={() => setSelectedMission(mission)}
-                          className={`p-5 rounded-3xl border transition-all cursor-pointer shadow-xl relative overflow-hidden flex flex-col justify-between h-56 ${
-                            isSelected
-                              ? 'bg-[#1A3827] border-[#4ADE80] ring-2 ring-[#4ADE80]'
-                              : isDark ? 'bg-[#07150C] border-[#20422E] hover:border-[#4ADE80]/50' : 'bg-[#F4F7F4] border-slate-200 hover:border-emerald-500'
-                          }`}
-                        >
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-start">
-                              <span className="px-3 py-1 rounded-full bg-[#1A3827] text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/30">
-                                {mission.category}
-                              </span>
-                              <span className="text-xs text-amber-400 font-extrabold">+{mission.xpReward} XP</span>
-                            </div>
-                            <h4 className={`font-display text-base font-bold line-clamp-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{mission.title}</h4>
-                          </div>
-
-                          <div className="space-y-2 pt-2 border-t border-emerald-950/15">
-                            <div className="flex justify-between items-center text-[10px]">
-                              <span className="text-slate-400">{completedStepsCount} of {mission.steps.length} Steps</span>
-                              <span className="text-[#4ADE80] font-bold">{progressPct}%</span>
-                            </div>
-                            <div className="w-full bg-[#13271C] h-2 rounded-full overflow-hidden">
-                              <div className="bg-[#4ADE80] h-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
+                  <p className="text-3xl">🌿</p>
+                  <p className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    {activeTab === 'completed' ? 'No completed missions yet' : 'No active missions'}
+                  </p>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    {activeTab === 'completed'
+                      ? 'Complete action items on any active mission card to earn XP and move them here.'
+                      : 'Create a custom mission or click Generate Challenge to start your next quest!'}
+                  </p>
                 </div>
-              {/* ──────────────── UNLOCKABLE ACHIEVEMENT MILESTONES ──────────────── */}
-              <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {(activeTab === 'active'
+                  ? missions.filter((m) => m.status !== 'completed')
+                  : activeTab === 'completed'
+                  ? missions.filter((m) => m.status === 'completed')
+                  : missions).map((mission) => {
+                  const isSelected = selectedMission?.id === mission.id;
+                  const completedStepsCount = mission.steps.filter((s) => s.done).length;
+                  const progressPct = Math.round((completedStepsCount / mission.steps.length) * 100);
+
+                  return (
+                    <motion.div
+                      key={mission.id}
+                      whileHover={{ scale: 1.04 }}
+                      onClick={() => setSelectedMission(mission)}
+                      className={`p-5 rounded-3xl border transition-all cursor-pointer shadow-xl relative overflow-hidden flex flex-col justify-between h-56 ${
+                        isSelected
+                          ? 'bg-[#1A3827] border-[#4ADE80] ring-2 ring-[#4ADE80]'
+                          : isDark ? 'bg-[#07150C] border-[#20422E] hover:border-[#4ADE80]/50' : 'bg-[#F4F7F4] border-slate-200 hover:border-emerald-500'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-start">
+                          <span className="px-3 py-1 rounded-full bg-[#1A3827] text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/30">
+                            {mission.category}
+                          </span>
+                          <span className="text-xs text-amber-400 font-extrabold">+{mission.xpReward} XP</span>
+                        </div>
+                        <h4 className={`font-display text-base font-bold line-clamp-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{mission.title}</h4>
+                      </div>
+
+                      <div className="space-y-2 pt-2 border-t border-emerald-950/15">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-400">{completedStepsCount} of {mission.steps.length} Steps</span>
+                          <span className="text-[#4ADE80] font-bold">{progressPct}%</span>
+                        </div>
+                        <div className="w-full bg-[#13271C] h-2 rounded-full overflow-hidden">
+                          <div className="bg-[#4ADE80] h-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ──────────────── UNLOCKABLE ACHIEVEMENT MILESTONES ──────────────── */}
+            <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
               <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
                 <div>
                   <h3 className="font-display text-2xl font-bold text-white">{t.achievementsTitle}</h3>
@@ -630,10 +630,7 @@ export default function NatureMissions() {
               </div>
             </div>
           </div>
-        );
-      }
-      return null;
-    })()}
+        )}
 
         {/* ──────────────── TAB 4: CUSTOM CREATOR ──────────────── */}
         {activeTab === 'create' && (

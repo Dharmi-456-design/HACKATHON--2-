@@ -110,12 +110,12 @@ export default function Navbar() {
               >
                 Sign in
               </Link>
-              <button
-                onClick={handleDashboardClick}
+              <Link
+                to={isLoggedIn ? '/app' : '/login'}
                 className="inline-flex items-center gap-1.5 rounded-full bg-[#96CD7B] text-[#0A1610] font-semibold text-xs sm:text-sm px-4 sm:px-5 py-2 hover:bg-white transition-all cursor-pointer shadow-md hover:scale-[1.02]"
               >
                 Begin <ArrowRight size={14} />
-              </button>
+              </Link>
             </div>
           )}
 

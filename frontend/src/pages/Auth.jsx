@@ -37,7 +37,7 @@ function GoogleIcon() {
 export default function Auth({ initialMode = 'login' }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, login, register, signInWithGoogle, logout } = useAuth();
+  const { user, login, register, demoLogin, signInWithGoogle, logout } = useAuth();
   const stats = usePublicStats();
 
   const perks = [
@@ -75,6 +75,8 @@ export default function Auth({ initialMode = 'login' }) {
   const [showForgot, setShowForgot] = useState(false);
   const [resetBusy, setResetBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+
+  const [showVideo, setShowVideo] = useState(true);
 
   const isLogin = mode === 'login';
 
@@ -187,19 +189,21 @@ export default function Auth({ initialMode = 'login' }) {
   return (
     <div className="relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden p-3 sm:p-6 lg:p-8 font-sans text-white">
       {/* ── 1. LIVE FULLSCREEN VIDEO BACKGROUND (BALANCED CINEMATIC TONE) ── */}
-      <div className="fixed inset-0 w-full h-full -z-10 overflow-hidden select-none pointer-events-none bg-[#051009]">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          disablePictureInPicture
-          disableRemotePlayback
-          className="absolute inset-0 w-full h-full object-cover scale-[1.02] will-change-transform opacity-65 brightness-95 contrast-105"
-        >
-          <source src="/Animating_nature_scene_with_breeze_202608161651.mp4" type="video/mp4" />
-        </video>
+      <div className="fixed inset-0 w-full h-full -z-10 overflow-hidden select-none pointer-events-none bg-gradient-to-br from-[#040C07] via-[#0D2216] to-[#040C07]">
+        {showVideo && (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="none"
+            disablePictureInPicture
+            disableRemotePlayback
+            className="absolute inset-0 w-full h-full object-cover scale-[1.02] will-change-transform opacity-65 brightness-95 contrast-105"
+          >
+            <source src="/Animating_nature_scene_with_breeze_202608161651.mp4" type="video/mp4" />
+          </video>
+        )}
         {/* Balanced cinematic gradient overlay: soft contrast without washing out the video */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#051009]/65 via-[#051009]/30 to-[#030905]/75" />
         <div className="absolute inset-0 bg-radial from-transparent via-transparent to-[#030905]/50" />
@@ -207,12 +211,13 @@ export default function Auth({ initialMode = 'login' }) {
 
       {/* ── TOP BAR: BACK NAVIGATION & BRAND BADGE ── */}
       <header className="relative w-full max-w-7xl mx-auto flex items-center justify-between z-30 pt-1 pb-3 sm:py-2">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/45 hover:bg-black/75 text-white/90 hover:text-white text-xs font-medium backdrop-blur-md border border-white/15 transition-all duration-200 hover:scale-105"
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/45 hover:bg-black/75 text-white/90 hover:text-white text-xs font-medium backdrop-blur-md border border-white/15 transition-all duration-200 hover:scale-105 cursor-pointer"
         >
           <ArrowLeft size={13} /> <span className="hidden xs:inline">Back to</span> NaturePulse
-        </Link>
+        </button>
 
         {/* Floating Switcher Pills */}
         <div className="flex items-center p-1 rounded-full bg-black/55 backdrop-blur-md border border-white/15 shadow-xl">
@@ -551,6 +556,19 @@ export default function Auth({ initialMode = 'login' }) {
                           <ArrowRight size={15} />
                         </>
                       )}
+                    </button>
+
+                    {/* Instant 1-Click Demo Login */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        demoLogin();
+                        navigate('/app');
+                      }}
+                      className="w-full mt-2 bg-emerald-950/80 hover:bg-emerald-900 border border-[#96CD7B]/50 text-[#96CD7B] rounded-2xl py-2.5 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                    >
+                      <Sparkles size={14} className="text-[#96CD7B] animate-pulse" />
+                      <span>⚡ Instant 1-Click Access (No Password Required)</span>
                     </button>
                   </form>
 
