@@ -1,6 +1,16 @@
 const mongoose = require('mongoose');
 
 // Profile Schema
+const weeklyGoalSchema = new mongoose.Schema(
+  {
+    id: { type: String, default: () => `g-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` },
+    text: { type: String, required: true, trim: true, maxlength: 300 },
+    done: { type: Boolean, default: false },
+    created_at: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 const profileSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -10,6 +20,8 @@ const profileSchema = new mongoose.Schema(
     available_minutes: { type: Number, default: 20 },
     interests: [{ type: String }],
     onboarding_complete: { type: Boolean, default: true },
+    saved_places: [{ type: String }],
+    weekly_goals: { type: [weeklyGoalSchema], default: [] },
   },
   { timestamps: true }
 );
@@ -141,6 +153,26 @@ const actionSchema = new mongoose.Schema(
 );
 actionSchema.index({ user: 1, createdAt: -1 });
 
+// Pulse Chat Thread Schema
+const chatMessageSchema = new mongoose.Schema(
+  {
+    role: { type: String, enum: ['user', 'assistant'], required: true },
+    content: { type: String, default: '', maxlength: 20000 },
+    created_at: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const chatThreadSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+    title: { type: String, default: 'Ecological Inquiry', maxlength: 120 },
+    messages: { type: [chatMessageSchema], default: [] },
+  },
+  { timestamps: true }
+);
+chatThreadSchema.index({ user: 1, updatedAt: -1 });
+
 module.exports = {
   Profile: mongoose.model('Profile', profileSchema),
   Discovery: mongoose.model('Discovery', discoverySchema),
@@ -150,4 +182,5 @@ module.exports = {
   Story: mongoose.model('Story', storySchema),
   CommunityPost: mongoose.model('CommunityPost', communityPostSchema),
   Action: mongoose.model('Action', actionSchema),
+  ChatThread: mongoose.model('ChatThread', chatThreadSchema),
 };

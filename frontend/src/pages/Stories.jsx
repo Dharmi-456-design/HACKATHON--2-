@@ -7,243 +7,152 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
+import { DEFAULT_STORIES } from '../data/storiesData';
 
 // Multilingual UI Translations for Stories Universe
 const STORIES_TRANSLATIONS = {
   en: {
-    heroTag: 'INTERACTIVE STORY UNIVERSE',
-    heroTitle: 'Cinematic AI & Nature Chronicles',
-    heroSubtitle: 'Step into immersive 3D narratives, shape branching paths, listen with AI Voice, and generate custom stories.',
-    createStoryBtn: 'Create Custom Story',
+    heroTag: 'Interactive Story Universe',
+    heroTitle: 'Living Nature Chronicles & Speculative Ecology',
+    heroSubtitle: 'Step into immersive ecological narratives, explore branching field decisions, and listen with real-time text-to-speech.',
+    createStoryBtn: 'Create New Story',
     featuredTitle: 'The Whispering Redwood Canopy',
-    featuredDesc: 'An ancient canopy conceals a neural web of bioluminescent fungi. Follow Maya as she decodes the forest heartbeat.',
+    featuredDesc: 'An ancient canopy conceals an underground communication network of symbiotic fungi. Follow Maya as she decodes the bioacoustic rhythms.',
     continueReading: 'Continue Reading',
     readStory: 'Read Story',
     listenStory: 'Listen with Voice',
-    interactiveMode: 'Interactive Choice Path',
+    interactiveMode: 'Interactive Branching Path',
     tabAll: 'Explore Universe',
-    tabMyStories: '📚 My Library',
-    tabFavorites: '⭐ Favorites',
-    tabInteractive: '🔀 Branching Paths',
-    genreAll: 'All Genres',
-    genreFantasy: '✨ Fantasy',
-    genreSciFi: '🚀 Sci-Fi',
-    genreNature: '🌿 Nature & Eco',
-    genreMystery: '🕵️ Mystery',
-    genreAdventure: '🌍 Adventure',
-    genreEdu: '📚 Educational',
-    createModalTitle: 'Weave an AI Story',
-    promptLabel: 'Story Prompt or Core Idea',
+    tabMyStories: 'My Library',
+    tabFavorites: 'Saved Stories',
+    tabInteractive: 'Branching Paths',
+    genreAll: 'All Categories',
+    genreNature: 'Nature & Ecology',
+    genreSciFi: 'Speculative Ecology',
+    genreMarine: 'Marine Biology',
+    genreBotany: 'Botanical Fieldwork',
+    genreExpedition: 'Canopy Expedition',
+    genreScience: 'Ecological Science',
+    genreHabitats: 'Regenerative Habitats',
+    genreHeritage: 'Folklore & Heritage',
+    createModalTitle: 'Generate an Ecological Story',
+    promptLabel: 'Story Prompt or Field Concept',
     titleLabel: 'Story Title',
-    genreLabel: 'Genre',
+    genreLabel: 'Category',
     moodLabel: 'Atmospheric Mood',
     generateBtn: 'Generate Story with AI',
-    generatingText: 'Weaving story threads & neural paths…',
-    aiAssistantTitle: 'AI Story Assistant',
-    rewriteSection: '🪄 Rewrite & Polish',
-    changeMood: '🎭 Shift Mood',
-    alternateEnding: '🔮 Alternate Ending',
-    continueStory: '⏩ Next Chapter',
-    translateStory: '🌐 Translate',
-    customPromptPlaceholder: 'Tell AI Assistant how to modify or continue this story…',
-    choicePrompt: 'What will you do next?',
-    magical: 'Magical',
-    lovedIt: 'Loved It',
+    generatingText: 'Synthesizing narrative threads…',
+    aiAssistantTitle: 'Story Assistant',
+    rewriteSection: 'Rewrite & Polish',
+    changeMood: 'Shift Atmosphere',
+    alternateEnding: 'Alternate Outcome',
+    continueStory: 'Next Chapter',
+    translateStory: 'Translate',
+    customPromptPlaceholder: 'Instruct the assistant to expand or modify this chronicle…',
+    choicePrompt: 'Choose your field decision:',
+    magical: 'Inspiring',
+    lovedIt: 'Captivating',
     unexpected: 'Unexpected',
-    funny: 'Funny',
-    thoughtful: 'Thoughtful',
+    funny: 'Engaging',
+    thoughtful: 'Insightful',
     savedInLibrary: 'Saved to Library',
     saveToLibrary: 'Save Story',
   },
   gu: {
     heroTag: 'ઇન્ટરેક્ટિવ વાર્તા વિશ્વ',
-    heroTitle: 'સિનેમેટિક એઆઈ અને પ્રકૃતિ વાર્તાઓ',
-    heroSubtitle: 'ઇમર્સિવ વાર્તાઓમાં પ્રવેશ કરો, નવો માર્ગ પસંદ કરો, અવાજ દ્વારા સાંભળો અને એઆઈ દ્વારા કસ્ટમ વાર્તાઓ બનાવો.',
-    createStoryBtn: 'કસ્ટમ વાર્તા બનાવો',
+    heroTitle: 'જીવંત પ્રકૃતિ વાર્તાઓ અને ઇકોલોજી',
+    heroSubtitle: 'ઇમર્સિવ વાર્તાઓમાં પ્રવેશ કરો, નવો માર્ગ પસંદ કરો અને અવાજ દ્વારા સાંભળો.',
+    createStoryBtn: 'નવી વાર્તા બનાવો',
     featuredTitle: 'વ્હિસ્પરિંગ રેડવુડ કેનોપી',
-    featuredDesc: 'એક પ્રાચીન વૃક્ષની છત્ર બાયોલ્યુમિનેસન્ટ ફૂગના ચેતાતંત્રને છુપાવે છે. માયા જ્યારે જંગલના ધબકારાને સમજે છે ત્યારે તેનું પાલન કરો.',
+    featuredDesc: 'એક પ્રાચીન વૃક્ષની છત્ર બાયોલ્યુમિનેસન્ટ ફૂગના નેટવર્કને છુપાવે છે.',
     continueReading: 'વાંચન ચાલુ રાખો',
     readStory: 'વાર્તા વાંચો',
     listenStory: 'સાંભળો',
-    interactiveMode: 'ઇન્ટરેક્ટિવ પસંદગી માર્ગ',
+    interactiveMode: 'ઇન્ટરેક્ટિવ શાખા માર્ગ',
     tabAll: 'બ્રહ્માંડ શોધો',
-    tabMyStories: '📚 મારી લાઇબ્રેરી',
-    tabFavorites: '⭐ મનપસંદ',
-    tabInteractive: '🔀 શાખા માર્ગો',
-    genreAll: 'બધી શૈલીઓ',
-    genreFantasy: '✨ કલ્પનાશક્તિ',
-    genreSciFi: '🚀 સાયન્સ ફિક્શન',
-    genreNature: '🌿 પ્રકૃતિ અને ઇકો',
-    genreMystery: '🕵️ રહસ્ય',
-    genreAdventure: '🌍 સાહસ',
-    genreEdu: '📚 શૈક્ષણિક',
-    createModalTitle: 'એઆઈ વાર્તા બનાવો',
+    tabMyStories: 'મારી લાઇબ્રેરી',
+    tabFavorites: 'મનપસંદ',
+    tabInteractive: 'શાખા માર્ગો',
+    genreAll: 'બધી શ્રેણીઓ',
+    genreNature: 'પ્રકૃતિ અને ઇકોલોજી',
+    genreSciFi: 'વિજ્ઞાન અને પર્યાવરણ',
+    genreMarine: 'સમુદ્રી જીવવિજ્ઞાન',
+    genreBotany: 'વનસ્પતિ સંશોધન',
+    genreExpedition: 'જંગલ અભિયાન',
+    genreScience: 'ઇકોલોજીકલ વિજ્ઞાન',
+    genreHabitats: 'પુનર્જીવિત રહેઠાણો',
+    genreHeritage: 'વારસો અને લોકકથા',
+    createModalTitle: 'વાર્તા બનાવો',
     promptLabel: 'વાર્તાનો વિચાર',
     titleLabel: 'વાર્તાનું શીર્ષક',
-    genreLabel: 'શૈલી',
-    moodLabel: 'વાતાવરણ નો મૂડ',
-    generateBtn: 'એઆઈ સાથે વાર્તા બનાવો',
-    generatingText: 'વાર્તાના તાંતણા વણાઈ રહ્યા છે…',
-    aiAssistantTitle: 'એઆઈ સ્ટોરી આસિસ્ટન્ટ',
-    rewriteSection: '🪄 વિભાગ ફરીથી લખો',
-    changeMood: '🎭 મૂડ બદલો',
-    alternateEnding: '🔮 વૈકલ્પિક અંત',
-    continueStory: '⏩ આગળનો અધ્યાય',
-    translateStory: '🌐 વાર્તા અનુવાદ કરો',
+    genreLabel: 'શ્રેણી',
+    moodLabel: 'વાતાવરણ',
+    generateBtn: 'વાર્તા બનાવો',
+    generatingText: 'વાર્તા તૈયાર થઈ રહી છે…',
+    aiAssistantTitle: 'સ્ટોરી આસિસ્ટન્ટ',
+    rewriteSection: 'વિભાગ સુધારો',
+    changeMood: 'મૂડ બદલો',
+    alternateEnding: 'વૈકલ્પિક અંત',
+    continueStory: 'આગળનો અધ્યાય',
+    translateStory: 'વાર્તા અનુવાદ કરો',
     customPromptPlaceholder: 'વાર્તામાં શું ફેરફાર કરવો છે તે લખો…',
-    choicePrompt: 'તમે આગળ શું કરશો?',
-    magical: 'જાદુઈ',
+    choicePrompt: 'તમારો નિર્ણય પસંદ કરો:',
+    magical: 'પ્રેરણાદાયક',
     lovedIt: 'ખૂબ ગમ્યું',
     unexpected: 'અણધાર્યું',
-    funny: 'રમુજી',
+    funny: 'રસપ્રદ',
     thoughtful: 'વિચારપ્રેરક',
     savedInLibrary: 'લાઇબ્રેરીમાં સંગ્રહિત',
     saveToLibrary: 'વાર્તા સાચવો',
   },
   hi: {
     heroTag: 'इंटरैक्टिव कहानी दुनिया',
-    heroTitle: 'सिनेमैटिक एआई और प्रकृति कहानियां',
-    heroSubtitle: 'थ्रीडी कहानियों में प्रवेश करें, नए रास्ते चुनें, आवाज से सुनें और एआई द्वारा कस्टम कहानियां बनाएं।',
-    createStoryBtn: 'कस्टम कहानी बनाएं',
+    heroTitle: 'जीवंत प्रकृति कथाएं और पारिस्थितिकी',
+    heroSubtitle: 'प्राकृतिक कहानियों में प्रवेश करें, नए रास्ते चुनें और आवाज से सुनें।',
+    createStoryBtn: 'नई कहानी बनाएं',
     featuredTitle: 'विस्परिंग रेडवुड कैनोपी',
-    featuredDesc: 'एक प्राचीन पेड़ की छत्र छाया बायोल्यूमिनसेंट कवक के तंत्रिका तंत्र को छिपाती है। माया के साथ जंगल की धड़कन को समझें।',
+    featuredDesc: 'एक प्राचीन पेड़ की छत्र छाया बायोल्यूमिनसेंट कवक के नेटवर्क को दर्शाती है।',
     continueReading: 'पढ़ना जारी रखें',
     readStory: 'कहानी पढ़ें',
     listenStory: 'आवाज से सुनें',
     interactiveMode: 'इंटरैक्टिव विकल्प पथ',
     tabAll: 'दुनिया खोजें',
-    tabMyStories: '📚 मेरी लाइब्रेरी',
-    tabFavorites: '⭐ पसंदीदा',
-    tabInteractive: '🔀 शाखा वाले रास्ते',
-    genreAll: 'सभी शैलियां',
-    genreFantasy: '✨ कल्पना',
-    genreSciFi: '🚀 साइंस फिक्शन',
-    genreNature: '🌿 प्रकृति और इको',
-    genreMystery: '🕵️ रहस्य',
-    genreAdventure: '🌍 साहसिक',
-    genreEdu: '📚 शैक्षणिक',
-    createModalTitle: 'एआई कहानी बनाएं',
+    tabMyStories: 'मेरी लाइब्रेरी',
+    tabFavorites: 'पसंदीदा',
+    tabInteractive: 'शाखा वाले रास्ते',
+    genreAll: 'सभी श्रेणियां',
+    genreNature: 'प्रकृति और पारिस्थितिकी',
+    genreSciFi: 'वैज्ञानिक पर्यावरण',
+    genreMarine: 'समुद्री जीवविज्ञान',
+    genreBotany: 'वनस्पति अनुसंधान',
+    genreExpedition: 'कैनोपी अभियान',
+    genreScience: 'पारिस्थितिक विज्ञान',
+    genreHabitats: 'पुनर्जीवित पर्यावास',
+    genreHeritage: 'विरासत और लोककथा',
+    createModalTitle: 'कहानी बनाएं',
     promptLabel: 'कहानी का विचार',
     titleLabel: 'कहानी का शीर्षक',
-    genreLabel: 'शैली',
-    moodLabel: 'वातावरण का मूड',
-    generateBtn: 'एआई के साथ कहानी बनाएं',
-    generatingText: 'कहानी के धागे बुने जा रहे हैं…',
-    aiAssistantTitle: 'एआई स्टोरी असिस्टेंट',
-    rewriteSection: '🪄 अनुभाग फिर से लिखें',
-    changeMood: '🎭 मूड बदलें',
-    alternateEnding: '🔮 वैकल्पिक अंत',
-    continueStory: '⏩ अगला अध्याय',
-    translateStory: '🌐 कहानी का अनुवाद करें',
+    genreLabel: 'श्रेणी',
+    moodLabel: 'वातावरण',
+    generateBtn: 'कहानी बनाएं',
+    generatingText: 'कहानी तैयार हो रही है…',
+    aiAssistantTitle: 'स्टोरी असिस्टेंट',
+    rewriteSection: 'अनुभाग सुधारें',
+    changeMood: 'मूड बदलें',
+    alternateEnding: 'वैकल्पिक अंत',
+    continueStory: 'अगला अध्याय',
+    translateStory: 'कहानी का अनुवाद करें',
     customPromptPlaceholder: 'कहानी में क्या बदलाव करना चाहते हैं, लिखें…',
-    choicePrompt: 'आप आगे क्या करेंगे?',
-    magical: 'जादुई',
+    choicePrompt: 'अपना निर्णय चुनें:',
+    magical: 'प्रेरक',
     lovedIt: 'बहुत पसंद आया',
     unexpected: 'अनपेक्षित',
-    funny: 'मजेदार',
+    funny: 'रोचक',
     thoughtful: 'विचारोत्तेजक',
     savedInLibrary: 'लाइब्रेरी में सहेजा गया',
     saveToLibrary: 'कहानी सहेजें',
   },
 };
-
-// Rich Pre-Built Seed Stories with Interactive Choice Paths & 3D Artwork
-const SEED_STORIES = [
-  {
-    id: 'story-201',
-    title: 'The Whispering Redwood Canopy',
-    genre: '✨ Fantasy',
-    mood: 'Mystical',
-    readTime: '4 min read',
-    coverImage: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80',
-    summary: 'An ancient redwood canopy conceals a neural web of bioluminescent fungi. Follow Maya as she decodes the forest heartbeat.',
-    narrative: `The mist hung low over the old-growth Pacific grove. Maya stepped carefully across the moss-covered roots of an 800-year-old Redwood. 
-
-Her field scanner pulsed green — detecting faint electrical impulses passing between the tree roots and subterranean mycelium.
-
-"It is not just a tree," she whispered into her journal. "It is a living neural network."
-
-Suddenly, a faint glow illuminated the hollow trunk ahead. Two distinct pathways emerged from the ancient roots...`,
-    isInteractive: true,
-    choices: [
-      {
-        id: 'c1',
-        text: '🔵 Descend into the subterranean fungal glow cave',
-        nextText: `Maya climbed down into the hollow root chamber. Hundreds of tiny blue bioluminescent caps pulsed in rhythm with her heartbeat. Deep within the cavern, an ancient stone altar held a crystal filled with forest sap...`,
-      },
-      {
-        id: 'c2',
-        text: '🟣 Ascend the spiral bark ladder towards the canopy skywalk',
-        nextText: `Securing her safety harness, Maya climbed higher into the misty canopy. At 250 feet above the forest floor, a pair of rare Northern Spotted Owls greeted her, guarding a glowing cedar nest...`,
-      },
-    ],
-    reactions: { magical: 42, lovedIt: 58, unexpected: 19, funny: 4, thoughtful: 31 },
-    isFeatured: true,
-    progress: 75,
-  },
-  {
-    id: 'story-202',
-    title: 'Chrono-Ecology 2085: The Silent Reef',
-    genre: '🚀 Sci-Fi',
-    mood: 'Futuristic',
-    readTime: '6 min read',
-    coverImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
-    summary: 'In a ocean habitat restored by autonomous micro-drones, marine biologist Leo discovers an artificial coral intelligence.',
-    narrative: `Deep underwater in the Great Barrier Sanctuary of 2085, automated solar-powered drones tended to living coral bio-polymers. 
-
-Leo adjusted his acoustic hydro-visor. Instead of silent water, his earpiece registered harmonic frequencies emitted by the synthetic reef structures.
-
-The coral was self-organizing — adapting its molecular density to withstand warming currents.`,
-    isInteractive: false,
-    reactions: { magical: 31, lovedIt: 45, unexpected: 28, funny: 2, thoughtful: 49 },
-    isFeatured: false,
-    progress: 30,
-  },
-  {
-    id: 'story-203',
-    title: 'The Secret Language of Migratory Sunbirds',
-    genre: '🌿 Nature & Eco',
-    mood: 'Calm & Educational',
-    readTime: '3 min read',
-    coverImage: 'https://images.unsplash.com/photo-1555532538-dcdbd01d373d?w=800&q=80',
-    summary: 'Discover how purple sunbirds navigate thousands of miles using Earth’s magnetic field and flowering plant scents.',
-    narrative: `Before sunrise, a tiny male Purple Sunbird flutters near a blooming Champa tree. Weighing less than a coin, its tiny heart beats 1,000 times per minute.
-
-By detecting subtle fluctuations in magnetic dip angles, the bird maps out safe flight corridors across urban landscapes.`,
-    isInteractive: false,
-    reactions: { magical: 24, lovedIt: 62, unexpected: 11, funny: 5, thoughtful: 38 },
-    isFeatured: false,
-    progress: 100,
-  },
-  {
-    id: 'story-204',
-    title: 'Mystery of the Midnight Bloom',
-    genre: '🕵️ Mystery',
-    mood: 'Suspenseful',
-    readTime: '5 min read',
-    coverImage: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800&q=80',
-    summary: 'Every midnight, a rare night-blooming cereus emits a golden fragrance that attracts an unidentified nocturnal pollinator.',
-    narrative: `Professor Kulkarni adjusted his infrared night camera. The clock struck 12:00 AM. 
-
-Slowly, white velvety petals unfurled under the full moon, releasing a sweet vanilla scent that carried across the botanical garden...`,
-    isInteractive: true,
-    choices: [
-      {
-        id: 'c3',
-        text: '🌙 Focus infrared lens on the upper canopy branches',
-        nextText: `The thermal sensors flashed red. A rare Sphinx Moth with a 10-inch proboscis descended silently onto the blossom...`,
-      },
-      {
-        id: 'c4',
-        text: '🔍 Inspect damp soil around root nodules',
-        nextText: `Glowing root exudates were attracting subterranean beetles that pollinated the lowest stamens from below...`,
-      },
-    ],
-    reactions: { magical: 38, lovedIt: 29, unexpected: 41, funny: 3, thoughtful: 22 },
-    isFeatured: false,
-    progress: 0,
-  }
-];
 
 export default function Stories() {
   const { session } = useAuth();
@@ -251,23 +160,43 @@ export default function Stories() {
   const t = STORIES_TRANSLATIONS[lang] || STORIES_TRANSLATIONS.en;
 
   // Persistent Stories State
-  const [stories, setStories] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_stories_v1');
-      return saved ? JSON.parse(saved) : SEED_STORIES;
-    } catch {
-      return SEED_STORIES;
-    }
-  });
+  const [stories, setStories] = useState(DEFAULT_STORIES);
 
-  const [savedStoryIds, setSavedStoryIds] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_stories_saved_v1');
-      return saved ? JSON.parse(saved) : ['story-201', 'story-203'];
-    } catch {
-      return ['story-201', 'story-203'];
-    }
-  });
+  // Fetch remote user-created stories on mount
+  useEffect(() => {
+    let isMounted = true;
+    apiFetch('/api/stories')
+      .then((data) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const formatted = data.map((item) => ({
+            id: item._id || item.id,
+            title: item.title,
+            genre: item.genre || '🌿 Nature & Eco',
+            mood: item.mood || 'Serene',
+            readTime: item.readTime || '4 min read',
+            isFeatured: false,
+            isInteractive: Boolean(item.choices?.length),
+            choices: item.choices || [],
+            isMine: true,
+            coverImage: item.image_url || item.coverImage || 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&q=80',
+            summary: item.narrative ? item.narrative.slice(0, 160) + '...' : '',
+            narrative: item.narrative || '',
+            reactions: item.reactions || { magical: 12, lovedIt: 24, unexpected: 5, funny: 0, thoughtful: 18 },
+          }));
+          setStories((prev) => {
+            const existingIds = new Set(formatted.map((s) => s.id));
+            const remaining = prev.filter((s) => !existingIds.has(s.id));
+            return [...formatted, ...remaining];
+          });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const [savedStoryIds, setSavedStoryIds] = useState([]);
 
   // Filter & Active Reader States
   const [activeTab, setActiveTab] = useState('all'); // all, my_stories, favorites, interactive
@@ -298,14 +227,10 @@ export default function Stories() {
   const audioCtxRef = useRef(null);
   const ambientNodesRef = useRef(null);
 
-  // 3D Card Hover & Hero Title Flip state
-  const [flippedCardId, setFlippedCardId] = useState(null);
-  const [isTitleFlipped, setIsTitleFlipped] = useState(false);
-
   // New Story Form State
   const [newTitle, setNewTitle] = useState('');
-  const [newGenre, setNewGenre] = useState('✨ Fantasy');
-  const [newMood, setNewMood] = useState('Mystical');
+  const [newGenre, setNewGenre] = useState('Nature & Ecology');
+  const [newMood, setNewMood] = useState('Serene');
   const [newPrompt, setNewPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -337,14 +262,6 @@ export default function Stories() {
       stopAmbientSound();
     };
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem('pulse_stories_v1', JSON.stringify(stories));
-  }, [stories]);
-
-  useEffect(() => {
-    localStorage.setItem('pulse_stories_saved_v1', JSON.stringify(savedStoryIds));
-  }, [savedStoryIds]);
 
   // Ambient Nature Soundscape Generator (Web Audio API)
   const startAmbientSound = () => {
@@ -1064,21 +981,23 @@ export default function Stories() {
 
               {/* Reader Reactions Bar */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-6 border-t border-[#20452F]">
-                <span className="text-xs text-slate-400">Reactions</span>
+                <span className="text-xs text-slate-400 font-medium">Reader Feedback</span>
                 <div className="flex flex-wrap items-center gap-2">
                   {[
-                    { key: 'magical', label: t.magical, icon: '✨' },
-                    { key: 'lovedIt', label: t.lovedIt, icon: '❤️' },
-                    { key: 'unexpected', label: t.unexpected, icon: '😮' },
-                    { key: 'funny', label: t.funny, icon: '😂' },
-                    { key: 'thoughtful', label: t.thoughtful, icon: '🧠' },
-                  ].map((rx) => (
+                    { key: 'magical', label: t.magical, Icon: Sparkles },
+                    { key: 'lovedIt', label: t.lovedIt, Icon: Heart },
+                    { key: 'unexpected', label: t.unexpected, Icon: Compass },
+                    { key: 'funny', label: t.funny, Icon: Smile },
+                    { key: 'thoughtful', label: t.thoughtful, Icon: Brain },
+                  ].map(({ key, label, Icon }) => (
                     <button
-                      key={rx.key}
-                      onClick={() => handleReaction(readingStory.id, rx.key)}
-                      className="px-3 py-1.5 rounded-full bg-[#13271C] border border-[#20422E] text-xs font-medium text-slate-300 hover:text-white cursor-pointer"
+                      key={key}
+                      onClick={() => handleReaction(readingStory.id, key)}
+                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#13271C] border border-[#20422E] text-xs font-medium text-slate-300 hover:text-white hover:border-[#10B981]/50 cursor-pointer transition-colors"
                     >
-                      <span>{rx.icon}</span> <span>{readingStory.reactions?.[rx.key] || 0}</span>
+                      <Icon className="w-3.5 h-3.5 text-[#10B981]" />
+                      <span>{label}</span>
+                      <span className="text-slate-400 font-mono text-[10px]">({readingStory.reactions?.[key] || 0})</span>
                     </button>
                   ))}
                 </div>
@@ -1099,15 +1018,15 @@ export default function Stories() {
             onClick={() => setShowCreateModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#112318] border border-[#4ADE80]/40 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 my-auto"
+              exit={{ scale: 0.95, y: 20 }}
+              className="bg-[#112318] border border-[#10B981]/40 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 my-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center border-b border-[#20452F] pb-3">
                 <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
-                  <Wand2 className="w-5 h-5 text-[#4ADE80]" />
+                  <Wand2 className="w-5 h-5 text-[#10B981]" />
                   <span>{t.createModalTitle}</span>
                 </h2>
                 <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white cursor-pointer">
@@ -1125,8 +1044,8 @@ export default function Stories() {
                     rows={3}
                     value={newPrompt}
                     onChange={(e) => setNewPrompt(e.target.value)}
-                    placeholder="e.g., A girl discovers glowing spores in an ancient cedar forest that respond to birdsong..."
-                    className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl p-3.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80] resize-none"
+                    placeholder="e.g., A botanist investigates glowing canopy orchids that synchronize with lunar tides..."
+                    className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl p-3.5 text-xs sm:text-sm text-white outline-none focus:border-[#10B981] resize-none"
                   />
                 </div>
 
@@ -1139,7 +1058,7 @@ export default function Stories() {
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
                       placeholder="Story Title (Optional)"
-                      className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
+                      className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#10B981]"
                     />
                   </div>
 
@@ -1150,14 +1069,16 @@ export default function Stories() {
                     <select
                       value={newGenre}
                       onChange={(e) => setNewGenre(e.target.value)}
-                      className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-3 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
+                      className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-3 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#10B981]"
                     >
-                      <option value="✨ Fantasy">{t.genreFantasy}</option>
-                      <option value="🚀 Sci-Fi">{t.genreSciFi}</option>
-                      <option value="🌿 Nature & Eco">{t.genreNature}</option>
-                      <option value="🕵️ Mystery">{t.genreMystery}</option>
-                      <option value="🌍 Adventure">{t.genreAdventure}</option>
-                      <option value="📚 Educational">{t.genreEdu}</option>
+                      <option value="Nature & Ecology">{t.genreNature}</option>
+                      <option value="Speculative Ecology">{t.genreSciFi}</option>
+                      <option value="Marine Biology">{t.genreMarine}</option>
+                      <option value="Botanical Fieldwork">{t.genreBotany}</option>
+                      <option value="Canopy Expedition">{t.genreExpedition}</option>
+                      <option value="Ecological Science">{t.genreScience}</option>
+                      <option value="Regenerative Habitats">{t.genreHabitats}</option>
+                      <option value="Folklore & Heritage">{t.genreHeritage}</option>
                     </select>
                   </div>
                 </div>
@@ -1165,7 +1086,7 @@ export default function Stories() {
                 <button
                   type="submit"
                   disabled={isGenerating}
-                  className="w-full py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3 rounded-full bg-[#10B981] text-white font-bold text-sm hover:bg-[#059669] transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>{isGenerating ? t.generatingText : t.generateBtn}</span>
@@ -1190,39 +1111,31 @@ export default function Stories() {
         <div className="relative bg-gradient-to-r from-[#0E2316] via-[#112D1B] to-[#0A1A10] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden">
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="space-y-2 max-w-xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30 text-xs font-bold uppercase tracking-widest">
-                <Sparkles className="w-3.5 h-3.5 text-[#4ADE80] animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A3827] text-[#10B981] border border-[#10B981]/30 text-xs font-bold uppercase tracking-widest">
+                <Sparkles className="w-3.5 h-3.5 text-[#10B981]" />
                 {t.heroTag}
               </span>
-              <motion.h1
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setIsTitleFlipped((v) => !v)}
-                className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight cursor-pointer select-none"
-                title="Click to flip title!"
-              >
-                <span className="inline-block bg-gradient-to-r from-white via-emerald-200 to-[#4ADE80] bg-clip-text text-transparent drop-shadow-md">
-                  {isTitleFlipped ? '✨ Neural Ecosystem Stories ✨' : t.heroTitle}
+              <h1 className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
+                <span className="inline-block bg-gradient-to-r from-white via-emerald-100 to-[#10B981] bg-clip-text text-transparent drop-shadow-md">
+                  {t.heroTitle}
                 </span>
-              </motion.h1>
+              </h1>
               <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
                 {t.heroSubtitle}
               </p>
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/25 flex items-center gap-2 cursor-pointer shrink-0"
+              className="px-6 py-3.5 rounded-full bg-[#10B981] text-white font-bold text-xs sm:text-sm hover:bg-[#059669] transition-all shadow-xl shadow-[#10B981]/25 flex items-center gap-2 cursor-pointer shrink-0"
             >
               <Plus className="w-4 h-4" />
               <span>{t.createStoryBtn}</span>
-            </motion.button>
+            </button>
           </div>
         </div>
 
-        {/* ──────────────── FEATURED CINEMATIC SPOTLIGHT ──────────────── */}
+        {/* ──────────────── FEATURED SPOTLIGHT ──────────────── */}
         {featuredStory && (
           <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl overflow-hidden shadow-2xl">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
@@ -1238,8 +1151,8 @@ export default function Stories() {
               <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between space-y-6">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/40 text-[10px] font-bold uppercase tracking-wider">
-                      ★ FEATURED CHRONICLE
+                    <span className="px-3 py-1 rounded-full bg-[#1A3827] text-[#10B981] border border-[#10B981]/40 text-[10px] font-bold uppercase tracking-wider">
+                      Featured Chronicle
                     </span>
                     <span className="text-xs text-slate-400">{featuredStory.readTime}</span>
                   </div>
@@ -1256,7 +1169,7 @@ export default function Stories() {
                 <div className="flex flex-wrap gap-3 pt-2">
                   <button
                     onClick={() => setReadingStory(featuredStory)}
-                    className="px-6 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-[#4ADE80]/20"
+                    className="px-6 py-3 rounded-full bg-[#10B981] text-white font-bold text-xs sm:text-sm hover:bg-[#059669] transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-[#10B981]/20"
                   >
                     <BookOpen className="w-4 h-4" />
                     <span>{t.readStory}</span>
@@ -1267,9 +1180,9 @@ export default function Stories() {
                       setReadingStory(featuredStory);
                       setTimeout(() => handleSpeakStory(`${featuredStory.title}. ${featuredStory.narrative}`), 300);
                     }}
-                    className="px-5 py-3 rounded-full bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-3 rounded-full bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#10B981] text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer"
                   >
-                    <Volume2 className="w-4 h-4 text-[#4ADE80]" />
+                    <Volume2 className="w-4 h-4 text-[#10B981]" />
                     <span>{t.listenStory}</span>
                   </button>
                 </div>
@@ -1286,28 +1199,29 @@ export default function Stories() {
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search chronicles, topics, mycelial networks…"
-                className="w-full bg-[#13271C] border border-[#20422E] rounded-2xl pl-11 pr-4 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
+                placeholder="Search chronicles, species, habitats, field notes…"
+                className="w-full bg-[#13271C] border border-[#20422E] rounded-2xl pl-11 pr-4 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#10B981]"
               />
             </div>
 
             {/* Navigation Tabs */}
             <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
               {[
-                { id: 'all', label: t.tabAll },
-                { id: 'favorites', label: `${t.tabFavorites} (${savedStoryIds.length})` },
-                { id: 'interactive', label: t.tabInteractive },
-              ].map((tab) => (
+                { id: 'all', label: t.tabAll, Icon: BookOpen },
+                { id: 'favorites', label: `${t.tabFavorites} (${savedStoryIds.length})`, Icon: Bookmark },
+                { id: 'interactive', label: t.tabInteractive, Icon: Compass },
+              ].map(({ id, label, Icon }) => (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                    activeTab === tab.id
-                      ? 'bg-[#4ADE80] text-[#07130B] font-bold shadow-md'
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    activeTab === id
+                      ? 'bg-[#10B981] text-white font-bold shadow-md'
                       : 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white'
                   }`}
                 >
-                  {tab.label}
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{label}</span>
                 </button>
               ))}
             </div>
@@ -1316,31 +1230,28 @@ export default function Stories() {
           {/* Genre Pills */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
             {[
-              t.genreAll,
-              t.genreFantasy,
-              t.genreSciFi,
-              t.genreNature,
-              t.genreMystery,
-              t.genreAdventure,
-              t.genreEdu,
-            ].map((genreName, idx) => {
-              const val = idx === 0 ? 'All' : [
-                '✨ Fantasy', '🚀 Sci-Fi', '🌿 Nature & Eco', '🕵️ Mystery', '🌍 Adventure', '📚 Educational'
-              ][idx - 1];
-              return (
-                <button
-                  key={genreName}
-                  onClick={() => setSelectedGenre(val)}
-                  className={`px-3.5 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                    selectedGenre === val
-                      ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80]'
-                      : 'bg-[#13271C] border-[#20422E] text-slate-300 hover:bg-[#1A3827]'
-                  }`}
-                >
-                  {genreName}
-                </button>
-              );
-            })}
+              { val: 'All', label: t.genreAll },
+              { val: 'Nature & Ecology', label: t.genreNature },
+              { val: 'Speculative Ecology', label: t.genreSciFi },
+              { val: 'Marine Biology', label: t.genreMarine },
+              { val: 'Botanical Fieldwork', label: t.genreBotany },
+              { val: 'Canopy Expedition', label: t.genreExpedition },
+              { val: 'Ecological Science', label: t.genreScience },
+              { val: 'Regenerative Habitats', label: t.genreHabitats },
+              { val: 'Folklore & Heritage', label: t.genreHeritage },
+            ].map(({ val, label }) => (
+              <button
+                key={val}
+                onClick={() => setSelectedGenre(val)}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                  selectedGenre === val
+                    ? 'bg-[#10B981] text-white border-[#10B981]'
+                    : 'bg-[#13271C] border-[#20422E] text-slate-300 hover:bg-[#1A3827] hover:text-white'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 

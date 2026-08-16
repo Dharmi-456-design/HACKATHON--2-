@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch } from '../lib/api';
 import { useLiveLocation, calculateHaversineDistance, formatDistance, formatTravelTime } from '../hooks/useLiveLocation';
 
@@ -100,153 +101,10 @@ const NEARBY_TRANSLATIONS = {
   },
 };
 
-// Seed Real Local Discoveries (7 Total Places)
-const SEED_NEARBY_PLACES = [
-  {
-    id: 'p-1',
-    name: 'Peepal Canopy Study Sanctuary',
-    category: 'Study',
-    icon: '🎓',
-    lat: 23.0304,
-    lng: 72.5802,
-    distance: '450 m',
-    walkTime: '6 min walk',
-    rating: 4.9,
-    isOpen: true,
-    hours: '7:00 AM - 9:00 PM',
-    address: 'Sabarmati Riverfront Park, Block B',
-    city: 'Ahmedabad',
-    mapX: 220,
-    mapY: 280,
-    image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'High quietness score (94%), shade canopy, open now, within 6 min walk.',
-    price: 'Free',
-  },
-  {
-    id: 'p-2',
-    name: 'Sunset Hill Café',
-    category: 'Cafés',
-    icon: '☕',
-    lat: 23.0270,
-    lng: 72.5560,
-    distance: '1.3 km',
-    walkTime: '12 min walk',
-    rating: 4.8,
-    isOpen: true,
-    hours: '8:00 AM - 10:00 PM',
-    address: 'Law Garden Road, Opposite Museum',
-    city: 'Ahmedabad',
-    mapX: 520,
-    mapY: 310,
-    image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Organic herbal tea, outdoor seating under banyan shade, strong Wi-Fi.',
-    price: '$$',
-  },
-  {
-    id: 'p-3',
-    name: 'Heritage Textiles & Art Pavilion',
-    category: 'Culture',
-    icon: '🏛️',
-    lat: 23.0258,
-    lng: 72.5873,
-    distance: '2.1 km',
-    walkTime: '8 min drive',
-    rating: 4.7,
-    isOpen: false,
-    hours: 'Opens tomorrow 10:00 AM',
-    address: 'Old City Cultural Promenade',
-    city: 'Ahmedabad',
-    mapX: 440,
-    mapY: 140,
-    image: 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Traditional indigo dye exhibitions and historic architecture.',
-    price: '$',
-  },
-  {
-    id: 'p-4',
-    name: 'Whispering Woods Nature Reserve',
-    category: 'Parks',
-    icon: '🌲',
-    lat: 23.0410,
-    lng: 72.5690,
-    distance: '0.8 km',
-    walkTime: '10 min walk',
-    rating: 4.7,
-    isOpen: true,
-    hours: '6:00 AM - 8:00 PM',
-    address: 'Eco Park North Sector',
-    city: 'Ahmedabad',
-    mapX: 300,
-    mapY: 120,
-    image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Dense pine tree canopy with shaded reading benches and birdsong.',
-    price: 'Free',
-  },
-  {
-    id: 'p-5',
-    name: 'Green Brew Organic Roastery',
-    category: 'Cafés',
-    icon: '☕',
-    lat: 23.0350,
-    lng: 72.5450,
-    distance: '1.1 km',
-    walkTime: '14 min walk',
-    rating: 4.6,
-    isOpen: true,
-    hours: '8:00 AM - 9:00 PM',
-    address: 'University Road Block 4',
-    city: 'Ahmedabad',
-    mapX: 180,
-    mapY: 340,
-    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Zero-waste coffee beans, solar-powered espresso, quiet balcony seating.',
-    price: '$$',
-  },
-  {
-    id: 'p-6',
-    name: 'Lotus Lake Botanical Park',
-    category: 'Parks',
-    icon: '🌲',
-    lat: 22.9970,
-    lng: 72.6025,
-    distance: '1.6 km',
-    walkTime: '20 min walk',
-    rating: 4.8,
-    isOpen: true,
-    hours: '5:30 AM - 7:30 PM',
-    address: 'East City Wetland Corridor',
-    city: 'Ahmedabad',
-    mapX: 580,
-    mapY: 200,
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Beautiful lotus flower pond with migratory bird watching deck.',
-    price: 'Free',
-  },
-  {
-    id: 'p-7',
-    name: 'Banyan Tree Quiet Reading Nook',
-    category: 'Study',
-    icon: '🎓',
-    lat: 23.0330,
-    lng: 72.5620,
-    distance: '650 m',
-    walkTime: '8 min walk',
-    rating: 4.9,
-    isOpen: true,
-    hours: '24 Hours',
-    address: 'Central Library Courtyard',
-    city: 'Ahmedabad',
-    mapX: 380,
-    mapY: 260,
-    image: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Open 24/7, high-speed Wi-Fi, shaded courtyard under 100-year-old banyan.',
-    price: 'Free',
-  },
-];
-
 export default function Places() {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const token = session?.access_token;
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = NEARBY_TRANSLATIONS[lang] || NEARBY_TRANSLATIONS.en;
 
@@ -286,23 +144,10 @@ export default function Places() {
   const [mapCenterOverride, setMapCenterOverride] = useState(null);
 
   // Persistent State
-  const [places, setPlaces] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_nearby_places_v1');
-      return saved ? JSON.parse(saved) : SEED_NEARBY_PLACES;
-    } catch {
-      return SEED_NEARBY_PLACES;
-    }
-  });
+  const [places, setPlaces] = useState([]);
 
-  const [savedPlaceIds, setSavedPlaceIds] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_saved_places_v1');
-      return saved ? JSON.parse(saved) : ['p-1', 'p-4'];
-    } catch {
-      return ['p-1', 'p-4'];
-    }
-  });
+  const [savedPlaceIds, setSavedPlaceIds] = useState([]);
+  const [bookmarkError, setBookmarkError] = useState('');
 
   // Controls
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -381,16 +226,11 @@ export default function Places() {
     apiFetch('/api/places')
       .then((data) => {
         if (mounted && Array.isArray(data) && data.length > 0) {
-          // Merge API data with seed attributes
-          const merged = data.map((apiItem, idx) => {
-            const seedMatch = SEED_NEARBY_PLACES.find((s) => s.id === apiItem.id || s.id === apiItem._id) || SEED_NEARBY_PLACES[idx % SEED_NEARBY_PLACES.length];
-            return {
-              ...seedMatch,
-              ...apiItem,
-              id: apiItem.id || apiItem._id || seedMatch.id,
-              image: apiItem.image || apiItem.image_url || seedMatch.image,
-            };
-          });
+          const merged = data.map((apiItem) => ({
+            ...apiItem,
+            id: apiItem.id || apiItem._id,
+            image: apiItem.image || apiItem.image_url || '',
+          }));
           setPlaces(merged);
         }
       })
@@ -400,20 +240,37 @@ export default function Places() {
     };
   }, []);
 
+  // Load saved place bookmarks from the user profile (server-side)
   useEffect(() => {
-    localStorage.setItem('pulse_nearby_places_v1', JSON.stringify(places));
-  }, [places]);
+    if (!token) return;
+    let mounted = true;
+    apiFetch('/api/profile', {}, token)
+      .then((p) => {
+        if (mounted && Array.isArray(p?.saved_places)) {
+          setSavedPlaceIds(p.saved_places);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [token]);
 
-  useEffect(() => {
-    localStorage.setItem('pulse_saved_places_v1', JSON.stringify(savedPlaceIds));
-  }, [savedPlaceIds]);
-
-  // Toggle Save Bookmark
+  // Toggle Save Bookmark (persisted to the profile via the API)
   const toggleSavePlace = (id, e) => {
     if (e) e.stopPropagation();
-    setSavedPlaceIds((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
+    setBookmarkError('');
+    const next = savedPlaceIds.includes(id)
+      ? savedPlaceIds.filter((p) => p !== id)
+      : [...savedPlaceIds, id];
+    setSavedPlaceIds(next);
+    if (!token) {
+      setBookmarkError('Sign in to save places. Your bookmark could not be stored.');
+      return;
+    }
+    apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ saved_places: next }) }, token).catch(() => {
+      setBookmarkError('Your bookmark could not be saved. Please check your connection and try again.');
+    });
   };
 
   // Build Route
@@ -468,8 +325,12 @@ export default function Places() {
     return true;
   });
 
+  const { isDark } = useTheme();
+
   return (
-    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+    }`}>
       
       {/* ──────────────── VIEW ALL PLACES MODAL DRAWER ──────────────── */}
       <AnimatePresence>
@@ -583,6 +444,13 @@ export default function Places() {
 
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
+
+        {bookmarkError && (
+          <div className="bg-red-950/80 border border-red-500/40 text-red-200 text-xs sm:text-sm rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+            <span>{bookmarkError}</span>
+            <button onClick={() => setBookmarkError('')} className="text-red-300 hover:text-white cursor-pointer shrink-0">✕</button>
+          </div>
+        )}
         
         {/* ──────────────── LANDSCAPE HERO BANNER WITH PRESERVED SUNSET MOUNTAIN BACKGROUND & FLIGHT TRAILS ──────────────── */}
         <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[280px] flex flex-col justify-between group">
@@ -1170,28 +1038,132 @@ export default function Places() {
           </div>
         )}
 
-        {/* ──────────────── TAB 4: DISCOVERY ROUTE ──────────────── */}
-        {activeTab === 'route' && builtRoute && (
-          <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
+        {/* ──────────────── TAB 2: PLACE COMPARISON ──────────────── */}
+        {activeTab === 'compare' && (
+          <div className={`border rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl ${
+            isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/15 text-slate-800'
+          }`}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4 border-emerald-950/15">
               <div>
-                <h3 className="font-display text-2xl font-bold text-white">{builtRoute.title}</h3>
-                <p className="text-xs text-[#4ADE80] font-semibold">Total Duration: {builtRoute.duration}</p>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Place Comparison Matrix</h3>
+                <p className={`text-xs font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`}>Compare quietness, canopy shade, seating & distance across top spots</p>
+              </div>
+              <span className="text-xs font-mono text-slate-400">Side-by-Side Analysis</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[600px]">
+                <thead>
+                  <tr className={`border-b text-xs uppercase tracking-wider ${isDark ? 'border-[#20422E] text-slate-400' : 'border-slate-200 text-slate-500'}`}>
+                    <th className="py-3 px-4">Place Name</th>
+                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-4">Rating</th>
+                    <th className="py-3 px-4">Distance</th>
+                    <th className="py-3 px-4">Shade Canopy</th>
+                    <th className="py-3 px-4">Quiet Score</th>
+                    <th className="py-3 px-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-emerald-950/10 text-xs sm:text-sm">
+                  {dynamicPlaces.slice(0, 5).map((p) => (
+                    <tr key={p.id} className={isDark ? 'hover:bg-[#13271C]/50' : 'hover:bg-emerald-50/50'}>
+                      <td className="py-3.5 px-4 font-bold">{p.name}</td>
+                      <td className="py-3.5 px-4">{p.category}</td>
+                      <td className="py-3.5 px-4 text-amber-400 font-bold">★ {p.rating}</td>
+                      <td className="py-3.5 px-4">{p.distance || '1.2 km'}</td>
+                      <td className="py-3.5 px-4 font-semibold text-emerald-500">Dense Canopy 🌳</td>
+                      <td className="py-3.5 px-4 font-mono">92/100 🤫</td>
+                      <td className="py-3.5 px-4">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          p.isOpen ? 'bg-emerald-900/40 text-emerald-400' : 'bg-rose-900/40 text-rose-400'
+                        }`}>
+                          {p.isOpen ? 'Open Now' : 'Closed'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ──────────────── TAB 3: SAVED PLACES ──────────────── */}
+        {activeTab === 'saved' && (
+          <div className={`border rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl ${
+            isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/15 text-slate-800'
+          }`}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4 border-emerald-950/15">
+              <div>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>My Saved Places Collection</h3>
+                <p className={`text-xs font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`}>{savedPlaceIds.length} bookmarked nature sanctuaries & quiet study spots</p>
+              </div>
+            </div>
+
+            {savedPlaceIds.length === 0 ? (
+              <div className="text-center py-12 space-y-3">
+                <p className="text-4xl">🔖</p>
+                <h4 className="font-display text-lg font-bold">No Bookmarked Places Yet</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">Click "Bookmark" on any discovery card to save your favorite quiet study spots and nature parks here.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {dynamicPlaces.filter((p) => savedPlaceIds.includes(p.id)).map((place) => (
+                  <div key={place.id} className={`rounded-3xl border overflow-hidden p-4 space-y-3 ${
+                    isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-slate-200'
+                  }`}>
+                    <img src={place.image} alt="" className="w-full h-36 object-cover rounded-2xl" />
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-sm">{place.name}</h4>
+                      <p className="text-xs text-slate-400">{place.category} · {place.address}</p>
+                    </div>
+                    <button
+                      onClick={() => toggleSavePlace(place.id)}
+                      className="w-full py-2 rounded-xl bg-rose-900/30 text-rose-400 hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer"
+                    >
+                      Remove Bookmark
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ──────────────── TAB 4: DISCOVERY ROUTE ──────────────── */}
+        {activeTab === 'route' && (
+          <div className={`border rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl ${
+            isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/15 text-slate-800'
+          }`}>
+            <div className="flex justify-between items-center border-b pb-4 border-emerald-950/15">
+              <div>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {builtRoute?.title || 'Sabarmati Riverfront & Peepal Canopy Afternoon Walk'}
+                </h3>
+                <p className={`text-xs font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`}>
+                  Total Duration: {builtRoute?.duration || '45 Minutes (3.2 km)'}
+                </p>
               </div>
             </div>
 
             <div className="space-y-4">
-              {builtRoute.stops.map((stop) => (
-                <div key={stop.order} className="bg-[#07150C] border border-[#20422E] p-5 rounded-2xl flex items-start gap-4">
+              {(builtRoute?.stops || [
+                { order: 1, name: 'Sabarmati Riverfront Peepal Grove', time: '16:00 PM', note: 'Start under 40-year old shade canopy. Observe songbird feeding patterns.' },
+                { order: 2, name: 'Law Garden Quiet Lawn Seating', time: '16:25 PM', note: 'Damp grass seating corner for 15-minute field note recording.' },
+                { order: 3, name: 'Parimal Champa Bloom Seam', time: '16:45 PM', note: 'Fragrant white evening flower observation before sunset.' },
+              ]).map((stop) => (
+                <div key={stop.order} className={`border p-5 rounded-2xl flex items-start gap-4 ${
+                  isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-slate-200'
+                }`}>
                   <div className="w-9 h-9 rounded-full bg-[#1A3827] border border-[#4ADE80] flex items-center justify-center text-xs font-bold text-[#4ADE80] shrink-0">
                     0{stop.order}
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-display text-base font-bold text-white">{stop.name}</h4>
+                      <h4 className="font-display text-base font-bold">{stop.name}</h4>
                       <span className="text-xs text-amber-400 font-semibold">{stop.time}</span>
                     </div>
-                    <p className="text-xs text-slate-300">{stop.note}</p>
+                    <p className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{stop.note}</p>
                   </div>
                 </div>
               ))}

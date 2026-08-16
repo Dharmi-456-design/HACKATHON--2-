@@ -23,6 +23,8 @@ const {
   getCommunityPosts,
   createCommunityPost,
   deleteCommunityPost,
+  getTestimonials,
+  getPublicStats,
   getActions,
   createAction,
   updateAction,
@@ -33,6 +35,12 @@ const {
   getConnection,
   handlePulseChat,
   handleImageAnalyze,
+  getPulseThreads,
+  createPulseThread,
+  renamePulseThread,
+  deletePulseThread,
+  clearPulseThreads,
+  updatePulseThreadMessages,
 } = require('../controllers/natureController');
 const asyncHandler = require('../utils/asyncHandler');
 const { protect } = require('../middleware/authMiddleware');
@@ -52,6 +60,18 @@ router.post('/pulse', aiLimiter, asyncHandler(handlePulseChat));
 router.post('/analyze', aiLimiter, asyncHandler(handleImageAnalyze));
 router.post('/stories/generate', aiLimiter, asyncHandler(generateAIStory));
 router.post('/stories/assist', aiLimiter, asyncHandler(assistAIStory));
+
+// Pulse chat threads (private, user-owned)
+router
+  .route('/pulse/threads')
+  .get(protect, asyncHandler(getPulseThreads))
+  .post(protect, asyncHandler(createPulseThread))
+  .delete(protect, asyncHandler(clearPulseThreads));
+router
+  .route('/pulse/threads/:id')
+  .patch(protect, asyncHandler(renamePulseThread))
+  .delete(protect, asyncHandler(deletePulseThread));
+router.put('/pulse/threads/:id/messages', protect, asyncHandler(updatePulseThreadMessages));
 
 // Profile (private)
 router.route('/profile').get(protect, asyncHandler(getProfile)).put(protect, asyncHandler(updateProfile));
@@ -91,6 +111,10 @@ router
   .get(asyncHandler(getCommunityPosts))
   .post(protect, asyncHandler(createCommunityPost));
 router.route('/community/:id').delete(protect, asyncHandler(deleteCommunityPost));
+
+// Public marketing data (testimonials from real reports, live aggregate stats)
+router.get('/testimonials', asyncHandler(getTestimonials));
+router.get('/stats', asyncHandler(getPublicStats));
 
 // Actions, Streaks & Insights (private)
 router.route('/actions').get(protect, asyncHandler(getActions)).post(protect, asyncHandler(createAction));
