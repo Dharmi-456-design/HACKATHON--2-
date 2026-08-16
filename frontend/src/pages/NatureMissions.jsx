@@ -549,6 +549,7 @@ export default function NatureMissions() {
                   const isSelected = selectedMission?.id === mission.id;
                   const completedStepsCount = mission.steps.filter((s) => s.done).length;
                   const progressPct = Math.round((completedStepsCount / mission.steps.length) * 100);
+                  const isDone = mission.status === 'completed' || progressPct === 100;
 
                   return (
                     <motion.div

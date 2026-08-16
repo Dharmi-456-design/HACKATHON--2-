@@ -1071,9 +1071,9 @@ export default function Stories() {
                     { key: 'thoughtful', label: t.thoughtful, Icon: Brain },
                   ].map(({ key, label, Icon }) => (
                     <button
-                      key={rx.key}
-                      onClick={() => handleReaction(readingStory.id, rx.key)}
-                      className={`px-3 py-1.5 rounded-full border text-xs font-medium cursor-pointer ${
+                      key={key}
+                      onClick={() => handleReaction(readingStory.id, key)}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium cursor-pointer flex items-center gap-1.5 ${
                         isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:bg-[#EDE6D8]'
                       }`}
                     >
