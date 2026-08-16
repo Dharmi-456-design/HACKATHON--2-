@@ -251,6 +251,7 @@ export default function Places() {
   const [searchQuery, setSearchQuery] = useState('');
   const [onlyOpenNow, setOnlyOpenNow] = useState(false);
   const [activeTab, setActiveTab] = useState('radar');
+  const [radarViewMode, setRadarViewMode] = useState('google_maps'); // Default to Live Google Maps
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [flippedCardId, setFlippedCardId] = useState(null);
   const [showAllPlacesModal, setShowAllPlacesModal] = useState(false);
@@ -596,51 +597,113 @@ export default function Places() {
           <div className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* LEFT 2-COLUMN: INTERACTIVE RADAR CANVAS */}
+              {/* LEFT 2-COLUMN: INTERACTIVE RADAR CANVAS / GOOGLE MAPS LIVE VIEW */}
               <div className="lg:col-span-2 bg-[#0E2015] border border-[#20452F] rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden min-h-[460px] flex flex-col justify-between">
                 
-                <div className="relative w-full h-[400px]">
-                  <svg viewBox="0 0 700 400" className="absolute inset-0 w-full h-full pointer-events-none">
-                    <circle cx="350" cy="220" r="70" stroke="#20422E" strokeWidth="1" strokeDasharray="4" fill="none" />
-                    <circle cx="350" cy="220" r="140" stroke="#20422E" strokeWidth="1" strokeDasharray="4" fill="none" />
-                    <circle cx="350" cy="220" r="210" stroke="#20422E" strokeWidth="1" strokeDasharray="4" fill="none" />
-                    <line x1="350" y1="220" x2="600" y2="90" stroke="#4ADE80" strokeWidth="1.5" opacity="0.4" />
-                  </svg>
+                {/* View Mode Toggle Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-[#20422E] z-20 relative">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-[#4ADE80]" />
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">
+                      {radarViewMode === 'radar' ? 'Spatial Radar Compass' : 'Live Google Map View'}
+                    </span>
+                  </div>
 
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute left-1/2 top-3/5 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-gradient-to-br from-[#2E6141] to-[#040B06] border-2 border-[#4ADE80] flex flex-col items-center justify-center text-center shadow-2xl z-20 cursor-pointer"
-                    onClick={() => setSelectedPlace(null)}
-                  >
-                    <Navigation className="w-5 h-5 text-[#4ADE80]" />
-                    <span className="text-[9px] font-bold text-white tracking-widest uppercase">YOU</span>
-                  </motion.div>
-
-                  {filteredPlaces.map((place) => {
-                    const isSelected = selectedPlace?.id === place.id;
-                    return (
-                      <motion.div
-                        key={place.id}
-                        whileHover={{ scale: 1.12 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setSelectedPlace(place)}
-                        style={{ left: place.mapX, top: place.mapY }}
-                        className={`absolute -translate-x-1/2 -translate-y-1/2 px-3.5 py-2.5 rounded-2xl border transition-all cursor-pointer shadow-xl z-20 flex items-center gap-2.5 ${
-                          isSelected
-                            ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-[#4ADE80]/30 scale-105'
-                            : 'bg-[#07150C]/95 border-[#20422E] text-slate-200 hover:border-[#4ADE80]/50'
-                        }`}
-                      >
-                        <span className="text-base">{place.icon}</span>
-                        <div>
-                          <p className="text-xs font-bold whitespace-nowrap">{place.name}</p>
-                          <p className="text-[10px] text-[#4ADE80] font-semibold">{place.distance}</p>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                  <div className="flex items-center gap-1.5 bg-[#07150C] border border-[#20422E] p-1 rounded-full text-xs">
+                    <button
+                      onClick={() => setRadarViewMode('radar')}
+                      className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                        radarViewMode === 'radar'
+                          ? 'bg-[#4ADE80] text-[#07130B]'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      📡 Radar
+                    </button>
+                    <button
+                      onClick={() => setRadarViewMode('google_maps')}
+                      className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                        radarViewMode === 'google_maps'
+                          ? 'bg-[#4ADE80] text-[#07130B]'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      🗺️ Google Maps
+                    </button>
+                  </div>
                 </div>
+
+                {radarViewMode === 'google_maps' ? (
+                  <div className="relative w-full h-[430px] rounded-2xl overflow-hidden border border-[#20422E] my-3 shadow-2xl bg-[#07150C]">
+                    <iframe
+                      title="Google Maps Nearby Discovery"
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0, minHeight: '430px' }}
+                      loading="lazy"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(
+                        selectedPlace 
+                          ? `${selectedPlace.name}, ${selectedPlace.address || selectedPlace.city || 'Ahmedabad'}`
+                          : searchQuery.trim() 
+                            ? `${searchQuery}, Ahmedabad`
+                            : 'Sabarmati Riverfront Park, Ahmedabad'
+                      )}&t=&z=14&ie=UTF8&iwloc=&output=embed`}
+                    />
+                    
+                    {/* Active Selected Pin Overlay Badge */}
+                    {selectedPlace && (
+                      <div className="absolute top-3 left-3 bg-[#07130B]/90 backdrop-blur-md border border-[#4ADE80]/50 px-3.5 py-1.5 rounded-full text-xs font-bold text-white shadow-xl flex items-center gap-2 pointer-events-none">
+                        <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-ping" />
+                        <span>Focused: {selectedPlace.name}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative w-full h-[400px]">
+                    <svg viewBox="0 0 700 400" className="absolute inset-0 w-full h-full pointer-events-none">
+                      <circle cx="350" cy="220" r="70" stroke="#20422E" strokeWidth="1" strokeDasharray="4" fill="none" />
+                      <circle cx="350" cy="220" r="140" stroke="#20422E" strokeWidth="1" strokeDasharray="4" fill="none" />
+                      <circle cx="350" cy="220" r="210" stroke="#20422E" strokeWidth="1" strokeDasharray="4" fill="none" />
+                      <line x1="350" y1="220" x2="600" y2="90" stroke="#4ADE80" strokeWidth="1.5" opacity="0.4" />
+                    </svg>
+
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                      className="absolute left-1/2 top-3/5 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-gradient-to-br from-[#2E6141] to-[#040B06] border-2 border-[#4ADE80] flex flex-col items-center justify-center text-center shadow-2xl z-20 cursor-pointer"
+                      onClick={() => setSelectedPlace(null)}
+                    >
+                      <Navigation className="w-5 h-5 text-[#4ADE80]" />
+                      <span className="text-[9px] font-bold text-white tracking-widest uppercase">YOU</span>
+                    </motion.div>
+
+                    {filteredPlaces.map((place) => {
+                      const isSelected = selectedPlace?.id === place.id;
+                      return (
+                        <motion.div
+                          key={place.id}
+                          whileHover={{ scale: 1.12 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setSelectedPlace(place)}
+                          style={{ left: place.mapX, top: place.mapY }}
+                          className={`absolute -translate-x-1/2 -translate-y-1/2 px-3.5 py-2.5 rounded-2xl border transition-all cursor-pointer shadow-xl z-20 flex items-center gap-2.5 ${
+                            isSelected
+                              ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-[#4ADE80]/30 scale-105'
+                              : 'bg-[#07150C]/95 border-[#20422E] text-slate-200 hover:border-[#4ADE80]/50'
+                          }`}
+                        >
+                          <span className="text-base">{place.icon}</span>
+                          <div>
+                            <p className="text-xs font-bold whitespace-nowrap">{place.name}</p>
+                            <p className="text-[10px] text-[#4ADE80] font-semibold">{place.distance}</p>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div className="flex items-center gap-2 overflow-x-auto pt-3 border-t border-[#20422E] text-xs">
                   {[
