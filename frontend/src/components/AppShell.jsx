@@ -86,7 +86,7 @@ export default function AppShell() {
   };
 
   return (
-    <div className="min-h-screen bg-cream text-ink flex">
+    <div className={`min-h-screen flex ${isDark ? 'bg-[#040B06] text-slate-100' : 'bg-cream text-ink'}`}>
 
       {/* ────────────────────── DESKTOP SIDEBAR ────────────────────── */}
       <motion.aside
@@ -94,7 +94,7 @@ export default function AppShell() {
         animate={{ width: collapsed ? 68 : 240 }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         className={`hidden md:flex flex-col border-r sticky top-0 h-screen shrink-0 z-20 overflow-hidden select-none
-          ${isDark ? 'bg-[#1C3727] border-white/10' : 'bg-[#F8F9FA] border-ink/8'}`}
+          ${isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#F8F9FA] border-ink/8'}`}
       >
         {/* Brand & Toggle Header */}
         <div className="h-16 px-3 flex items-center shrink-0 border-b border-transparent">
@@ -161,7 +161,7 @@ export default function AppShell() {
         <div className={`mx-3 h-px ${isDark ? 'bg-white/6' : 'bg-ink/6'} mb-2`} />
 
         {/* Nav links */}
-        <nav className="px-2 flex-1 space-y-1 overflow-y-auto overflow-x-hidden pt-1">
+        <nav className="px-2 flex-1 space-y-0.5 overflow-y-auto overflow-x-hidden pt-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overscroll-contain">
           {!collapsed && (
             <p className="px-3 text-[10px] uppercase tracking-[0.2em] text-forest/35 font-semibold mb-2 mt-1 whitespace-nowrap">
               Menu
@@ -175,7 +175,7 @@ export default function AppShell() {
               title={collapsed ? l.label : undefined}
               className={({ isActive }) =>
                 `flex items-center rounded-xl transition-colors duration-150 ${
-                  collapsed ? 'justify-center h-10 w-10 mx-auto' : 'gap-3 px-3 py-2.5 text-sm w-full'
+                  collapsed ? 'justify-center h-10 w-10 mx-auto' : 'gap-3 px-3 py-2 text-sm w-full'
                 } ${
                   isActive
                     ? isDark
