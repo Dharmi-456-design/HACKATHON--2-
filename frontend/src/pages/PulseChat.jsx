@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Send, RotateCcw, Copy, Check, Sparkles, Sun, Bell, User, Image as ImageIcon, Mic, CheckCheck, Globe, ChevronDown, History, Plus, Edit2, Trash2, X, MessageSquare, MicOff, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { apiFetch } from '../lib/api';
+import { chatWithPulse } from '../lib/openrouter';
 import { ErrorBanner } from '../components/ui';
 
 // Multilingual UI Translations Dictionary
@@ -217,9 +216,7 @@ const STARTERS = [
 ];
 
 export default function PulseChat() {
-  const { session } = useAuth();
   const { toggleTheme } = useTheme();
-  const token = session?.access_token;
 
   const [lang, setLang] = useState(() => localStorage.getItem('pulse_chat_lang') || 'en');
   const [showLangModal, setShowLangModal] = useState(() => !localStorage.getItem('pulse_lang_selected'));
@@ -473,11 +470,16 @@ export default function PulseChat() {
     saveActiveThreadMessages(newMsgs);
 
     try {
-      const reply = await apiFetch(
-        '/api/pulse',
-        { method: 'POST', body: JSON.stringify({ content: fullMessageContent, language: lang }) },
-        token
-      );
+      const history = newMsgs
+        .filter((m) => m.role === 'user' || m.role === 'assistant')
+        .map((m) => ({ role: m.role, content: m.content }));
+      const replyContent = await chatWithPulse(history);
+      const reply = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: replyContent,
+        created_at: new Date().toISOString(),
+      };
       const finalMsgs = [...newMsgs, reply];
       setMessages(finalMsgs);
       saveActiveThreadMessages(finalMsgs);
