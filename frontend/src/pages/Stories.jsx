@@ -147,127 +147,15 @@ const STORIES_TRANSLATIONS = {
   },
 };
 
-// Rich Pre-Built Seed Stories with Interactive Choice Paths & 3D Artwork
-const SEED_STORIES = [
-  {
-    id: 'story-201',
-    title: 'The Whispering Redwood Canopy',
-    genre: '✨ Fantasy',
-    mood: 'Mystical',
-    readTime: '4 min read',
-    coverImage: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80',
-    summary: 'An ancient redwood canopy conceals a neural web of bioluminescent fungi. Follow Maya as she decodes the forest heartbeat.',
-    narrative: `The mist hung low over the old-growth Pacific grove. Maya stepped carefully across the moss-covered roots of an 800-year-old Redwood. 
-
-Her field scanner pulsed green — detecting faint electrical impulses passing between the tree roots and subterranean mycelium.
-
-"It is not just a tree," she whispered into her journal. "It is a living neural network."
-
-Suddenly, a faint glow illuminated the hollow trunk ahead. Two distinct pathways emerged from the ancient roots...`,
-    isInteractive: true,
-    choices: [
-      {
-        id: 'c1',
-        text: '🔵 Descend into the subterranean fungal glow cave',
-        nextText: `Maya climbed down into the hollow root chamber. Hundreds of tiny blue bioluminescent caps pulsed in rhythm with her heartbeat. Deep within the cavern, an ancient stone altar held a crystal filled with forest sap...`,
-      },
-      {
-        id: 'c2',
-        text: '🟣 Ascend the spiral bark ladder towards the canopy skywalk',
-        nextText: `Securing her safety harness, Maya climbed higher into the misty canopy. At 250 feet above the forest floor, a pair of rare Northern Spotted Owls greeted her, guarding a glowing cedar nest...`,
-      },
-    ],
-    reactions: { magical: 42, lovedIt: 58, unexpected: 19, funny: 4, thoughtful: 31 },
-    isFeatured: true,
-    progress: 75,
-  },
-  {
-    id: 'story-202',
-    title: 'Chrono-Ecology 2085: The Silent Reef',
-    genre: '🚀 Sci-Fi',
-    mood: 'Futuristic',
-    readTime: '6 min read',
-    coverImage: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
-    summary: 'In a ocean habitat restored by autonomous micro-drones, marine biologist Leo discovers an artificial coral intelligence.',
-    narrative: `Deep underwater in the Great Barrier Sanctuary of 2085, automated solar-powered drones tended to living coral bio-polymers. 
-
-Leo adjusted his acoustic hydro-visor. Instead of silent water, his earpiece registered harmonic frequencies emitted by the synthetic reef structures.
-
-The coral was self-organizing — adapting its molecular density to withstand warming currents.`,
-    isInteractive: false,
-    reactions: { magical: 31, lovedIt: 45, unexpected: 28, funny: 2, thoughtful: 49 },
-    isFeatured: false,
-    progress: 30,
-  },
-  {
-    id: 'story-203',
-    title: 'The Secret Language of Migratory Sunbirds',
-    genre: '🌿 Nature & Eco',
-    mood: 'Calm & Educational',
-    readTime: '3 min read',
-    coverImage: 'https://images.unsplash.com/photo-1555532538-dcdbd01d373d?w=800&q=80',
-    summary: 'Discover how purple sunbirds navigate thousands of miles using Earth’s magnetic field and flowering plant scents.',
-    narrative: `Before sunrise, a tiny male Purple Sunbird flutters near a blooming Champa tree. Weighing less than a coin, its tiny heart beats 1,000 times per minute.
-
-By detecting subtle fluctuations in magnetic dip angles, the bird maps out safe flight corridors across urban landscapes.`,
-    isInteractive: false,
-    reactions: { magical: 24, lovedIt: 62, unexpected: 11, funny: 5, thoughtful: 38 },
-    isFeatured: false,
-    progress: 100,
-  },
-  {
-    id: 'story-204',
-    title: 'Mystery of the Midnight Bloom',
-    genre: '🕵️ Mystery',
-    mood: 'Suspenseful',
-    readTime: '5 min read',
-    coverImage: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800&q=80',
-    summary: 'Every midnight, a rare night-blooming cereus emits a golden fragrance that attracts an unidentified nocturnal pollinator.',
-    narrative: `Professor Kulkarni adjusted his infrared night camera. The clock struck 12:00 AM. 
-
-Slowly, white velvety petals unfurled under the full moon, releasing a sweet vanilla scent that carried across the botanical garden...`,
-    isInteractive: true,
-    choices: [
-      {
-        id: 'c3',
-        text: '🌙 Focus infrared lens on the upper canopy branches',
-        nextText: `The thermal sensors flashed red. A rare Sphinx Moth with a 10-inch proboscis descended silently onto the blossom...`,
-      },
-      {
-        id: 'c4',
-        text: '🔍 Inspect damp soil around root nodules',
-        nextText: `Glowing root exudates were attracting subterranean beetles that pollinated the lowest stamens from below...`,
-      },
-    ],
-    reactions: { magical: 38, lovedIt: 29, unexpected: 41, funny: 3, thoughtful: 22 },
-    isFeatured: false,
-    progress: 0,
-  }
-];
-
 export default function Stories() {
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = STORIES_TRANSLATIONS[lang] || STORIES_TRANSLATIONS.en;
 
   // Persistent Stories State
-  const [stories, setStories] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_stories_v1');
-      return saved ? JSON.parse(saved) : SEED_STORIES;
-    } catch {
-      return SEED_STORIES;
-    }
-  });
+  const [stories, setStories] = useState([]);
 
-  const [savedStoryIds, setSavedStoryIds] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_stories_saved_v1');
-      return saved ? JSON.parse(saved) : ['story-201', 'story-203'];
-    } catch {
-      return ['story-201', 'story-203'];
-    }
-  });
+  const [savedStoryIds, setSavedStoryIds] = useState([]);
 
   // Filter & Active Reader States
   const [activeTab, setActiveTab] = useState('all'); // all, my_stories, favorites, interactive
@@ -337,14 +225,6 @@ export default function Stories() {
       stopAmbientSound();
     };
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem('pulse_stories_v1', JSON.stringify(stories));
-  }, [stories]);
-
-  useEffect(() => {
-    localStorage.setItem('pulse_stories_saved_v1', JSON.stringify(savedStoryIds));
-  }, [savedStoryIds]);
 
   // Ambient Nature Soundscape Generator (Web Audio API)
   const startAmbientSound = () => {

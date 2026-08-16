@@ -5,11 +5,8 @@ import {
   LogOut, MapPin, MapPinned, Send, ShieldAlert, ThumbsUp, X,
 } from 'lucide-react';
 import { Badge, Card, Empty, ErrorBanner, Field, GhostButton, PrimaryButton, Skeleton, inputCls } from '../components/ui';
-
-const API_BASE = (import.meta.env.VITE_GREENWATCH_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
-
-const TOKEN_KEY = 'greenwatch_token';
-const USER_KEY = 'greenwatch_user';
+import { apiUrl } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const CATEGORIES = [
   { value: 'litter', label: 'Litter' },
@@ -34,18 +31,9 @@ const statusTone = (v) => (v === 'resolved' ? 'sage' : v === 'in_progress' ? 'go
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
-function readAuth() {
-  try {
-    const token = localStorage.getItem(TOKEN_KEY);
-    const user = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
-    return { token, user };
-  } catch {
-    return { token: null, user: null };
-  }
-}
-
 export default function GreenWatch() {
-  const [{ token, user }, setAuth] = useState(readAuth);
+  const { session, user, logout } = useAuth();
+  const token = session?.access_token;
   const [view, setView] = useState('feed');
   const [selectedId, setSelectedId] = useState(null);
   const [issues, setIssues] = useState([]);
@@ -88,9 +76,7 @@ export default function GreenWatch() {
   };
 
   const signOut = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    setAuth({ token: null, user: null });
+    logout();
     setView('feed');
     setNotice('Signed out. You can still browse the public feed.');
   };
@@ -131,10 +117,7 @@ export default function GreenWatch() {
 
       {!token ? (
         <AuthCard
-          onAuth={({ token: t, user: u }) => {
-            localStorage.setItem(TOKEN_KEY, t);
-            localStorage.setItem(USER_KEY, JSON.stringify(u));
-            setAuth({ token: t, user: u });
+          onAuth={() => {
             setError('');
             setNotice('');
             setView('report');
@@ -242,7 +225,7 @@ async function gwFetch(path, options = {}, token = null) {
   if (token) headers.Authorization = `Bearer ${token}`;
   let res;
   try {
-    res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    res = await fetch(`${apiUrl}${path}`, { ...options, headers });
   } catch {
     const err = new Error('Could not reach the Green Watch server. Check your connection.');
     err.status = 0;
@@ -268,7 +251,7 @@ function uploadImageFile(file, token, onProgress) {
     const fd = new FormData();
     fd.append('image', file);
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `${API_BASE}/api/upload`);
+    xhr.open('POST', `${apiUrl}/api/upload`);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable && typeof onProgress === 'function') {
@@ -306,6 +289,7 @@ function uploadImageFile(file, token, onProgress) {
 
 // ─── Login / register ──────────────────────────────────────────────────────────
 function AuthCard({ onAuth }) {
+  const { login, register } = useAuth();
   const [mode, setMode] = useState('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -318,10 +302,9 @@ function AuthCard({ onAuth }) {
     setError('');
     setBusy(true);
     try {
-      const data = await gwFetch(
-        mode === 'login' ? '/api/auth/login' : '/api/auth/register',
-        { method: 'POST', body: JSON.stringify(mode === 'login' ? { email, password } : { name, email, password }) }
-      );
+      const data = mode === 'login'
+        ? await login(email, password)
+        : await register({ name, email, password });
       if (!data.token || !data.user) {
         throw new Error('Server did not return a session. Please try again.');
       }
@@ -736,7 +719,7 @@ function AdminStatsView({ token }) {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/export`, {
+      const res = await fetch(`${apiUrl}/api/admin/export`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const blob = await res.blob();

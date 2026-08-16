@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function PricingSection() {
-  const { user, isDemoUser } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' | 'yearly'
 
   const handleSelectPlan = () => {
-    if (user || isDemoUser) {
+    if (user) {
       navigate('/app');
     } else {
       navigate('/login');

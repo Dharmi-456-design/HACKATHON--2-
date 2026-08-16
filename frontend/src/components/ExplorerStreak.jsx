@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Flame } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch } from '../lib/api';
-import { isDemoMode, demoStreak } from '../utils/demoMode';
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
@@ -32,10 +31,9 @@ export default function ExplorerStreak({ compact = false }) {
 
   useEffect(() => {
     if (!token) return;
-    const fn = isDemoMode()
-      ? demoStreak
-      : () => apiFetch('/api/streak', {}, token).catch(() => null);
-    fn().then((d) => { if (d) setStreak(d.streak); }).catch(() => {});
+    apiFetch('/api/streak', {}, token)
+      .then((d) => { if (d) setStreak(d.streak); })
+      .catch(() => {});
   }, [token]);
 
   if (streak === null) return null;

@@ -8,7 +8,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual Translations Dictionary for Community Page
@@ -156,129 +155,11 @@ const COMMUNITY_TRANSLATIONS = {
   },
 };
 
-// Initial Rich Seed Posts for All Categories & Tabs
-const INITIAL_POSTS = [
-  {
-    id: 'post-101',
-    author: { id: 'u1', name: 'Dr. Aarav Patel', city: 'Ahmedabad', avatar: '🌱', bio: 'Botanist & Urban Forest Researcher' },
-    title: 'Observing Dawn Nesting Behavior in Banyan Canopy',
-    category: 'Nature & Ecology',
-    content: 'Spent 45 quiet minutes this dawn observing 3 distinct bird species in the ancient Banyan near the lake. The Indian Myna and Sunbirds show incredible cooperative foraging before sunrise.',
-    tags: ['biodiversity', 'birds', 'banyan', 'urbanwild'],
-    pinned: true,
-    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-    reactions: { like: 14, insightful: 9, ecoLove: 22, hot: 5, educational: 11 },
-    userReactions: { ecoLove: true },
-    comments: [
-      {
-        id: 'c101',
-        author: { name: 'Priya Sharma', city: 'Mumbai' },
-        content: 'Fascinating observation! Did you notice any temperature drop near the roots?',
-        created_at: new Date(Date.now() - 3600000).toISOString(),
-        replies: [
-          {
-            id: 'r101',
-            author: { name: 'Dr. Aarav Patel', city: 'Ahmedabad' },
-            content: 'Yes! Root canopy area was roughly 2.5°C cooler than the open sidewalk.',
-            created_at: new Date(Date.now() - 1800000).toISOString(),
-          }
-        ]
-      }
-    ],
-    aiSummary: null,
-  },
-  {
-    id: 'post-102',
-    author: { id: 'u2', name: 'Rohan Mehta', city: 'Surat', avatar: '🦅', bio: 'Wildlife Photographer' },
-    title: 'How can AI Neural Vision improve species identification accuracy?',
-    category: 'AI & Technology',
-    content: 'When using Nature Lens under low morning light, high ISO noise sometimes affects leaf pattern recognition. How can we leverage multi-frame stacking to improve accuracy?',
-    tags: ['ai', 'computer-vision', 'nature-lens', 'tech'],
-    pinned: false,
-    created_at: new Date(Date.now() - 3600000 * 6).toISOString(),
-    reactions: { like: 18, insightful: 25, ecoLove: 14, hot: 12, educational: 17 },
-    userReactions: { insightful: true },
-    comments: [],
-    aiSummary: null,
-    aiAnswer: null,
-  },
-  {
-    id: 'post-103',
-    author: { id: 'u3', name: 'Neha Gupta', city: 'Delhi', avatar: '🌸', bio: 'Environmental Educator' },
-    title: 'Weekly Community Action: Installing Bird Water Dishes Before Summer',
-    category: 'Ideas & Suggestions',
-    content: 'As temperature rises across urban areas, small shallow water dishes placed in shaded garden corners provide critical hydration for migratory birds and pollinators.',
-    tags: ['community-act', 'wildlife', 'conservation'],
-    pinned: false,
-    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-    reactions: { like: 25, insightful: 16, ecoLove: 38, hot: 9, educational: 18 },
-    userReactions: { like: true },
-    comments: [],
-    aiSummary: null,
-  },
-  {
-    id: 'post-104',
-    author: { id: 'u4', name: 'Kavita Shah', city: 'Vadodara', avatar: '🦋', bio: 'Micro-climate Specialist' },
-    title: 'Sharing Local Neighborhood Micro-Climate Experiences',
-    category: 'General Discussion',
-    content: 'Notice how humidity levels increase dramatically near urban parks during early morning hours. Let us share observations on micro-climates in your city!',
-    tags: ['microclimate', 'humidity', 'urban-parks'],
-    pinned: false,
-    created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
-    reactions: { like: 18, insightful: 12, ecoLove: 20, hot: 6, educational: 14 },
-    userReactions: { ecoLove: true },
-    comments: [],
-    aiSummary: null,
-  },
-  {
-    id: 'post-105',
-    author: { id: 'u1', name: 'Dr. Aarav Patel', city: 'Ahmedabad', avatar: '🌱', bio: 'Botanist & Urban Forest Researcher' },
-    title: 'Understanding Seasonal Leaf Color Variations & Photosynthesis Efficiency',
-    category: 'Education & Learning',
-    content: 'A comprehensive guide for students and nature enthusiasts on how chlorophyll breakdown reveals carotenoid and anthocyanin pigments during seasonal transitions.',
-    tags: ['photosynthesis', 'botany', 'education'],
-    pinned: false,
-    created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
-    reactions: { like: 30, insightful: 22, ecoLove: 15, hot: 8, educational: 25 },
-    userReactions: { educational: true },
-    comments: [],
-    aiSummary: null,
-  },
-  {
-    id: 'post-106',
-    author: { id: 'u2', name: 'Rohan Mehta', city: 'Surat', avatar: '🦅', bio: 'Wildlife Photographer' },
-    title: 'Which species of butterflies visit urban flowering plants in morning hours?',
-    category: 'Questions & Answers',
-    content: 'Looking for identification pointers on common swallowtail and monarch butterflies observed around city garden flowers between 7 AM and 9 AM.',
-    tags: ['butterflies', 'pollinators', 'qa'],
-    pinned: false,
-    created_at: new Date(Date.now() - 3600000 * 30).toISOString(),
-    reactions: { like: 12, insightful: 18, ecoLove: 14, hot: 7, educational: 16 },
-    userReactions: { insightful: true },
-    comments: [],
-    aiSummary: null,
-  },
-  {
-    id: 'post-107',
-    author: { id: 'my-user-id', name: 'My Explorer', city: 'Local Region', avatar: '🌳', bio: 'Passionate Nature Explorer' },
-    title: 'My Neighborhood Tree Canopy & Bird Sanctuary Journal',
-    category: 'Nature & Ecology',
-    content: 'Documenting 5 native trees and bird activity in my neighborhood. Observed Sunbirds and Parakeets feeding on flower nectar early this morning!',
-    tags: ['my-journal', 'birds', 'trees'],
-    pinned: false,
-    created_at: new Date(Date.now() - 3600000 * 36).toISOString(),
-    reactions: { like: 19, insightful: 11, ecoLove: 24, hot: 5, educational: 9 },
-    userReactions: { ecoLove: true },
-    comments: [],
-    aiSummary: null,
-  }
-];
 
 export default function Community() {
   const { user, session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = COMMUNITY_TRANSLATIONS[lang] || COMMUNITY_TRANSLATIONS.en;
-  const demoMode = isDemoMode();
   const myId = user?.id || user?._id || 'my-user-id';
   const tokenFromSession = session?.access_token;
 
@@ -307,50 +188,10 @@ export default function Community() {
   });
 
   // Persistent States
-  const [posts, setPosts] = useState(() => {
-    if (!demoMode) return [];
-    try {
-      const saved = localStorage.getItem('pulse_community_posts_v4');
-      return saved ? JSON.parse(saved) : INITIAL_POSTS;
-    } catch {
-      return INITIAL_POSTS;
-    }
-  });
-
-  const [savedPostIds, setSavedPostIds] = useState(() => {
-    if (!demoMode) return [];
-    try {
-      const saved = localStorage.getItem('pulse_community_saved_v4');
-      return saved ? JSON.parse(saved) : ['post-101', 'post-103', 'post-105', 'post-107'];
-    } catch {
-      return ['post-101'];
-    }
-  });
-
-  const [followedUserIds, setFollowedUserIds] = useState(() => {
-    if (!demoMode) return [];
-    try {
-      const saved = localStorage.getItem('pulse_community_follows_v4');
-      return saved ? JSON.parse(saved) : ['u1', 'u2', 'u3', 'u4'];
-    } catch {
-      return ['u1'];
-    }
-  });
-
-  const [notifications, setNotifications] = useState(() => {
-    if (!demoMode) return [];
-    try {
-      const saved = localStorage.getItem('pulse_community_notifications_v4');
-      return saved
-        ? JSON.parse(saved)
-        : [
-            { id: 'n1', text: 'Dr. Aarav Patel liked your comment', time: '2h ago', read: false },
-            { id: 'n2', text: 'Priya Sharma started following you', time: '5h ago', read: false },
-          ];
-    } catch {
-      return [];
-    }
-  });
+  const [posts, setPosts] = useState([]);
+  const [savedPostIds, setSavedPostIds] = useState([]);
+  const [followedUserIds, setFollowedUserIds] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   // Filter & Search States
   const [searchQuery, setSearchQuery] = useState('');
@@ -379,34 +220,12 @@ export default function Community() {
   const [replyInputs, setReplyInputs] = useState({});
   const [activeReplyId, setActiveReplyId] = useState(null);
 
-  // Save Posts to LocalStorage (demo mode only)
-  useEffect(() => {
-    if (!demoMode) return;
-    localStorage.setItem('pulse_community_posts_v4', JSON.stringify(posts));
-  }, [posts, demoMode]);
-
-  useEffect(() => {
-    if (!demoMode) return;
-    localStorage.setItem('pulse_community_saved_v4', JSON.stringify(savedPostIds));
-  }, [savedPostIds, demoMode]);
-
-  useEffect(() => {
-    if (!demoMode) return;
-    localStorage.setItem('pulse_community_follows_v4', JSON.stringify(followedUserIds));
-  }, [followedUserIds, demoMode]);
-
-  useEffect(() => {
-    if (!demoMode) return;
-    localStorage.setItem('pulse_community_notifications_v4', JSON.stringify(notifications));
-  }, [notifications, demoMode]);
-
   // Load the real shared feed from the backend
   useEffect(() => {
-    if (demoMode) return;
     apiFetch('/api/community', {}, null)
       .then((list) => setPosts(Array.isArray(list) ? list.map(toUiPost) : []))
       .catch(() => {});
-  }, [demoMode]);
+  }, []);
 
   // Reaction Toggle Handler
   const handleReaction = (postId, rxKey) => {
@@ -523,7 +342,6 @@ export default function Community() {
     setPostImage(null);
     addNotification('Your post has been published successfully!');
 
-    if (demoMode) return;
     apiFetch(
       '/api/community',
       {
@@ -549,7 +367,6 @@ export default function Community() {
   // Delete Post
   const handleDeletePost = (postId) => {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
-    if (demoMode) return;
     apiFetch(`/api/community/${postId}`, { method: 'DELETE' }, tokenFromSession).catch(() => {});
   };
 

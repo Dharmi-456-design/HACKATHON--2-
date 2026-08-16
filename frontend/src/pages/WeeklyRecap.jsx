@@ -8,7 +8,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Weekly Recap
@@ -79,39 +78,12 @@ const RECAP_TRANSLATIONS = {
 };
 
 // 7-Day Activity Nodes Data
-const WEEKLY_TIMELINE_NODES = [
-  { day: 'Mon', fullDay: 'Monday', chats: 3, messages: 12, topTopic: 'Photosynthesis & Canopy', intensity: 60, highlight: 'Discussed tree shade cooling effect' },
-  { day: 'Tue', fullDay: 'Tuesday', chats: 2, messages: 8, topTopic: 'Migratory Birds', intensity: 45, highlight: 'Learned about Kingfisher feeding times' },
-  { day: 'Wed', fullDay: 'Wednesday', chats: 6, messages: 24, topTopic: 'Urban Micro-climate', intensity: 95, highlight: 'Peak activity day with 6 conversations' },
-  { day: 'Thu', fullDay: 'Thursday', chats: 4, messages: 15, topTopic: 'AI Neural Vision', intensity: 75, highlight: 'Explored camera sensor confidence' },
-  { day: 'Fri', fullDay: 'Friday', chats: 3, messages: 10, topTopic: 'Banyan Canopy Ecology', intensity: 55, highlight: 'Saved 2 observations to library' },
-  { day: 'Sat', fullDay: 'Saturday', chats: 5, messages: 19, topTopic: 'Interactive Stories', intensity: 85, highlight: 'Read 3 interactive AI stories' },
-  { day: 'Sun', fullDay: 'Sunday', chats: 4, messages: 14, topTopic: 'Community Action', intensity: 70, highlight: 'Shared water dish action proposal' },
-];
-
-// Floating Topic Galaxy Orbit Nodes
-const TOPIC_NODES = [
-  { id: 't1', name: 'Nature & Botany', count: 14, percent: 35, color: 'from-[#4ADE80] to-[#254B35]', desc: 'Photosynthesis, tree shade, banyan canopy' },
-  { id: 't2', name: 'AI & Neural Sensing', count: 10, percent: 25, color: 'from-blue-400 to-[#173824]', desc: 'Computer vision, confidence score' },
-  { id: 't3', name: 'Bird Life & Waterfowl', count: 8, percent: 20, color: 'from-amber-400 to-[#2A4533]', desc: 'Kingfishers, Egrets, Sunbirds' },
-  { id: 't4', name: 'Micro-climates', count: 5, percent: 12, color: 'from-[#E6C176] to-[#1F3E2B]', desc: 'Humidity, root canopy cooling' },
-  { id: 't5', name: 'Community Actions', count: 3, percent: 8, color: 'from-purple-400 to-[#1C3627]', desc: 'Bird water dishes, leaf conservation' },
-];
-
-// Badges Data
-const ACHIEVEMENTS = [
-  { id: 'b1', title: '🔥 7-Day Explorer Streak', desc: 'Active every single day this week', unlocked: true },
-  { id: 'b2', title: '💡 Knowledge Seeker', desc: 'Explored 5 distinct ecological topics', unlocked: true },
-  { id: 'b3', title: '🌐 Multilingual Master', desc: 'Switched fluently between English, Gujarati & Hindi', unlocked: true },
-  { id: 'b4', title: '📚 Story Enthusiast', desc: 'Completed 3 interactive decision stories', unlocked: true },
-];
 
 export default function WeeklyRecap() {
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = RECAP_TRANSLATIONS[lang] || RECAP_TRANSLATIONS.en;
   const token = session?.access_token;
-  const demoMode = isDemoMode();
 
   // Active States
   const [activeTab, setActiveTab] = useState('timeline'); // timeline, topics, goals, archive
@@ -120,16 +92,9 @@ export default function WeeklyRecap() {
 
   // Weekly Goals State
   const [goals, setGoals] = useState(() => {
-    if (!demoMode) return [];
     try {
       const saved = localStorage.getItem('pulse_weekly_goals_v1');
-      return saved
-        ? JSON.parse(saved)
-        : [
-            { id: 'g1', text: 'Have 10 AI conversations on local flora', done: true },
-            { id: 'g2', text: 'Read 3 Interactive 3D Stories', done: true },
-            { id: 'g3', text: 'Document 2 micro-climate observations', done: false },
-          ];
+      return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
@@ -139,12 +104,12 @@ export default function WeeklyRecap() {
   const [showGoalInput, setShowGoalInput] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  // Real weekly data (non-demo mode)
+  // Real weekly data
   const [recap, setRecap] = useState(null);
   const [dayCounts, setDayCounts] = useState({});
 
   useEffect(() => {
-    if (demoMode || !token) return;
+    if (!token) return;
     apiFetch('/api/weekly-recap', {}, token).then(setRecap).catch(() => {});
     apiFetch('/api/discoveries', {}, token)
       .then((list) => {
@@ -161,58 +126,50 @@ export default function WeeklyRecap() {
         setDayCounts(counts);
       })
       .catch(() => {});
-  }, [demoMode, token]);
+  }, [token]);
 
   useEffect(() => {
     localStorage.setItem('pulse_weekly_goals_v1', JSON.stringify(goals));
   }, [goals]);
 
-  // Build the 7-day nodes from real per-day observation counts (non-demo)
-  const weekNodes = demoMode
-    ? WEEKLY_TIMELINE_NODES
-    : (() => {
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const out = [];
-        const d = new Date();
-        d.setHours(0, 0, 0, 0);
-        d.setDate(d.getDate() - 6);
-        for (let i = 0; i < 7; i++) {
-          const key = d.toISOString().slice(0, 10);
-          const count = dayCounts[key] || 0;
-          out.push({
-            day: dayNames[d.getDay()],
-            fullDay: d.toLocaleDateString('en-US', { weekday: 'long' }),
-            chats: count,
-            messages: 0,
-            obs: count,
-            topTopic: '',
-            intensity: Math.min(100, count * 30),
-            highlight: count ? `${count} observation${count === 1 ? '' : 's'} recorded` : 'No observations recorded',
-          });
-          d.setDate(d.getDate() + 1);
-        }
-        return out;
-      })();
+  // Build the 7-day nodes from real per-day observation counts
+  const weekNodes = (() => {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const out = [];
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - 6);
+      for (let i = 0; i < 7; i++) {
+        const key = d.toISOString().slice(0, 10);
+        const count = dayCounts[key] || 0;
+        out.push({
+          day: dayNames[d.getDay()],
+          fullDay: d.toLocaleDateString('en-US', { weekday: 'long' }),
+          chats: count,
+          messages: 0,
+          obs: count,
+          topTopic: '',
+          intensity: Math.min(100, count * 30),
+          highlight: count ? `${count} observation${count === 1 ? '' : 's'} recorded` : 'No observations recorded',
+        });
+        d.setDate(d.getDate() + 1);
+      }
+      return out;
+    })();
 
   const totalSpecies = recap?.total_species || 0;
   const totalDays = recap?.total_days || 0;
   const speciesNames = recap?.slides?.[1]?.species_list || [];
 
-  const totalChatsCount = demoMode
-    ? WEEKLY_TIMELINE_NODES.reduce((a, b) => a + b.chats, 0)
-    : totalSpecies;
-  const totalMessagesCount = demoMode
-    ? WEEKLY_TIMELINE_NODES.reduce((a, b) => a + b.messages, 0)
-    : totalDays;
+  const totalChatsCount = totalSpecies;
+  const totalMessagesCount = totalDays;
 
   const mostActiveKey = Object.keys(dayCounts).reduce((a, b) => (dayCounts[a] >= dayCounts[b] ? a : b), '');
   const mostActiveDay = mostActiveKey ? new Date(mostActiveKey).toLocaleDateString('en-US', { weekday: 'long' }) : '—';
   const mostActiveCount = mostActiveKey ? dayCounts[mostActiveKey] : 0;
 
-  const summaryTitle = demoMode ? t.aiSummaryTitle : 'Weekly Activity Summary';
-  const summaryText = demoMode
-    ? t.aiSummaryText
-    : totalSpecies > 0
+  const summaryTitle = 'Weekly Activity Summary';
+  const summaryText = totalSpecies > 0
       ? `You recorded ${totalSpecies} species across ${totalDays} day${totalDays === 1 ? '' : 's'} this week${speciesNames.length ? ', including ' + speciesNames.slice(0, 3).join(', ') : ''}.`
       : 'No observations recorded this week yet. Head out with the Lens to make your first discovery.';
 
@@ -223,27 +180,19 @@ export default function WeeklyRecap() {
     return `Week of ${fmt(start)} – ${fmt(new Date())}`;
   })();
 
-  const ecoScore = demoMode ? '98%' : `${Math.round((totalDays / 7) * 100)}%`;
-  const ecoSubtitle = demoMode ? '7 Days Active 🔥' : `${totalDays} Day${totalDays === 1 ? '' : 's'} Active`;
+  const ecoScore = `${Math.round((totalDays / 7) * 100)}%`;
+  const ecoSubtitle = `${totalDays} Day${totalDays === 1 ? '' : 's'} Active`;
 
-  const topicNodes = demoMode
-    ? TOPIC_NODES
-    : speciesNames.map((s, i) => ({
-        id: `sp-${i}`,
-        name: s,
-        count: 1,
-        percent: 100,
-        color: 'from-[#4ADE80] to-[#254B35]',
-        desc: 'Species recorded this week',
-      }));
+  const topicNodes = speciesNames.map((s, i) => ({
+      id: `sp-${i}`,
+      name: s,
+      count: 1,
+      percent: 100,
+      color: 'from-[#4ADE80] to-[#254B35]',
+      desc: 'Species recorded this week',
+    }));
 
-  const archiveItems = demoMode
-    ? [
-        { week: 'Aug 10 - Aug 16, 2026', chats: '27 Chats', top: 'Photosynthesis & Canopy', status: 'Current Week' },
-        { week: 'Aug 03 - Aug 09, 2026', chats: '22 Chats', top: 'Migratory Sunbirds', status: 'Completed' },
-        { week: 'Jul 27 - Aug 02, 2026', chats: '19 Chats', top: 'Micro-climate Research', status: 'Completed' },
-      ]
-    : [];
+  const archiveItems = [];
 
   const activeNode = selectedDayNode || weekNodes[weekNodes.length - 1];
 
@@ -359,7 +308,7 @@ ${mostActiveDay !== '—' ? `• Most Active Day: ${mostActiveDay} (${mostActive
                       ? 'bg-[#4ADE80] text-[#07130B] border-white shadow-lg shadow-[#4ADE80]/40 scale-125'
                       : 'bg-[#13271C] text-slate-200 border-[#20422E] hover:border-[#4ADE80]'
                   }`}
-                  title={`${n.fullDay}: ${n.chats} ${demoMode ? 'chats' : 'observations'}`}
+                  title={`${n.fullDay}: ${n.chats} ${n.chats === 1 ? 'observation' : 'observations'}`}
                 >
                   {n.day[0]}
                 </button>
@@ -394,30 +343,27 @@ ${mostActiveDay !== '—' ? `• Most Active Day: ${mostActiveDay} (${mostActive
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-xs font-semibold text-[#4ADE80] uppercase tracking-wider">{t.mostActiveDay}</p>
-                <h3 className="font-display text-3xl sm:text-4xl font-extrabold text-white mt-1">{demoMode ? 'Wednesday' : mostActiveDay}</h3>
+                <h3 className="font-display text-3xl sm:text-4xl font-extrabold text-white mt-1">{mostActiveDay}</h3>
               </div>
               <span className="px-3 py-1 rounded-full bg-[#1A3827] text-xs text-[#4ADE80] border border-[#4ADE80]/30 font-bold">
-                {demoMode ? '6 Chats · 24 Messages' : `${mostActiveCount} Observation${mostActiveCount === 1 ? '' : 's'}`}
+                {mostActiveCount > 0 ? `${mostActiveCount} Observation${mostActiveCount === 1 ? '' : 's'}` : 'No activity yet'}
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-              {demoMode
-                ? 'Peak activity recorded between 6:00 PM and 8:30 PM discussing Urban Micro-climates and Canopy Shade.'
-                : mostActiveDay !== '—'
-                  ? `Most of this week's observations were recorded on ${mostActiveDay}.`
-                  : 'No observations recorded yet this week.'}
+              {mostActiveDay !== '—'
+                ? `Most of this week's observations were recorded on ${mostActiveDay}.`
+                : 'No observations recorded yet this week.'}
             </p>
           </div>
 
           {/* Capsule 2: Vertical Interaction Velocity */}
           <div className="bg-[#0E2015] border border-[#20422E] hover:border-[#4ADE80]/60 rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-4 transition-all">
             <div>
-              <p className="text-xs font-semibold text-[#4ADE80] uppercase tracking-wider">{demoMode ? t.totalChats : 'Species Logged'}</p>
-              <h3 className="font-display text-3xl font-extrabold text-white mt-1">{totalChatsCount} {demoMode ? 'Chats' : 'Species'}</h3>
-              {demoMode && <p className="text-xs text-emerald-400 font-medium mt-1">+18% vs Last Week</p>}
+              <p className="text-xs font-semibold text-[#4ADE80] uppercase tracking-wider">Species Logged</p>
+              <h3 className="font-display text-3xl font-extrabold text-white mt-1">{totalChatsCount} Species</h3>
             </div>
             <div className="border-t border-[#20422E] pt-3 text-[11px] text-slate-400">
-              {demoMode ? 'High interaction across Nature Lens & Pulse Chat.' : 'Field observations logged in the past 7 days.'}
+              Field observations logged in the past 7 days.
             </div>
           </div>
 
@@ -469,7 +415,7 @@ ${mostActiveDay !== '—' ? `• Most Active Day: ${mostActiveDay} (${mostActive
                     <div className="w-7 h-7 rounded-full bg-[#1A3827] border border-[#4ADE80] flex items-center justify-center text-[10px] font-bold text-white">
                       {node.chats}
                     </div>
-                    <span className="text-[10px] text-slate-400">{demoMode ? `${node.messages} msgs` : `${node.obs} obs`}</span>
+                    <span className="text-[10px] text-slate-400">{node.obs} obs</span>
                   </motion.button>
                 );
               })}

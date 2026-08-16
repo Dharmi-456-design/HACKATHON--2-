@@ -37,7 +37,7 @@ function GoogleIcon() {
 export default function Auth({ initialMode = 'login' }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, login, register, signInWithGoogle, enterDemoMode, logout } = useAuth();
+  const { user, login, register, signInWithGoogle, logout } = useAuth();
 
   // Determine initial mode from path or prop
   const isRegisterPath =
@@ -569,22 +569,6 @@ export default function Auth({ initialMode = 'login' }) {
                         </button>
                       </>
                     )}
-                  </div>
-
-                  {/* ── 1-CLICK DEMO SHORTCUT (CLEAN SAGE/EMERALD) ── */}
-                  <div className="mt-3.5 sm:mt-4 pt-3 border-t border-white/10">
-                    <div className="rounded-2xl border border-dashed border-[#96CD7B]/30 bg-[#96CD7B]/10 p-2.5 sm:p-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5 text-[10px] sm:text-[11px] font-mono font-semibold uppercase tracking-wider text-[#96CD7B] mb-1">
-                        <Sparkles size={12} /> 1-Click Instant Demo
-                      </div>
-                      <button
-                        type="button"
-                        onClick={enterDemoMode}
-                        className="w-full rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 text-white text-[11px] sm:text-xs font-semibold py-1.5 sm:py-2 px-3 transition-all border border-white/20 flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <span>🚀 Launch Demo Mode Instantly</span>
-                      </button>
-                    </div>
                   </div>
 
                 </motion.div>
