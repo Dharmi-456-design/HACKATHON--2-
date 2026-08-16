@@ -15,9 +15,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { usePublicStats } from '../hooks/usePublicStats';
 
 const PERKS = [
-  '42+ Native flora telemetry logs',
   'AI Species & Bio-Acoustic Scanner',
   'Free & open community passport',
   'Real-time urban habitat mapping',
@@ -38,6 +38,14 @@ export default function Auth({ initialMode = 'login' }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, login, register, signInWithGoogle, logout } = useAuth();
+  const stats = usePublicStats();
+
+  const perks = [
+    stats && typeof stats.observations === 'number'
+      ? `${stats.observations.toLocaleString()} species observations logged`
+      : 'Community species observation logs',
+    ...PERKS,
+  ];
 
   // Determine initial mode from path or prop
   const isRegisterPath =
@@ -293,7 +301,9 @@ export default function Auth({ initialMode = 'login' }) {
                   <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">
                     {isLogin
                       ? 'Sign in to sync your observations and streaks'
-                      : 'Join 12,000+ explorers recording the living earth'}
+                      : stats && typeof stats.users === 'number'
+                        ? `Join ${stats.users.toLocaleString()} explorers recording the living earth`
+                        : 'Join explorers recording the living earth'}
                   </p>
 
                   {/* Active User Alert (if already authenticated) */}
@@ -666,7 +676,7 @@ export default function Auth({ initialMode = 'login' }) {
 
                   {/* Perks Checklist */}
                   <div className="space-y-2.5 pt-1">
-                    {PERKS.map((perk, i) => (
+                    {perks.map((perk, i) => (
                       <div
                         key={i}
                         className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md"
@@ -699,7 +709,9 @@ export default function Auth({ initialMode = 'login' }) {
                       />
                     </div>
                     <span className="text-xs font-mono text-white/70">
-                      Joined by 12,000+ local naturalists
+                      {stats && typeof stats.users === 'number'
+                        ? `Joined by ${stats.users.toLocaleString()} local naturalists`
+                        : 'Joined by local naturalists'}
                     </span>
                   </div>
                 </motion.div>

@@ -23,6 +23,8 @@ const {
   getCommunityPosts,
   createCommunityPost,
   deleteCommunityPost,
+  getTestimonials,
+  getPublicStats,
   getActions,
   createAction,
   updateAction,
@@ -109,6 +111,10 @@ router
   .get(asyncHandler(getCommunityPosts))
   .post(protect, asyncHandler(createCommunityPost));
 router.route('/community/:id').delete(protect, asyncHandler(deleteCommunityPost));
+
+// Public marketing data (testimonials from real reports, live aggregate stats)
+router.get('/testimonials', asyncHandler(getTestimonials));
+router.get('/stats', asyncHandler(getPublicStats));
 
 // Actions, Streaks & Insights (private)
 router.route('/actions').get(protect, asyncHandler(getActions)).post(protect, asyncHandler(createAction));
