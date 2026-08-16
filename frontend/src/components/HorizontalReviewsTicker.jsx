@@ -161,17 +161,17 @@ export default function HorizontalReviewsTicker() {
     setScrollPos(latest);
   });
 
-  // Map scroll progress (0 to 1) so cards visually travel from LEFT to RIGHT (-maxScrollDistance to 0)
-  const x = useTransform(smoothProgress, [0, 1], [-maxScrollDistance, 0]);
+  // Map scroll progress (0 to 1) so cards visually travel from RIGHT to LEFT, viewport moves LEFT to RIGHT
+  const x = useTransform(smoothProgress, [0, 1], [0, -maxScrollDistance]);
 
   // Initial Card Entrance: Cards start slightly below and move UPWARD into position as section enters viewport
-  const cardsY = useTransform(smoothProgress, [0, 0.15], [35, 0]);
-  const cardsOpacity = useTransform(smoothProgress, [0, 0.1], [0.3, 1]);
+  const cardsY = useTransform(smoothProgress, [0, 0.05], [35, 0]);
+  const cardsOpacity = useTransform(smoothProgress, [0, 0.05], [0.3, 1]);
 
   return (
     <>
-      {/* Outer Section - Pinning duration tuned to 120vh to guarantee zero empty space between sections */}
-      <div ref={targetRef} className="relative h-[120vh] bg-[#0E1E15] text-white">
+      {/* Outer Section - Pinning duration tuned to 400vh to ensure "no up-down does take place" until end */}
+      <div ref={targetRef} className="relative h-[400vh] bg-[#0E1E15] text-white">
         
         {/* Sticky Viewport Container - Pins section while user completes Card 1 -> Card 10 */}
         <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-6 px-6 sm:px-12 select-none">
@@ -198,7 +198,10 @@ export default function HorizontalReviewsTicker() {
 
           {/* Linear Wave Scrubber Bar (Dynamic Green Peak following scroll progress) */}
           <div className="relative max-w-7xl w-full mx-auto my-2 sm:my-4 z-20 shrink-0">
-            <div className="flex items-center justify-between gap-1 h-12 px-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+            <div className="relative flex items-center justify-between gap-1 h-12 px-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+              {/* The "One linear line" behind the mini lines */}
+              <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 h-[1px] bg-white/20 z-0" />
+              
               {Array.from({ length: NUM_TICKS }).map((_, i) => {
                 const tickProgress = i / (NUM_TICKS - 1);
                 const distance = Math.abs(tickProgress - scrollPos);
@@ -216,7 +219,7 @@ export default function HorizontalReviewsTicker() {
                       height: `${heightPx}px`,
                       opacity,
                     }}
-                    className={`w-1 rounded-full transition-all duration-100 ${
+                    className={`relative z-10 w-1 rounded-full transition-all duration-100 ${
                       isWaveActive
                         ? 'bg-[#96CD7B] shadow-[0_0_10px_#96CD7B]'
                         : 'bg-white/35'
@@ -236,7 +239,7 @@ export default function HorizontalReviewsTicker() {
             </div>
           </div>
 
-          {/* Horizontal Staircase Ticker Cards (Cards Enter UPWARD -> Move LEFT to RIGHT -> Focus Hover Blur) */}
+          {/* Horizontal Staircase Ticker Cards (Cards Enter UPWARD -> Move RIGHT to LEFT -> Focus Hover Blur) */}
           <motion.div
             style={{ y: cardsY, opacity: cardsOpacity }}
             className="relative w-full overflow-hidden z-10 my-auto py-2"
