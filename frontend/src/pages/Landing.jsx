@@ -1,12 +1,15 @@
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight, Eye, Compass, BookOpen, HandHeart, RotateCcw, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Eye, Compass, BookOpen, HandHeart, RotateCcw, Sparkles, ChevronDown } from 'lucide-react';
 import { PulseOrb } from '../components/ui';
 import ThemeToggle from '../components/ThemeToggle';
 import InteractiveHeroSphere from '../components/InteractiveHeroSphere';
 import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
 import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 import AnimatedStatCard from '../components/AnimatedStatCard';
+import Interactive3DFooter from '../components/Interactive3DFooter';
+import { useAuth } from '../contexts/AuthContext';
 
 const JOURNEY = [
   { icon: Eye, title: 'Observe', body: 'Notice what is already beside you — bark, birdsong, a wet seam of moss.' },
@@ -17,27 +20,213 @@ const JOURNEY = [
   { icon: RotateCcw, title: 'Return', body: 'A single visit is a snapshot. Returning is how a landscape becomes familiar.' },
 ];
 
-export default function Landing() {
+const PRACTICE_TIPS = [
+  { label: 'Field Protocol', tip: 'Look for subtle details: bark textures, moss seams, avian calls. Spend 2 minutes taking notes without forcing a name.' },
+  { label: 'Ecological Insight', tip: 'Ask why this species thrives in this specific habitat before trying to memorize Latin taxonomy.' },
+  { label: 'Sensory Engagement', tip: 'Step into the same spot at a different hour — dusk, dawn, or after rain. Notice light and sound shifts.' },
+  { label: 'Local Stewardship', tip: 'Perform one modest local action: water native soil, clear plastic debris, or record habitat telemetry.' },
+  { label: 'Connection Metric', tip: 'Track your 5-dimensional Nature Connection score across time, habitats, and seasonal returns.' },
+  { label: 'Long-term Care', tip: 'A single visit is a snapshot. Repeated quiet visits turn unfamiliar landscapes into living sanctuaries.' },
+];
+
+const FAQS = [
+  { q: "Is it really free?", a: "Yes. Core observation tools, daily field missions, and species tracking are 100% free forever for all urban observers.", tag: "Free Forever" },
+  { q: "Do you track my exact location?", a: "No. We only store city-level and broad habitat telemetry. We never store precise GPS pins of your home or private walks.", tag: "Privacy First" },
+  { q: "Do I need to know about plants?", a: "Not at all. NaturePulse is designed specifically for beginners. You only need curiosity to notice things around you.", tag: "Beginner Friendly" },
+  { q: "Is there a mobile app?", a: "Yes! NaturePulse is a Progressive Web App (PWA). You can install it directly to your iOS or Android home screen with zero app store clutter.", tag: "PWA Supported" }
+];
+
+function JourneyHoverCard({ step, i }) {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
-    <div className="min-h-screen bg-[#0A1610] text-ink">
-      <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-[#0A1610]/80 border-b border-white/10 transition-colors">
+    <div
+      className="group relative [perspective:1200px] h-[290px] w-full select-none"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-40px' }}
+        animate={{
+          rotateY: isHovered ? 180 : 0,
+          scale: isHovered ? 1.03 : 1,
+          y: isHovered ? -6 : 0,
+        }}
+        transition={{
+          rotateY: { duration: 0.7, ease: [0.2, 0.8, 0.2, 1] },
+          scale: { duration: 0.4, ease: 'easeOut' },
+          y: { duration: 0.4, ease: 'easeOut' },
+          opacity: { duration: 0.5, delay: i * 0.05 },
+        }}
+        style={{ transformStyle: 'preserve-3d' }}
+        className="relative w-full h-full rounded-3xl cursor-pointer shadow-soft hover:shadow-[0_20px_50px_-10px_rgba(151,205,171,0.35)] gpu-layer"
+      >
+        {/* FRONT FACE (0°) */}
+        <div
+          style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+          className="absolute inset-0 w-full h-full rounded-3xl bg-[#15281D] p-7 border border-white/10 group-hover:border-[#97CDAB]/50 transition-colors flex flex-col justify-between overflow-hidden gpu-layer"
+        >
+          {/* Top Glowing Beam */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#97CDAB] via-[#E6C176] to-[#97CDAB] rounded-t-3xl opacity-80" />
+          
+          {/* Ambient Glow Aura */}
+          <div className="absolute -right-10 -top-10 w-36 h-36 bg-[#97CDAB]/15 rounded-full blur-2xl pointer-events-none" />
+
+          <div>
+            <div className="relative z-10 flex items-start justify-between mb-5">
+              <div className="w-12 h-12 rounded-2xl bg-[#97CDAB]/15 border border-[#97CDAB]/20 flex items-center justify-center text-[#97CDAB] group-hover:scale-110 transition-transform">
+                <step.icon size={20} />
+              </div>
+              <span className="text-xs uppercase tracking-[0.2em] font-mono font-bold text-[#97CDAB]/70 group-hover:text-[#E6C176] transition-colors">
+                0{i + 1}
+              </span>
+            </div>
+
+            <div className="relative z-10">
+              <h3 className="font-display text-2xl text-white font-semibold group-hover:text-[#97CDAB] transition-colors">{step.title}</h3>
+              <p className="mt-2 text-sm text-white/75 leading-relaxed">{step.body}</p>
+            </div>
+          </div>
+
+          <div className="relative z-10 pt-3 border-t border-white/10 flex items-center justify-between text-[11px] text-[#97CDAB] font-semibold uppercase tracking-wider">
+            <span>Hover to reveal field practice</span>
+            <RotateCcw size={13} className="group-hover:rotate-180 transition-transform duration-700" />
+          </div>
+        </div>
+
+        {/* BACK FACE (180° FLIPPED REVEAL) */}
+        <div
+          style={{
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg) translateZ(1px)',
+          }}
+          className="absolute inset-0 w-full h-full rounded-3xl bg-gradient-to-br from-[#1C3727] via-[#14281C] to-[#0E1E15] p-7 border-2 border-[#97CDAB] shadow-2xl flex flex-col justify-between overflow-hidden gpu-layer"
+        >
+          {/* Glowing Back Accent */}
+          <div className="absolute -left-10 -bottom-10 w-36 h-36 bg-[#E6C176]/20 rounded-full blur-2xl pointer-events-none" />
+
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-bold px-3 py-1 rounded-full bg-[#97CDAB]/25 text-[#97CDAB] border border-[#97CDAB]/40">
+                {PRACTICE_TIPS[i].label}
+              </span>
+              <span className="text-xs font-mono text-[#E6C176] font-bold">0{i + 1} / 06</span>
+            </div>
+
+            <h4 className="font-display text-xl text-white font-semibold mt-1">
+              {step.title} Practice
+            </h4>
+
+            <p className="mt-2.5 text-sm text-white/95 leading-relaxed font-normal">
+              "{PRACTICE_TIPS[i].tip}"
+            </p>
+          </div>
+
+          <div className="pt-3 border-t border-white/15 flex items-center justify-between text-[11px] text-[#E6C176] font-semibold uppercase tracking-wider">
+            <span>Active Field Protocol</span>
+            <Sparkles size={13} className="text-[#E6C176] animate-pulse" />
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function FaqAccordionItem({ faq, index }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div
+      className={`rounded-2xl border transition-all duration-300 overflow-hidden gpu-layer ${
+        isOpen
+          ? 'bg-[#162E20] border-[#97CDAB]/60 shadow-[0_16px_36px_rgba(151,205,171,0.2)] -translate-y-1'
+          : 'bg-[#14281C] border-white/10 hover:border-[#97CDAB]/40'
+      }`}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <div className="w-full p-6 text-left flex items-center justify-between gap-4 cursor-pointer select-none group">
+        <div className="flex items-center gap-3.5">
+          <span className="text-xs font-mono font-bold text-[#E6C176]">0{index + 1}</span>
+          <h3 className={`font-display text-lg sm:text-xl font-semibold transition-colors ${isOpen ? 'text-[#97CDAB]' : 'text-white group-hover:text-[#97CDAB]'}`}>
+            {faq.q}
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+              isOpen ? 'bg-[#97CDAB] text-[#060E09] rotate-180 scale-110' : 'bg-white/10 text-[#97CDAB]'
+            }`}
+          >
+            <ChevronDown size={18} />
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, y: -6 }}
+            animate={{ height: 'auto', opacity: 1, y: 0 }}
+            exit={{ height: 0, opacity: 0, y: -6 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="p-6 pt-0 border-t border-white/10 mt-1">
+              <div className="pt-4 pl-4 border-l-2 border-[#97CDAB] bg-white/[0.02] rounded-r-xl">
+                <p className="text-sm sm:text-base text-white/90 leading-relaxed font-normal">
+                  {faq.a}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default function Landing() {
+  const { user, isDemoUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleDashboardClick = (e) => {
+    e.preventDefault();
+    if (user || isDemoUser) {
+      navigate('/app');
+    } else {
+      navigate('/login');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0A1610] text-white">
+      {/* Fixed Navbar Header */}
+      <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-[#0A1610]/85 border-b border-white/10 transition-colors">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.png" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shadow-sm" />
             <span className="font-display text-xl tracking-tight text-white font-semibold">NaturePulse</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-8 text-sm text-white/80">
+          <nav className="hidden md:flex items-center gap-8 text-sm text-white/80 font-medium">
             <a href="#hero" className="hover:text-white transition-colors">3D Experience</a>
             <a href="#journey" className="hover:text-white transition-colors">The journey</a>
             <a href="#pulse" className="hover:text-white transition-colors">Pulse AI</a>
             <a href="#reviews" className="hover:text-white transition-colors">Community</a>
+            <button onClick={handleDashboardClick} className="hover:text-white transition-colors cursor-pointer font-semibold text-[#97CDAB]">
+              Dashboard
+            </button>
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link to="/login" className="hidden sm:inline-flex text-sm px-3 py-2 text-white/80 hover:text-white transition-colors">Sign in</Link>
-            <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full bg-[#97CDAB] text-[#0A1610] font-semibold text-sm px-4 py-2 hover:bg-white transition-colors">
+            <Link to="/login" className="hidden sm:inline-flex text-sm px-3 py-2 text-white/80 hover:text-white transition-colors font-medium">Sign in</Link>
+            <button onClick={handleDashboardClick} className="inline-flex items-center gap-1.5 rounded-full bg-[#97CDAB] text-[#0A1610] font-semibold text-sm px-4 py-2 hover:bg-white transition-colors cursor-pointer shadow-xs">
               Begin <ArrowRight size={14} />
-            </Link>
+            </button>
           </div>
         </div>
       </header>
@@ -57,58 +246,46 @@ export default function Landing() {
         <ScrollTypographyHighlight />
       </section>
 
-      <section id="journey" className="py-20 border-t border-ink/5">
+      {/* ────────────────────── 4. THE JOURNEY LOOP (TAGDA 3D HOVER FLIP CARDS) ────────────────────── */}
+      <section id="journey" className="py-20 border-t border-white/10 bg-[#0E1E15]">
         <div className="max-w-6xl mx-auto px-5">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-gold">The loop</p>
-          <h2 className="font-display text-4xl sm:text-5xl mt-2 max-w-2xl">A relationship, not a streak.</h2>
-          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-[#E6C176] font-semibold">The loop</p>
+          <h2 className="font-display text-4xl sm:text-5xl mt-2 max-w-2xl text-white font-semibold">A relationship, not a streak.</h2>
+          <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {JOURNEY.map((step, i) => (
-              <motion.div
-                key={step.title}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="rounded-3xl bg-paper p-6 border border-ink/5 shadow-soft"
-              >
-                <div className="w-10 h-10 rounded-2xl bg-mist/70 flex items-center justify-center text-forest mb-4">
-                  <step.icon size={18} />
-                </div>
-                <p className="text-[11px] uppercase tracking-[0.2em] text-forest/40">0{i + 1}</p>
-                <h3 className="font-display text-2xl mt-1">{step.title}</h3>
-                <p className="mt-2 text-sm text-forest/70 leading-relaxed">{step.body}</p>
-              </motion.div>
+              <JourneyHoverCard key={step.title} step={step} i={i} />
             ))}
           </div>
         </div>
       </section>
 
-      <section id="pulse" className="py-20 bg-forest text-cream transition-colors">
+      {/* ────────────────────── 5. MEET PULSE AI ────────────────────── */}
+      <section id="pulse" className="py-20 bg-[#162D20] text-white transition-colors">
         <div className="max-w-6xl mx-auto px-5 grid lg:grid-cols-2 gap-12 items-center">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.24em] text-gold">Meet Pulse</p>
-            <h2 className="font-display text-4xl sm:text-5xl mt-2">Calm. Encouraging. Intelligent. Practical.</h2>
-            <p className="mt-5 text-cream/75 leading-relaxed">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[#E6C176] font-semibold">Meet Pulse</p>
+            <h2 className="font-display text-4xl sm:text-5xl mt-2 text-white font-semibold">Calm. Encouraging. Intelligent. Practical.</h2>
+            <p className="mt-5 text-white/80 leading-relaxed">
               Pulse is your field companion. It writes daily missions from your city, your time, and what you have already noticed.
               It reads a photograph only as far as the image supports. When it does not know, it says so.
             </p>
-            <ul className="mt-6 space-y-2 text-sm text-cream/80">
+            <ul className="mt-6 space-y-2 text-sm text-white/85">
               <li>— Personalized missions that require real-world interaction</li>
               <li>— Nature Lens with structured, cautious image understanding</li>
               <li>— Ecological stories that connect several observations without forcing a plot</li>
             </ul>
           </div>
-          <div className="rounded-[28px] bg-ink/30 border border-cream/10 p-6 backdrop-blur-xs">
+          <div className="rounded-[28px] bg-black/40 border border-white/15 p-6 backdrop-blur-md">
             <div className="flex items-center gap-3 mb-5">
               <PulseOrb size={44} />
               <div>
-                <p className="font-display text-xl">Pulse</p>
-                <p className="text-xs text-cream/50">Your nature guide</p>
+                <p className="font-display text-xl text-white font-semibold">Pulse</p>
+                <p className="text-xs text-white/60">Your nature guide</p>
               </div>
             </div>
             <div className="space-y-3 text-sm">
-              <div className="rounded-2xl bg-cream/10 px-4 py-3 text-cream/90">I have twelve minutes before a meeting. What should I actually do?</div>
-              <div className="rounded-2xl bg-cream text-ink px-4 py-3">
+              <div className="rounded-2xl bg-white/10 px-4 py-3 text-white/90">I have twelve minutes before a meeting. What should I actually do?</div>
+              <div className="rounded-2xl bg-white text-[#0A1610] font-medium px-4 py-3 shadow-md">
                 Twelve minutes is enough. Walk to the nearest street tree you can name by location, not by species. Stand still. Count textures on the bark. Then come back and tell me one thing that surprised you.
               </div>
             </div>
@@ -116,38 +293,39 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="trust" className="py-20">
+      {/* ────────────────────── 6. TRUST & ETHICS PILLARS ────────────────────── */}
+      <section id="trust" className="py-20 bg-[#0E1E15]">
         <div className="max-w-6xl mx-auto px-5 grid md:grid-cols-3 gap-6">
           {[
             ['No invented names', 'If Pulse is unsure, the observation stays unnamed. Honesty is part of ecological literacy.'],
             ['No exact locations', 'We store city and habitat, never a pin on your house. Community posts are equally coarse.'],
             ['Care, not performance', 'Actions are modest and local. We do not overclaim impact or sell a carbon fairy tale.'],
           ].map(([t, b]) => (
-            <div key={t} className="rounded-3xl border border-ink/8 p-6 bg-paper shadow-soft">
-              <h3 className="font-display text-2xl">{t}</h3>
-              <p className="mt-2 text-sm text-forest/70 leading-relaxed">{b}</p>
+            <div key={t} className="rounded-3xl border border-white/10 p-6 bg-[#15281D] shadow-soft">
+              <h3 className="font-display text-2xl text-white font-semibold">{t}</h3>
+              <p className="mt-2 text-sm text-white/75 leading-relaxed">{b}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* --- NEW SECTION: Product Preview --- */}
-      <section className="py-24 bg-mist/20">
+      {/* ────────────────────── 7. PRODUCT PREVIEW ────────────────────── */}
+      <section className="py-24 bg-[#122419]">
         <div className="max-w-6xl mx-auto px-5 text-center">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-gold">Dashboard</p>
-          <h2 className="font-display text-4xl sm:text-5xl mt-2 mb-12">Your ecological home base.</h2>
-          <div className="relative rounded-[32px] overflow-hidden shadow-lift border border-ink/10 max-w-5xl mx-auto">
+          <p className="text-[11px] uppercase tracking-[0.24em] text-[#E6C176] font-semibold">Dashboard</p>
+          <h2 className="font-display text-4xl sm:text-5xl mt-2 mb-12 text-white font-semibold">Your ecological home base.</h2>
+          <div className="relative rounded-[32px] overflow-hidden shadow-lift border border-white/15 max-w-5xl mx-auto">
             <img src="/landing_preview.jpg" alt="NaturePulse Dashboard Preview" className="w-full h-auto object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-ink/20 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
           </div>
         </div>
       </section>
 
-      {/* --- NEW SECTION: Key Features --- */}
-      <section className="py-24">
+      {/* ────────────────────── 8. KEY FEATURES ────────────────────── */}
+      <section className="py-24 bg-[#0E1E15]">
         <div className="max-w-6xl mx-auto px-5">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-gold text-center">Features</p>
-          <h2 className="font-display text-4xl sm:text-5xl mt-2 text-center mb-16">Everything you need to connect.</h2>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-[#E6C176] text-center font-semibold">Features</p>
+          <h2 className="font-display text-4xl sm:text-5xl mt-2 text-center mb-16 text-white font-semibold">Everything you need to connect.</h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
@@ -156,20 +334,20 @@ export default function Landing() {
               { icon: BookOpen, title: 'Field Notes', desc: 'Keep a private journal of your observations with AI-assisted insights.' },
               { icon: Sparkles, title: 'Ecological Stories', desc: 'Watch your daily observations weave into a continuous narrative.' }
             ].map((f) => (
-              <div key={f.title} className="p-6 rounded-3xl bg-paper border border-ink/5 hover:border-forest/20 transition-colors shadow-sm group">
-                <div className="w-12 h-12 rounded-2xl bg-forest text-cream flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
+              <div key={f.title} className="p-6 rounded-3xl bg-[#15281D] border border-white/10 hover:border-[#97CDAB]/40 transition-colors shadow-sm group">
+                <div className="w-12 h-12 rounded-2xl bg-[#97CDAB]/20 text-[#97CDAB] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
                   <f.icon size={20} />
                 </div>
-                <h3 className="font-display text-xl">{f.title}</h3>
-                <p className="mt-3 text-sm text-forest/70 leading-relaxed">{f.desc}</p>
+                <h3 className="font-display text-xl text-white font-semibold">{f.title}</h3>
+                <p className="mt-3 text-sm text-white/75 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- NEW SECTION: Statistics --- */}
-      <section className="py-20 bg-forest text-white">
+      {/* ────────────────────── 9. STATISTICS ────────────────────── */}
+      <section className="py-20 bg-[#14291B] text-white">
         <div className="max-w-6xl mx-auto px-5 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
             { val: '12k+', label: 'Active Observers' },
@@ -182,15 +360,15 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* --- NEW SECTION: Benefits --- */}
-      <section className="py-24">
+      {/* ────────────────────── 10. BENEFITS ────────────────────── */}
+      <section className="py-24 bg-[#0E1E15]">
         <div className="max-w-6xl mx-auto px-5 grid lg:grid-cols-2 gap-16 items-center">
-          <div className="rounded-[32px] overflow-hidden border border-ink/5 shadow-soft">
+          <div className="rounded-[32px] overflow-hidden border border-white/10 shadow-soft">
             <img src="/login_nature.jpg" alt="Nature path" className="w-full h-[500px] object-cover" />
           </div>
           <div>
-            <p className="text-[11px] uppercase tracking-[0.24em] text-gold">Why Choose Us</p>
-            <h2 className="font-display text-4xl sm:text-5xl mt-2 mb-6">Designed for actual reality.</h2>
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[#E6C176] font-semibold">Why Choose Us</p>
+            <h2 className="font-display text-4xl sm:text-5xl mt-2 mb-6 text-white font-semibold">Designed for actual reality.</h2>
             <div className="space-y-6">
               {[
                 { title: 'Screen time that leads outside', desc: 'Unlike endless feeds, our app is designed to be closed. We give you a mission and send you out.' },
@@ -198,12 +376,12 @@ export default function Landing() {
                 { title: 'Scientific yet accessible', desc: 'We bridge the gap between rigorous ecology and everyday walking, making nature understandable.' }
               ].map((b) => (
                 <div key={b.title} className="flex gap-4">
-                  <div className="w-6 h-6 rounded-full bg-mist/50 flex flex-shrink-0 items-center justify-center mt-1 text-forest">
+                  <div className="w-6 h-6 rounded-full bg-[#97CDAB]/20 flex flex-shrink-0 items-center justify-center mt-1 text-[#97CDAB]">
                     <ArrowRight size={12} />
                   </div>
                   <div>
-                    <h4 className="font-display text-xl">{b.title}</h4>
-                    <p className="mt-2 text-sm text-forest/70">{b.desc}</p>
+                    <h4 className="font-display text-xl text-white font-semibold">{b.title}</h4>
+                    <p className="mt-2 text-sm text-white/75">{b.desc}</p>
                   </div>
                 </div>
               ))}
@@ -212,72 +390,119 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* --- NEW SECTION: Testimonials --- */}
-      <section className="py-24 bg-mist/10 border-y border-ink/5">
+      {/* ────────────────────── 11. TESTIMONIALS (INTERACTIVE LETTER & CARD HIGHLIGHT) ────────────────────── */}
+      <section className="py-24 bg-[#122419] border-y border-white/10">
         <div className="max-w-6xl mx-auto px-5">
-          <h2 className="font-display text-4xl text-center mb-16">Stories from the field.</h2>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-[#E6C176] text-center font-semibold mb-2">
+            COMMUNITY TESTIMONIALS
+          </p>
+
+          {/* Slightly Bolder Heading with 3D Letter Flip on Hover */}
+          <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl text-center mb-16 text-white font-bold flex justify-center flex-wrap gap-x-3 sm:gap-x-4 select-none [perspective:800px]">
+            {"Stories from the field.".split(" ").map((word, wIdx) => (
+              <span key={wIdx} className="inline-block whitespace-nowrap">
+                {word.split("").map((char, cIdx) => (
+                  <motion.span
+                    key={cIdx}
+                    whileHover={{ rotateY: 360, y: -8, scale: 1.25, color: '#97CDAB' }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    style={{ transformStyle: 'preserve-3d', display: 'inline-block' }}
+                    className="inline-block transition-colors cursor-pointer gpu-layer font-bold"
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </span>
+            ))}
+          </h2>
+
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { text: "It completely changed how I walk to work. I notice the moss on the brick walls now.", name: "Sarah L.", loc: "Urban Ecologist" },
-              { text: "The missions are perfectly sized. 10 minutes is actually 10 minutes. It respects my time.", name: "Marcus T.", loc: "Software Engineer" },
-              { text: "I love that it doesn't force me to pretend I know the exact Latin name of every bird.", name: "Elena R.", loc: "Amateur Birdwatcher" }
+              { text: "It completely changed how I walk to work. I notice the moss on the brick walls now.", name: "Sarah L.", loc: "Urban Ecologist", role: "Verified Observer" },
+              { text: "The missions are perfectly sized. 10 minutes is actually 10 minutes. It respects my time.", name: "Marcus T.", loc: "Software Engineer", role: "Habitat Explorer" },
+              { text: "I love that it doesn't force me to pretend I know the exact Latin name of every bird.", name: "Elena R.", loc: "Amateur Birdwatcher", role: "Field Journaler" }
             ].map((t, i) => (
-              <div key={i} className="p-8 rounded-3xl bg-paper border border-ink/5 shadow-sm">
-                <div className="flex gap-1 text-gold mb-4">
-                  {[1,2,3,4,5].map(s => <span key={s}>★</span>)}
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -14, scale: 1.04 }}
+                transition={{ duration: 0.45, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                className="group relative p-8 rounded-3xl bg-gradient-to-b from-[#172D20] to-[#112318] border border-white/10 hover:border-[#E6C176]/70 shadow-soft hover:shadow-[0_24px_60px_-12px_rgba(230,193,118,0.3)] transition-all cursor-pointer overflow-hidden gpu-layer"
+              >
+                {/* 1. Diagonal Holographic Shimmer Light Beam Sweep */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none" />
+
+                {/* 2. Top Glowing Gold/Sage Dual Accent Line */}
+                <div className="absolute top-0 left-0 w-0 group-hover:w-full h-1 bg-gradient-to-r from-[#E6C176] via-[#97CDAB] to-[#E6C176] transition-all duration-500 rounded-t-3xl" />
+                
+                {/* 3. Ambient Gold Glow Aura */}
+                <div className="absolute -right-12 -top-12 w-40 h-40 bg-[#E6C176]/10 rounded-full blur-3xl group-hover:bg-[#E6C176]/25 group-hover:scale-125 transition-all duration-500 pointer-events-none" />
+
+                {/* Star Rating & Role Badge */}
+                <div className="relative z-10 flex items-center justify-between mb-5">
+                  <div className="flex gap-1.5 text-[#E6C176] group-hover:scale-110 transition-transform origin-left">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <span key={s} className="text-base group-hover:drop-shadow-[0_0_8px_rgba(230,193,118,0.8)] transition-all">★</span>
+                    ))}
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.18em] font-bold px-3 py-1 rounded-full bg-[#E6C176]/15 text-[#E6C176] border border-[#E6C176]/30 group-hover:border-[#E6C176]/60 transition-colors">
+                    {t.role}
+                  </span>
                 </div>
-                <p className="text-forest/80 italic mb-6 leading-relaxed">"{t.text}"</p>
-                <div>
-                  <p className="font-display font-medium">{t.name}</p>
-                  <p className="text-xs text-forest/50">{t.loc}</p>
+
+                {/* Quote Text */}
+                <p className="relative z-10 text-white/90 italic mb-7 leading-relaxed text-base font-normal group-hover:text-white transition-colors">
+                  "{t.text}"
+                </p>
+
+                {/* Card Bottom Profile Meta */}
+                <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between">
+                  <div>
+                    <p className="font-display font-bold text-white text-lg group-hover:text-[#E6C176] transition-colors">{t.name}</p>
+                    <p className="text-xs text-white/60 mt-0.5">{t.loc}</p>
+                  </div>
+
+                  {/* 360° Rotating Sparkle Badge */}
+                  <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[#E6C176] group-hover:bg-[#E6C176] group-hover:text-[#060E09] group-hover:rotate-[360deg] transition-all duration-700 shadow-md">
+                    <Sparkles size={16} />
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- NEW SECTION: FAQ --- */}
-      <section className="py-24">
+      {/* ────────────────────── 12. FAQ / COMMON INQUIRIES ────────────────────── */}
+      <section className="py-24 bg-[#0E1E15]">
         <div className="max-w-3xl mx-auto px-5">
-          <p className="text-[11px] uppercase tracking-[0.24em] text-gold text-center">Questions</p>
-          <h2 className="font-display text-4xl sm:text-5xl mt-2 text-center mb-12">Common inquiries.</h2>
+          <p className="text-[11px] uppercase tracking-[0.24em] text-[#E6C176] text-center font-semibold mb-2">Questions</p>
+          <h2 className="font-display text-4xl sm:text-5xl mt-2 text-center mb-12 text-white font-semibold">Common inquiries.</h2>
           <div className="space-y-4">
-            {[
-              { q: "Is it really free?", a: "Yes. Core observation tools and daily missions are free." },
-              { q: "Do you track my exact location?", a: "No. We only use city-level and habitat-level data. Never precise GPS coordinates." },
-              { q: "Do I need to know about plants?", a: "Not at all. Pulse is designed for beginners. You just need to notice things." },
-              { q: "Is there a mobile app?", a: "NaturePulse is a progressive web app. You can install it directly to your home screen." }
-            ].map((faq, i) => (
-              <details key={i} className="group rounded-2xl bg-paper border border-ink/5 overflow-hidden">
-                <summary className="p-5 font-display text-lg cursor-pointer select-none flex items-center justify-between hover:bg-mist/10">
-                  {faq.q}
-                  <span className="text-forest/40 group-open:rotate-180 transition-transform">▼</span>
-                </summary>
-                <div className="p-5 pt-0 text-sm text-forest/70 border-t border-ink/5 mt-2 bg-paper/50">
-                  {faq.a}
-                </div>
-              </details>
+            {FAQS.map((faq, i) => (
+              <FaqAccordionItem key={i} faq={faq} index={i} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- NEW SECTION: Final CTA --- */}
-      <section className="py-24 px-5">
-        <div className="max-w-4xl mx-auto rounded-[40px] bg-forest text-cream p-12 sm:p-20 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gold/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-mist/20 rounded-full blur-3xl" />
+      {/* ────────────────────── 13. FINAL CTA ────────────────────── */}
+      <section className="py-24 px-5 bg-[#0E1E15]">
+        <div className="max-w-4xl mx-auto rounded-[40px] bg-gradient-to-br from-[#1C3727] to-[#14281C] text-white p-12 sm:p-20 text-center relative overflow-hidden border border-white/15 shadow-2xl">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#E6C176]/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#97CDAB]/15 rounded-full blur-3xl" />
           <div className="relative z-10">
-            <h2 className="font-display text-4xl sm:text-6xl mb-6">Ready to return?</h2>
-            <p className="text-cream/80 max-w-lg mx-auto mb-10 text-lg">
+            <h2 className="font-display text-4xl sm:text-6xl mb-6 font-semibold text-white">Ready to return?</h2>
+            <p className="text-white/80 max-w-lg mx-auto mb-10 text-lg">
               Join thousands of others building a quieter, more honest relationship with the living world.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/register" className="w-full sm:w-auto rounded-full bg-cream text-forest px-8 py-4 font-medium hover:bg-white transition-colors">
+              <Link to="/register" className="w-full sm:w-auto rounded-full bg-[#97CDAB] text-[#0A1610] px-8 py-4 font-semibold hover:bg-white transition-colors">
                 Create free account
               </Link>
-              <Link to="/login" className="w-full sm:w-auto rounded-full border border-cream/30 text-cream px-8 py-4 font-medium hover:bg-cream/10 transition-colors">
+              <Link to="/login" className="w-full sm:w-auto rounded-full border border-white/30 text-white px-8 py-4 font-semibold hover:bg-white/10 transition-colors">
                 Sign in
               </Link>
             </div>
@@ -285,17 +510,8 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-ink/8 py-10">
-        <div className="max-w-6xl mx-auto px-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <PulseOrb size={28} />
-            <span className="font-display text-lg">NaturePulse</span>
-          </div>
-          <p className="text-xs text-forest/50 max-w-md">
-            An AI-powered Nature Relationship Platform. Helping people notice, understand, experience, and care for the natural world around them.
-          </p>
-        </div>
-      </footer>
+      {/* ────────────────────── 14. 3D INTERACTIVE ECOSYSTEM FOOTER ────────────────────── */}
+      <Interactive3DFooter />
     </div>
   );
 }

@@ -68,7 +68,7 @@ const REVIEWS = [
   },
 ];
 
-const TOTAL_TICKS = 110;
+const TOTAL_TICKS = 190;
 
 export default function HorizontalReviewsTicker() {
   const sectionRef = useRef(null);
@@ -102,12 +102,12 @@ export default function HorizontalReviewsTicker() {
     <section ref={sectionRef} className="relative h-[360vh] bg-[#1C3727] text-white">
       {/* Sticky Fullscreen Container */}
       <div className="sticky top-0 h-screen w-full flex flex-col justify-between overflow-hidden py-10 px-6 sm:px-12 select-none">
-        
+
         {/* Section Header */}
         <div className="max-w-7xl w-full mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-4 z-10 shrink-0">
           <div>
             <p className="text-[11px] uppercase tracking-[0.25em] text-[#96CD7B] font-semibold mb-1">
-              COMMUNITY TRUST
+              COMMUNITY TRUST & REVIEWS
             </p>
             <h2 className="font-display text-3xl sm:text-5xl font-bold tracking-tight text-white">
               Beyond clients. Trusted partners.
@@ -122,16 +122,16 @@ export default function HorizontalReviewsTicker() {
           </a>
         </div>
 
-        {/* ────────────────── LIQUID SMOOTH MINI-LINE EQUALIZER SCRUBBER ────────────────── */}
-        <div className="w-full max-w-7xl mx-auto my-6 px-2 flex items-center justify-between gap-[2px] z-10 h-10">
+        {/* ────────────────── ENHANCED ANIMATED EQUALIZER LINE SCRUBBER ────────────────── */}
+        <div className="w-full max-w-7xl mx-auto my-4 px-2 flex items-center justify-between gap-[2px] z-10 h-12">
           {[...Array(TOTAL_TICKS)].map((_, i) => {
             const dist = Math.abs(i - floatCenterIndex);
-            
-            // Continuous Gaussian smooth bell curve (no skipping/stepping!)
-            const intensity = Math.max(0, 1 - dist / 5.5);
-            const heightPx = 8 + Math.pow(intensity, 1.8) * 24;
-            const opacity = 0.2 + intensity * 0.8;
-            const isPeak = intensity > 0.6;
+
+            // Continuous Gaussian smooth bell curve for dynamic animated light wave
+            const intensity = Math.max(0, 1 - dist / 6);
+            const heightPx = 8 + Math.pow(intensity, 1.7) * 32;
+            const opacity = 0.25 + intensity * 0.75;
+            const isPeak = intensity > 0.5;
 
             return (
               <div
@@ -139,7 +139,8 @@ export default function HorizontalReviewsTicker() {
                 style={{
                   height: `${heightPx}px`,
                   opacity: opacity,
-                  backgroundColor: isPeak ? '#FFFFFF' : 'rgba(255, 255, 255, 0.45)',
+                  backgroundColor: isPeak ? '#96CD7B' : 'rgba(255, 255, 255, 0.35)',
+                  boxShadow: isPeak ? '0 0 12px rgba(150, 205, 123, 0.8)' : 'none',
                 }}
                 className="w-[2px] sm:w-[3px] rounded-full transition-all duration-75 ease-out shadow-xs"
               />
@@ -147,16 +148,15 @@ export default function HorizontalReviewsTicker() {
           })}
         </div>
 
-        {/* ────────────────── STICKY HORIZONTAL CAROUSEL WITH STAIRCASE & HOVER FADE ────────────────── */}
-        <div className="w-full flex-1 flex items-center overflow-hidden">
+        {/* ────────────────── CAROUSEL WITH STAIRCASE FORM & TALLER CARDS ────────────────── */}
+        <div className="w-full flex-1 flex items-center overflow-hidden py-6">
           <motion.div style={{ x }} className="flex gap-8 pl-4 sm:pl-12 w-max items-center">
             {REVIEWS.map((rev, idx) => {
               const isHovered = hoveredId === rev.id;
               const hasHover = hoveredId !== null;
 
-              // Staircase offset effect (alternating heights as seen in Image 3 & 4)
-              const staircaseOffsets = [0, 36, 18, 50, 10, 42, 22, 48, 14];
-              const yOffset = staircaseOffsets[idx % staircaseOffsets.length];
+              // Staircase form calculation: Card 0 is highest (-65px), Card 1 slightly lower (-35px), Card 2 (-5px), Card 3 (25px), Card 4 (55px), Card 5 (85px)...
+              const yOffset = (idx % 6) * 30 - 65;
 
               return (
                 <motion.div
@@ -170,30 +170,29 @@ export default function HorizontalReviewsTicker() {
                     filter: hasHover && !isHovered ? 'blur(2.5px)' : 'blur(0px)',
                   }}
                   transition={{ duration: 0.3, ease: 'easeOut' }}
-                  className={`w-[340px] sm:w-[400px] lg:w-[440px] shrink-0 rounded-3xl p-8 sm:p-9 shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer border ${
-                    isHovered
+                  className={`w-[350px] sm:w-[420px] lg:w-[460px] min-h-[380px] sm:min-h-[420px] shrink-0 rounded-3xl p-8 sm:p-10 shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer border ${isHovered
                       ? 'bg-[#E5E0DC] text-[#14261C] border-white shadow-2xl z-30'
                       : 'bg-[#DCD7D3] text-[#14261C] border-white/40 hover:border-white'
-                  }`}
+                    }`}
                 >
                   <div>
                     {/* User Profile Header */}
-                    <div className="flex items-center gap-3.5 mb-6">
+                    <div className="flex items-center gap-4 mb-6">
                       <img
                         src={rev.avatar}
                         alt={rev.name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-[#14261C]/20 shrink-0"
+                        className="w-14 h-14 rounded-full object-cover border-2 border-[#14261C]/20 shrink-0 shadow-sm"
                       />
                       <div className="truncate">
-                        <h4 className="font-semibold text-base sm:text-lg leading-tight text-[#14261C]">
+                        <h4 className="font-bold text-lg sm:text-xl leading-tight text-[#14261C]">
                           {rev.name}
                         </h4>
-                        <p className="text-xs text-[#14261C]/60 mt-0.5">{rev.role}</p>
+                        <p className="text-xs font-semibold text-[#14261C]/65 mt-0.5">{rev.role}</p>
                       </div>
 
                       <div className="ml-auto flex gap-0.5 text-[#C49535]">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={13} fill="currentColor" />
+                          <Star key={i} size={14} fill="currentColor" />
                         ))}
                       </div>
                     </div>
@@ -205,9 +204,9 @@ export default function HorizontalReviewsTicker() {
                   </div>
 
                   {/* Card Bottom Meta */}
-                  <div className="mt-8 pt-5 border-t border-[#14261C]/10 flex items-center justify-between text-xs text-[#14261C]/60 font-medium">
+                  <div className="mt-8 pt-5 border-t border-[#14261C]/12 flex items-center justify-between text-xs text-[#14261C]/70 font-semibold">
                     <span className="flex items-center gap-1.5">
-                      <Quote size={13} className="text-[#1C3727]" /> Verified Partner
+                      <Quote size={14} className="text-[#1C3727]" /> Verified Partner
                     </span>
                     <span>Nature Explorer</span>
                   </div>

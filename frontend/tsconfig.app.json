@@ -8,13 +8,15 @@
     "types": ["vite/client", "node"],
     "skipLibCheck": true,
     "allowJs": true,
+    "checkJs": false,
+    "composite": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "strict": true,
+    "strict": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src/**/*"]
 }

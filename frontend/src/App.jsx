@@ -20,6 +20,7 @@ import BiodiversityPassport from './pages/BiodiversityPassport';
 import NatureMissions from './pages/NatureMissions';
 import CommunityBiodiversityMap from './pages/CommunityBiodiversityMap';
 import WeeklyRecap from './pages/WeeklyRecap';
+import LithosHero from './components/LithosHero';
 import { useEffect, useState } from 'react';
 import { apiFetch } from './lib/api';
 
@@ -58,6 +59,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/lithos" element={<LithosHero />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route

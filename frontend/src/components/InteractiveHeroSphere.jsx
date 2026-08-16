@@ -145,14 +145,21 @@ export default function InteractiveHeroSphere() {
     let targetRotationX = 0;
     let targetRotationY = 0;
 
+    let lastStep = 0;
     const onScroll = () => {
       const p = window.scrollY / (document.body.scrollHeight || 1);
       targetRotationY = p * Math.PI * 4;
       targetRotationX = p * Math.PI * 1.5;
 
-      if (p < 0.3) setActiveStep(0);
-      else if (p < 0.6) setActiveStep(1);
-      else setActiveStep(2);
+      let newStep = 0;
+      if (p < 0.35) newStep = 0;
+      else if (p < 0.65) newStep = 1;
+      else newStep = 2;
+
+      if (newStep !== lastStep) {
+        lastStep = newStep;
+        setActiveStep(newStep);
+      }
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
