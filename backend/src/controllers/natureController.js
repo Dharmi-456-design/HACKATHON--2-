@@ -840,7 +840,11 @@ async function callGeminiApi({ prompt, system, imageBase64, mimeType, json = fal
         const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('').trim() || '';
         if (json) {
           try {
-            return { data: JSON.parse(text), raw: text };
+            const cleaned = text
+              .replace(/^```(?:json)?\s*/i, '')
+              .replace(/\s*```$/, '')
+              .trim();
+            return { data: JSON.parse(cleaned), raw: text };
           } catch {
             return { data: null, raw: text, parseError: true };
           }
@@ -897,6 +901,7 @@ Return ONLY JSON with this shape:
 {
   "identified": boolean,
   "confidence": "high" | "medium" | "low" | "uncertain",
+  "confidence_pct": number 0-100,
   "common_name": string | null,
   "scientific_name": string | null,
   "category": "plant" | "bird" | "insect" | "fungi" | "mammal" | "habitat" | "water" | "other",
@@ -905,15 +910,20 @@ Return ONLY JSON with this shape:
   "why_it_matters": string,
   "experience_suggestion": string,
   "ecological_role": string,
-  "uncertainty_note": string | null
+  "uncertainty_note": string | null,
+  "photo_coach_tip": string | null,
+  "look_closer_steps": string[]
 }
 
 Rules:
 - If you can reasonably identify the species or object, set identified=true, confidence="high" or "medium".
-- If you cannot reasonably identify a species, set identified=false, confidence="uncertain", common_name=null, scientific_name=null.
+- If you cannot identify with reasonable confidence, ALWAYS give your best guess: set identified=false, confidence="low" or "uncertain", and fill common_name and scientific_name with your most likely candidate (never leave common_name null). Choose the most plausible species that matches the visible features, and make that guess clear in uncertainty_note.
+- confidence_pct must be a number 0-100 matching the confidence level (high 85-99, medium 60-84, low 40-59, uncertain 0-39). A best-guess identification should score 0-59.
 - Describe only what is visible. Do not invent range, rarity, edibility, or toxicity.
 - why_it_matters should be one grounded paragraph about ecological or human relationship, without exaggeration.
-- experience_suggestion must be a real-world next step.`;
+- experience_suggestion must be a real-world next step.
+- photo_coach_tip: one concrete framing or composition tip to improve the next photograph (or null).
+- look_closer_steps: 3 short sensory actions the photographer can take right now for a "look closer" experience (or an empty array).`;
 
   const ai = await callGeminiApi({
     prompt,
@@ -925,7 +935,17 @@ Rules:
   });
 
   if (ai.data) {
-    return res.json({ ...ai.data, ai_available: true });
+    const analysis = ai.data;
+    let confidencePct = Number(analysis.confidence_pct);
+    if (!Number.isFinite(confidencePct)) {
+      confidencePct =
+        analysis.confidence === 'high' ? 90
+          : analysis.confidence === 'medium' ? 65
+            : analysis.confidence === 'low' ? 40
+              : 20;
+    }
+    confidencePct = Math.max(0, Math.min(100, Math.round(confidencePct)));
+    return res.json({ ...analysis, confidence_pct: confidencePct, ai_available: true });
   }
 
   res.status(503).json({
