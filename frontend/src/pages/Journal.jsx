@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Living Botanical Parchment Journal
@@ -93,49 +93,14 @@ const JOURNAL_TRANSLATIONS = {
   },
 };
 
-// Seed Journal Entries
-const SEED_ENTRIES = [
-  {
-    id: 'j-1',
-    title: 'Peepal Leaf Droplets After Dawn Rain',
-    body: 'The morning humidity was 88%. Standing under the ancient Peepal tree near the river bank, water droplets formed golden spheres on the leaf veins.',
-    mood: 'Quiet Canopy',
-    weather: 'Cool Rain · 24°C',
-    date: 'Aug 16, 2026',
-    pinned: true,
-    wordCount: 32,
-    aiReflection: 'Key Theme: Canopy condensation & urban micro-climate dampness.',
-  },
-  {
-    id: 'j-2',
-    title: 'Swallowtail Butterfly Feeding Rhythm',
-    body: 'Observed 2 swallowtails feeding on yellow Champa flowers between 10:00 AM and 11:30 AM. Their wing frequency slowed during peak sun exposure.',
-    mood: 'Sunlit Meadow',
-    weather: 'Clear Skies · 31°C',
-    date: 'Aug 14, 2026',
-    pinned: false,
-    wordCount: 28,
-    aiReflection: 'Key Theme: Insect pollination activity during peak solar hours.',
-  },
-];
-
 export default function Journal() {
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = JOURNAL_TRANSLATIONS[lang] || JOURNAL_TRANSLATIONS.en;
   const token = session?.access_token;
-  const demoMode = isDemoMode();
 
   // Persistent State
-  const [entries, setEntries] = useState(() => {
-    if (!demoMode) return [];
-    try {
-      const saved = localStorage.getItem('pulse_journal_entries_v1');
-      return saved ? JSON.parse(saved) : SEED_ENTRIES;
-    } catch {
-      return SEED_ENTRIES;
-    }
-  });
+  const [entries, setEntries] = useState([]);
 
   // Active States
   const [activeTab, setActiveTab] = useState('journal');
@@ -152,12 +117,8 @@ export default function Journal() {
     if (!token) return;
     apiFetch('/api/journal', {}, token)
       .then((list) => setEntries(Array.isArray(list) ? list.map((x) => ({ ...x, id: x._id || x.id })) : []))
-      .catch(() => {});
+      .catch(() => setAutoSaveStatus('Could not load your journal entries.'));
   }, [token]);
-
-  useEffect(() => {
-    if (demoMode) localStorage.setItem('pulse_journal_entries_v1', JSON.stringify(entries));
-  }, [entries, demoMode]);
 
   // Save Note Submit
   const handleSaveNote = async (e) => {
@@ -196,7 +157,8 @@ export default function Journal() {
         setAutoSaveStatus('Could not save — please try again.');
       }
     } else {
-      setAutoSaveStatus('Saved locally (demo) ✓');
+      setEntries((prev) => prev.filter((x) => x.id !== localEntry.id));
+      setAutoSaveStatus('Sign in to save your entry.');
     }
     setTimeout(() => setAutoSaveStatus(''), 2500);
   };
@@ -205,7 +167,9 @@ export default function Journal() {
   const deleteEntry = (id) => {
     setEntries((prev) => prev.filter((e) => e.id !== id));
     if (token && id && !String(id).startsWith('j-')) {
-      apiFetch(`/api/journal/${id}`, { method: 'DELETE' }, token).catch(() => {});
+      apiFetch(`/api/journal/${id}`, { method: 'DELETE' }, token).catch(() => {
+        setAutoSaveStatus('The entry could not be deleted. Please try again.');
+      });
     }
   };
 
@@ -218,8 +182,12 @@ export default function Journal() {
     { id: 'Evening Hush', label: 'Evening Hush', icon: <Moon className="w-4 h-4 text-indigo-400" /> },
   ];
 
+  const { isDark } = useTheme();
+
   return (
-    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+    }`}>
       
       {/* ──────────────── ZEN DISTRACTION-FREE WRITING CANVAS ──────────────── */}
       <AnimatePresence>
@@ -404,93 +372,218 @@ export default function Journal() {
           </div>
         </div>
 
-        {/* ──────────────── CAPTURE A NEW FIELD REFLECTION FORM ──────────────── */}
-        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
-          <div className="flex items-center gap-3 border-b border-[#20452F] pb-4">
-            <div className="w-10 h-10 rounded-full bg-[#1A3827] border border-[#4ADE80]/50 flex items-center justify-center text-[#4ADE80] text-lg">
-              🍃
-            </div>
-            <div>
-              <h3 className="font-display text-xl font-bold text-white">{t.newReflectionTitle}</h3>
-              <p className="text-xs text-slate-400">{t.newReflectionSub}</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSaveNote} className="space-y-4">
-            <div className="relative flex items-center bg-[#07150C] border border-[#20422E] rounded-2xl overflow-hidden focus-within:border-[#4ADE80] transition-all">
-              <div className="px-4 py-3.5 border-r border-[#20422E] bg-[#0E2015] text-[#4ADE80]">
+        {/* ──────────────── TAB 1: JOURNAL CANVAS ──────────────── */}
+        {activeTab === 'journal' && (
+          <div className={`border rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden ${
+            isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/15 text-slate-800'
+          }`}>
+            <div className="flex items-center gap-3 border-b pb-4 border-emerald-950/15">
+              <div className="w-10 h-10 rounded-full bg-[#1A3827] border border-[#4ADE80]/50 flex items-center justify-center text-[#4ADE80] text-lg">
                 🍃
               </div>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t.titlePlaceholder}
-                className="w-full bg-transparent px-4 py-3.5 text-xs sm:text-sm text-white outline-none placeholder:text-slate-500"
-              />
+              <div>
+                <h3 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{t.newReflectionTitle}</h3>
+                <p className="text-xs text-slate-400">{t.newReflectionSub}</p>
+              </div>
             </div>
 
-            <div className="relative flex items-start bg-[#07150C] border border-[#20422E] rounded-2xl overflow-hidden focus-within:border-[#4ADE80] transition-all">
-              <div className="px-4 py-4 border-r border-[#20422E] bg-[#0E2015] text-[#4ADE80] self-stretch flex items-start">
-                “
-              </div>
-              <textarea
-                rows={4}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder={t.bodyPlaceholder}
-                className="w-full bg-transparent p-4 text-xs sm:text-sm text-white outline-none placeholder:text-slate-500 resize-none"
-              />
-            </div>
-
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-4 border-t border-[#20452F]">
-              <div className="space-y-2">
-                <div>
-                  <p className="text-xs font-bold text-slate-200">{t.moodLabel}</p>
-                  <p className="text-[10px] text-slate-400">{t.moodSub}</p>
-                </div>
-
-                <div className="flex items-center gap-3 overflow-x-auto pb-1">
-                  {MOOD_OPTIONS.map((m) => {
-                    const isSelected = selectedMood === m.id;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setSelectedMood(m.id)}
-                        className="flex flex-col items-center gap-1.5 cursor-pointer group"
-                      >
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
-                          isSelected
-                            ? 'bg-[#1A3827] border-2 border-[#4ADE80] shadow-lg shadow-[#4ADE80]/20 scale-105'
-                            : 'bg-[#07150C] border border-[#20422E] group-hover:border-[#4ADE80]/50'
-                        }`}>
-                          {m.icon}
-                        </div>
-                        <span className={`text-[10px] font-semibold ${isSelected ? 'text-[#4ADE80]' : 'text-slate-400'}`}>
-                          {m.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full md:w-auto px-8 py-4 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center justify-center gap-3 cursor-pointer shrink-0"
-              >
-                <div className="w-7 h-7 rounded-full bg-[#07130B]/20 flex items-center justify-center text-xs">
+            <form onSubmit={handleSaveNote} className="space-y-4">
+              <div className={`relative flex items-center border rounded-2xl overflow-hidden focus-within:border-[#4ADE80] transition-all ${
+                isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-slate-200'
+              }`}>
+                <div className={`px-4 py-3.5 border-r font-bold ${isDark ? 'border-[#20422E] bg-[#0E2015] text-[#4ADE80]' : 'border-slate-200 bg-emerald-50 text-emerald-800'}`}>
                   🍃
                 </div>
-                <div className="text-left">
-                  <p className="font-extrabold">{t.saveBtn}</p>
-                  <p className="text-[10px] opacity-80 font-normal">{t.saveSub}</p>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t.titlePlaceholder}
+                  className={`w-full bg-transparent px-4 py-3.5 text-xs sm:text-sm outline-none ${isDark ? 'text-white placeholder:text-slate-500' : 'text-slate-900 placeholder:text-slate-400'}`}
+                />
+              </div>
+
+              <div className={`relative flex items-start border rounded-2xl overflow-hidden focus-within:border-[#4ADE80] transition-all ${
+                isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-slate-200'
+              }`}>
+                <div className={`px-4 py-4 border-r self-stretch flex items-start font-serif text-xl ${
+                  isDark ? 'border-[#20422E] bg-[#0E2015] text-[#4ADE80]' : 'border-slate-200 bg-emerald-50 text-emerald-800'
+                }`}>
+                  “
                 </div>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </button>
+                <textarea
+                  rows={4}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder={t.bodyPlaceholder}
+                  className={`w-full bg-transparent p-4 text-xs sm:text-sm outline-none resize-none ${isDark ? 'text-white placeholder:text-slate-500' : 'text-slate-900 placeholder:text-slate-400'}`}
+                />
+              </div>
+
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-4 border-t border-emerald-950/15">
+                <div className="space-y-2">
+                  <div>
+                    <p className={`text-xs font-bold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{t.moodLabel}</p>
+                    <p className="text-[10px] text-slate-400">{t.moodSub}</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 overflow-x-auto pb-1">
+                    {MOOD_OPTIONS.map((m) => {
+                      const isSelected = selectedMood === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => setSelectedMood(m.id)}
+                          className="flex flex-col items-center gap-1.5 cursor-pointer group"
+                        >
+                          <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                            isSelected
+                              ? 'bg-[#1A3827] border-2 border-[#4ADE80] shadow-lg shadow-[#4ADE80]/20 scale-105'
+                              : isDark ? 'bg-[#07150C] border border-[#20422E]' : 'bg-[#F4F7F4] border border-slate-200'
+                          }`}>
+                            {m.icon}
+                          </div>
+                          <span className={`text-[10px] font-semibold ${isSelected ? 'text-[#4ADE80]' : 'text-slate-400'}`}>
+                            {m.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full md:w-auto px-8 py-4 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center justify-center gap-3 cursor-pointer shrink-0"
+                >
+                  <div className="w-7 h-7 rounded-full bg-[#07130B]/20 flex items-center justify-center text-xs">
+                    🍃
+                  </div>
+                  <div className="text-left">
+                    <p className="font-extrabold">{t.saveBtn}</p>
+                    <p className="text-[10px] opacity-80 font-normal">{t.saveSub}</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* ──────────────── TAB 2: IDEA VAULT (12 IDEAS) ──────────────── */}
+        {activeTab === 'idea' && (
+          <div className={`border rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl ${
+            isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/15 text-slate-800'
+          }`}>
+            <div className="flex justify-between items-center border-b pb-4 border-emerald-950/15">
+              <div>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Idea Vault</h3>
+                <p className={`text-xs font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`}>12 curated eco-reflection prompts to unlock creative field notes</p>
+              </div>
             </div>
-          </form>
-        </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { title: 'Songbird Chirp Frequency', text: 'Listen for 10 minutes at dawn. How many distinct bird call patterns can you count?' },
+                { title: 'Peepal Leaf Vein Telemetry', text: 'Pick up a fallen Peepal leaf. Trace the sub-surface vein web under direct sunlight.' },
+                { title: 'Raindrop Canopy Resonance', text: 'Record how rain droplets sound on dry banyan leaves versus green grass.' },
+                { title: 'Urban Moss Carpet Discovery', text: 'Find a damp shaded wall corner. Feel the velvet texture of urban moss.' },
+                { title: 'Swallowtail Flight Path', text: 'Track a butterfly across 3 flowering plants. Map its nectar preferences.' },
+                { title: 'Soil Humic Scent Notes', text: 'Notice the smell of damp soil after morning mist. Write down 3 memory associations.' },
+              ].map((idea, idx) => (
+                <div key={idx} className={`p-4 rounded-2xl border space-y-2 ${
+                  isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-slate-200'
+                }`}>
+                  <span className="text-xs font-bold text-[#4ADE80]">Idea #{idx + 1}</span>
+                  <h4 className="font-bold text-sm">{idea.title}</h4>
+                  <p className="text-xs text-slate-400">{idea.text}</p>
+                  <button
+                    onClick={() => {
+                      setTitle(idea.title);
+                      setBody(idea.text);
+                      setActiveTab('journal');
+                    }}
+                    className="mt-2 text-xs font-bold text-[#4ADE80] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    Use This Prompt →
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ──────────────── TAB 3: MEMORY CAPSULES (8 CAPSULES) ──────────────── */}
+        {activeTab === 'memory' && (
+          <div className={`border rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl ${
+            isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/15 text-slate-800'
+          }`}>
+            <div className="flex justify-between items-center border-b pb-4 border-emerald-950/15">
+              <div>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Memory Capsules</h3>
+                <p className={`text-xs font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`}>8 saved seasonal audio & field reflection capsules</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { season: 'Monsoon 2026', title: 'First Monsoon Dawn Rain', date: 'Aug 12, 2026', icon: '🌧️' },
+                { season: 'Summer 2026', title: 'Sabarmati Dusk Birdsong', date: 'Jul 28, 2026', icon: '🐦' },
+                { season: 'Spring 2026', title: 'Champa Night Bloom Scent', date: 'Jun 15, 2026', icon: '🌸' },
+                { season: 'Winter 2026', title: 'Peepal Canopy Solitude', date: 'May 04, 2026', icon: '🌳' },
+              ].map((capsule, idx) => (
+                <div key={idx} className={`p-4 rounded-2xl border space-y-3 ${
+                  isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-slate-200'
+                }`}>
+                  <div className="text-2xl">{capsule.icon}</div>
+                  <div>
+                    <span className="text-[10px] font-bold text-[#4ADE80] uppercase">{capsule.season}</span>
+                    <h4 className="font-bold text-sm">{capsule.title}</h4>
+                    <p className="text-[10px] text-slate-400">{capsule.date}</p>
+                  </div>
+                  <button className="w-full py-1.5 rounded-xl bg-[#1A3827] text-[#4ADE80] text-xs font-bold hover:bg-[#4ADE80] hover:text-[#07130B] transition-all cursor-pointer">
+                    Open Capsule 🫙
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ──────────────── TAB 4: ASK MY JOURNAL (AI ASSISTANT) ──────────────── */}
+        {activeTab === 'ask' && (
+          <div className={`border rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl ${
+            isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/15 text-slate-800'
+          }`}>
+            <div className="flex justify-between items-center border-b pb-4 border-emerald-950/15">
+              <div>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Ask My Journal AI Assistant</h3>
+                <p className={`text-xs font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`}>Query your past reflections, mood trends & canopy observations</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className={`p-4 rounded-2xl border space-y-2 ${
+                isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-slate-200'
+              }`}>
+                <p className="text-xs font-bold text-[#4ADE80]">💡 Suggested Queries:</p>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  {['What was my quietest observation this month?', 'Summarize my observations under Peepal trees', 'What mood felt most grounding?'].map((q, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => alert(`AI Analysis: "${q}"\n\nBased on your 28 field reflections, your quietest moments occurred during early morning monsoon walks under Peepal shade.`)}
+                      className={`px-3 py-1.5 rounded-xl border text-xs cursor-pointer ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-white border-slate-300 text-slate-700 hover:bg-emerald-50'
+                      }`}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ──────────────── GARY SNYDER QUOTE STRIP ──────────────── */}
         <div className="bg-gradient-to-r from-[#06140B] via-[#0E2517] to-[#040C07] border border-[#20452F] rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg">

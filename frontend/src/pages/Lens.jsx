@@ -2,9 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
 import { Camera, Save, Share2, Trash2, RefreshCw, Leaf, Eye, Lightbulb } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { apiFetch, fileToResizedBase64, formatWhen } from '../lib/api';
+import { apiFetch, uploadImage, fileToResizedBase64, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Field, GhostButton, PrimaryButton, Skeleton, inputCls } from '../components/ui';
-import { isDemoMode, demoAnalyze } from '../utils/demoMode';
 import ShareCard from '../components/ShareCard';
 
 const prefersReducedMotion = () =>
@@ -122,7 +121,6 @@ export default function Lens() {
   const [coachMode, setCoachMode] = useState(false);
   const [lookStep, setLookStep] = useState(0);
   const [showShare, setShowShare] = useState(false);
-  const demoMode = isDemoMode();
 
   // STATE: 'capture' | 'scanning' | 'result'
   const state = !preview ? 'capture' : analyzing ? 'scanning' : analysis ? 'result' : 'capture';
@@ -134,7 +132,7 @@ export default function Lens() {
         apiFetch('/api/discoveries', {}, token),
         apiFetch('/api/profile', {}, token),
       ]);
-      setDiscoveries(d);
+      setDiscoveries(Array.isArray(d) ? d.map((x) => ({ ...x, id: x.id || x._id })) : []);
       setProfile(p);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load discoveries');
@@ -164,12 +162,10 @@ export default function Lens() {
     setAnalyzing(true);
     setError('');
     try {
-      const data = demoMode
-        ? await demoAnalyze()
-        : await apiFetch('/api/analyze', {
-            method: 'POST',
-            body: JSON.stringify({ imageBase64: filePayload.base64, contentType: filePayload.mime, city: profile?.city, note: notes }),
-          }, token);
+      const data = await apiFetch('/api/analyze', {
+          method: 'POST',
+          body: JSON.stringify({ imageBase64: filePayload.base64, contentType: filePayload.mime, city: profile?.city, note: notes }),
+        }, token);
       setAnalysis(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Pulse could not read this image');
@@ -183,10 +179,7 @@ export default function Lens() {
     setSaving(true);
     setError('');
     try {
-      const up = await apiFetch('/api/upload', {
-        method: 'POST',
-        body: JSON.stringify({ fileName: filePayload.name, fileBase64: filePayload.base64, contentType: filePayload.mime }),
-      }, token);
+      const up = await uploadImage({ base64: filePayload.base64, mime: filePayload.mime, fileName: filePayload.name, token });
       const created = await apiFetch('/api/discoveries', {
         method: 'POST',
         body: JSON.stringify({
@@ -194,6 +187,12 @@ export default function Lens() {
           common_name: analysis?.common_name || 'Unnamed observation',
           scientific_name: analysis?.scientific_name || '',
           confidence: analysis?.confidence || 'uncertain',
+          confidence_pct: Number.isFinite(Number(analysis?.confidence_pct))
+            ? Math.max(0, Math.min(100, Math.round(Number(analysis.confidence_pct))))
+            : analysis?.confidence === 'high' ? 90
+              : analysis?.confidence === 'medium' ? 65
+                : analysis?.confidence === 'low' ? 40
+                  : 20,
           category: analysis?.category || 'other',
           description: analysis?.description || notes,
           why_it_matters: analysis?.why_it_matters || '',
@@ -251,14 +250,9 @@ export default function Lens() {
           <p className="text-[11px] uppercase tracking-[0.22em] text-gold">Nature Lens</p>
           <h1 className="font-display text-4xl sm:text-5xl mt-1">Look carefully. Name only what you know.</h1>
           <p className="mt-2 text-sm text-forest/65 max-w-2xl">
-            Pulse reads the photograph and returns structured notes. Low confidence stays unnamed.
+            Pulse reads the photograph and returns structured notes with an honest confidence level.
           </p>
         </div>
-        {demoMode && (
-          <span className="shrink-0 bg-gold/20 text-gold rounded-full text-xs px-3 py-1 border border-gold/20 ml-4">
-            Demo Mode
-          </span>
-        )}
       </div>
 
       {error && <div className="mt-5"><ErrorBanner message={error} /></div>}
@@ -332,7 +326,6 @@ export default function Lens() {
                         />
                       ))}
                     </div>
-                    {demoMode && <p className="text-xs text-gold">Demo Mode · Using sample species</p>}
                   </div>
                 </Card>
               </motion.div>
@@ -349,59 +342,55 @@ export default function Lens() {
                     </button>
                   </div>
                   <div className="p-6">
-                    {isLowConfidence ? (
-                      <div className="text-center py-6">
-                        <p className="font-display text-2xl">Not sure — try a clearer photo</p>
-                        <p className="text-sm text-forest/65 mt-2 max-w-xs mx-auto">
+                    {isLowConfidence && (
+                      <div className="mb-4 rounded-2xl bg-amber-50 border border-amber-200 p-3">
+                        <p className="text-sm text-amber-900 font-semibold">Not sure — this is a best guess</p>
+                        <p className="text-sm text-amber-900 mt-1">
                           {analysis.uncertainty_note || 'Confidence is too low for a reliable identification.'}
                         </p>
-                        {analysis.photo_coach_tip && (
-                          <div className="mt-4 rounded-2xl bg-amber-50 border border-amber-200 p-3 text-left">
-                            <p className="text-[11px] uppercase tracking-[0.14em] text-amber-700 mb-1"><Lightbulb size={11} className="inline mr-1" />Photo tip</p>
-                            <p className="text-sm text-amber-900">{analysis.photo_coach_tip}</p>
-                          </div>
-                        )}
-                        <button onClick={reset} className="mt-4 text-sm text-forest underline hover:opacity-70">Try again</button>
+                        <button onClick={reset} className="mt-2 text-sm text-amber-800 underline hover:opacity-70">Try again with a clearer photo</button>
                       </div>
-                    ) : (
-                      <motion.div variants={stagger.container} initial="initial" animate="animate">
-                        <motion.div variants={stagger.item} className="flex flex-wrap gap-2 mb-3">
-                          <Badge tone={analysis.confidence === 'high' ? 'sage' : 'warn'}>{analysis.confidence}</Badge>
-                          <Badge tone="ink">{analysis.category}</Badge>
-                        </motion.div>
-                        <motion.h2 variants={stagger.item} className="font-display text-3xl">{analysis.common_name}</motion.h2>
-                        {analysis.scientific_name && (
-                          <motion.p variants={stagger.item} className="italic text-sm text-forest/55 mt-1">{analysis.scientific_name}</motion.p>
-                        )}
-                        <motion.div variants={stagger.item} className="mt-4 flex justify-center">
-                          <ConfidenceRing pct={analysis.confidence_pct || (analysis.confidence === 'high' ? 90 : analysis.confidence === 'medium' ? 65 : 35)} />
-                        </motion.div>
-                        <motion.div variants={stagger.item} className="mt-4 rounded-2xl bg-cream p-4 border border-ink/5">
-                          <p className="text-[11px] uppercase tracking-[0.16em] text-forest/45">Why this matters</p>
-                          <p className="mt-1 text-sm leading-relaxed">{analysis.why_it_matters}</p>
-                        </motion.div>
-                        {analysis.experience_suggestion && (
-                          <motion.div variants={stagger.item} className="mt-3 rounded-2xl bg-mist/40 p-4 border border-ink/5">
-                            <p className="text-[11px] uppercase tracking-[0.16em] text-forest/45">Experience it</p>
-                            <p className="mt-1 text-sm leading-relaxed">{analysis.experience_suggestion}</p>
-                          </motion.div>
-                        )}
-                        {analysis.photo_coach_tip && coachMode && (
-                          <motion.div variants={stagger.item} className="mt-3 rounded-2xl bg-amber-50 border border-amber-200 p-4">
-                            <p className="text-[11px] uppercase tracking-[0.14em] text-amber-700 mb-1"><Lightbulb size={11} className="inline mr-1" />Photo Coach</p>
-                            <p className="text-sm text-amber-900">{analysis.photo_coach_tip}</p>
-                          </motion.div>
-                        )}
-                        <motion.div variants={stagger.item} className="mt-5 flex flex-wrap gap-2">
-                          <PrimaryButton onClick={save} disabled={!filePayload || saving}>
-                            <Save size={14} /> {saving ? 'Saving…' : 'Save to Journal'}
-                          </PrimaryButton>
-                          <GhostButton onClick={() => setShowShare(true)}>
-                            <Share2 size={14} /> Share Card
-                          </GhostButton>
-                        </motion.div>
-                      </motion.div>
                     )}
+                    <motion.div variants={stagger.container} initial="initial" animate="animate">
+                      <motion.div variants={stagger.item} className="flex flex-wrap gap-2 mb-3">
+                        <Badge tone={analysis.confidence === 'high' ? 'sage' : 'warn'}>{analysis.confidence}</Badge>
+                        <Badge tone="ink">{analysis.category}</Badge>
+                      </motion.div>
+                      <motion.h2 variants={stagger.item} className="font-display text-3xl">{analysis.common_name || 'Unidentified species'}</motion.h2>
+                      {analysis.scientific_name && (
+                        <motion.p variants={stagger.item} className="italic text-sm text-forest/55 mt-1">{analysis.scientific_name}</motion.p>
+                      )}
+                      {isLowConfidence && (
+                        <motion.p variants={stagger.item} className="text-[11px] uppercase tracking-[0.16em] text-amber-700 mt-2 font-semibold">Best guess — unconfirmed</motion.p>
+                      )}
+                      <motion.div variants={stagger.item} className="mt-4 flex justify-center">
+                        <ConfidenceRing pct={analysis.confidence_pct || (analysis.confidence === 'high' ? 90 : analysis.confidence === 'medium' ? 65 : 35)} />
+                      </motion.div>
+                      <motion.div variants={stagger.item} className="mt-4 rounded-2xl bg-cream p-4 border border-ink/5">
+                        <p className="text-[11px] uppercase tracking-[0.16em] text-forest/45">Why this matters</p>
+                        <p className="mt-1 text-sm leading-relaxed">{analysis.why_it_matters}</p>
+                      </motion.div>
+                      {analysis.experience_suggestion && (
+                        <motion.div variants={stagger.item} className="mt-3 rounded-2xl bg-mist/40 p-4 border border-ink/5">
+                          <p className="text-[11px] uppercase tracking-[0.16em] text-forest/45">Experience it</p>
+                          <p className="mt-1 text-sm leading-relaxed">{analysis.experience_suggestion}</p>
+                        </motion.div>
+                      )}
+                      {analysis.photo_coach_tip && (isLowConfidence || coachMode) && (
+                        <motion.div variants={stagger.item} className="mt-3 rounded-2xl bg-amber-50 border border-amber-200 p-4">
+                          <p className="text-[11px] uppercase tracking-[0.14em] text-amber-700 mb-1"><Lightbulb size={11} className="inline mr-1" />Photo Coach</p>
+                          <p className="text-sm text-amber-900">{analysis.photo_coach_tip}</p>
+                        </motion.div>
+                      )}
+                      <motion.div variants={stagger.item} className="mt-5 flex flex-wrap gap-2">
+                        <PrimaryButton onClick={save} disabled={!filePayload || saving}>
+                          <Save size={14} /> {saving ? 'Saving…' : 'Save to Journal'}
+                        </PrimaryButton>
+                        <GhostButton onClick={() => setShowShare(true)}>
+                          <Share2 size={14} /> Share Card
+                        </GhostButton>
+                      </motion.div>
+                    </motion.div>
                   </div>
                 </Card>
               </motion.div>

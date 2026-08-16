@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, MapPin, Clock, Star, Navigation, Compass, Share2, 
@@ -7,175 +7,22 @@ import {
   Calendar, Wifi, Trees, Coffee, VolumeX, Heart, Layers, Eye
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch } from '../lib/api';
-
-// Seed Real Local Discoveries with rich fallback data
-export const SEED_NEARBY_PLACES = [
-  {
-    id: 'p-1',
-    name: 'Peepal Canopy Study Sanctuary',
-    category: 'Study',
-    icon: '📚',
-    lat: 23.0304,
-    lng: 72.5802,
-    distance: '450 m',
-    walkTime: '6 min walk',
-    rating: 4.9,
-    reviewsCount: 128,
-    isOpen: true,
-    hours: '7:00 AM - 9:00 PM',
-    address: 'Sabarmati Riverfront Park, Block B',
-    city: 'Ahmedabad',
-    region: 'Gujarat',
-    habitat: 'Riverfront Green Canopy & Shaded Botanical Study Zone',
-    mapX: 320,
-    mapY: 180,
-    image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1200&q=80',
-    description: 'A dedicated peaceful outdoor study sanctuary shaded by mature sacred fig (Peepal) trees along the quiet riverfront promenade. Features ergonomic timber workbenches, natural ambient airflow, and minimal urban noise.',
-    whyRecommend: 'High quietness score (94%), dense leafy shade canopy, open now, within 6 min walk.',
-    price: 'Free',
-    bestTime: 'Early Morning (7:00 AM - 10:30 AM) & Sunset',
-    quietScore: '94%',
-    amenities: [
-      'Shaded Reading Pods',
-      'Solar Device Charging',
-      'Free High-Speed Wi-Fi',
-      'Water Refill Fountain',
-      'Wheelchair Accessible Ramp',
-      'Ambient Bird Chorus',
-    ],
-    highlights: [
-      'Zero traffic disturbance zone',
-      'Over 24 mature native tree species providing natural cooling',
-      'Regular community eco-study circles on weekends',
-    ],
-  },
-  {
-    id: 'p-2',
-    name: 'Banyan Tree Botanical Garden Café',
-    category: 'Cafés',
-    icon: '☕',
-    lat: 23.0270,
-    lng: 72.5560,
-    distance: '900 m',
-    walkTime: '12 min walk',
-    rating: 4.8,
-    reviewsCount: 94,
-    isOpen: true,
-    hours: '8:00 AM - 10:00 PM',
-    address: 'Law Garden Road, Opposite Museum',
-    city: 'Ahmedabad',
-    region: 'Gujarat',
-    habitat: 'Subtropical Heritage Garden & Shaded Courtyard',
-    mapX: 480,
-    mapY: 260,
-    image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=80',
-    description: 'An eco-conscious garden cafe nestled beneath a sprawling 70-year-old Banyan tree. Serving single-origin organic brews, seasonal herbal infusions, and fresh farm-to-table light bites amidst lush tropical foliage.',
-    whyRecommend: 'Organic herbal tea, outdoor seating under banyan shade, strong Wi-Fi.',
-    price: '$$',
-    bestTime: 'Morning (8:30 AM - 11:30 AM) or Evening (5:00 PM - 8:00 PM)',
-    quietScore: '86%',
-    amenities: [
-      'Artisanal Organic Coffee & Herbal Teas',
-      'Open-Air Banyan Canopy Seating',
-      'Laptop-Friendly Tables with Power Outlets',
-      'Pet Friendly Patio',
-      'Botanical Herb Garden Tours',
-    ],
-    highlights: [
-      '100% compostable packaging and zero single-use plastic',
-      'Microclimate 3°C cooler than surrounding asphalt streets',
-      'Herbal infusions brewed with freshly plucked garden mint & tulsi',
-    ],
-  },
-  {
-    id: 'p-3',
-    name: 'Urban Wetlands & Bird Deck',
-    category: 'Parks',
-    icon: '🌳',
-    lat: 22.9970,
-    lng: 72.6025,
-    distance: '1.4 km',
-    walkTime: '18 min walk',
-    rating: 4.9,
-    reviewsCount: 165,
-    isOpen: true,
-    hours: '6:00 AM - 7:00 PM',
-    address: 'Kankaria Lake North Eco-Corridor',
-    city: 'Ahmedabad',
-    region: 'Gujarat',
-    habitat: 'Freshwater Wetland & Riparian Reeds Ecosystem',
-    mapX: 210,
-    mapY: 340,
-    image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=80',
-    description: 'A restored urban wetland sanctuary designed for biodiversity conservation and peaceful walking meditation. Elevated wooden boardwalks wind through reed beds and lily ponds.',
-    whyRecommend: 'Ideal for Kingfisher observation and evening micro-climate walks.',
-    price: 'Free',
-    bestTime: 'Dawn (6:00 AM - 8:00 AM) for bird watching',
-    quietScore: '96%',
-    amenities: [
-      'Elevated Observation Deck',
-      'Binocular Lending Station',
-      'Interpretive Nature Signage',
-      'Guided Sunrise Bird Walks',
-      'Paved Jogging Loop',
-    ],
-    highlights: [
-      'Home to over 45 migratory bird species in winter',
-      'Natural reed-bed filtration improving local water quality',
-      'Benches positioned at prime photographic viewpoints',
-    ],
-  },
-  {
-    id: 'p-4',
-    name: 'Heritage Textiles & Art Pavilion',
-    category: 'Culture',
-    icon: '🎨',
-    lat: 23.0258,
-    lng: 72.5873,
-    distance: '2.1 km',
-    walkTime: '8 min drive',
-    rating: 4.7,
-    reviewsCount: 82,
-    isOpen: false,
-    hours: 'Opens tomorrow 10:00 AM (10:00 AM - 6:00 PM)',
-    address: 'Old City Cultural Promenade',
-    city: 'Ahmedabad',
-    region: 'Gujarat',
-    habitat: 'Historic Courtyard with Native Neem Trees',
-    mapX: 520,
-    mapY: 140,
-    image: 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=1200&q=80',
-    description: 'A heritage preservation center celebrating artisanal block printing, indigenous natural dyes, and sustainable textile craft traditions in a restored open-air haveli courtyard.',
-    whyRecommend: 'Traditional indigo dye exhibitions and historic architecture.',
-    price: '$',
-    bestTime: 'Afternoon (2:00 PM - 5:00 PM)',
-    quietScore: '89%',
-    amenities: [
-      'Live Dyeing Demonstration Workshops',
-      'Artisan Gift Archive',
-      'Courtyard Fountain Seating',
-      'Audio Guide in 3 Languages',
-      'Air-Cooled Exhibition Halls',
-    ],
-    highlights: [
-      'Features authentic wooden printing blocks dating back 150 years',
-      'Demonstrations of plant-based natural dye extraction',
-      'Restored brick and timber Indo-Saracenic architectural elements',
-    ],
-  },
-];
 
 export default function PlaceDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { session } = useAuth();
+  const token = session?.access_token;
   
   const [place, setPlace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [savedIds, setSavedIds] = useState([]);
+  const [bookmarkError, setBookmarkError] = useState(null);
 
   // Load place and bookmark state
   useEffect(() => {
@@ -185,50 +32,14 @@ export default function PlaceDetails() {
 
     async function fetchPlaceData() {
       try {
-        // Check local storage seed / cached places
-        let placesPool = SEED_NEARBY_PLACES;
-        try {
-          const savedLocal = localStorage.getItem('pulse_nearby_places_v1');
-          if (savedLocal) {
-            const parsed = JSON.parse(savedLocal);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              placesPool = parsed;
-            }
-          }
-        } catch {
-          // fallback to SEED_NEARBY_PLACES
-        }
-
-        // Try to find matching item in local pool
-        let matched = placesPool.find(
-          (p) => String(p.id) === String(id) || String(p._id) === String(id)
-        );
-
-        // Also check if backend provides it
-        try {
-          const backendRes = await apiFetch(`/api/places/${id}`).catch(() => null);
+        const backendRes = await apiFetch(`/api/places/${id}`).catch(() => null);
+        if (isMounted) {
           if (backendRes && backendRes.name) {
-            matched = {
-              ...matched,
+            setPlace({
               ...backendRes,
               id: backendRes.id || backendRes._id || id,
-              image: backendRes.image || backendRes.image_url || matched?.image || SEED_NEARBY_PLACES[0].image,
-            };
-          }
-        } catch {
-          // Backend offline or error, continue with matched
-        }
-
-        // Check fallback seed if still not found
-        if (!matched) {
-          matched = SEED_NEARBY_PLACES.find(
-            (p) => String(p.id) === String(id) || String(p._id) === String(id)
-          );
-        }
-
-        if (isMounted) {
-          if (matched) {
-            setPlace(matched);
+              image: backendRes.image || backendRes.image_url || '',
+            });
           } else {
             setError('Place not found');
           }
@@ -244,37 +55,39 @@ export default function PlaceDetails() {
 
     fetchPlaceData();
 
-    // Check bookmark state
-    try {
-      const savedIds = JSON.parse(localStorage.getItem('pulse_saved_places_v1') || '[]');
-      if (Array.isArray(savedIds)) {
-        setIsSaved(savedIds.includes(id));
-      }
-    } catch {
-      setIsSaved(false);
+    // Check bookmark state from the user profile (server-side)
+    if (token) {
+      apiFetch('/api/profile', {}, token)
+        .then((p) => {
+          if (!isMounted) return;
+          const ids = Array.isArray(p?.saved_places) ? p.saved_places : [];
+          setSavedIds(ids);
+          setIsSaved(ids.includes(id));
+        })
+        .catch(() => {});
     }
 
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, token]);
 
-  // Toggle Bookmark
+  // Toggle Bookmark (persisted to the profile via the API)
   const toggleBookmark = () => {
-    try {
-      const savedIds = JSON.parse(localStorage.getItem('pulse_saved_places_v1') || '[]');
-      let updated;
-      if (savedIds.includes(id)) {
-        updated = savedIds.filter((p) => p !== id);
-        setIsSaved(false);
-      } else {
-        updated = [...savedIds, id];
-        setIsSaved(true);
-      }
-      localStorage.setItem('pulse_saved_places_v1', JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to update bookmarks:', e);
+    setBookmarkError(null);
+    const nextSaved = !isSaved;
+    const nextIds = nextSaved
+      ? [...new Set([...savedIds, id])]
+      : savedIds.filter((p) => p !== id);
+    setIsSaved(nextSaved);
+    if (!token) {
+      setBookmarkError('Sign in to save places. Your bookmark could not be stored.');
+      return;
     }
+    apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ saved_places: nextIds }) }, token).catch(() => {
+      setIsSaved(!nextSaved);
+      setBookmarkError('Your bookmark could not be saved. Please check your connection and try again.');
+    });
   };
 
   // Share Place URL
@@ -292,21 +105,23 @@ export default function PlaceDetails() {
     }
   };
 
+  const { isDark } = useTheme();
+
   // Loading Skeleton State
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#040B06] text-slate-100 px-4 sm:px-6 py-8">
+      <div className={`min-h-screen px-4 sm:px-6 py-8 ${isDark ? 'bg-[#040B06] text-slate-100' : 'bg-[#F8F9FA] text-slate-800'}`}>
         <div className="max-w-4xl mx-auto space-y-6 animate-pulse">
-          <div className="h-6 w-32 bg-[#13271C] rounded-xl" />
-          <div className="h-72 w-full bg-[#13271C] rounded-3xl" />
-          <div className="h-10 w-3/4 bg-[#13271C] rounded-2xl" />
+          <div className="h-6 w-32 bg-emerald-950/20 rounded-xl" />
+          <div className="h-72 w-full bg-emerald-950/20 rounded-3xl" />
+          <div className="h-10 w-3/4 bg-emerald-950/20 rounded-2xl" />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="h-20 bg-[#13271C] rounded-2xl" />
-            <div className="h-20 bg-[#13271C] rounded-2xl" />
-            <div className="h-20 bg-[#13271C] rounded-2xl" />
-            <div className="h-20 bg-[#13271C] rounded-2xl" />
+            <div className="h-20 bg-emerald-950/20 rounded-2xl" />
+            <div className="h-20 bg-emerald-950/20 rounded-2xl" />
+            <div className="h-20 bg-emerald-950/20 rounded-2xl" />
+            <div className="h-20 bg-emerald-950/20 rounded-2xl" />
           </div>
-          <div className="h-36 bg-[#13271C] rounded-3xl" />
+          <div className="h-36 bg-emerald-950/20 rounded-3xl" />
         </div>
       </div>
     );
@@ -315,15 +130,17 @@ export default function PlaceDetails() {
   // Not Found / Error State
   if (error || !place) {
     return (
-      <div className="min-h-screen bg-[#040B06] text-slate-100 flex items-center justify-center px-4 py-16">
-        <div className="max-w-md w-full text-center bg-[#0E2015] border border-[#20452F] rounded-3xl p-8 shadow-2xl space-y-5">
+      <div className={`min-h-screen flex items-center justify-center px-4 py-16 ${isDark ? 'bg-[#040B06] text-slate-100' : 'bg-[#F8F9FA] text-slate-800'}`}>
+        <div className={`max-w-md w-full text-center border rounded-3xl p-8 shadow-2xl space-y-5 ${
+          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-white border-emerald-900/15'
+        }`}>
           <div className="w-16 h-16 rounded-full bg-[#13271C] border border-[#4ADE80]/40 flex items-center justify-center mx-auto text-[#4ADE80]">
             <Compass className="w-8 h-8 animate-pulse" />
           </div>
-          <h2 className="font-display text-2xl font-bold text-white">
+          <h2 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
             {error === 'Place not found' ? 'Place Not Found' : 'Unable to Load Place'}
           </h2>
-          <p className="text-sm text-slate-300">
+          <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
             {error === 'Place not found'
               ? 'The discovery spot you are looking for does not exist or has moved.'
               : 'We could not load this discovery spot. Please verify your connection or try again.'}
@@ -349,11 +166,10 @@ export default function PlaceDetails() {
     );
   }
 
-  // Related nearby spots excluding current
-  const relatedSpots = SEED_NEARBY_PLACES.filter((p) => String(p.id) !== String(place.id)).slice(0, 2);
-
   return (
-    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24">
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 ${
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+    }`}>
       
       {/* ──────────────── TOP NAVIGATION BAR ──────────────── */}
       <div className="border-b border-[#20452F] bg-[#0E2015]/80 backdrop-blur-md sticky top-0 z-30">
@@ -404,6 +220,13 @@ export default function PlaceDetails() {
 
       {/* ──────────────── MAIN CONTENT CONTAINER ──────────────── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+
+        {bookmarkError && (
+          <div className="bg-red-950/80 border border-red-500/40 text-red-200 text-xs sm:text-sm rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+            <span>{bookmarkError}</span>
+            <button onClick={() => setBookmarkError(null)} className="text-red-300 hover:text-white cursor-pointer shrink-0">✕</button>
+          </div>
+        )}
 
         {/* HERO IMAGE & HEADLINE BANNER */}
         <div className="relative rounded-3xl overflow-hidden border border-[#20452F] shadow-2xl bg-[#0E2015]">
@@ -613,38 +436,6 @@ export default function PlaceDetails() {
             >
               <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
             </button>
-          </div>
-        </div>
-
-        {/* ──────────────── OTHER PLACES TO EXPLORE ──────────────── */}
-        <div className="space-y-4 pt-4">
-          <h3 className="font-display text-xl font-bold text-white">Other Spots Nearby</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {relatedSpots.map((spot) => (
-              <Link
-                key={spot.id}
-                to={`/app/places/${spot.id}`}
-                className="flex gap-4 p-4 rounded-3xl bg-[#0E2015] border border-[#20452F] hover:border-[#4ADE80]/50 transition-all group cursor-pointer shadow-lg"
-              >
-                <img
-                  src={spot.image}
-                  alt={spot.name}
-                  className="w-20 h-20 rounded-2xl object-cover shrink-0 group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="min-w-0 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h4 className="font-display text-sm font-bold text-white truncate group-hover:text-[#4ADE80] transition-colors">
-                      {spot.name}
-                    </h4>
-                    <p className="text-[11px] text-slate-300 truncate mt-0.5">{spot.address}</p>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] text-[#4ADE80] font-semibold pt-1">
-                    <span>{spot.distance} · {spot.walkTime}</span>
-                    <span className="text-amber-300">★ {spot.rating}</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
           </div>
         </div>
 

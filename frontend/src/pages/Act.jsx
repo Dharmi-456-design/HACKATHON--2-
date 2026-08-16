@@ -5,8 +5,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch } from '../lib/api';
-import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Act Page
@@ -64,56 +64,11 @@ const ACT_TRANSLATIONS = {
   },
 };
 
-// Seed HD Nature Actions
-const SEED_ACTIONS = [
-  {
-    id: 'act-1',
-    title: 'Install Bird Water Dish in Canopy Shade',
-    category: 'Wildlife',
-    minutes: 15,
-    status: 'pending',
-    image: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=800&q=80',
-    description: 'Place a shallow clay water dish in garden shade to aid urban birds and pollinators.',
-    impactNote: 'Saves up to 12 birds daily from heat dehydration in summer.',
-  },
-  {
-    id: 'act-2',
-    title: 'Plant Native Wildflower Seeds',
-    category: 'Habitat',
-    minutes: 30,
-    status: 'pending',
-    image: 'https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?auto=format&fit=crop&w=800&q=80',
-    description: 'Scatter indigenous wildflower seeds in moist soil patches to support swallowtail butterflies.',
-    impactNote: 'Restores 4 sq meters of urban micro-pollinator corridor.',
-  },
-  {
-    id: 'act-3',
-    title: 'Leave Leaf Pile for Hibernating Insects',
-    category: 'Soil',
-    minutes: 10,
-    status: 'pending',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
-    description: 'Gather dry banyan leaves in a damp shaded garden corner for soil organisms.',
-    impactNote: 'Protects soil biodiversity and increases humic organic content.',
-  },
-  {
-    id: 'act-4',
-    title: 'Inspect Tree Root Dampness & Mulch',
-    category: 'Canopy',
-    minutes: 20,
-    status: 'completed',
-    image: 'https://images.unsplash.com/photo-1511497584788-8767611136f6?auto=format&fit=crop&w=800&q=80',
-    description: 'Cover exposed tree roots with organic bark mulch to prevent soil evaporation.',
-    impactNote: 'Reduces soil water loss by 40% under direct sun.',
-  },
-];
-
 export default function Act() {
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = ACT_TRANSLATIONS[lang] || ACT_TRANSLATIONS.en;
   const token = session?.access_token;
-  const demoMode = isDemoMode();
 
   const toUiAction = (a) => ({
     id: a._id || a.id,
@@ -127,21 +82,7 @@ export default function Act() {
   });
 
   // Persistent States
-  const [actions, setActions] = useState(() => {
-    if (!demoMode) return [];
-    try {
-      const saved = localStorage.getItem('pulse_act_actions_v1');
-      const list = saved ? JSON.parse(saved) : SEED_ACTIONS;
-      return list.map((a) => {
-        if (a.title && a.title.includes('Eco Observation')) {
-          return { ...a, image: 'https://images.unsplash.com/photo-1767783094429-c1ccbea11599?auto=format&fit=crop&w=800&q=80' };
-        }
-        return a;
-      });
-    } catch {
-      return SEED_ACTIONS;
-    }
-  });
+  const [actions, setActions] = useState([]);
 
   const [minutes, setMinutes] = useState(15);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -153,12 +94,8 @@ export default function Act() {
     if (!token) return;
     apiFetch('/api/actions', {}, token)
       .then((list) => setActions(Array.isArray(list) ? list.map(toUiAction) : []))
-      .catch(() => {});
+      .catch(() => setActError('Could not load your actions. Please check your connection and try again.'));
   }, [token]);
-
-  useEffect(() => {
-    if (demoMode) localStorage.setItem('pulse_act_actions_v1', JSON.stringify(actions));
-  }, [actions, demoMode]);
 
   // Complete Action
   const completeAction = (id) => {
@@ -175,24 +112,6 @@ export default function Act() {
   const handleGenerateActions = async () => {
     setIsGenerating(true);
     setActError('');
-
-    if (!token || demoMode) {
-      setTimeout(() => {
-        const newAction = {
-          id: `act-${Date.now()}`,
-          title: `Explore ${minutes}-Min Eco Observation`,
-          category: 'Habitat',
-          minutes,
-          status: 'pending',
-          image: 'https://images.unsplash.com/photo-1767783094429-c1ccbea11599?auto=format&fit=crop&w=800&q=80',
-          description: `Dedicated ${minutes} minutes of field observation to document local shade canopy patterns.`,
-          impactNote: 'Helps map urban biodiversity corridors.',
-        };
-        setActions((prev) => [newAction, ...prev]);
-        setIsGenerating(false);
-      }, 600);
-      return;
-    }
 
     try {
       const created = await apiFetch(
@@ -220,12 +139,16 @@ export default function Act() {
     }
   };
 
+  const { isDark } = useTheme();
+
   const pendingActions = actions.filter((a) => a.status !== 'completed');
   const completedActions = actions.filter((a) => a.status === 'completed');
   const totalMinutesGiven = completedActions.reduce((acc, b) => acc + b.minutes, 0);
 
   return (
-    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+    }`}>
       
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">

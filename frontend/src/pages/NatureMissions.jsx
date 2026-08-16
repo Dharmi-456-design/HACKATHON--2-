@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Mission Control Universe
@@ -117,99 +117,18 @@ const MISSION_TRANSLATIONS = {
   },
 };
 
-// Seed Missions
-const SEED_MISSIONS = [
-  {
-    id: 'm-101',
-    title: 'Listen to Tree Canopy at Dawn',
-    category: 'Exploration',
-    difficulty: '🟢 Easy',
-    duration: '10 min',
-    xpReward: 100,
-    status: 'in_progress',
-    steps: [
-      { id: 's1', text: 'Find a shaded Banyan or Peepal tree near your location', done: true },
-      { id: 's2', text: 'Stand quietly for 5 minutes without phone distractions', done: true },
-      { id: 's3', text: 'Log 2 distinct bird sounds or leaf rustles in Nature Pulse', done: false },
-    ],
-    aiHint: 'Early morning between 6:00 AM and 7:15 AM provides peak birdsong clarity.',
-  },
-  {
-    id: 'm-102',
-    title: 'Discover 3 Distinct Moss & Lichen Textures',
-    category: 'Learning',
-    difficulty: '🟡 Medium',
-    duration: '15 min',
-    xpReward: 180,
-    status: 'in_progress',
-    steps: [
-      { id: 's4', text: 'Inspect shaded wall bases or moist tree trunks', done: true },
-      { id: 's5', text: 'Touch 3 different patches and observe moisture levels', done: false },
-      { id: 's6', text: 'Identify if it is crustose or foliose lichen', done: false },
-    ],
-    aiHint: 'Mosses act as micro-ecosystem sponges, absorbing urban rainwater.',
-  },
-  {
-    id: 'm-103',
-    title: 'Identify Night Moth Visitors Near Light',
-    category: 'Challenges',
-    difficulty: '🔴 Hard',
-    duration: '20 min',
-    xpReward: 250,
-    status: 'not_started',
-    steps: [
-      { id: 's7', text: 'Check an outdoor lamp after dusk near garden plants', done: false },
-      { id: 's8', text: 'Use Nature Lens camera stack to scan wing patterns', done: false },
-      { id: 's9', text: 'Record observation in Biodiversity Passport', done: false },
-    ],
-    aiHint: 'Sphinx moths and silk moths are attracted to white LED garden lamps.',
-  },
-  {
-    id: 'm-104',
-    title: 'Install Bird Water Dish Before Summer',
-    category: 'Personal Goals',
-    difficulty: '🟡 Medium',
-    duration: '25 min',
-    xpReward: 200,
-    status: 'completed',
-    steps: [
-      { id: 's10', text: 'Select a shallow clay dish for garden or balcony', done: true },
-      { id: 's11', text: 'Place in shaded corner away from urban predators', done: true },
-      { id: 's12', text: 'Fill with clean water and post Community update', done: true },
-    ],
-    aiHint: 'Shallow water dishes prevent bird drowning while aiding migratory species.',
-  }
-];
-
-// Seed Milestones Badges
-const SEED_BADGES = [
-  { id: 'b1', name: 'Canopy Guardian', icon: '🌱', unlocked: true, desc: 'Completed 5 shade tree observations' },
-  { id: 'b2', name: 'Birdsong Analyst', icon: '🐦', unlocked: true, desc: 'Logged 10 dawn bird flight calls' },
-  { id: 'b3', name: 'Pollinator Protector', icon: '🦋', unlocked: true, desc: 'Planted native nectar seeds' },
-  { id: 'b4', name: 'Master Eco Scholar', icon: '👑', unlocked: false, desc: 'Reach 3,000 XP & Level 5 Commander' },
-];
-
-// Seed Leaderboard Users
-const SEED_LEADERBOARD = [
-  { rank: 1, name: 'Aarav Patel', xp: '3,820 XP', streak: '14 Days', badge: '👑 Master Commander' },
-  { rank: 2, name: 'You (Explorer)', xp: '2,450 XP', streak: '7 Days', badge: '🟣 Eco Guardian' },
-  { rank: 3, name: 'Priya Sharma', xp: '2,180 XP', streak: '9 Days', badge: '🌱 Canopy Protector' },
-  { rank: 4, name: 'David Miller', xp: '1,950 XP', streak: '5 Days', badge: '🐦 Bird Naturalist' },
-];
-
 export default function NatureMissions() {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = MISSION_TRANSLATIONS[lang] || MISSION_TRANSLATIONS.en;
   const token = session?.access_token;
-  const demoMode = isDemoMode();
 
   const toUiMission = (m) => {
     const type = m.mission_type || 'explore';
     const status = m.status || 'not_started';
     const xpReward = type === 'learn' ? 250 : type === 'explore' ? 180 : type === 'act' ? 200 : 100;
     const categoryMap = { observe: 'Exploration', explore: 'Learning', learn: 'Challenges', act: 'Personal Goals' };
-    const difficulty = !m.duration_minutes ? '🟡 Medium' : m.duration_minutes <= 10 ? '🟢 Easy' : m.duration_minutes <= 20 ? '🟡 Medium' : '🔴 Hard';
+    const difficulty = !m.duration_minutes ? 'Medium' : m.duration_minutes <= 10 ? 'Easy' : m.duration_minutes <= 20 ? 'Medium' : 'Hard';
     const steps = Array.isArray(m.steps) && m.steps.length
       ? m.steps
       : [
@@ -231,26 +150,11 @@ export default function NatureMissions() {
   };
 
   // Persistent States
-  const [missions, setMissions] = useState(() => {
-    if (!demoMode) return [];
-    try {
-      const saved = localStorage.getItem('pulse_missions_v1');
-      return saved ? JSON.parse(saved) : SEED_MISSIONS;
-    } catch {
-      return SEED_MISSIONS;
-    }
-  });
+  const [missions, setMissions] = useState([]);
 
-  const [totalXP, setTotalXP] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_missions_xp_v1');
-      return saved ? parseInt(saved, 10) : 2450;
-    } catch {
-      return 2450;
-    }
-  });
+  const [totalXP, setTotalXP] = useState(0);
 
-  const [streakDays, setStreakDays] = useState(7);
+  const [streakDays, setStreakDays] = useState(0);
   const [activeTab, setActiveTab] = useState('path');
   const [selectedMission, setSelectedMission] = useState(null);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
@@ -261,7 +165,7 @@ export default function NatureMissions() {
   // Custom Mission Creator State
   const [customTitle, setCustomTitle] = useState('');
   const [customCategory, setCustomCategory] = useState('Exploration');
-  const [customDifficulty, setCustomDifficulty] = useState('🟢 Easy');
+  const [customDifficulty, setCustomDifficulty] = useState('Easy');
 
   useEffect(() => {
     if (!token) return;
@@ -275,20 +179,14 @@ export default function NatureMissions() {
         setTotalXP(ui.filter((m) => m.status === 'completed').reduce((sum, m) => sum + m.xpReward, 0));
         if (streakData && typeof streakData.streak === 'number') setStreakDays(streakData.streak);
       })
-      .catch(() => {});
+      .catch(() => setMissionError('Could not load your missions. Please check your connection and try again.'));
   }, [token]);
-
-  useEffect(() => {
-    if (demoMode) localStorage.setItem('pulse_missions_v1', JSON.stringify(missions));
-  }, [missions, demoMode]);
-
-  useEffect(() => {
-    if (demoMode) localStorage.setItem('pulse_missions_xp_v1', totalXP.toString());
-  }, [totalXP, demoMode]);
 
   const pushMissionStatus = (mission) => {
     if (!token || !mission.id || String(mission.id).startsWith('m-')) return;
-    apiFetch(`/api/missions/${mission.id}`, { method: 'PATCH', body: JSON.stringify({ status: mission.status }) }, token).catch(() => {});
+    apiFetch(`/api/missions/${mission.id}`, { method: 'PATCH', body: JSON.stringify({ status: mission.status }) }, token).catch(() => {
+      setMissionError('Your mission progress could not be saved. Please check your connection and try again.');
+    });
   };
 
   // Toggle Step Completion
@@ -319,33 +217,6 @@ export default function NatureMissions() {
 
     setIsGenerating(true);
     setMissionError('');
-
-    if (!token || demoMode) {
-      setTimeout(() => {
-        const newMission = {
-          id: `m-${Date.now()}`,
-          title: generatePrompt.trim(),
-          category: 'Challenges',
-          difficulty: '🟡 Medium',
-          duration: '15 min',
-          xpReward: 150,
-          status: 'in_progress',
-          steps: [
-            { id: `s-${Date.now()}-1`, text: 'Explore core concepts of the challenge', done: false },
-            { id: `s-${Date.now()}-2`, text: 'Log your observations in Nature Pulse', done: false },
-            { id: `s-${Date.now()}-3`, text: 'Share your findings with the community', done: false },
-          ],
-          aiHint: 'Focus on observing local variations during golden hour light.',
-        };
-
-        setMissions([newMission, ...missions]);
-        setIsGenerating(false);
-        setShowGenerateModal(false);
-        setGeneratePrompt('');
-        setSelectedMission(newMission);
-      }, 600);
-      return;
-    }
 
     try {
       const created = await apiFetch(
@@ -426,12 +297,29 @@ export default function NatureMissions() {
     setMissions((prev) => prev.filter((m) => m.id !== missionId));
     if (selectedMission?.id === missionId) setSelectedMission(null);
     if (token && missionId && !String(missionId).startsWith('m-')) {
-      apiFetch(`/api/missions/${missionId}`, { method: 'DELETE' }, token).catch(() => {});
+      apiFetch(`/api/missions/${missionId}`, { method: 'DELETE' }, token).catch(() => {
+        setMissionError('The mission could not be deleted. Please check your connection and try again.');
+      });
     }
   };
 
+  const completedCount = missions.filter((m) => m.status === 'completed').length;
+  const badges = [
+    { id: 'b1', name: 'First Steps', icon: '🌱', unlocked: completedCount >= 1, desc: 'Complete your first mission' },
+    { id: 'b2', name: 'Canopy Guardian', icon: '🌿', unlocked: completedCount >= 3, desc: 'Complete 3 missions' },
+    { id: 'b3', name: 'Pollinator Protector', icon: '🦋', unlocked: completedCount >= 5, desc: 'Complete 5 missions' },
+    { id: 'b4', name: 'Master Eco Scholar', icon: '👑', unlocked: completedCount >= 10, desc: 'Complete 10 missions' },
+  ];
+  const impactStats = [
+    { rank: 1, name: user?.name || 'You', xp: `${totalXP.toLocaleString()} XP`, streak: `${streakDays} Day${streakDays === 1 ? '' : 's'}`, badge: 'Your Mission Path' },
+  ];
+
+  const { isDark } = useTheme();
+
   return (
-    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+    }`}>
       
       {/* ──────────────── GENERATE MISSION MODAL ──────────────── */}
       <AnimatePresence>
@@ -589,38 +477,47 @@ export default function NatureMissions() {
           ))}
         </div>
 
-        {/* ──────────────── TAB 1: CHECKPOINT MISSION PATH ──────────────── */}
-        {activeTab === 'path' && (
+        {/* ──────────────── TABS 1, 2, 3: PATH, ACTIVE & COMPLETED ──────────────── */}
+        {(activeTab === 'path' || activeTab === 'active' || activeTab === 'completed') && (
           <div className="space-y-8">
-            
             {/* Missions Grid */}
-            <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative overflow-hidden">
+            <div className={`border rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative overflow-hidden ${
+              isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-white border-emerald-900/15'
+            }`}>
               <div className="flex justify-between items-center">
-                <h3 className="font-display text-2xl font-bold text-white">Ecological Checkpoint Mission Trail</h3>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {activeTab === 'active' ? '⚡ Active In-Progress Quests' : activeTab === 'completed' ? '🏆 Completed Achievements' : 'Ecological Checkpoint Mission Trail'}
+                </h3>
                 <span className="text-xs text-[#4ADE80] font-semibold">Tap any Mission to Expand Checklist</span>
               </div>
 
-              {missions.length === 0 && (
-                <div className="bg-[#13271C] border border-dashed border-[#20422E] rounded-3xl p-10 text-center space-y-3">
+              {((activeTab === 'active'
+                ? missions.filter((m) => m.status !== 'completed')
+                : activeTab === 'completed'
+                ? missions.filter((m) => m.status === 'completed')
+                : missions).length === 0) && (
+                <div className={`border border-dashed rounded-3xl p-10 text-center space-y-3 ${
+                  isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-emerald-50 border-emerald-200'
+                }`}>
                   <p className="text-3xl">🌿</p>
-                  <p className="font-display text-lg font-bold text-white">No missions yet</p>
-                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                    Generate a challenge from the lightning button, create a custom mission, or finish onboarding to get your first mission set.
+                  <p className={`font-display text-lg font-bold ${isDark ? 'text-[#4ADE80]' : 'text-slate-900'}`}>
+                    {activeTab === 'completed' ? 'No completed missions yet' : 'No active missions'}
                   </p>
-                  <button
-                    onClick={() => setShowGenerateModal(true)}
-                    className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] cursor-pointer"
-                  >
-                    <Zap className="w-4 h-4" />
-                    Generate Challenge
-                  </button>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    {activeTab === 'completed'
+                      ? 'Complete action items on any active mission card to earn XP and move them here.'
+                      : 'Create a custom mission or click Generate Challenge to start your next quest!'}
+                  </p>
                 </div>
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {missions.map((mission) => {
+                {(activeTab === 'active'
+                  ? missions.filter((m) => m.status !== 'completed')
+                  : activeTab === 'completed'
+                  ? missions.filter((m) => m.status === 'completed')
+                  : missions).map((mission) => {
                   const isSelected = selectedMission?.id === mission.id;
-                  const isDone = mission.status === 'completed';
                   const completedStepsCount = mission.steps.filter((s) => s.done).length;
                   const progressPct = Math.round((completedStepsCount / mission.steps.length) * 100);
 
@@ -631,36 +528,27 @@ export default function NatureMissions() {
                       onClick={() => setSelectedMission(mission)}
                       className={`p-5 rounded-3xl border transition-all cursor-pointer shadow-xl relative overflow-hidden flex flex-col justify-between h-56 ${
                         isSelected
-                          ? 'bg-[#1A3827] border-[#4ADE80] shadow-[#4ADE80]/30'
-                          : isDone
-                          ? 'bg-[#0E2015] border-[#4ADE80]/40'
-                          : 'bg-[#13271C] border-[#20422E] hover:border-[#4ADE80]/50'
+                          ? 'bg-[#1A3827] border-[#4ADE80] ring-2 ring-[#4ADE80]'
+                          : isDark ? 'bg-[#07150C] border-[#20422E] hover:border-[#4ADE80]/50' : 'bg-[#F4F7F4] border-slate-200 hover:border-emerald-500'
                       }`}
                     >
                       <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#0E2015] text-[#4ADE80] border border-[#4ADE80]/30">
-                            {mission.difficulty}
+                        <div className="flex justify-between items-start">
+                          <span className="px-3 py-1 rounded-full bg-[#1A3827] text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/30">
+                            {mission.category}
                           </span>
-                          <span className="text-xs text-amber-400 font-bold">+{mission.xpReward} XP</span>
+                          <span className="text-xs text-amber-400 font-extrabold">+{mission.xpReward} XP</span>
                         </div>
-
-                        <h4 className="font-display text-base font-bold text-white line-clamp-2 mt-1">
-                          {mission.title}
-                        </h4>
+                        <h4 className={`font-display text-base font-bold line-clamp-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{mission.title}</h4>
                       </div>
 
-                      <div className="space-y-2 pt-2 border-t border-[#20422E]">
-                        <div className="flex justify-between items-center text-[11px] text-slate-400">
-                          <span>{completedStepsCount}/{mission.steps.length} Steps</span>
+                      <div className="space-y-2 pt-2 border-t border-emerald-950/15">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-400">{completedStepsCount} of {mission.steps.length} Steps</span>
                           <span className="text-[#4ADE80] font-bold">{progressPct}%</span>
                         </div>
-
-                        <div className="w-full bg-[#0E2015] h-2 rounded-full overflow-hidden">
-                          <div
-                            className="bg-[#4ADE80] h-full rounded-full transition-all duration-300"
-                            style={{ width: `${progressPct}%` }}
-                          />
+                        <div className="w-full bg-[#13271C] h-2 rounded-full overflow-hidden">
+                          <div className="bg-[#4ADE80] h-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
                         </div>
                       </div>
                     </motion.div>
@@ -680,7 +568,7 @@ export default function NatureMissions() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {SEED_BADGES.map((badge) => (
+                {badges.map((badge) => (
                   <div
                     key={badge.id}
                     className={`p-4 rounded-2xl border flex items-center gap-3.5 transition-all ${
@@ -701,18 +589,18 @@ export default function NatureMissions() {
               </div>
             </div>
 
-            {/* ──────────────── COMMUNITY ECO LEADERBOARD ──────────────── */}
+            {/* ──────────────── ECO IMPACT LEADERBOARD ──────────────── */}
             <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
               <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
                 <div>
                   <h3 className="font-display text-2xl font-bold text-white">{t.leaderboardTitle}</h3>
-                  <p className="text-xs text-slate-400">Weekly rankings of top ecological explorers</p>
+                  <p className="text-xs text-slate-400">Your mission path progress this week</p>
                 </div>
                 <Users className="w-6 h-6 text-[#4ADE80]" />
               </div>
 
               <div className="space-y-3">
-                {SEED_LEADERBOARD.map((user) => (
+                {impactStats.map((user) => (
                   <div
                     key={user.rank}
                     className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${
@@ -741,7 +629,6 @@ export default function NatureMissions() {
                 ))}
               </div>
             </div>
-
           </div>
         )}
 
@@ -789,9 +676,9 @@ export default function NatureMissions() {
                     onChange={(e) => setCustomDifficulty(e.target.value)}
                     className="w-full bg-[#13271C] border border-[#20422E] text-xs text-white rounded-2xl px-4 py-3 outline-none focus:border-[#4ADE80]"
                   >
-                    <option value="🟢 Easy">🟢 Easy (100 XP)</option>
-                    <option value="🟡 Medium">🟡 Medium (180 XP)</option>
-                    <option value="🔴 Hard">🔴 Hard (250 XP)</option>
+                    <option value="Easy">Easy (100 XP)</option>
+                    <option value="Medium">Medium (180 XP)</option>
+                    <option value="Hard">Hard (250 XP)</option>
                   </select>
                 </div>
               </div>

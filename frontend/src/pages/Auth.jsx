@@ -15,9 +15,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { usePublicStats } from '../hooks/usePublicStats';
 
 const PERKS = [
-  '42+ Native flora telemetry logs',
   'AI Species & Bio-Acoustic Scanner',
   'Free & open community passport',
   'Real-time urban habitat mapping',
@@ -37,7 +37,15 @@ function GoogleIcon() {
 export default function Auth({ initialMode = 'login' }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, login, register, signInWithGoogle, enterDemoMode, logout } = useAuth();
+  const { user, login, register, demoLogin, signInWithGoogle, logout } = useAuth();
+  const stats = usePublicStats();
+
+  const perks = [
+    stats && typeof stats.observations === 'number'
+      ? `${stats.observations.toLocaleString()} species observations logged`
+      : 'Community species observation logs',
+    ...PERKS,
+  ];
 
   // Determine initial mode from path or prop
   const isRegisterPath =
@@ -67,6 +75,8 @@ export default function Auth({ initialMode = 'login' }) {
   const [showForgot, setShowForgot] = useState(false);
   const [resetBusy, setResetBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+
+  const [showVideo, setShowVideo] = useState(true);
 
   const isLogin = mode === 'login';
 
@@ -179,19 +189,21 @@ export default function Auth({ initialMode = 'login' }) {
   return (
     <div className="relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden p-3 sm:p-6 lg:p-8 font-sans text-white">
       {/* ── 1. LIVE FULLSCREEN VIDEO BACKGROUND (BALANCED CINEMATIC TONE) ── */}
-      <div className="fixed inset-0 w-full h-full -z-10 overflow-hidden select-none pointer-events-none bg-[#051009]">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          disablePictureInPicture
-          disableRemotePlayback
-          className="absolute inset-0 w-full h-full object-cover scale-[1.02] will-change-transform opacity-65 brightness-95 contrast-105"
-        >
-          <source src="/Animating_nature_scene_with_breeze_202608161651.mp4" type="video/mp4" />
-        </video>
+      <div className="fixed inset-0 w-full h-full -z-10 overflow-hidden select-none pointer-events-none bg-gradient-to-br from-[#040C07] via-[#0D2216] to-[#040C07]">
+        {showVideo && (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="none"
+            disablePictureInPicture
+            disableRemotePlayback
+            className="absolute inset-0 w-full h-full object-cover scale-[1.02] will-change-transform opacity-65 brightness-95 contrast-105"
+          >
+            <source src="/Animating_nature_scene_with_breeze_202608161651.mp4" type="video/mp4" />
+          </video>
+        )}
         {/* Balanced cinematic gradient overlay: soft contrast without washing out the video */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#051009]/65 via-[#051009]/30 to-[#030905]/75" />
         <div className="absolute inset-0 bg-radial from-transparent via-transparent to-[#030905]/50" />
@@ -199,12 +211,13 @@ export default function Auth({ initialMode = 'login' }) {
 
       {/* ── TOP BAR: BACK NAVIGATION & BRAND BADGE ── */}
       <header className="relative w-full max-w-7xl mx-auto flex items-center justify-between z-30 pt-1 pb-3 sm:py-2">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/45 hover:bg-black/75 text-white/90 hover:text-white text-xs font-medium backdrop-blur-md border border-white/15 transition-all duration-200 hover:scale-105"
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/45 hover:bg-black/75 text-white/90 hover:text-white text-xs font-medium backdrop-blur-md border border-white/15 transition-all duration-200 hover:scale-105 cursor-pointer"
         >
           <ArrowLeft size={13} /> <span className="hidden xs:inline">Back to</span> NaturePulse
-        </Link>
+        </button>
 
         {/* Floating Switcher Pills */}
         <div className="flex items-center p-1 rounded-full bg-black/55 backdrop-blur-md border border-white/15 shadow-xl">
@@ -293,7 +306,9 @@ export default function Auth({ initialMode = 'login' }) {
                   <p className="text-white/60 text-xs sm:text-sm mb-4 sm:mb-5">
                     {isLogin
                       ? 'Sign in to sync your observations and streaks'
-                      : 'Join 12,000+ explorers recording the living earth'}
+                      : stats && typeof stats.users === 'number'
+                        ? `Join ${stats.users.toLocaleString()} explorers recording the living earth`
+                        : 'Join explorers recording the living earth'}
                   </p>
 
                   {/* Active User Alert (if already authenticated) */}
@@ -542,6 +557,19 @@ export default function Auth({ initialMode = 'login' }) {
                         </>
                       )}
                     </button>
+
+                    {/* Instant 1-Click Demo Login */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        demoLogin();
+                        navigate('/app');
+                      }}
+                      className="w-full mt-2 bg-emerald-950/80 hover:bg-emerald-900 border border-[#96CD7B]/50 text-[#96CD7B] rounded-2xl py-2.5 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
+                    >
+                      <Sparkles size={14} className="text-[#96CD7B] animate-pulse" />
+                      <span>⚡ Instant 1-Click Access (No Password Required)</span>
+                    </button>
                   </form>
 
                   {/* Switcher Link */}
@@ -569,22 +597,6 @@ export default function Auth({ initialMode = 'login' }) {
                         </button>
                       </>
                     )}
-                  </div>
-
-                  {/* ── 1-CLICK DEMO SHORTCUT (CLEAN SAGE/EMERALD) ── */}
-                  <div className="mt-3.5 sm:mt-4 pt-3 border-t border-white/10">
-                    <div className="rounded-2xl border border-dashed border-[#96CD7B]/30 bg-[#96CD7B]/10 p-2.5 sm:p-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5 text-[10px] sm:text-[11px] font-mono font-semibold uppercase tracking-wider text-[#96CD7B] mb-1">
-                        <Sparkles size={12} /> 1-Click Instant Demo
-                      </div>
-                      <button
-                        type="button"
-                        onClick={enterDemoMode}
-                        className="w-full rounded-xl bg-white/15 hover:bg-white/25 active:bg-white/30 text-white text-[11px] sm:text-xs font-semibold py-1.5 sm:py-2 px-3 transition-all border border-white/20 flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <span>🚀 Launch Demo Mode Instantly</span>
-                      </button>
-                    </div>
                   </div>
 
                 </motion.div>
@@ -682,7 +694,7 @@ export default function Auth({ initialMode = 'login' }) {
 
                   {/* Perks Checklist */}
                   <div className="space-y-2.5 pt-1">
-                    {PERKS.map((perk, i) => (
+                    {perks.map((perk, i) => (
                       <div
                         key={i}
                         className="flex items-center gap-3 p-2.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md"
@@ -715,7 +727,9 @@ export default function Auth({ initialMode = 'login' }) {
                       />
                     </div>
                     <span className="text-xs font-mono text-white/70">
-                      Joined by 12,000+ local naturalists
+                      {stats && typeof stats.users === 'number'
+                        ? `Joined by ${stats.users.toLocaleString()} local naturalists`
+                        : 'Joined by local naturalists'}
                     </span>
                   </div>
                 </motion.div>

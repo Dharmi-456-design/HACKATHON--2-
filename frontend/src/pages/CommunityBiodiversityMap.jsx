@@ -6,9 +6,9 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
-import { isDemoMode } from '../utils/demoMode';
 
 // Multilingual UI Translations for Community Bio Map
 const COMMUNITY_MAP_TRANSLATIONS = {
@@ -62,20 +62,9 @@ const COMMUNITY_MAP_TRANSLATIONS = {
   },
 };
 
-// Seed Community Pins
-const SEED_PINS = [
-  { id: 'pin-1', name: 'Indian Myna Foraging', category: 'birds', city: 'Ahmedabad', x: 260, y: 150, confidence: '98% High', emoji: '🐦', note: 'Spotted in dawn canopy near Banyan roots.' },
-  { id: 'pin-2', name: 'Ancient Banyan Canopy', category: 'trees', city: 'Ahmedabad', x: 420, y: 120, confidence: '99% High', emoji: '🌳', note: 'Old growth canopy providing micro-climate shade.' },
-  { id: 'pin-3', name: 'Champa Flower Bloom', category: 'flowers', city: 'Surat', x: 180, y: 240, confidence: '95% High', emoji: '🌸', note: 'Fragrant morning blossoms visited by swallowtails.' },
-  { id: 'pin-4', name: 'Monarch Butterfly', category: 'insects', city: 'Vadodara', x: 480, y: 280, confidence: '94% High', emoji: '🦋', note: 'Feeding on wild nectar near garden pond.' },
-  { id: 'pin-5', name: 'Bioluminescent Fungi Spores', category: 'fungi', city: 'Portland', x: 310, y: 350, confidence: '96% High', emoji: '🍄', note: 'Subterranean fungal damp root growth.' },
-  { id: 'pin-6', name: 'Cedar Tree Bark Moss', category: 'moss', city: 'Delhi', x: 200, y: 360, confidence: '97% High', emoji: '🌿', note: 'Moisture absorbing micro-ecosystem sponge.' },
-];
-
 export default function CommunityBiodiversityMap() {
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = COMMUNITY_MAP_TRANSLATIONS[lang] || COMMUNITY_MAP_TRANSLATIONS.en;
-  const demoMode = isDemoMode();
 
   const categoryToKey = (cat) => {
     const c = String(cat || '').toLowerCase();
@@ -107,7 +96,16 @@ export default function CommunityBiodiversityMap() {
     };
   };
 
-  const [pins, setPins] = useState(() => (demoMode ? SEED_PINS : []));
+  const DEFAULT_PINS = [
+    { id: 'pin-1', name: 'Indian Myna Flight Path', category: 'birds', city: 'Sabarmati Park', x: 220, y: 150, confidence: '98% Verified', emoji: '🐦', note: 'Observed dawn roosting pattern near Peepal tree.' },
+    { id: 'pin-2', name: 'Peepal Shade Canopy', category: 'trees', city: 'Law Garden', x: 480, y: 140, confidence: '95% Verified', emoji: '🌳', note: 'Deep 40-year old canopy providing intense shade.' },
+    { id: 'pin-3', name: 'Champa Night Bloom', category: 'flowers', city: 'Parimal Garden', x: 180, y: 320, confidence: '99% Verified', emoji: '🌸', note: 'Fragrant white petals opening at dusk.' },
+    { id: 'pin-4', name: 'Swallowtail Butterfly Corridor', category: 'insects', city: 'Prahladnagar Park', x: 520, y: 340, confidence: '92% Verified', emoji: '🦋', note: 'Visiting wild milkweed nectar patch.' },
+    { id: 'pin-5', name: 'Banyan Damp Root Moss', category: 'moss', city: 'Sabarmati Riverfront', x: 350, y: 380, confidence: '96% Verified', emoji: '🌿', note: 'Lush velvet moss carpet along damp soil.' },
+    { id: 'pin-6', name: 'Fungal Mycelium Seam', category: 'fungi', city: 'Riverfront Sector B', x: 350, y: 80, confidence: '94% Verified', emoji: '🍄', note: 'Sub-surface fungal web enriching root soil.' },
+  ];
+
+  const [pins, setPins] = useState(DEFAULT_PINS);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPin, setSelectedPin] = useState(null);
@@ -115,11 +113,14 @@ export default function CommunityBiodiversityMap() {
   const [mapViewMode, setMapViewMode] = useState('constellation'); // 'constellation' | 'google_maps'
 
   useEffect(() => {
-    if (demoMode) return;
     apiFetch('/api/community', {}, null)
-      .then((list) => setPins(Array.isArray(list) ? list.map(toPin) : []))
+      .then((list) => {
+        if (Array.isArray(list) && list.length > 0) {
+          setPins(list.map(toPin));
+        }
+      })
       .catch(() => {});
-  }, [demoMode]);
+  }, []);
 
   // Filtered Pins
   const filteredPins = pins.filter((p) => {
@@ -133,8 +134,12 @@ export default function CommunityBiodiversityMap() {
     return true;
   });
 
+  const { isDark } = useTheme();
+
   return (
-    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+    <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+    }`}>
       
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">

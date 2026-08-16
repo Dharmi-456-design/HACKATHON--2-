@@ -25,7 +25,7 @@ export default function Onboarding() {
         if (p.city) setCity(p.city);
         if (p.region) setRegion(p.region);
       })
-      .catch(() => {});
+      .catch(() => setError('Could not load your profile. You can still set it up here.'));
   }, [token, nav]);
 
   const handleSkip = async () => {
@@ -77,7 +77,12 @@ export default function Onboarding() {
         },
         token
       );
-      await apiFetch('/api/missions', { method: 'POST', body: JSON.stringify({ generate: true, minutes }) }, token).catch(() => {});
+      try {
+        await apiFetch('/api/missions', { method: 'POST', body: JSON.stringify({ generate: true, minutes }) }, token);
+      } catch {
+        setError('Your profile was saved, but we could not generate starter missions right now. You can create missions anytime from the Missions page.');
+        await new Promise((r) => setTimeout(r, 1200));
+      }
       nav('/app');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save your profile. Please try again.');

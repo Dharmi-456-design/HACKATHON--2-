@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,400;1,500;1,600&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --color-cream: #F8F9FA;
   --color-cream-deep: #EFF2EE;
@@ -37,6 +39,25 @@
   --error-bg: #2B1414;
   --error-text: #FCA5A5;
   --error-border: #7F1D1D;
+}
+
+[data-theme="light"] {
+  --color-cream: #F8F9FA;
+  --color-cream-deep: #EFF2EE;
+  --color-paper: #FFFFFF;
+  --color-forest: #1C3727;
+  --color-ink: #0E1E15;
+  --color-moss: #355E45;
+  --color-sage: #96CD7B;
+  --color-mist: #D9EAD4;
+  --color-gold: #E6C176;
+  --color-pistachio: #96CD7B;
+  --shadow-soft: 0 12px 40px -18px rgb(28 55 39 / 0.16);
+  --shadow-lift: 0 24px 60px -24px rgb(28 55 39 / 0.25);
+  --border-subtle: rgba(28, 55, 39, 0.08);
+  --error-bg: #FEF2F2;
+  --error-text: #991B1B;
+  --error-border: #FEE2E2;
 }
 
 @theme {

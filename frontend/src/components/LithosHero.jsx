@@ -73,11 +73,11 @@ export default function LithosHero() {
   const smoothRef = useRef({ x: -999, y: -999 });
   const rafRef = useRef(null);
   const [cursorPos, setCursorPos] = useState({ x: -999, y: -999 });
-  const { user, isDemoUser } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleAction = () => {
-    if (user || isDemoUser) {
+    if (user) {
       navigate('/app');
     } else {
       navigate('/login');

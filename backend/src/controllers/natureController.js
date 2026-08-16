@@ -8,6 +8,7 @@ const {
   Story,
   CommunityPost,
   Action,
+  ChatThread,
 } = require('../models/Nature');
 const { sanitizeText, sanitizeMultiline } = require('../utils/sanitize');
 
@@ -72,6 +73,8 @@ const profileAllowlist = [
   'available_minutes',
   'interests',
   'onboarding_complete',
+  'saved_places',
+  'weekly_goals',
 ];
 
 const discoveryAllowlist = [
@@ -190,6 +193,39 @@ const updateProfile = async (req, res) => {
   if (updates.interests !== undefined && Array.isArray(updates.interests)) {
     updates.interests = updates.interests.map((i) => sanitizeText(String(i), 40)).filter(Boolean).slice(0, 20);
   }
+  if (updates.saved_places !== undefined) {
+    if (!Array.isArray(updates.saved_places)) {
+      return res.status(400).json({ error: 'saved_places must be an array of place ids.' });
+    }
+    const seen = new Set();
+    const places = [];
+    for (const p of updates.saved_places) {
+      const cleaned = sanitizeText(String(p), 100);
+      if (cleaned && !seen.has(cleaned)) {
+        seen.add(cleaned);
+        places.push(cleaned);
+      }
+      if (places.length >= 200) break;
+    }
+    updates.saved_places = places;
+  }
+  if (updates.weekly_goals !== undefined) {
+    if (!Array.isArray(updates.weekly_goals)) {
+      return res.status(400).json({ error: 'weekly_goals must be an array.' });
+    }
+    const goals = [];
+    for (const g of updates.weekly_goals.slice(0, 50)) {
+      const text = sanitizeText(String(g?.text || g), 300);
+      if (!text) continue;
+      goals.push({
+        id: sanitizeText(String(g?.id || `g-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`), 60),
+        text,
+        done: Boolean(g?.done),
+        created_at: g?.created_at ? new Date(g.created_at) : new Date(),
+      });
+    }
+    updates.weekly_goals = goals;
+  }
   Object.assign(profile, updates);
   await profile.save();
   res.json(profile);
@@ -215,6 +251,18 @@ const createDiscovery = async (req, res) => {
   if (body.notes) body.notes = sanitizeMultiline(body.notes, 2000);
   if (body.place_name) body.place_name = sanitizeText(body.place_name, 160);
   if (body.city) body.city = sanitizeText(body.city, 120);
+  if (body.category) {
+    const categoryMap = {
+      plant: 'trees',
+      bird: 'birds',
+      insect: 'insects',
+      mammal: 'mammals',
+      habitat: 'other',
+      water: 'other',
+    };
+    const mapped = categoryMap[body.category];
+    if (mapped) body.category = mapped;
+  }
   const discovery = await Discovery.create({ user: req.user._id, ...body });
   res.status(201).json(discovery);
 };
@@ -546,6 +594,40 @@ const deleteCommunityPost = async (req, res) => {
   res.json({ success: true });
 };
 
+// Public testimonials sourced from real community field reports
+const getTestimonials = async (req, res) => {
+  const posts = await CommunityPost.find({})
+    .populate('user', 'name')
+    .sort({ createdAt: -1 })
+    .limit(50);
+  const list = posts
+    .filter((p) => String(p.note || '').trim().length >= 10)
+    .map((p) => ({
+      _id: p._id,
+      author_name: (p.user && p.user.name) || 'Nature Explorer',
+      category: p.category || 'Field Observation',
+      city: p.city || '',
+      note: p.note,
+      common_name: p.common_name,
+      scientific_name: p.scientific_name,
+      image_url: p.image_url,
+      upvotes: p.upvotes || 0,
+      createdAt: p.createdAt,
+    }));
+  res.json(list);
+};
+
+// Public aggregate stats for the marketing pages (no fabricated numbers)
+const getPublicStats = async (req, res) => {
+  const [users, observations, habitats, reports] = await Promise.all([
+    Profile.countDocuments({}),
+    Discovery.countDocuments({}),
+    Place.countDocuments({}),
+    CommunityPost.countDocuments({}),
+  ]);
+  res.json({ users, observations, habitats, reports });
+};
+
 // Actions
 const getActions = async (req, res) => {
   const actions = await Action.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(200);
@@ -792,7 +874,11 @@ async function callGeminiApi({ prompt, system, imageBase64, mimeType, json = fal
         const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('').trim() || '';
         if (json) {
           try {
-            return { data: JSON.parse(text), raw: text };
+            const cleaned = text
+              .replace(/^```(?:json)?\s*/i, '')
+              .replace(/\s*```$/, '')
+              .trim();
+            return { data: JSON.parse(cleaned), raw: text };
           } catch {
             return { data: null, raw: text, parseError: true };
           }
@@ -849,6 +935,7 @@ Return ONLY JSON with this shape:
 {
   "identified": boolean,
   "confidence": "high" | "medium" | "low" | "uncertain",
+  "confidence_pct": number 0-100,
   "common_name": string | null,
   "scientific_name": string | null,
   "category": "plant" | "bird" | "insect" | "fungi" | "mammal" | "habitat" | "water" | "other",
@@ -857,15 +944,20 @@ Return ONLY JSON with this shape:
   "why_it_matters": string,
   "experience_suggestion": string,
   "ecological_role": string,
-  "uncertainty_note": string | null
+  "uncertainty_note": string | null,
+  "photo_coach_tip": string | null,
+  "look_closer_steps": string[]
 }
 
 Rules:
 - If you can reasonably identify the species or object, set identified=true, confidence="high" or "medium".
-- If you cannot reasonably identify a species, set identified=false, confidence="uncertain", common_name=null, scientific_name=null.
+- If you cannot identify with reasonable confidence, ALWAYS give your best guess: set identified=false, confidence="low" or "uncertain", and fill common_name and scientific_name with your most likely candidate (never leave common_name null). Choose the most plausible species that matches the visible features, and make that guess clear in uncertainty_note.
+- confidence_pct must be a number 0-100 matching the confidence level (high 85-99, medium 60-84, low 40-59, uncertain 0-39). A best-guess identification should score 0-59.
 - Describe only what is visible. Do not invent range, rarity, edibility, or toxicity.
 - why_it_matters should be one grounded paragraph about ecological or human relationship, without exaggeration.
-- experience_suggestion must be a real-world next step.`;
+- experience_suggestion must be a real-world next step.
+- photo_coach_tip: one concrete framing or composition tip to improve the next photograph (or null).
+- look_closer_steps: 3 short sensory actions the photographer can take right now for a "look closer" experience (or an empty array).`;
 
   const ai = await callGeminiApi({
     prompt,
@@ -877,13 +969,117 @@ Rules:
   });
 
   if (ai.data) {
-    return res.json({ ...ai.data, ai_available: true });
+    const analysis = ai.data;
+    let confidencePct = Number(analysis.confidence_pct);
+    if (!Number.isFinite(confidencePct)) {
+      confidencePct =
+        analysis.confidence === 'high' ? 90
+          : analysis.confidence === 'medium' ? 65
+            : analysis.confidence === 'low' ? 40
+              : 20;
+    }
+    confidencePct = Math.max(0, Math.min(100, Math.round(confidencePct)));
+    return res.json({ ...analysis, confidence_pct: confidencePct, ai_available: true });
   }
 
   res.status(503).json({
     ai_available: false,
     error: 'Species analysis is temporarily unavailable. Please try again shortly.',
   });
+};
+
+// Pulse Chat threads (private, user-owned)
+const toClientThread = (thread) => ({
+  id: thread._id,
+  title: thread.title || 'Ecological Inquiry',
+  created_at: thread.createdAt,
+  updated_at: thread.updatedAt,
+  messages: (thread.messages || []).map((m) => ({
+    id: m._id || `${thread._id}-${m.created_at?.getTime?.() || Date.now()}-${m.role}`,
+    role: m.role,
+    content: m.content,
+    created_at: m.created_at,
+  })),
+});
+
+const getPulseThreads = async (req, res) => {
+  const threads = await ChatThread.find({ user: req.user._id }).sort({ updatedAt: -1 });
+  res.json(threads.map(toClientThread));
+};
+
+const createPulseThread = async (req, res) => {
+  const title = sanitizeText(req.body?.title, 120) || 'Ecological Inquiry';
+  const thread = await ChatThread.create({ user: req.user._id, title, messages: [] });
+  res.status(201).json(toClientThread(thread));
+};
+
+const renamePulseThread = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid thread id.' });
+  }
+  const title = sanitizeText(req.body?.title, 120);
+  if (!title) {
+    return res.status(400).json({ error: 'A thread title is required.' });
+  }
+  const thread = await ChatThread.findOneAndUpdate(
+    { _id: id, user: req.user._id },
+    { title },
+    { new: true }
+  );
+  if (!thread) {
+    return res.status(404).json({ error: 'Thread not found or not yours.' });
+  }
+  res.json(toClientThread(thread));
+};
+
+const deletePulseThread = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid thread id.' });
+  }
+  const thread = await ChatThread.findOne({ _id: id, user: req.user._id });
+  if (!thread) {
+    return res.status(404).json({ error: 'Thread not found or not yours.' });
+  }
+  await thread.deleteOne();
+  res.json({ success: true });
+};
+
+const clearPulseThreads = async (req, res) => {
+  await ChatThread.deleteMany({ user: req.user._id });
+  res.json({ success: true });
+};
+
+const updatePulseThreadMessages = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid thread id.' });
+  }
+  const raw = req.body?.messages;
+  if (!Array.isArray(raw)) {
+    return res.status(400).json({ error: 'messages must be an array.' });
+  }
+  const messages = [];
+  for (const m of raw.slice(0, 200)) {
+    const role = m?.role === 'assistant' ? 'assistant' : 'user';
+    const content = sanitizeText(String(m?.content || ''), 20000);
+    if (!content) continue;
+    messages.push({
+      role,
+      content,
+      created_at: m?.created_at ? new Date(m.created_at) : new Date(),
+    });
+  }
+  const thread = await ChatThread.findOneAndUpdate(
+    { _id: id, user: req.user._id },
+    { $set: { messages } },
+    { new: true }
+  );
+  if (!thread) {
+    return res.status(404).json({ error: 'Thread not found or not yours.' });
+  }
+  res.json(toClientThread(thread));
 };
 
 module.exports = {
@@ -907,6 +1103,8 @@ module.exports = {
   assistAIStory,
   getCommunityPosts,
   createCommunityPost,
+  getTestimonials,
+  getPublicStats,
   getActions,
   createAction,
   updateAction,
@@ -917,4 +1115,10 @@ module.exports = {
   getConnection,
   handlePulseChat,
   handleImageAnalyze,
+  getPulseThreads,
+  createPulseThread,
+  renamePulseThread,
+  deletePulseThread,
+  clearPulseThreads,
+  updatePulseThreadMessages,
 };
