@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const PointsService = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default PointsService;
-  const User = require('../models/User');
+const User = require('../models/User');
 
 const POINTS_PER_RESOLUTION = 5;
 

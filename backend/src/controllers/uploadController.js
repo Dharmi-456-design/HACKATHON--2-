@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const UploadController = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default UploadController;
-  const cloudinary = require('../config/cloudinary');
+const cloudinary = require('../config/cloudinary');
 const asyncHandler = require('../utils/asyncHandler');
 
 const uploadImage = asyncHandler(async (req, res) => {

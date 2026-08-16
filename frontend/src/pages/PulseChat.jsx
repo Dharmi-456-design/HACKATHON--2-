@@ -208,6 +208,14 @@ function BouncingDots() {
   );
 }
 
+// Suggested starter prompts
+const STARTERS = [
+  'What bird is singing outside my window?',
+  'I have 5 minutes — what should I notice?',
+  'Why do leaves change color in autumn?',
+  'What lives in the moss on my garden wall?',
+];
+
 export default function PulseChat() {
   const { session } = useAuth();
   const { toggleTheme } = useTheme();
@@ -241,7 +249,6 @@ export default function PulseChat() {
   const [editTitleText, setEditTitleText] = useState('');
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState(null);
@@ -475,14 +482,19 @@ export default function PulseChat() {
       setMessages(finalMsgs);
       saveActiveThreadMessages(finalMsgs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Pulse is quiet right now');
+      setError(err instanceof Error ? err.message : 'Pulse is quiet right now. Try again.');
     } finally {
       setBusy(false);
+      inputRef.current?.focus();
     }
   };
 
-  const clear = async () => {
-    await apiFetch('/api/pulse', { method: 'DELETE' }, token);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    send(text);
+  };
+
+  const clear = () => {
     setMessages([]);
     saveActiveThreadMessages([]);
   };

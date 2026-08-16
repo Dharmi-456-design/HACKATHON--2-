@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const NotificationRoutes = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default NotificationRoutes;
-  const express = require('express');
+const express = require('express');
 const { getNotifications, markAsRead, markAllAsRead } = require('../controllers/notificationController');
 const { protect } = require('../middleware/authMiddleware');
 

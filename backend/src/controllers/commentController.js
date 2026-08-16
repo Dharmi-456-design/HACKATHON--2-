@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const CommentController = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default CommentController;
-  const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
 const Comment = require('../models/Comment');
 const Issue = require('../models/Issue');

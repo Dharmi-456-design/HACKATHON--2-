@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const AdminController = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default AdminController;
-  const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
 const Issue = require('../models/Issue');
 const { STATUSES, PRIORITIES } = require('../models/Issue');
