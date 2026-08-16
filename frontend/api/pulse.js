@@ -37,10 +37,23 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const content = sanitizeText(String(req.body?.content || '').trim(), 2000);
-      if (!content) return res.status(400).json({ error: 'Say something to Pulse.' });
-      if (content.length > 2000) return res.status(400).json({ error: 'Keep it under 2000 characters.' });
+      const imageBase64 = req.body?.imageBase64 ? String(req.body.imageBase64) : '';
+      const contentType = String(req.body?.contentType || '');
+      const language = String(req.body?.language || 'en');
 
-      await supabase.from('np_pulse').insert({ user_id: user.id, role: 'user', content, created_at: new Date().toISOString() });
+      const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (imageBase64) {
+        if (!ALLOWED_IMAGE_TYPES.includes(contentType)) {
+          return res.status(400).json({ error: 'Only jpeg, png, gif or webp images are supported.' });
+        }
+        if (imageBase64.length > 5 * 1024 * 1024) {
+          return res.status(400).json({ error: 'Image is too large (max 5 MB).' });
+        }
+      }
+      if (!content && !imageBase64) return res.status(400).json({ error: 'Say something to Pulse.' });
+
+      const userText = content || (imageBase64 ? '[Attached Image Observation]' : '');
+      await supabase.from('np_pulse').insert({ user_id: user.id, role: 'user', content: userText, created_at: new Date().toISOString() });
 
       const [{ data: profile }, { data: discoveries }, { data: missions }, { data: history }] = await Promise.all([
         supabase.from('np_profiles').select('*').eq('user_id', user.id).maybeSingle(),
@@ -55,11 +68,15 @@ export default async function handler(req, res) {
         minutes: profile?.available_minutes || 20,
       };
 
-      let reply = fallbackReply(content, ctx);
+      let reply = imageBase64 ? fallbackReply(content || 'photo', ctx) : fallbackReply(content, ctx);
       const transcript = (history || [])
         .reverse()
         .map((m) => `${m.role === 'user' ? 'Human' : 'Pulse'}: ${m.content}`)
         .join('\n');
+
+      const imageNote = imageBase64
+        ? '\nThe user attached a photograph of their surroundings. Look at it carefully and answer their question or describe what is honestly visible — colors, shapes, habitat cues, likely living things — without inventing species names or locations.\n'
+        : '';
 
       const ai = await geminiGenerate({
         temperature: 0.55,
@@ -71,10 +88,12 @@ Missions: ${JSON.stringify(missions || [])}
 
 Recent conversation:
 ${transcript}
-
+${imageNote}
 Human: ${content}
 
 Reply as Pulse.`,
+        imageBase64: imageBase64 || undefined,
+        mimeType: contentType,
       });
       if (!ai.unavailable && ai.text) reply = ai.text;
 

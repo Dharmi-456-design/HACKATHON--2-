@@ -28,7 +28,14 @@ const uploadImage = asyncHandler(async (req, res) => {
         resource_type: 'image',
         transformation: [{ width: 1600, crop: 'limit' }],
       },
-      (error, image) => (error ? reject(error) : resolve(image))
+      (error, image) => {
+        if (error) {
+          const wrapped = new Error('Image could not be processed. Please try again.');
+          wrapped.statusCode = 502;
+          return reject(wrapped);
+        }
+        resolve(image);
+      }
     );
     stream.end(req.file.buffer);
   });
