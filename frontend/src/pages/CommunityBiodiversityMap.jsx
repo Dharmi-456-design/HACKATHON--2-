@@ -80,6 +80,7 @@ export default function CommunityBiodiversityMap() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPin, setSelectedPin] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [mapViewMode, setMapViewMode] = useState('constellation'); // 'constellation' | 'google_maps'
 
   // Filtered Pins
   const filteredPins = pins.filter((p) => {
@@ -184,62 +185,110 @@ export default function CommunityBiodiversityMap() {
           </div>
         </div>
 
-        {/* ──────────────── INTERACTIVE COMMUNITY MAP CANVAS ──────────────── */}
+        {/* ──────────────── INTERACTIVE COMMUNITY MAP CANVAS / GOOGLE MAPS ──────────────── */}
         <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden min-h-[480px]">
-          <div
-            className="relative w-full h-[460px] transition-transform duration-300 origin-center"
-            style={{ transform: `scale(${zoomLevel})` }}
-          >
-            {/* SVG Connecting Web */}
-            <svg viewBox="0 0 700 460" className="absolute inset-0 w-full h-full pointer-events-none">
-              {filteredPins.map((p) => (
-                <g key={p.id}>
-                  <line
-                    x1={350}
-                    y1={230}
-                    x2={p.x}
-                    y2={p.y}
-                    stroke={selectedPin?.id === p.id ? '#4ADE80' : '#20422E'}
-                    strokeWidth={selectedPin?.id === p.id ? '2.5' : '1.2'}
-                    strokeDasharray={selectedPin?.id === p.id ? 'none' : '4'}
-                  />
-                </g>
-              ))}
-            </svg>
+          {/* View Mode Toggle Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-[#20422E] mb-3">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-[#4ADE80]" />
+              <span className="text-xs font-bold text-white uppercase tracking-wider">
+                {mapViewMode === 'constellation' ? 'Species Constellation Network' : 'Live Google Biodiversity Map'}
+              </span>
+            </div>
 
-            {/* Central City Hub Node */}
-            <motion.div
-              animate={{ scale: [1, 1.08, 1] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#2E6141] via-[#1A3827] to-[#040B06] border-2 border-[#4ADE80] flex flex-col items-center justify-center text-center shadow-2xl z-20 cursor-pointer"
-              onClick={() => setSelectedPin(null)}
-            >
-              <Globe className="w-6 h-6 text-[#4ADE80]" />
-              <span className="text-[10px] font-bold text-white tracking-wider uppercase">HUB</span>
-            </motion.div>
-
-            {/* Floating Species Nodes */}
-            {filteredPins.map((p) => {
-              const isSelected = selectedPin?.id === p.id;
-              return (
-                <motion.div
-                  key={p.id}
-                  whileHover={{ scale: 1.15 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedPin(p)}
-                  style={{ left: p.x, top: p.y }}
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 px-3 py-2 rounded-2xl border transition-all cursor-pointer shadow-lg z-20 flex items-center gap-2 ${
-                    isSelected
-                      ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-[#4ADE80]/30 scale-110'
-                      : 'bg-[#13271C]/90 border-[#20422E] text-slate-200 hover:border-[#4ADE80]/50'
-                  }`}
-                >
-                  <span className="text-base">{p.emoji}</span>
-                  <span className="text-xs font-bold whitespace-nowrap">{p.name}</span>
-                </motion.div>
-              );
-            })}
+            <div className="flex items-center gap-1.5 bg-[#07150C] border border-[#20422E] p-1 rounded-full text-xs">
+              <button
+                onClick={() => setMapViewMode('constellation')}
+                className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                  mapViewMode === 'constellation'
+                    ? 'bg-[#4ADE80] text-[#07130B]'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                ✨ Constellation
+              </button>
+              <button
+                onClick={() => setMapViewMode('google_maps')}
+                className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                  mapViewMode === 'google_maps'
+                    ? 'bg-[#4ADE80] text-[#07130B]'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                🗺️ Google Maps
+              </button>
+            </div>
           </div>
+
+          {mapViewMode === 'google_maps' ? (
+            <div className="relative w-full h-[440px] rounded-2xl overflow-hidden border border-[#20422E] shadow-inner bg-[#13271C]">
+              <iframe
+                title="Google Maps Biodiversity Observations"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(selectedPin ? (`${selectedPin.name}, ${selectedPin.city}`) : 'parks and nature reserves, Ahmedabad, Gujarat')}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+              />
+            </div>
+          ) : (
+            <div
+              className="relative w-full h-[460px] transition-transform duration-300 origin-center"
+              style={{ transform: `scale(${zoomLevel})` }}
+            >
+              {/* SVG Connecting Web */}
+              <svg viewBox="0 0 700 460" className="absolute inset-0 w-full h-full pointer-events-none">
+                {filteredPins.map((p) => (
+                  <g key={p.id}>
+                    <line
+                      x1={350}
+                      y1={230}
+                      x2={p.x}
+                      y2={p.y}
+                      stroke={selectedPin?.id === p.id ? '#4ADE80' : '#20422E'}
+                      strokeWidth={selectedPin?.id === p.id ? '2.5' : '1.2'}
+                      strokeDasharray={selectedPin?.id === p.id ? 'none' : '4'}
+                    />
+                  </g>
+                ))}
+              </svg>
+
+              {/* Central City Hub Node */}
+              <motion.div
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#2E6141] via-[#1A3827] to-[#040B06] border-2 border-[#4ADE80] flex flex-col items-center justify-center text-center shadow-2xl z-20 cursor-pointer"
+                onClick={() => setSelectedPin(null)}
+              >
+                <Globe className="w-6 h-6 text-[#4ADE80]" />
+                <span className="text-[10px] font-bold text-white tracking-wider uppercase">HUB</span>
+              </motion.div>
+
+              {/* Floating Species Nodes */}
+              {filteredPins.map((p) => {
+                const isSelected = selectedPin?.id === p.id;
+                return (
+                  <motion.div
+                    key={p.id}
+                    whileHover={{ scale: 1.15 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSelectedPin(p)}
+                    style={{ left: p.x, top: p.y }}
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 px-3 py-2 rounded-2xl border transition-all cursor-pointer shadow-lg z-20 flex items-center gap-2 ${
+                      isSelected
+                        ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-[#4ADE80]/30 scale-110'
+                        : 'bg-[#13271C]/90 border-[#20422E] text-slate-200 hover:border-[#4ADE80]/50'
+                    }`}
+                  >
+                    <span className="text-base">{p.emoji}</span>
+                    <span className="text-xs font-bold whitespace-nowrap">{p.name}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* ──────────────── SELECTED PIN DETAIL DRAWER ──────────────── */}
