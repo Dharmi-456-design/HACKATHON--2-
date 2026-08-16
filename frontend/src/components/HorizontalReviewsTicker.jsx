@@ -168,132 +168,98 @@ export default function HorizontalReviewsTicker() {
 
   return (
     <>
-      {/* Outer Section - Pinning duration tuned to 400vh to ensure "no up-down does take place" until end */}
+      {/* Outer Section - Pinning duration tuned to 400vh for scroll distance */}
       <div ref={targetRef} className="relative h-[400vh] bg-[#0E1E15] text-white">
         
-        {/* Sticky Viewport Container - Pins section while user completes Card 1 -> Card 10 */}
-        <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-6 px-6 sm:px-12 select-none">
+        {/* Sticky Viewport Container */}
+        <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-center py-10 px-6 sm:px-12 select-none">
           
-          {/* Header Bar */}
-          <div className="max-w-7xl w-full mx-auto flex flex-col sm:flex-row sm:items-end justify-between z-20 pt-6 shrink-0">
-            <div>
-              <div className="text-xs font-mono uppercase tracking-[0.24em] text-[#E6C176] font-semibold mb-2">
-                A PARTNER YOU TRUST
-              </div>
-              <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-none">
+          <div className="max-w-[1400px] w-full mx-auto relative z-20">
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
+              <h2 className="font-display text-5xl sm:text-6xl lg:text-7xl font-medium tracking-tight text-white leading-[1.1]">
                 Beyond clients.<br />Trusted partners.
               </h2>
-            </div>
-          </div>
-
-          {/* Linear Wave Scrubber Bar (Dynamic Green Peak following scroll progress) */}
-          <div className="relative max-w-7xl w-full mx-auto my-4 z-20 shrink-0">
-            <div className="relative flex items-center justify-between gap-1 h-12 px-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
-              {/* The "One linear line" behind the mini lines */}
-              <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 h-[1px] bg-white/20 z-0" />
               
-              {Array.from({ length: NUM_TICKS }).map((_, i) => {
-                const tickProgress = i / (NUM_TICKS - 1);
-                const distance = Math.abs(tickProgress - scrollPos);
-                
-                // Continuous Smooth Gaussian Wave Peak
-                const wave = Math.exp(-Math.pow(distance / 0.065, 2));
-                const heightPx = Math.max(8, Math.round(wave * 32 + 8));
-                const opacity = 0.3 + wave * 0.7;
-                const isWaveActive = wave > 0.5;
+              {/* Scrubber Area (Right side) */}
+              <div className="mt-8 md:mt-0 flex flex-col items-end">
+                <div className="flex items-center gap-1 h-8 px-2">
+                  {Array.from({ length: 40 }).map((_, i) => {
+                    const tickProgress = i / (40 - 1);
+                    const distance = Math.abs(tickProgress - scrollPos);
+                    const wave = Math.exp(-Math.pow(distance / 0.15, 2));
+                    const heightPx = Math.max(4, Math.round(wave * 20 + 4));
+                    const opacity = 0.2 + wave * 0.8;
+                    const isWaveActive = wave > 0.5;
 
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      height: `${heightPx}px`,
-                      opacity,
-                    }}
-                    className={`relative z-10 w-1 rounded-full transition-all duration-100 ${
-                      isWaveActive
-                        ? 'bg-[#96CD7B] shadow-[0_0_10px_#96CD7B]'
-                        : 'bg-white/35'
-                    }`}
-                  />
-                );
-              })}
+                    return (
+                      <div
+                        key={i}
+                        style={{ height: `${heightPx}px`, opacity }}
+                        className={`w-[2px] rounded-full transition-all duration-100 ${
+                          isWaveActive ? 'bg-white shadow-[0_0_8px_#ffffff]' : 'bg-white/30'
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
             </div>
-            
-            {/* Scrubber Label */}
-            <div className="flex items-center justify-between text-[11px] font-mono text-white/50 px-3 mt-1.5 uppercase tracking-widest">
-              <span>01 / START</span>
-              <span className="text-[#96CD7B]">
-                {scrollPos >= 0.98 ? '✓ ALL 10 REVIEWS READ' : 'SCROLL LEFT → RIGHT TO READ ALL REVIEWS'}
-              </span>
-              <span>10 / END</span>
-            </div>
-          </div>
 
-          {/* Horizontal Staircase Ticker Cards (Cards Enter UPWARD -> Move RIGHT to LEFT -> Focus Hover Blur) */}
-          <motion.div
-            style={{ y: cardsY, opacity: cardsOpacity }}
-            className="relative w-full overflow-hidden z-10 my-auto py-4"
-          >
+            {/* Horizontal Staircase Ticker Cards */}
             <motion.div
-              ref={trackRef}
-              style={{ x }}
-              className="flex gap-6 sm:gap-8 items-center pl-4 sm:pl-8 pr-[50vw] w-max"
+              style={{ y: cardsY, opacity: cardsOpacity }}
+              className="relative w-full overflow-hidden z-10 py-8"
             >
-              {REVIEWS.map((r) => {
-                const isHovered = hoveredId === r.id;
-                const isAnyHovered = hoveredId !== null;
-                const isBlur = isAnyHovered && !isHovered;
+              <motion.div
+                ref={trackRef}
+                style={{ x }}
+                className="flex gap-6 sm:gap-8 items-center pr-12 w-max"
+              >
+                {REVIEWS.map((r) => {
+                  const isHovered = hoveredId === r.id;
+                  const isAnyHovered = hoveredId !== null;
+                  const isBlur = isAnyHovered && !isHovered;
 
-                return (
-                  <motion.div
-                    key={r.id}
-                    onMouseEnter={() => setHoveredId(r.id)}
-                    onMouseLeave={() => setHoveredId(null)}
-                    style={{
-                      filter: isBlur ? 'blur(3px)' : 'blur(0px)',
-                      opacity: isBlur ? 0.3 : 1,
-                      scale: isHovered ? 1.05 : 1,
-                    }}
-                    className={`w-[320px] sm:w-[380px] h-[260px] shrink-0 bg-[#14281C] border border-white/10 text-white rounded-2xl p-7 shadow-2xl flex flex-col justify-between transition-all duration-300 ${r.yOffset} ${
-                      isHovered ? 'shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-[#96CD7B]' : ''
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-start justify-between mb-5">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={r.avatar}
-                            alt={r.name}
-                            className="w-12 h-12 rounded-full object-cover border border-white/20"
-                          />
-                          <div className="flex flex-col">
-                            <h4 className="text-base font-bold text-white font-sans leading-tight">{r.name}</h4>
-                            <p className="text-xs text-white/60 font-medium">{r.handle}</p>
+                  return (
+                    <motion.div
+                      key={r.id}
+                      onMouseEnter={() => setHoveredId(r.id)}
+                      onMouseLeave={() => setHoveredId(null)}
+                      style={{
+                        filter: isBlur ? 'blur(3px)' : 'blur(0px)',
+                        opacity: isBlur ? 0.4 : 1,
+                        scale: isHovered ? 1.02 : 1,
+                      }}
+                      className={`w-[320px] sm:w-[380px] h-[300px] shrink-0 bg-[#A39F98]/20 backdrop-blur-sm border border-white/10 text-white rounded-xl p-8 shadow-2xl flex flex-col justify-between transition-all duration-300 ${r.yOffset} ${
+                        isHovered ? 'shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-white/30' : ''
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-start justify-between mb-6">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={r.avatar}
+                              alt={r.name}
+                              className="w-12 h-12 rounded-full object-cover border border-white/20"
+                            />
+                            <div className="flex flex-col">
+                              <h4 className="text-base font-bold text-white font-sans leading-tight">{r.name}</h4>
+                              <p className="text-xs text-white/60 font-medium">{r.handle}</p>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1 text-[#E6C176]">
-                          {[...Array(r.rating)].map((_, i) => (
-                            <Star key={i} size={13} fill="currentColor" />
-                          ))}
-                        </div>
+
+                        <p className="text-[15px] text-white/90 leading-relaxed font-light">
+                          "{r.quote}"
+                        </p>
                       </div>
-
-                      <p className="text-sm sm:text-base text-white/90 leading-relaxed font-light">
-                        "{r.quote}"
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between text-[11px] font-mono tracking-wider uppercase text-white/40">
-                      <span>{r.role}</span>
-                      <span>{r.stat}</span>
-                    </div>
-
-                  </motion.div>
-                );
-              })}
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
             </motion.div>
-          </motion.div>
-
+          </div>
         </div>
       </div>
     </>
