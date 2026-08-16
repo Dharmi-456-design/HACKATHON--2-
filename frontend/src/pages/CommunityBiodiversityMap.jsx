@@ -96,7 +96,16 @@ export default function CommunityBiodiversityMap() {
     };
   };
 
-  const [pins, setPins] = useState([]);
+  const DEFAULT_PINS = [
+    { id: 'pin-1', name: 'Indian Myna Flight Path', category: 'birds', city: 'Sabarmati Park', x: 220, y: 150, confidence: '98% Verified', emoji: '🐦', note: 'Observed dawn roosting pattern near Peepal tree.' },
+    { id: 'pin-2', name: 'Peepal Shade Canopy', category: 'trees', city: 'Law Garden', x: 480, y: 140, confidence: '95% Verified', emoji: '🌳', note: 'Deep 40-year old canopy providing intense shade.' },
+    { id: 'pin-3', name: 'Champa Night Bloom', category: 'flowers', city: 'Parimal Garden', x: 180, y: 320, confidence: '99% Verified', emoji: '🌸', note: 'Fragrant white petals opening at dusk.' },
+    { id: 'pin-4', name: 'Swallowtail Butterfly Corridor', category: 'insects', city: 'Prahladnagar Park', x: 520, y: 340, confidence: '92% Verified', emoji: '🦋', note: 'Visiting wild milkweed nectar patch.' },
+    { id: 'pin-5', name: 'Banyan Damp Root Moss', category: 'moss', city: 'Sabarmati Riverfront', x: 350, y: 380, confidence: '96% Verified', emoji: '🌿', note: 'Lush velvet moss carpet along damp soil.' },
+    { id: 'pin-6', name: 'Fungal Mycelium Seam', category: 'fungi', city: 'Riverfront Sector B', x: 350, y: 80, confidence: '94% Verified', emoji: '🍄', note: 'Sub-surface fungal web enriching root soil.' },
+  ];
+
+  const [pins, setPins] = useState(DEFAULT_PINS);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPin, setSelectedPin] = useState(null);
@@ -105,7 +114,11 @@ export default function CommunityBiodiversityMap() {
 
   useEffect(() => {
     apiFetch('/api/community', {}, null)
-      .then((list) => setPins(Array.isArray(list) ? list.map(toPin) : []))
+      .then((list) => {
+        if (Array.isArray(list) && list.length > 0) {
+          setPins(list.map(toPin));
+        }
+      })
       .catch(() => {});
   }, []);
 

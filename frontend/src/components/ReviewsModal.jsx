@@ -1,143 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+<<<<<<< HEAD
 import { X, Star, Search, Filter, ShieldCheck, Quote } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+=======
+import { X, Search, Filter, ShieldCheck, ThumbsUp } from 'lucide-react';
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
 
-const ALL_REVIEWS = [
-  {
-    id: 1,
-    name: 'Jimmy Slagle',
-    role: 'Urban Botanist & Educator',
-    city: 'Seattle, WA',
-    rating: 5,
-    tag: 'Field Protocol',
-    quote: 'NaturePulse fundamentally shifted how I look at urban tree canopies. It turns a quick morning walk into a rich, structured ecological recording session.',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 2,
-    name: 'Ty Zamkow',
-    role: 'Biodiversity Explorer',
-    city: 'Portland, OR',
-    rating: 5,
-    tag: 'Species Tracking',
-    quote: 'The 5-dimensional connection score keeps me accountable. Returning to the same urban stream every week reveals seasonal rhythms I used to miss completely.',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 3,
-    name: 'Nathan Graville',
-    role: 'Field Telemetry Specialist',
-    city: 'San Francisco, CA',
-    rating: 5,
-    tag: 'Pulse AI',
-    quote: 'Pulse AI doesn’t just identify species — it connects soil moisture, light levels, and bird migration into a coherent story. Absolutely brilliant.',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 4,
-    name: 'Arianna Armelli',
-    role: 'Ecological Designer',
-    city: 'Denver, CO',
-    rating: 5,
-    tag: 'Urban Habitat',
-    quote: 'Our entire design studio relies on NaturePulse field notes for baseline habitat telemetry. The interface is breathtaking and quiet.',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 5,
-    name: 'Fawaz Buqammaz',
-    role: 'Avian Acoustic Researcher',
-    city: 'Austin, TX',
-    rating: 5,
-    tag: 'Dawn Chorus',
-    quote: 'Acoustic telemetry at 5:30 AM has never been this seamless. NaturePulse helped us log 340+ bird calls across 12 neighborhood zones.',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 6,
-    name: 'Elena Rostova',
-    role: 'Conservation Biologist',
-    city: 'Chicago, IL',
-    rating: 5,
-    tag: 'Community Mapped',
-    quote: 'The community biodiversity map makes localized citizen science feel tangible and deeply connected across cities.',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 7,
-    name: 'Devin Sterling',
-    role: 'Permaculture Strategist',
-    city: 'Vancouver, BC',
-    rating: 5,
-    tag: 'Sanctuary Care',
-    quote: 'The 14-day nature relationship challenge changed my daily habits forever. I notice every moss seam and lichen pattern now.',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 8,
-    name: 'Marcus Vance',
-    role: 'Soil Microbiologist',
-    city: 'Boston, MA',
-    rating: 5,
-    tag: 'Field Protocol',
-    quote: 'Tracking fungal networks and soil crusts with NaturePulse has given our urban research group invaluable baseline data.',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 9,
-    name: 'Maya Lin-Chao',
-    role: 'Environmental Journalist',
-    city: 'New York, NY',
-    rating: 5,
-    tag: 'Pulse AI',
-    quote: 'NaturePulse turns raw natural observations into poetic, scientifically accurate field reports in seconds.',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 10,
-    name: 'Liam O’Connor',
-    role: 'Wilderness Educator',
-    city: 'Binghamton, NY',
-    rating: 5,
-    tag: 'Species Tracking',
-    quote: 'My students log native flora daily. The streak system focuses on quiet relationship building rather than gamified points.',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 11,
-    name: 'Sophia Chen',
-    role: 'Urban Forestry Lead',
-    city: 'Toronto, ON',
-    rating: 5,
-    tag: 'Urban Habitat',
-    quote: 'An essential app for municipal tree canopy tracking. The speed and beauty of the UI make field logging a joy.',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 12,
-    name: 'David K. Thorne',
-    role: 'Amateur Mycologist',
-    city: 'Asheville, NC',
-    rating: 5,
-    tag: 'Field Protocol',
-    quote: 'I logged 85 species of fungi in Pisgah Forest. The species passport and AI vision telemetry are standard-setting.',
-    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=120&q=80',
-  },
-];
-
-export default function ReviewsModal({ isOpen, onClose }) {
+export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState('All');
   const { isDark } = useTheme();
 
-  const tags = ['All', 'Field Protocol', 'Species Tracking', 'Pulse AI', 'Urban Habitat', 'Dawn Chorus'];
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
-  const filteredReviews = ALL_REVIEWS.filter((r) => {
+  const tags = ['All', ...new Set(reports.map((r) => r.tag).filter(Boolean))];
+
+  const filteredReports = reports.filter((r) => {
+    const q = search.toLowerCase();
     const matchesSearch =
-      r.name.toLowerCase().includes(search.toLowerCase()) ||
-      r.quote.toLowerCase().includes(search.toLowerCase()) ||
-      r.city.toLowerCase().includes(search.toLowerCase());
+      !q ||
+      r.name.toLowerCase().includes(q) ||
+      r.quote.toLowerCase().includes(q) ||
+      r.city.toLowerCase().includes(q) ||
+      r.species.toLowerCase().includes(q);
     const matchesTag = selectedTag === 'All' || r.tag === selectedTag;
     return matchesSearch && matchesTag;
   });
@@ -145,7 +38,12 @@ export default function ReviewsModal({ isOpen, onClose }) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reviews-modal-title"
+          className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+        >
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -160,46 +58,72 @@ export default function ReviewsModal({ isOpen, onClose }) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
+<<<<<<< HEAD
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className={`relative w-full max-w-5xl rounded-3xl p-6 sm:p-8 shadow-2xl z-10 my-auto overflow-hidden max-h-[85vh] flex flex-col transition-colors ${
               isDark ? 'bg-[#0E1E15] border border-white/15 text-white' : 'bg-[#FDFBF7] border border-[#E3DDD1] text-[#0F2418]'
             }`}
+=======
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-5xl bg-[#0E1E15] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 my-auto text-white overflow-hidden max-h-[85vh] flex flex-col"
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
           >
             {/* Header */}
             <div className={`flex items-start justify-between border-b pb-6 mb-6 shrink-0 ${
               isDark ? 'border-white/10' : 'border-[#E3DDD1]'
             }`}>
               <div>
+<<<<<<< HEAD
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-wider mb-2 ${
                   isDark ? 'bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B]' : 'bg-[#E1EFE0] border border-[#C3DEC0] text-[#183B28]'
                 }`}>
                   <ShieldCheck size={14} /> 100% VERIFIED COMMUNITY REVIEWS
+=======
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-wider mb-2">
+                  <ShieldCheck size={14} aria-hidden="true" /> REAL COMMUNITY FIELD REPORTS
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
                 </div>
-                <h2 className="font-display text-2xl sm:text-3xl font-bold">
-                  What Urban Explorers Say
+                <h2 id="reviews-modal-title" className="font-display text-2xl sm:text-3xl font-bold">
+                  What Urban Explorers Share
                 </h2>
+<<<<<<< HEAD
                 <p className={`text-sm mt-1 ${isDark ? 'text-white/70' : 'text-[#3E5C48]'}`}>
                   Read authentic stories from 12,000+ botanists, researchers, and nature lovers worldwide.
+=======
+                <p className="text-sm text-white/70 mt-1">
+                  Every report below was shared by a real NaturePulse community member.
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
                 </p>
               </div>
 
               <button
                 onClick={onClose}
+<<<<<<< HEAD
                 className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                   isDark ? 'bg-white/10 hover:bg-white/20 text-white/80 hover:text-white' : 'bg-[#F2ECE1] hover:bg-[#EDE6D8] text-[#183B28] hover:text-[#0F2418]'
                 }`}
+=======
+                aria-label="Close field reports modal"
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer"
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
               >
-                <X size={18} />
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
 
             {/* Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-6 shrink-0">
               <div className="relative w-full sm:w-72">
+<<<<<<< HEAD
                 <Search size={16} className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${isDark ? 'text-white/40' : 'text-[#3E5C48]'}`} />
+=======
+                <Search size={16} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                <label htmlFor="search-field-reports" className="sr-only">Search field reports</label>
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
                 <input
+                  id="search-field-reports"
                   type="text"
-                  placeholder="Search reviews..."
+                  placeholder="Search field reports..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className={`w-full rounded-full pl-10 pr-4 py-2 text-sm focus:outline-none transition-colors ${
@@ -211,7 +135,11 @@ export default function ReviewsModal({ isOpen, onClose }) {
               </div>
 
               <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 scrollbar-hide">
+<<<<<<< HEAD
                 <Filter size={14} className={isDark ? 'text-white/40 shrink-0' : 'text-[#3E5C48] shrink-0'} />
+=======
+                <Filter size={14} aria-hidden="true" className="text-white/40 shrink-0" />
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
                 {tags.map((t) => (
                   <button
                     key={t}
@@ -228,6 +156,7 @@ export default function ReviewsModal({ isOpen, onClose }) {
               </div>
             </div>
 
+<<<<<<< HEAD
             {/* Reviews Grid */}
             <div className="overflow-y-auto pr-2 grid sm:grid-cols-2 gap-4 flex-1 scrollbar-hide">
               {filteredReviews.map((r) => (
@@ -286,6 +215,71 @@ export default function ReviewsModal({ isOpen, onClose }) {
               isDark ? 'border-white/10 text-white/50' : 'border-[#E3DDD1] text-[#3E5C48]'
             }`}>
               Showing {filteredReviews.length} of {ALL_REVIEWS.length} community reviews
+=======
+            {/* Reports Grid */}
+            {reports.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
+                <span className="text-4xl mb-4">🌿</span>
+                <h3 className="font-display text-xl font-semibold mb-2">No field reports yet</h3>
+                <p className="text-sm text-white/60 max-w-sm">
+                  Be the first to share a species observation from the Community feed — it will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-y-auto pr-2 grid sm:grid-cols-2 gap-4 flex-1 scrollbar-hide">
+                {filteredReports.map((r) => (
+                  <div
+                    key={r.id}
+                    className="bg-white/5 border border-white/10 hover:border-[#96CD7B]/40 rounded-2xl p-5 flex flex-col justify-between transition-all hover:bg-white/[0.07]"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#96CD7B]/20 text-[#96CD7B]">
+                          {r.species || r.tag}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-[#96CD7B] text-xs font-mono">
+                          <ThumbsUp size={13} aria-hidden="true" />
+                          {r.upvotes}
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-white/85 leading-relaxed font-light italic mb-4">
+                        "{r.quote}"
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-3 border-t border-white/10">
+                      {r.avatar ? (
+                        <img
+                          src={r.avatar}
+                          alt={r.name}
+                          loading="lazy"
+                          decoding="async"
+                          width="40"
+                          height="40"
+                          className="w-10 h-10 rounded-full object-cover border border-white/20"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 flex items-center justify-center text-lg">
+                          🌿
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="text-sm font-semibold text-white">{r.name}</h4>
+                        <p className="text-xs text-white/60">
+                          {r.role} · <span className="text-[#96CD7B]">{r.city}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Footer summary */}
+            <div className="pt-4 mt-4 border-t border-white/10 text-center text-xs text-white/50 shrink-0">
+              Showing {filteredReports.length} of {reports.length} community field reports
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
             </div>
           </motion.div>
         </div>

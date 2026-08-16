@@ -115,9 +115,16 @@ export default function PricingSection() {
             </span>
             <button
               onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+<<<<<<< HEAD
               className={`w-14 h-8 rounded-full border p-1 flex items-center transition-colors cursor-pointer ${
                 isDark ? 'bg-white/10 border-white/20' : 'bg-[#EDE6D8] border-[#D4CBB8]'
               }`}
+=======
+              aria-label="Toggle between monthly and yearly billing"
+              role="switch"
+              aria-checked={billingCycle === 'yearly'}
+              className="w-14 h-8 rounded-full bg-white/10 border border-white/20 p-1 flex items-center transition-colors cursor-pointer"
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
             >
               <motion.div
                 animate={{ x: billingCycle === 'yearly' ? 24 : 0 }}

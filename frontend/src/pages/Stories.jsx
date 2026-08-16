@@ -8,140 +8,147 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
+import { DEFAULT_STORIES } from '../data/storiesData';
 
 // Multilingual UI Translations for Stories Universe
 const STORIES_TRANSLATIONS = {
   en: {
-    heroTag: 'INTERACTIVE STORY UNIVERSE',
-    heroTitle: 'Cinematic AI & Nature Chronicles',
-    heroSubtitle: 'Step into immersive 3D narratives, shape branching paths, listen with AI Voice, and generate custom stories.',
-    createStoryBtn: 'Create Custom Story',
+    heroTag: 'Interactive Story Universe',
+    heroTitle: 'Living Nature Chronicles & Speculative Ecology',
+    heroSubtitle: 'Step into immersive ecological narratives, explore branching field decisions, and listen with real-time text-to-speech.',
+    createStoryBtn: 'Create New Story',
     featuredTitle: 'The Whispering Redwood Canopy',
-    featuredDesc: 'An ancient canopy conceals a neural web of bioluminescent fungi. Follow Maya as she decodes the forest heartbeat.',
+    featuredDesc: 'An ancient canopy conceals an underground communication network of symbiotic fungi. Follow Maya as she decodes the bioacoustic rhythms.',
     continueReading: 'Continue Reading',
     readStory: 'Read Story',
     listenStory: 'Listen with Voice',
-    interactiveMode: 'Interactive Choice Path',
+    interactiveMode: 'Interactive Branching Path',
     tabAll: 'Explore Universe',
-    tabMyStories: '📚 My Library',
-    tabFavorites: '⭐ Favorites',
-    tabInteractive: '🔀 Branching Paths',
-    genreAll: 'All Genres',
-    genreFantasy: '✨ Fantasy',
-    genreSciFi: '🚀 Sci-Fi',
-    genreNature: '🌿 Nature & Eco',
-    genreMystery: '🕵️ Mystery',
-    genreAdventure: '🌍 Adventure',
-    genreEdu: '📚 Educational',
-    createModalTitle: 'Weave an AI Story',
-    promptLabel: 'Story Prompt or Core Idea',
+    tabMyStories: 'My Library',
+    tabFavorites: 'Saved Stories',
+    tabInteractive: 'Branching Paths',
+    genreAll: 'All Categories',
+    genreNature: 'Nature & Ecology',
+    genreSciFi: 'Speculative Ecology',
+    genreMarine: 'Marine Biology',
+    genreBotany: 'Botanical Fieldwork',
+    genreExpedition: 'Canopy Expedition',
+    genreScience: 'Ecological Science',
+    genreHabitats: 'Regenerative Habitats',
+    genreHeritage: 'Folklore & Heritage',
+    createModalTitle: 'Generate an Ecological Story',
+    promptLabel: 'Story Prompt or Field Concept',
     titleLabel: 'Story Title',
-    genreLabel: 'Genre',
+    genreLabel: 'Category',
     moodLabel: 'Atmospheric Mood',
     generateBtn: 'Generate Story with AI',
-    generatingText: 'Weaving story threads & neural paths…',
-    aiAssistantTitle: 'AI Story Assistant',
-    rewriteSection: '🪄 Rewrite & Polish',
-    changeMood: '🎭 Shift Mood',
-    alternateEnding: '🔮 Alternate Ending',
-    continueStory: '⏩ Next Chapter',
-    translateStory: '🌐 Translate',
-    customPromptPlaceholder: 'Tell AI Assistant how to modify or continue this story…',
-    choicePrompt: 'What will you do next?',
-    magical: 'Magical',
-    lovedIt: 'Loved It',
+    generatingText: 'Synthesizing narrative threads…',
+    aiAssistantTitle: 'Story Assistant',
+    rewriteSection: 'Rewrite & Polish',
+    changeMood: 'Shift Atmosphere',
+    alternateEnding: 'Alternate Outcome',
+    continueStory: 'Next Chapter',
+    translateStory: 'Translate',
+    customPromptPlaceholder: 'Instruct the assistant to expand or modify this chronicle…',
+    choicePrompt: 'Choose your field decision:',
+    magical: 'Inspiring',
+    lovedIt: 'Captivating',
     unexpected: 'Unexpected',
-    funny: 'Funny',
-    thoughtful: 'Thoughtful',
+    funny: 'Engaging',
+    thoughtful: 'Insightful',
     savedInLibrary: 'Saved to Library',
     saveToLibrary: 'Save Story',
   },
   gu: {
     heroTag: 'ઇન્ટરેક્ટિવ વાર્તા વિશ્વ',
-    heroTitle: 'સિનેમેટિક એઆઈ અને પ્રકૃતિ વાર્તાઓ',
-    heroSubtitle: 'ઇમર્સિવ વાર્તાઓમાં પ્રવેશ કરો, નવો માર્ગ પસંદ કરો, અવાજ દ્વારા સાંભળો અને એઆઈ દ્વારા કસ્ટમ વાર્તાઓ બનાવો.',
-    createStoryBtn: 'કસ્ટમ વાર્તા બનાવો',
+    heroTitle: 'જીવંત પ્રકૃતિ વાર્તાઓ અને ઇકોલોજી',
+    heroSubtitle: 'ઇમર્સિવ વાર્તાઓમાં પ્રવેશ કરો, નવો માર્ગ પસંદ કરો અને અવાજ દ્વારા સાંભળો.',
+    createStoryBtn: 'નવી વાર્તા બનાવો',
     featuredTitle: 'વ્હિસ્પરિંગ રેડવુડ કેનોપી',
-    featuredDesc: 'એક પ્રાચીન વૃક્ષની છત્ર બાયોલ્યુમિનેસન્ટ ફૂગના ચેતાતંત્રને છુપાવે છે. માયા જ્યારે જંગલના ધબકારાને સમજે છે ત્યારે તેનું પાલન કરો.',
+    featuredDesc: 'એક પ્રાચીન વૃક્ષની છત્ર બાયોલ્યુમિનેસન્ટ ફૂગના નેટવર્કને છુપાવે છે.',
     continueReading: 'વાંચન ચાલુ રાખો',
     readStory: 'વાર્તા વાંચો',
     listenStory: 'સાંભળો',
-    interactiveMode: 'ઇન્ટરેક્ટિવ પસંદગી માર્ગ',
+    interactiveMode: 'ઇન્ટરેક્ટિવ શાખા માર્ગ',
     tabAll: 'બ્રહ્માંડ શોધો',
-    tabMyStories: '📚 મારી લાઇબ્રેરી',
-    tabFavorites: '⭐ મનપસંદ',
-    tabInteractive: '🔀 શાખા માર્ગો',
-    genreAll: 'બધી શૈલીઓ',
-    genreFantasy: '✨ કલ્પનાશક્તિ',
-    genreSciFi: '🚀 સાયન્સ ફિક્શન',
-    genreNature: '🌿 પ્રકૃતિ અને ઇકો',
-    genreMystery: '🕵️ રહસ્ય',
-    genreAdventure: '🌍 સાહસ',
-    genreEdu: '📚 શૈક્ષણિક',
-    createModalTitle: 'એઆઈ વાર્તા બનાવો',
+    tabMyStories: 'મારી લાઇબ્રેરી',
+    tabFavorites: 'મનપસંદ',
+    tabInteractive: 'શાખા માર્ગો',
+    genreAll: 'બધી શ્રેણીઓ',
+    genreNature: 'પ્રકૃતિ અને ઇકોલોજી',
+    genreSciFi: 'વિજ્ઞાન અને પર્યાવરણ',
+    genreMarine: 'સમુદ્રી જીવવિજ્ઞાન',
+    genreBotany: 'વનસ્પતિ સંશોધન',
+    genreExpedition: 'જંગલ અભિયાન',
+    genreScience: 'ઇકોલોજીકલ વિજ્ઞાન',
+    genreHabitats: 'પુનર્જીવિત રહેઠાણો',
+    genreHeritage: 'વારસો અને લોકકથા',
+    createModalTitle: 'વાર્તા બનાવો',
     promptLabel: 'વાર્તાનો વિચાર',
     titleLabel: 'વાર્તાનું શીર્ષક',
-    genreLabel: 'શૈલી',
-    moodLabel: 'વાતાવરણ નો મૂડ',
-    generateBtn: 'એઆઈ સાથે વાર્તા બનાવો',
-    generatingText: 'વાર્તાના તાંતણા વણાઈ રહ્યા છે…',
-    aiAssistantTitle: 'એઆઈ સ્ટોરી આસિસ્ટન્ટ',
-    rewriteSection: '🪄 વિભાગ ફરીથી લખો',
-    changeMood: '🎭 મૂડ બદલો',
-    alternateEnding: '🔮 વૈકલ્પિક અંત',
-    continueStory: '⏩ આગળનો અધ્યાય',
-    translateStory: '🌐 વાર્તા અનુવાદ કરો',
+    genreLabel: 'શ્રેણી',
+    moodLabel: 'વાતાવરણ',
+    generateBtn: 'વાર્તા બનાવો',
+    generatingText: 'વાર્તા તૈયાર થઈ રહી છે…',
+    aiAssistantTitle: 'સ્ટોરી આસિસ્ટન્ટ',
+    rewriteSection: 'વિભાગ સુધારો',
+    changeMood: 'મૂડ બદલો',
+    alternateEnding: 'વૈકલ્પિક અંત',
+    continueStory: 'આગળનો અધ્યાય',
+    translateStory: 'વાર્તા અનુવાદ કરો',
     customPromptPlaceholder: 'વાર્તામાં શું ફેરફાર કરવો છે તે લખો…',
-    choicePrompt: 'તમે આગળ શું કરશો?',
-    magical: 'જાદુઈ',
+    choicePrompt: 'તમારો નિર્ણય પસંદ કરો:',
+    magical: 'પ્રેરણાદાયક',
     lovedIt: 'ખૂબ ગમ્યું',
     unexpected: 'અણધાર્યું',
-    funny: 'રમુજી',
+    funny: 'રસપ્રદ',
     thoughtful: 'વિચારપ્રેરક',
     savedInLibrary: 'લાઇબ્રેરીમાં સંગ્રહિત',
     saveToLibrary: 'વાર્તા સાચવો',
   },
   hi: {
     heroTag: 'इंटरैक्टिव कहानी दुनिया',
-    heroTitle: 'सिनेमैटिक एआई और प्रकृति कहानियां',
-    heroSubtitle: 'थ्रीडी कहानियों में प्रवेश करें, नए रास्ते चुनें, आवाज से सुनें और एआई द्वारा कस्टम कहानियां बनाएं।',
-    createStoryBtn: 'कस्टम कहानी बनाएं',
+    heroTitle: 'जीवंत प्रकृति कथाएं और पारिस्थितिकी',
+    heroSubtitle: 'प्राकृतिक कहानियों में प्रवेश करें, नए रास्ते चुनें और आवाज से सुनें।',
+    createStoryBtn: 'नई कहानी बनाएं',
     featuredTitle: 'विस्परिंग रेडवुड कैनोपी',
-    featuredDesc: 'एक प्राचीन पेड़ की छत्र छाया बायोल्यूमिनसेंट कवक के तंत्रिका तंत्र को छिपाती है। माया के साथ जंगल की धड़कन को समझें।',
+    featuredDesc: 'एक प्राचीन पेड़ की छत्र छाया बायोल्यूमिनसेंट कवक के नेटवर्क को दर्शाती है।',
     continueReading: 'पढ़ना जारी रखें',
     readStory: 'कहानी पढ़ें',
     listenStory: 'आवाज से सुनें',
     interactiveMode: 'इंटरैक्टिव विकल्प पथ',
     tabAll: 'दुनिया खोजें',
-    tabMyStories: '📚 मेरी लाइब्रेरी',
-    tabFavorites: '⭐ पसंदीदा',
-    tabInteractive: '🔀 शाखा वाले रास्ते',
-    genreAll: 'सभी शैलियां',
-    genreFantasy: '✨ कल्पना',
-    genreSciFi: '🚀 साइंस फिक्शन',
-    genreNature: '🌿 प्रकृति और इको',
-    genreMystery: '🕵️ रहस्य',
-    genreAdventure: '🌍 साहसिक',
-    genreEdu: '📚 शैक्षणिक',
-    createModalTitle: 'एआई कहानी बनाएं',
+    tabMyStories: 'मेरी लाइब्रेरी',
+    tabFavorites: 'पसंदीदा',
+    tabInteractive: 'शाखा वाले रास्ते',
+    genreAll: 'सभी श्रेणियां',
+    genreNature: 'प्रकृति और पारिस्थितिकी',
+    genreSciFi: 'वैज्ञानिक पर्यावरण',
+    genreMarine: 'समुद्री जीवविज्ञान',
+    genreBotany: 'वनस्पति अनुसंधान',
+    genreExpedition: 'कैनोपी अभियान',
+    genreScience: 'पारिस्थितिक विज्ञान',
+    genreHabitats: 'पुनर्जीवित पर्यावास',
+    genreHeritage: 'विरासत और लोककथा',
+    createModalTitle: 'कहानी बनाएं',
     promptLabel: 'कहानी का विचार',
     titleLabel: 'कहानी का शीर्षक',
-    genreLabel: 'शैली',
-    moodLabel: 'वातावरण का मूड',
-    generateBtn: 'एआई के साथ कहानी बनाएं',
-    generatingText: 'कहानी के धागे बुने जा रहे हैं…',
-    aiAssistantTitle: 'एआई स्टोरी असिस्टेंट',
-    rewriteSection: '🪄 अनुभाग फिर से लिखें',
-    changeMood: '🎭 मूड बदलें',
-    alternateEnding: '🔮 वैकल्पिक अंत',
-    continueStory: '⏩ अगला अध्याय',
-    translateStory: '🌐 कहानी का अनुवाद करें',
+    genreLabel: 'श्रेणी',
+    moodLabel: 'वातावरण',
+    generateBtn: 'कहानी बनाएं',
+    generatingText: 'कहानी तैयार हो रही है…',
+    aiAssistantTitle: 'स्टोरी असिस्टेंट',
+    rewriteSection: 'अनुभाग सुधारें',
+    changeMood: 'मूड बदलें',
+    alternateEnding: 'वैकल्पिक अंत',
+    continueStory: 'अगला अध्याय',
+    translateStory: 'कहानी का अनुवाद करें',
     customPromptPlaceholder: 'कहानी में क्या बदलाव करना चाहते हैं, लिखें…',
-    choicePrompt: 'आप आगे क्या करेंगे?',
-    magical: 'जादुई',
+    choicePrompt: 'अपना निर्णय चुनें:',
+    magical: 'प्रेरक',
     lovedIt: 'बहुत पसंद आया',
     unexpected: 'अनपेक्षित',
-    funny: 'मजेदार',
+    funny: 'रोचक',
     thoughtful: 'विचारोत्तेजक',
     savedInLibrary: 'लाइब्रेरी में सहेजा गया',
     saveToLibrary: 'कहानी सहेजें',
@@ -155,7 +162,41 @@ export default function Stories() {
   const t = STORIES_TRANSLATIONS[lang] || STORIES_TRANSLATIONS.en;
 
   // Persistent Stories State
-  const [stories, setStories] = useState([]);
+  const [stories, setStories] = useState(DEFAULT_STORIES);
+
+  // Fetch remote user-created stories on mount
+  useEffect(() => {
+    let isMounted = true;
+    apiFetch('/api/stories')
+      .then((data) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const formatted = data.map((item) => ({
+            id: item._id || item.id,
+            title: item.title,
+            genre: item.genre || '🌿 Nature & Eco',
+            mood: item.mood || 'Serene',
+            readTime: item.readTime || '4 min read',
+            isFeatured: false,
+            isInteractive: Boolean(item.choices?.length),
+            choices: item.choices || [],
+            isMine: true,
+            coverImage: item.image_url || item.coverImage || 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&q=80',
+            summary: item.narrative ? item.narrative.slice(0, 160) + '...' : '',
+            narrative: item.narrative || '',
+            reactions: item.reactions || { magical: 12, lovedIt: 24, unexpected: 5, funny: 0, thoughtful: 18 },
+          }));
+          setStories((prev) => {
+            const existingIds = new Set(formatted.map((s) => s.id));
+            const remaining = prev.filter((s) => !existingIds.has(s.id));
+            return [...formatted, ...remaining];
+          });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const [savedStoryIds, setSavedStoryIds] = useState([]);
 
@@ -188,14 +229,10 @@ export default function Stories() {
   const audioCtxRef = useRef(null);
   const ambientNodesRef = useRef(null);
 
-  // 3D Card Hover & Hero Title Flip state
-  const [flippedCardId, setFlippedCardId] = useState(null);
-  const [isTitleFlipped, setIsTitleFlipped] = useState(false);
-
   // New Story Form State
   const [newTitle, setNewTitle] = useState('');
-  const [newGenre, setNewGenre] = useState('✨ Fantasy');
-  const [newMood, setNewMood] = useState('Mystical');
+  const [newGenre, setNewGenre] = useState('Nature & Ecology');
+  const [newMood, setNewMood] = useState('Serene');
   const [newPrompt, setNewPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -1024,12 +1061,12 @@ export default function Stories() {
                 <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>Reactions</span>
                 <div className="flex flex-wrap items-center gap-2">
                   {[
-                    { key: 'magical', label: t.magical, icon: '✨' },
-                    { key: 'lovedIt', label: t.lovedIt, icon: '❤️' },
-                    { key: 'unexpected', label: t.unexpected, icon: '😮' },
-                    { key: 'funny', label: t.funny, icon: '😂' },
-                    { key: 'thoughtful', label: t.thoughtful, icon: '🧠' },
-                  ].map((rx) => (
+                    { key: 'magical', label: t.magical, Icon: Sparkles },
+                    { key: 'lovedIt', label: t.lovedIt, Icon: Heart },
+                    { key: 'unexpected', label: t.unexpected, Icon: Compass },
+                    { key: 'funny', label: t.funny, Icon: Smile },
+                    { key: 'thoughtful', label: t.thoughtful, Icon: Brain },
+                  ].map(({ key, label, Icon }) => (
                     <button
                       key={rx.key}
                       onClick={() => handleReaction(readingStory.id, rx.key)}
@@ -1037,7 +1074,9 @@ export default function Stories() {
                         isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:bg-[#EDE6D8]'
                       }`}
                     >
-                      <span>{rx.icon}</span> <span>{readingStory.reactions?.[rx.key] || 0}</span>
+                      <Icon className="w-3.5 h-3.5 text-[#10B981]" />
+                      <span>{label}</span>
+                      <span className="text-slate-400 font-mono text-[10px]">({readingStory.reactions?.[key] || 0})</span>
                     </button>
                   ))}
                 </div>
@@ -1058,7 +1097,7 @@ export default function Stories() {
             onClick={() => setShowCreateModal(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
               className={`rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 my-auto border transition-colors ${
@@ -1131,12 +1170,14 @@ export default function Stories() {
                         isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
                       }`}
                     >
-                      <option value="✨ Fantasy">{t.genreFantasy}</option>
-                      <option value="🚀 Sci-Fi">{t.genreSciFi}</option>
-                      <option value="🌿 Nature & Eco">{t.genreNature}</option>
-                      <option value="🕵️ Mystery">{t.genreMystery}</option>
-                      <option value="🌍 Adventure">{t.genreAdventure}</option>
-                      <option value="📚 Educational">{t.genreEdu}</option>
+                      <option value="Nature & Ecology">{t.genreNature}</option>
+                      <option value="Speculative Ecology">{t.genreSciFi}</option>
+                      <option value="Marine Biology">{t.genreMarine}</option>
+                      <option value="Botanical Fieldwork">{t.genreBotany}</option>
+                      <option value="Canopy Expedition">{t.genreExpedition}</option>
+                      <option value="Ecological Science">{t.genreScience}</option>
+                      <option value="Regenerative Habitats">{t.genreHabitats}</option>
+                      <option value="Folklore & Heritage">{t.genreHeritage}</option>
                     </select>
                   </div>
                 </div>
@@ -1199,9 +1240,7 @@ export default function Stories() {
               </p>
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={() => setShowCreateModal(true)}
               className={`px-6 py-3.5 rounded-full font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center gap-2 cursor-pointer shrink-0 ${
                 isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77] shadow-[#4ADE80]/25' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
@@ -1209,11 +1248,11 @@ export default function Stories() {
             >
               <Plus className="w-4 h-4" />
               <span>{t.createStoryBtn}</span>
-            </motion.button>
+            </button>
           </div>
         </div>
 
-        {/* ──────────────── FEATURED CINEMATIC SPOTLIGHT ──────────────── */}
+        {/* ──────────────── FEATURED SPOTLIGHT ──────────────── */}
         {featuredStory && (
           <div className={`rounded-3xl overflow-hidden shadow-2xl border transition-colors ${
             isDark ? 'bg-[#0E2015] border-[#20452F] text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] shadow-sm'
@@ -1303,10 +1342,10 @@ export default function Stories() {
             {/* Navigation Tabs */}
             <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
               {[
-                { id: 'all', label: t.tabAll },
-                { id: 'favorites', label: `${t.tabFavorites} (${savedStoryIds.length})` },
-                { id: 'interactive', label: t.tabInteractive },
-              ].map((tab) => (
+                { id: 'all', label: t.tabAll, Icon: BookOpen },
+                { id: 'favorites', label: `${t.tabFavorites} (${savedStoryIds.length})`, Icon: Bookmark },
+                { id: 'interactive', label: t.tabInteractive, Icon: Compass },
+              ].map(({ id, label, Icon }) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
@@ -1320,7 +1359,8 @@ export default function Stories() {
                         : 'bg-[#EDE6D8] border border-[#D4CBB8] text-[#3E5C48] hover:bg-[#E3DDD1]'
                   }`}
                 >
-                  {tab.label}
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{label}</span>
                 </button>
               ))}
             </div>
