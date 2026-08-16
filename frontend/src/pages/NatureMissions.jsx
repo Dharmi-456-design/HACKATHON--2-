@@ -128,7 +128,7 @@ export default function NatureMissions() {
     const status = m.status || 'not_started';
     const xpReward = type === 'learn' ? 250 : type === 'explore' ? 180 : type === 'act' ? 200 : 100;
     const categoryMap = { observe: 'Exploration', explore: 'Learning', learn: 'Challenges', act: 'Personal Goals' };
-    const difficulty = !m.duration_minutes ? '🟡 Medium' : m.duration_minutes <= 10 ? '🟢 Easy' : m.duration_minutes <= 20 ? '🟡 Medium' : '🔴 Hard';
+    const difficulty = !m.duration_minutes ? 'Medium' : m.duration_minutes <= 10 ? 'Easy' : m.duration_minutes <= 20 ? 'Medium' : 'Hard';
     const steps = Array.isArray(m.steps) && m.steps.length
       ? m.steps
       : [
@@ -165,7 +165,7 @@ export default function NatureMissions() {
   // Custom Mission Creator State
   const [customTitle, setCustomTitle] = useState('');
   const [customCategory, setCustomCategory] = useState('Exploration');
-  const [customDifficulty, setCustomDifficulty] = useState('🟢 Easy');
+  const [customDifficulty, setCustomDifficulty] = useState('Easy');
 
   useEffect(() => {
     if (!token) return;
@@ -500,7 +500,7 @@ export default function NatureMissions() {
                   isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-emerald-50 border-emerald-200'
                 }`}>
                   <p className="text-3xl">🌿</p>
-                  <p className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  <p className={`font-display text-lg font-bold ${isDark ? 'text-[#4ADE80]' : 'text-slate-900'}`}>
                     {activeTab === 'completed' ? 'No completed missions yet' : 'No active missions'}
                   </p>
                   <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -676,9 +676,9 @@ export default function NatureMissions() {
                     onChange={(e) => setCustomDifficulty(e.target.value)}
                     className="w-full bg-[#13271C] border border-[#20422E] text-xs text-white rounded-2xl px-4 py-3 outline-none focus:border-[#4ADE80]"
                   >
-                    <option value="🟢 Easy">🟢 Easy (100 XP)</option>
-                    <option value="🟡 Medium">🟡 Medium (180 XP)</option>
-                    <option value="🔴 Hard">🔴 Hard (250 XP)</option>
+                    <option value="Easy">Easy (100 XP)</option>
+                    <option value="Medium">Medium (180 XP)</option>
+                    <option value="Hard">Hard (250 XP)</option>
                   </select>
                 </div>
               </div>
