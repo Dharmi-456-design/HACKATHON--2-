@@ -116,7 +116,13 @@ export default function Act() {
   const [actions, setActions] = useState(() => {
     try {
       const saved = localStorage.getItem('pulse_act_actions_v1');
-      return saved ? JSON.parse(saved) : SEED_ACTIONS;
+      const list = saved ? JSON.parse(saved) : SEED_ACTIONS;
+      return list.map((a) => {
+        if (a.title && a.title.includes('Eco Observation')) {
+          return { ...a, image: 'https://images.unsplash.com/photo-1767783094429-c1ccbea11599?auto=format&fit=crop&w=800&q=80' };
+        }
+        return a;
+      });
     } catch {
       return SEED_ACTIONS;
     }
@@ -148,11 +154,19 @@ export default function Act() {
         category: 'Habitat',
         minutes: minutes,
         status: 'pending',
-        image: 'https://images.unsplash.com/photo-1511497584788-8767611136f6?auto=format&fit=crop&w=800&q=80',
+        image: 'https://images.unsplash.com/photo-1767783094429-c1ccbea11599?auto=format&fit=crop&w=800&q=80',
         description: `Dedicated ${minutes} minutes of field observation to document local shade canopy patterns.`,
         impactNote: 'Helps map urban biodiversity corridors.',
       };
-      setActions([newAction, ...actions]);
+      setActions((prev) => {
+        const updated = [newAction, ...prev].map((act) => {
+          if (act.title.includes('Eco Observation')) {
+            return { ...act, image: 'https://images.unsplash.com/photo-1767783094429-c1ccbea11599?auto=format&fit=crop&w=800&q=80' };
+          }
+          return act;
+        });
+        return updated;
+      });
       setIsGenerating(false);
     }, 1000);
   };
