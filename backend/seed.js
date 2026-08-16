@@ -110,13 +110,13 @@ async function run() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB');
 
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      await User.create(seedUsers);
-      console.log('Created seed users');
-    } else {
-      console.log('Users already exist, skipping user seed');
+    for (const seedUser of seedUsers) {
+      const exists = await User.findOne({ email: seedUser.email });
+      if (!exists) {
+        await User.create(seedUser);
+      }
     }
+    console.log('Seed users verified');
 
     const users = await User.find();
     const byEmail = Object.fromEntries(users.map((u) => [u.email, u]));
