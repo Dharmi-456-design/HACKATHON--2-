@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const IssueService = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default IssueService;
-  const Issue = require('../models/Issue');
+const Issue = require('../models/Issue');
 
 const buildIssueQuery = ({ category, status, search, near, maxDistance }) => {
   const query = { isDeleted: false };

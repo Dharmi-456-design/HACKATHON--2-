@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const IssueRoutes = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default IssueRoutes;
-  const express = require('express');
+const express = require('express');
 const {
   createIssue,
   getIssues,

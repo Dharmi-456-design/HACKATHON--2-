@@ -1,15 +1,4 @@
-import React from 'react';
-  
-  const Notification = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default Notification;
-  
-  const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema(
   {
