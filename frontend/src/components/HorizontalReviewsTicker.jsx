@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion';
 import { Star, ShieldCheck, ChevronRight } from 'lucide-react';
 import ReviewsModal from './ReviewsModal';
 
@@ -116,29 +116,65 @@ const REVIEWS = [
   },
 ];
 
-// Duplicated arrays for infinite seamless left -> right loop
-const LOOP_REVIEWS = [...REVIEWS, ...REVIEWS];
 const NUM_TICKS = 120;
 
 export default function HorizontalReviewsTicker() {
+  const targetRef = useRef(null);
+  const trackRef = useRef(null);
   const [hoveredId, setHoveredId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [scrollPos, setScrollPos] = useState(0);
+  const [maxScrollDistance, setMaxScrollDistance] = useState(0);
 
-  // Dynamic wave position update during marquee loop
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setScrollPos((prev) => (prev >= 1 ? 0 : prev + 0.003));
-    }, 45);
-    return () => clearInterval(interval);
+  // Calculate dynamic horizontal distance based on actual track width vs viewport width
+  const updateScrollDistance = () => {
+    if (trackRef.current) {
+      const scrollWidth = trackRef.current.scrollWidth;
+      const clientWidth = window.innerWidth;
+      const extraPadding = 80;
+      const distance = Math.max(0, scrollWidth - clientWidth + extraPadding);
+      setMaxScrollDistance(distance);
+    }
+  };
+
+  useLayoutEffect(() => {
+    updateScrollDistance();
+    window.addEventListener('resize', updateScrollDistance);
+    return () => window.removeEventListener('resize', updateScrollDistance);
   }, []);
+
+  // Framer Motion useScroll hook bound to targetRef
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+    offset: ['start start', 'end end'],
+  });
+
+  // Smooth physics spring easing for zero jitter/flicker
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 90,
+    damping: 20,
+    mass: 0.5,
+    restDelta: 0.001,
+  });
+
+  useMotionValueEvent(smoothProgress, 'change', (latest) => {
+    setScrollPos(latest);
+  });
+
+  // Map scroll progress (0 to 1) so cards visually travel from LEFT to RIGHT (-maxScrollDistance to 0)
+  const x = useTransform(smoothProgress, [0, 1], [-maxScrollDistance, 0]);
+
+  // Initial Card Entrance: Cards start slightly below and move UPWARD into position as section enters viewport
+  const cardsY = useTransform(smoothProgress, [0, 0.15], [35, 0]);
+  const cardsOpacity = useTransform(smoothProgress, [0, 0.1], [0.3, 1]);
 
   return (
     <>
-      {/* Compact Section with ZERO Extra Vertical Height or Empty Spaces */}
-      <div className="relative bg-[#0E1E15] text-white py-10 overflow-hidden select-none">
+      {/* Outer Section - Pinning duration tuned to 120vh to guarantee zero empty space between sections */}
+      <div ref={targetRef} className="relative h-[120vh] bg-[#0E1E15] text-white">
         
-        <div className="w-full flex flex-col justify-between px-6 sm:px-12 space-y-6">
+        {/* Sticky Viewport Container - Pins section while user completes Card 1 -> Card 10 */}
+        <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-6 px-6 sm:px-12 select-none">
           
           {/* Header Bar */}
           <div className="max-w-7xl w-full mx-auto flex items-end justify-between z-20 pt-2 shrink-0">
@@ -160,7 +196,7 @@ export default function HorizontalReviewsTicker() {
             </button>
           </div>
 
-          {/* PREVIOUS EXACT LINEAR WAVE SCRUBBER BAR (RESTORED EXACTLY) */}
+          {/* Linear Wave Scrubber Bar (Dynamic Green Peak following scroll progress) */}
           <div className="relative max-w-7xl w-full mx-auto my-2 sm:my-4 z-20 shrink-0">
             <div className="flex items-center justify-between gap-1 h-12 px-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
               {Array.from({ length: NUM_TICKS }).map((_, i) => {
@@ -193,38 +229,36 @@ export default function HorizontalReviewsTicker() {
             {/* Scrubber Label */}
             <div className="flex items-center justify-between text-[11px] font-mono text-white/50 px-3 mt-1.5 uppercase tracking-widest">
               <span>01 / START</span>
-              <span className="text-[#96CD7B]">SCROLL LEFT TO RIGHT</span>
+              <span className="text-[#96CD7B]">
+                {scrollPos >= 0.98 ? '✓ ALL 10 CARDS COMPLETED' : 'SCROLL LEFT → RIGHT (10 CARDS)'}
+              </span>
               <span>10 / END</span>
             </div>
           </div>
 
-          {/* Continuous Ultra-Smooth Left -> Right Infinite Loop Cards Marquee */}
-          <div className="relative w-full overflow-hidden z-10 py-4">
+          {/* Horizontal Staircase Ticker Cards (Cards Enter UPWARD -> Move LEFT to RIGHT -> Focus Hover Blur) */}
+          <motion.div
+            style={{ y: cardsY, opacity: cardsOpacity }}
+            className="relative w-full overflow-hidden z-10 my-auto py-2"
+          >
             <motion.div
-              animate={{ x: ['-50%', '0%'] }}
-              transition={{
-                x: {
-                  repeat: Infinity,
-                  repeatType: 'loop',
-                  duration: 35,
-                  ease: 'linear',
-                },
-              }}
-              className="flex gap-6 sm:gap-8 items-center w-max"
+              ref={trackRef}
+              style={{ x }}
+              className="flex gap-6 sm:gap-8 items-center pl-4 sm:pl-8 pr-16 w-max"
             >
-              {LOOP_REVIEWS.map((r, index) => {
-                const isHovered = hoveredId === `${r.id}-${index}`;
+              {REVIEWS.map((r) => {
+                const isHovered = hoveredId === r.id;
                 const isAnyHovered = hoveredId !== null;
                 const isBlur = isAnyHovered && !isHovered;
 
                 return (
                   <motion.div
-                    key={`${r.id}-${index}`}
-                    onMouseEnter={() => setHoveredId(`${r.id}-${index}`)}
+                    key={r.id}
+                    onMouseEnter={() => setHoveredId(r.id)}
                     onMouseLeave={() => setHoveredId(null)}
                     style={{
                       filter: isBlur ? 'blur(3px)' : 'blur(0px)',
-                      opacity: isBlur ? 0.25 : 1,
+                      opacity: isBlur ? 0.22 : 1,
                       scale: isHovered ? 1.05 : 1,
                     }}
                     className={`w-[320px] sm:w-[360px] h-[280px] shrink-0 bg-[#E8E6E1] text-[#1A1A1A] rounded-2xl p-6 shadow-2xl flex flex-col justify-between transition-all duration-300 ${r.yOffset} ${
@@ -264,11 +298,11 @@ export default function HorizontalReviewsTicker() {
                 );
               })}
             </motion.div>
-          </div>
+          </motion.div>
 
           {/* Bottom Hint */}
           <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/40 z-20 pb-2 shrink-0">
-            <span>Hover card to pause & focus · Continuous Left → Right flow</span>
+            <span>Scroll vertically to complete all 10 cards horizontally (LEFT → RIGHT)</span>
             <span>10 Verified Explorer Reports</span>
           </div>
 
