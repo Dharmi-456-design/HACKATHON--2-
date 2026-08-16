@@ -12,6 +12,7 @@ const {
   createMission,
   updateMission,
   getPlaces,
+  getPlaceById,
   getStories,
   createStory,
   deleteStory,
@@ -47,6 +48,7 @@ router.route('/missions/:id').patch(asyncHandler(updateMission));
 
 // Places
 router.route('/places').get(asyncHandler(getPlaces));
+router.route('/places/:id').get(asyncHandler(getPlaceById));
 
 // Stories
 router.route('/stories').get(asyncHandler(getStories)).post(asyncHandler(createStory)).delete(asyncHandler(deleteStory));
