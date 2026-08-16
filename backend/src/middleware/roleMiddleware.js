@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const RoleMiddleware = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default RoleMiddleware;
-  const requireRole = (roles) => (req, res, next) => {
+const requireRole = (roles) => (req, res, next) => {
   if (!req.user) {
     res.status(401);
     throw new Error('Not authorized');

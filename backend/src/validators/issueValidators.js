@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const IssueValidators = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default IssueValidators;
-  const { body } = require('express-validator');
+const { body } = require('express-validator');
 
 const CATEGORIES = [
   'litter',

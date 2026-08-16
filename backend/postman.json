@@ -1,0 +1,688 @@
+{
+  "info": {
+    "name": "GreenWatch API",
+    "description": "Complete API collection for the GreenWatch environmental issue reporting backend.\n\n## Setup\n1. Import this collection into Postman\n2. The `baseUrl` variable defaults to `http://localhost:5000`\n3. Register a user or login — the token is auto-saved to `{{authToken}}`\n4. For admin routes, login with an admin account\n\n## Test Accounts (from seed.js)\n- Admin: admin@greenwatch.app / Admin@12345\n- Citizen: maya@greenwatch.app / Citizen@123",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "issueId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notificationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "openrouterKey",
+      "value": "REPLACE_WITH_YOUR_OPENROUTER_KEY",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Returns server status, uptime, and current timestamp. No authentication required."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('authToken', json.token);",
+                  "        console.log('Token saved to {{authToken}}');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@greenwatch.app\",\n  \"password\": \"Test@12345\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new user. Name, email, and password (min 8 chars) are required. Token is auto-saved."
+          },
+          "response": []
+        },
+        {
+          "name": "Login (Citizen)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('authToken', json.token);",
+                  "        console.log('Citizen token saved to {{authToken}}');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maya@greenwatch.app\",\n  \"password\": \"Citizen@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with citizen credentials. Token is auto-saved to {{authToken}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('authToken', json.token);",
+                  "        console.log('Admin token saved to {{authToken}}');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@greenwatch.app\",\n  \"password\": \"Admin@12345\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with admin credentials. Token is auto-saved to {{authToken}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Returns the currently authenticated user's profile. Requires Bearer token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Issues",
+      "item": [
+        {
+          "name": "Get All Issues",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/issues?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "issues"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "category", "value": "litter", "disabled": true },
+                { "key": "status", "value": "reported", "disabled": true },
+                { "key": "sort", "value": "-createdAt", "disabled": true }
+              ]
+            },
+            "description": "List all issues with optional pagination, category, status, and sort filters. No auth required."
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Issues",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/issues/mine",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "issues", "mine"]
+            },
+            "description": "Get all issues created by the authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Issue",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/issues/{{issueId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "issues", "{{issueId}}"]
+            },
+            "description": "Get a single issue by its ID. No auth required."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Issue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    var id = json._id || json.id || (json.data && (json.data._id || json.data.id));",
+                  "    if (id) {",
+                  "        pm.collectionVariables.set('issueId', id);",
+                  "        console.log('Issue ID saved: ' + id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Broken glass near playground\",\n  \"description\": \"There are several broken glass bottles scattered near the children's playground in Central Park. This is a safety hazard.\",\n  \"category\": \"litter\",\n  \"location\": {\n    \"coordinates\": [72.8777, 19.0760]\n  },\n  \"address\": \"Central Park, Mumbai\",\n  \"images\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/issues",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "issues"]
+            },
+            "description": "Create a new environmental issue. Requires auth. Categories: litter, pollution, illegal_dumping, deforestation, water_contamination, other. The issue ID is auto-saved to {{issueId}}."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Issue",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Broken glass near playground — UPDATED\",\n  \"description\": \"Updated: Cleanup crew has been notified. Several broken glass bottles scattered near playground.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/issues/{{issueId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "issues", "{{issueId}}"]
+            },
+            "description": "Update an existing issue. Only the issue author or admin can update. All fields are optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Issue",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/issues/{{issueId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "issues", "{{issueId}}"]
+            },
+            "description": "Delete an issue. Only the issue author or admin can delete."
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Upvote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/issues/{{issueId}}/upvote",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "issues", "{{issueId}}", "upvote"]
+            },
+            "description": "Toggle upvote on an issue. Calling again removes the upvote. Requires auth."
+          },
+          "response": []
+        },
+        {
+          "name": "Change Issue Status (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"note\": \"Team dispatched to investigate.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/issues/{{issueId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "issues", "{{issueId}}", "status"]
+            },
+            "description": "Change issue status. Admin only. Valid statuses: reported, acknowledged, in_progress, resolved."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Get Comments for Issue",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/issues/{{issueId}}/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "issues", "{{issueId}}", "comments"]
+            },
+            "description": "Get all comments for a specific issue. No auth required."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"I've seen this too. The glass is right near the swings. Very dangerous for kids.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/issues/{{issueId}}/comments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "issues", "{{issueId}}", "comments"]
+            },
+            "description": "Add a comment to an issue. Requires auth. Max 500 characters."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "stats"]
+            },
+            "description": "Get dashboard statistics (issue counts by status, category breakdown, etc). Admin only."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Leaderboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/leaderboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "leaderboard"]
+            },
+            "description": "Get the user leaderboard ranked by points. No auth required."
+          },
+          "response": []
+        },
+        {
+          "name": "Export Issues CSV",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/export",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "export"]
+            },
+            "description": "Export all issues as CSV. Admin only."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Upload",
+      "item": [
+        {
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "",
+                  "description": "Select an image file (JPG, PNG, etc.) to upload"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "upload"]
+            },
+            "description": "Upload an image to Cloudinary. Returns the image URL. Requires auth. Use form-data with key 'image'."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications"]
+            },
+            "description": "Get all notifications for the authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/{{notificationId}}/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "{{notificationId}}", "read"]
+            },
+            "description": "Mark a single notification as read by its ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications/mark-all-read",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "notifications", "mark-all-read"]
+            },
+            "description": "Mark all notifications as read for the authenticated user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pulse Chatbot (AI)",
+      "description": "The Pulse chatbot uses OpenRouter API directly (not via backend). These requests call https://openrouter.ai with the project's API key to power the AI nature guide.",
+      "item": [
+        {
+          "name": "Chat with Pulse",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{openrouterKey}}"
+              },
+              {
+                "key": "HTTP-Referer",
+                "value": "http://localhost:5173"
+              },
+              {
+                "key": "X-Title",
+                "value": "NaturePulse"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"google/gemini-2.0-flash-001\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are Pulse, a calm, encouraging nature guide inside the NaturePulse app. Give short, warm, actionable answers about the natural world. Suggest micro-observations. Weave in ecological context. Never lecture.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"What bird is singing outside my window?\"\n    }\n  ],\n  \"max_tokens\": 512,\n  \"temperature\": 0.7\n}"
+            },
+            "url": {
+              "raw": "https://openrouter.ai/api/v1/chat/completions",
+              "protocol": "https",
+              "host": ["openrouter", "ai"],
+              "path": ["api", "v1", "chat", "completions"]
+            },
+            "description": "Send a message to the Pulse AI chatbot via OpenRouter. Uses google/gemini-2.0-flash-001 model. Include conversation history in the messages array for multi-turn chat."
+          },
+          "response": []
+        },
+        {
+          "name": "Chat with Pulse (Multi-turn)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{openrouterKey}}"
+              },
+              {
+                "key": "HTTP-Referer",
+                "value": "http://localhost:5173"
+              },
+              {
+                "key": "X-Title",
+                "value": "NaturePulse"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model\": \"google/gemini-2.0-flash-001\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are Pulse, a calm, encouraging nature guide inside the NaturePulse app. Give short, warm, actionable answers about the natural world. Suggest micro-observations. Weave in ecological context. Never lecture.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"I found some moss on my garden wall\"\n    },\n    {\n      \"role\": \"assistant\",\n      \"content\": \"That's a lovely find! Moss on a garden wall is a sign of consistent moisture and clean air. Look closely — can you see tiny star-shaped structures? Those are the sporophytes. Try touching it gently — moss holds up to 20 times its weight in water.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Yes I can see them! What species might this be?\"\n    }\n  ],\n  \"max_tokens\": 512,\n  \"temperature\": 0.7\n}"
+            },
+            "url": {
+              "raw": "https://openrouter.ai/api/v1/chat/completions",
+              "protocol": "https",
+              "host": ["openrouter", "ai"],
+              "path": ["api", "v1", "chat", "completions"]
+            },
+            "description": "Example of a multi-turn conversation with Pulse. Previous messages are included for context so the AI remembers the conversation."
+          },
+          "response": []
+        },
+        {
+          "name": "List Available Models",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{openrouterKey}}"
+              }
+            ],
+            "url": {
+              "raw": "https://openrouter.ai/api/v1/models",
+              "protocol": "https",
+              "host": ["openrouter", "ai"],
+              "path": ["api", "v1", "models"]
+            },
+            "description": "List all models available on OpenRouter. Useful to check model availability and pricing."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

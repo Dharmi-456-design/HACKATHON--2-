@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const CommentRoutes = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default CommentRoutes;
-  const express = require('express');
+const express = require('express');
 const { addComment, getComments } = require('../controllers/commentController');
 const { protect } = require('../middleware/authMiddleware');
 const { validateComment } = require('../validators/issueValidators');

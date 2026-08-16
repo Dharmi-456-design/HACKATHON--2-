@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const AdminRoutes = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default AdminRoutes;
-  const express = require('express');
+const express = require('express');
 const { getStats, getLeaderboard, exportCsv } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
 const { requireRole } = require('../middleware/roleMiddleware');

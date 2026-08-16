@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const AuthMiddleware = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default AuthMiddleware;
-  const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const asyncHandler = require('../utils/asyncHandler');
 const User = require('../models/User');
 
