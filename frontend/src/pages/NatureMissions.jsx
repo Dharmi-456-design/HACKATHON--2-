@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
+import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Mission Control Universe
@@ -200,9 +201,38 @@ export default function NatureMissions() {
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = MISSION_TRANSLATIONS[lang] || MISSION_TRANSLATIONS.en;
+  const token = session?.access_token;
+  const demoMode = isDemoMode();
+
+  const toUiMission = (m) => {
+    const type = m.mission_type || 'explore';
+    const status = m.status || 'not_started';
+    const xpReward = type === 'learn' ? 250 : type === 'explore' ? 180 : type === 'act' ? 200 : 100;
+    const categoryMap = { observe: 'Exploration', explore: 'Learning', learn: 'Challenges', act: 'Personal Goals' };
+    const difficulty = !m.duration_minutes ? '🟡 Medium' : m.duration_minutes <= 10 ? '🟢 Easy' : m.duration_minutes <= 20 ? '🟡 Medium' : '🔴 Hard';
+    const steps = Array.isArray(m.steps) && m.steps.length
+      ? m.steps
+      : [
+          { id: `${m._id || m.id}-s1`, text: m.description || m.title, done: status === 'completed' },
+          { id: `${m._id || m.id}-s2`, text: m.why_it_matters ? `Reflect: ${m.why_it_matters}` : 'Log your observations in Nature Pulse', done: status === 'completed' },
+          { id: `${m._id || m.id}-s3`, text: 'Share your findings with the community', done: status === 'completed' },
+        ];
+    return {
+      id: m._id || m.id,
+      title: m.title,
+      category: categoryMap[type] || 'Exploration',
+      difficulty,
+      duration: m.duration_minutes ? `${m.duration_minutes} min` : '15 min',
+      xpReward,
+      status,
+      steps,
+      aiHint: m.location_hint || 'Stay observant of micro-climate shifts near foliage.',
+    };
+  };
 
   // Persistent States
   const [missions, setMissions] = useState(() => {
+    if (!demoMode) return [];
     try {
       const saved = localStorage.getItem('pulse_missions_v1');
       return saved ? JSON.parse(saved) : SEED_MISSIONS;
@@ -226,6 +256,7 @@ export default function NatureMissions() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [generatePrompt, setGeneratePrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [missionError, setMissionError] = useState('');
 
   // Custom Mission Creator State
   const [customTitle, setCustomTitle] = useState('');
@@ -233,12 +264,32 @@ export default function NatureMissions() {
   const [customDifficulty, setCustomDifficulty] = useState('🟢 Easy');
 
   useEffect(() => {
-    localStorage.setItem('pulse_missions_v1', JSON.stringify(missions));
-  }, [missions]);
+    if (!token) return;
+    Promise.all([
+      apiFetch('/api/missions', {}, token),
+      apiFetch('/api/streak', {}, token),
+    ])
+      .then(([list, streakData]) => {
+        const ui = Array.isArray(list) ? list.map(toUiMission) : [];
+        setMissions(ui);
+        setTotalXP(ui.filter((m) => m.status === 'completed').reduce((sum, m) => sum + m.xpReward, 0));
+        if (streakData && typeof streakData.streak === 'number') setStreakDays(streakData.streak);
+      })
+      .catch(() => {});
+  }, [token]);
 
   useEffect(() => {
-    localStorage.setItem('pulse_missions_xp_v1', totalXP.toString());
-  }, [totalXP]);
+    if (demoMode) localStorage.setItem('pulse_missions_v1', JSON.stringify(missions));
+  }, [missions, demoMode]);
+
+  useEffect(() => {
+    if (demoMode) localStorage.setItem('pulse_missions_xp_v1', totalXP.toString());
+  }, [totalXP, demoMode]);
+
+  const pushMissionStatus = (mission) => {
+    if (!token || !mission.id || String(mission.id).startsWith('m-')) return;
+    apiFetch(`/api/missions/${mission.id}`, { method: 'PATCH', body: JSON.stringify({ status: mission.status }) }, token).catch(() => {});
+  };
 
   // Toggle Step Completion
   const toggleStep = (missionId, stepId) => {
@@ -254,6 +305,7 @@ export default function NatureMissions() {
         }
 
         const updatedMission = { ...m, steps: updatedSteps, status: nextStatus };
+        pushMissionStatus(updatedMission);
         if (selectedMission?.id === missionId) setSelectedMission(updatedMission);
         return updatedMission;
       })
@@ -261,53 +313,81 @@ export default function NatureMissions() {
   };
 
   // Generate AI Mission
-  const handleGenerateAIMission = (e) => {
+  const handleGenerateAIMission = async (e) => {
     e.preventDefault();
     if (!generatePrompt.trim()) return;
 
     setIsGenerating(true);
-    setTimeout(() => {
-      const newMission = {
-        id: `m-${Date.now()}`,
-        title: generatePrompt.trim(),
-        category: 'Challenges',
-        difficulty: '🟡 Medium',
-        duration: '15 min',
-        xpReward: 150,
-        status: 'in_progress',
-        steps: [
-          { id: `s-${Date.now()}-1`, text: 'Explore core concepts of the challenge', done: false },
-          { id: `s-${Date.now()}-2`, text: 'Log your observations in Nature Pulse', done: false },
-          { id: `s-${Date.now()}-3`, text: 'Share your findings with the community', done: false },
-        ],
-        aiHint: 'Focus on observing local variations during golden hour light.',
-      };
+    setMissionError('');
 
-      setMissions([newMission, ...missions]);
-      setIsGenerating(false);
+    if (!token || demoMode) {
+      setTimeout(() => {
+        const newMission = {
+          id: `m-${Date.now()}`,
+          title: generatePrompt.trim(),
+          category: 'Challenges',
+          difficulty: '🟡 Medium',
+          duration: '15 min',
+          xpReward: 150,
+          status: 'in_progress',
+          steps: [
+            { id: `s-${Date.now()}-1`, text: 'Explore core concepts of the challenge', done: false },
+            { id: `s-${Date.now()}-2`, text: 'Log your observations in Nature Pulse', done: false },
+            { id: `s-${Date.now()}-3`, text: 'Share your findings with the community', done: false },
+          ],
+          aiHint: 'Focus on observing local variations during golden hour light.',
+        };
+
+        setMissions([newMission, ...missions]);
+        setIsGenerating(false);
+        setShowGenerateModal(false);
+        setGeneratePrompt('');
+        setSelectedMission(newMission);
+      }, 600);
+      return;
+    }
+
+    try {
+      const created = await apiFetch(
+        '/api/missions',
+        { method: 'POST', body: JSON.stringify({ generate: true, count: 1, minutes: 15 }) },
+        token
+      );
+      const list = Array.isArray(created) ? created : [created];
+      const uiMissions = list.map(toUiMission);
+      setMissions((prev) => [...uiMissions, ...prev]);
+      setSelectedMission(uiMissions[0]);
       setShowGenerateModal(false);
       setGeneratePrompt('');
-      setSelectedMission(newMission);
-    }, 1500);
+    } catch (err) {
+      setMissionError(err instanceof Error ? err.message : 'Pulse could not generate a mission right now.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Create Custom Mission
-  const handleCreateCustomMission = (e) => {
+  const handleCreateCustomMission = async (e) => {
     e.preventDefault();
     if (!customTitle.trim()) return;
+    setMissionError('');
+
+    const typeMap = { Exploration: 'observe', Learning: 'explore', Creativity: 'learn', 'Personal Goals': 'act' };
+    const duration = customDifficulty === '🔴 Hard' ? 25 : customDifficulty === '🟡 Medium' ? 15 : 10;
+    const xpReward = customDifficulty === '🔴 Hard' ? 250 : customDifficulty === '🟡 Medium' ? 180 : 100;
 
     const newMission = {
       id: `m-${Date.now()}`,
       title: customTitle.trim(),
       category: customCategory,
       difficulty: customDifficulty,
-      duration: '15 min',
-      xpReward: customDifficulty === '🔴 Hard' ? 250 : customDifficulty === '🟡 Medium' ? 180 : 100,
+      duration: `${duration} min`,
+      xpReward,
       status: 'in_progress',
       steps: [
-        { id: `cs-1`, text: 'Prepare observation area and tools', done: false },
-        { id: `cs-2`, text: 'Execute main mission objective', done: false },
-        { id: `cs-3`, text: 'Record final reflection note', done: false },
+        { id: `${Date.now()}-cs1`, text: 'Prepare observation area and tools', done: false },
+        { id: `${Date.now()}-cs2`, text: 'Execute main mission objective', done: false },
+        { id: `${Date.now()}-cs3`, text: 'Record final reflection note', done: false },
       ],
       aiHint: 'Stay observant of micro-climate shifts near foliage.',
     };
@@ -316,12 +396,38 @@ export default function NatureMissions() {
     setCustomTitle('');
     setActiveTab('path');
     setSelectedMission(newMission);
+
+    if (token) {
+      try {
+        const created = await apiFetch(
+          '/api/missions',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              title: customTitle.trim(),
+              description: customTitle.trim(),
+              mission_type: typeMap[customCategory] || 'explore',
+              duration_minutes: duration,
+              status: 'in_progress',
+            }),
+          },
+          token
+        );
+        setMissions((prev) => [toUiMission(created), ...prev.filter((m) => m.id !== newMission.id)]);
+        setSelectedMission(toUiMission(created));
+      } catch (err) {
+        setMissionError(err instanceof Error ? err.message : 'Could not create mission.');
+      }
+    }
   };
 
   // Delete Mission
   const handleDeleteMission = (missionId) => {
     setMissions((prev) => prev.filter((m) => m.id !== missionId));
     if (selectedMission?.id === missionId) setSelectedMission(null);
+    if (token && missionId && !String(missionId).startsWith('m-')) {
+      apiFetch(`/api/missions/${missionId}`, { method: 'DELETE' }, token).catch(() => {});
+    }
   };
 
   return (
@@ -355,6 +461,11 @@ export default function NatureMissions() {
               </div>
 
               <form onSubmit={handleGenerateAIMission} className="space-y-4">
+                {missionError && (
+                  <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200">
+                    {missionError}
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
                     Challenge Idea or Goal
@@ -488,6 +599,23 @@ export default function NatureMissions() {
                 <h3 className="font-display text-2xl font-bold text-white">Ecological Checkpoint Mission Trail</h3>
                 <span className="text-xs text-[#4ADE80] font-semibold">Tap any Mission to Expand Checklist</span>
               </div>
+
+              {missions.length === 0 && (
+                <div className="bg-[#13271C] border border-dashed border-[#20422E] rounded-3xl p-10 text-center space-y-3">
+                  <p className="text-3xl">🌿</p>
+                  <p className="font-display text-lg font-bold text-white">No missions yet</p>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    Generate a challenge from the lightning button, create a custom mission, or finish onboarding to get your first mission set.
+                  </p>
+                  <button
+                    onClick={() => setShowGenerateModal(true)}
+                    className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] cursor-pointer"
+                  >
+                    <Zap className="w-4 h-4" />
+                    Generate Challenge
+                  </button>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {missions.map((mission) => {
@@ -623,6 +751,11 @@ export default function NatureMissions() {
             <h3 className="font-display text-2xl font-bold text-white">Create Custom Mission Objective</h3>
 
             <form onSubmit={handleCreateCustomMission} className="space-y-4">
+              {missionError && (
+                <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200">
+                  {missionError}
+                </div>
+              )}
               <div>
                 <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Mission Title</label>
                 <input

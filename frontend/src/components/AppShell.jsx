@@ -27,7 +27,6 @@ import ThemeToggle from './ThemeToggle';
 import ExplorerStreak from './ExplorerStreak';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import supabase from '../lib/supabase';
 
 const LINKS = [
   { to: '/app',                label: 'Dashboard',    icon: LayoutDashboard, end: true },
@@ -48,7 +47,7 @@ const LINKS = [
 const MOBILE_PRIMARY = [LINKS[0], LINKS[1], LINKS[2], LINKS[7]];
 
 export default function AppShell() {
-  const { user, exitDemoMode, isDemoUser } = useAuth();
+  const { logout } = useAuth();
   const { theme } = useTheme();
   const nav = useNavigate();
   const [more, setMore] = useState(false);
@@ -71,13 +70,7 @@ export default function AppShell() {
       e.stopPropagation();
     }
     try {
-      if (isDemoUser) {
-        await exitDemoMode();
-      } else {
-        await supabase.auth.signOut().catch(() => {});
-        sessionStorage.removeItem('np_demo_login');
-        sessionStorage.removeItem('np_demo');
-      }
+      logout();
     } catch (err) {
       console.error('Sign out error:', err);
     } finally {

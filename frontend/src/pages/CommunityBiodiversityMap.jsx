@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
+import { isDemoMode } from '../utils/demoMode';
 
 // Multilingual UI Translations for Community Bio Map
 const COMMUNITY_MAP_TRANSLATIONS = {
@@ -74,13 +75,51 @@ const SEED_PINS = [
 export default function CommunityBiodiversityMap() {
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = COMMUNITY_MAP_TRANSLATIONS[lang] || COMMUNITY_MAP_TRANSLATIONS.en;
+  const demoMode = isDemoMode();
 
-  const [pins, setPins] = useState(SEED_PINS);
+  const categoryToKey = (cat) => {
+    const c = String(cat || '').toLowerCase();
+    if (c.includes('bird')) return 'birds';
+    if (c.includes('tree')) return 'trees';
+    if (c.includes('plant') || c.includes('flower')) return 'flowers';
+    if (c.includes('insect') || c.includes('butterfly') || c.includes('moth')) return 'insects';
+    if (c.includes('fung')) return 'fungi';
+    if (c.includes('moss') || c.includes('lichen')) return 'moss';
+    return 'other';
+  };
+  const catEmoji = { birds: '🐦', trees: '🌳', flowers: '🌸', insects: '🦋', fungi: '🍄', moss: '🌿', other: '🌱' };
+  const catLabel = { birds: 'Birds', trees: 'Trees', flowers: 'Flowers', insects: 'Insects', fungi: 'Fungi', moss: 'Moss', other: 'Other' };
+
+  const toPin = (p, i) => {
+    const cat = categoryToKey(p.category || p.common_name);
+    const angle = i * 2.4;
+    const ring = 55 + (i % 5) * 52;
+    return {
+      id: p._id || `pin-${i}`,
+      name: p.common_name || 'Community observation',
+      category: cat,
+      city: p.city || 'Shared Field',
+      x: Math.round(350 + Math.cos(angle) * ring),
+      y: Math.round(230 + Math.sin(angle) * ring * 0.9),
+      confidence: p.confidence_pct ? `${p.confidence_pct}% High` : 'Community Verified',
+      emoji: catEmoji[cat],
+      note: p.note || p.description || '',
+    };
+  };
+
+  const [pins, setPins] = useState(() => (demoMode ? SEED_PINS : []));
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPin, setSelectedPin] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [mapViewMode, setMapViewMode] = useState('constellation'); // 'constellation' | 'google_maps'
+
+  useEffect(() => {
+    if (demoMode) return;
+    apiFetch('/api/community', {}, null)
+      .then((list) => setPins(Array.isArray(list) ? list.map(toPin) : []))
+      .catch(() => {});
+  }, [demoMode]);
 
   // Filtered Pins
   const filteredPins = pins.filter((p) => {
@@ -287,6 +326,13 @@ export default function CommunityBiodiversityMap() {
                   </motion.div>
                 );
               })}
+              {filteredPins.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <div className="bg-[#0E2015]/90 border border-dashed border-[#4ADE80]/30 rounded-2xl px-6 py-4 text-xs text-slate-300 max-w-sm text-center">
+                    No observations on the map yet. When community members log sightings, they appear here as constellation nodes.
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

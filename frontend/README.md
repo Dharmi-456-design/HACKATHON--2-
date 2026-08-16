@@ -7,15 +7,15 @@ The NaturePulse web app: an AI-powered nature relationship platform. Observe, un
 - **React 19 + Vite 7**
 - **Tailwind CSS 4** (`@tailwindcss/vite`)
 - **React Router 7**
-- **Supabase** — auth (email + Google), Postgres, storage
-- **Gemini API** — AI image analysis (Nature Lens), mission generation, Pulse chat
+- **Express + MongoDB backend** — auth (JWT, email/password), missions, journal, actions, discoveries, community, profile
+- **Gemini API (server-side)** — AI image analysis (Nature Lens), mission generation, Pulse chat, stories
 - **Framer Motion** — animations
 - **lucide-react** — icons
 
 ## Pages
 
 - `/` Landing
-- `/login`, `/register` — Supabase auth (email + Google)
+- `/login`, `/register`, `/reset-password` — Express JWT auth (email + password)
 - `/onboarding` — pick city, region, and interests
 - `/app` — Dashboard (connection score, missions, places, discoveries)
 - `/app/lens` — Nature Lens (AI photo analysis)
@@ -23,7 +23,8 @@ The NaturePulse web app: an AI-powered nature relationship platform. Observe, un
 - `/app/act` — Actions
 - `/app/journal` — Field journal
 - `/app/stories` — Community stories
-- `/app/community` — Community discussion
+- `/app/community` — Community discussion + biodiversity map
+- `/app/passport` — Biodiversity passport
 - `/app/pulse` — Pulse Chat (AI companion)
 - `/app/settings` — Profile settings
 
@@ -34,14 +35,14 @@ npm install
 cp .env.example .env
 ```
 
-Fill `.env` with your Supabase and Google credentials:
+Fill `.env` with your backend URL:
 
 ```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
-VITE_GOOGLE_AUTH_PROXY=https://your-auth-proxy-url
+VITE_API_URL=http://localhost:5000
+VITE_DEMO_MODE=false
 ```
+
+`VITE_DEMO_MODE=true` runs the app with fabricated sample data and no backend calls. It can also be toggled at runtime with `Ctrl+Shift+D`. Never enable it in production.
 
 ### Local development
 
@@ -58,9 +59,7 @@ npm run build
 npm run preview
 ```
 
-The app is deployed on Vercel. The `api/` directory holds the serverless routes that talk to Supabase (they need `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` at runtime).
-
-**Image uploads** (Nature Lens and Pulse Chat attachments) go through the serverless `api/` routes, so the Gemini key stays server-side. Set `GEMINI_API_KEY` in the Vercel dashboard — never in a `VITE_*` variable or the browser bundle. To call the serverless routes from a custom domain, set `VITE_API_URL` to the deployment origin (e.g. `https://your-app.vercel.app`). Without it the app runs in demo/mock mode.
+The frontend is a static SPA deployed anywhere (e.g. Vercel, with the catch-all rewrite in `vercel.json`). All data and auth live in the separate Express + MongoDB backend; all AI calls (Gemini) happen server-side, so no API keys are bundled in the browser.
 
 ## Scripts
 
