@@ -229,10 +229,12 @@ export default function Landing() {
     setPulseReply(reply);
   };
 
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
     <div className="min-h-screen bg-[#0A1610] text-white overflow-x-hidden">
       {/* ────────────────────── 0. INITIAL SPLASH INTRO ANIMATION ────────────────────── */}
-      <SplashIntro />
+      <SplashIntro onComplete={() => setSplashDone(true)} />
 
       {/* ────────────────────── REDESIGNED NAVBAR ────────────────────── */}
       <Navbar />

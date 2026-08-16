@@ -5,13 +5,23 @@ export default function SplashIntro({ onComplete }) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // Show splash screen for 2.2 seconds, then animate scale into navbar
+    // 100% Lock Page Scroll & Prevent Touch/Wheel Events while Splash Logo is Active
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+
     const timer = setTimeout(() => {
       setIsVisible(false);
+      // Re-enable page scrolling after splash disappears
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = 'auto';
       if (onComplete) onComplete();
     }, 2200);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = 'auto';
+    };
   }, [onComplete]);
 
   return (
@@ -26,7 +36,8 @@ export default function SplashIntro({ onComplete }) {
             y: '-44vh',
             transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
           }}
-          className="fixed inset-0 z-[200] bg-[#0A1610] text-white flex flex-col items-center justify-center p-6 select-none pointer-events-none"
+          className="fixed inset-0 z-[9999] bg-[#0A1610] text-white flex flex-col items-center justify-center p-6 select-none touch-none overflow-hidden"
+          style={{ touchAction: 'none' }}
         >
           {/* Ambient Glow background */}
           <div className="absolute w-[500px] h-[500px] bg-[#96CD7B]/15 rounded-full blur-[140px] pointer-events-none" />
