@@ -38,6 +38,7 @@ app.use('/api/issues', require('./routes/commentRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api', require('./routes/natureRoutes'));
 
 app.use(notFound);
 app.use(errorHandler);
