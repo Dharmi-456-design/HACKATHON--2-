@@ -34,8 +34,10 @@ export default function Navbar() {
           <div className="relative">
             <div className="absolute inset-0 bg-[#96CD7B]/20 rounded-xl blur-md group-hover:bg-[#96CD7B]/40 transition-colors" />
             <img
-              src="/logo.png"
+              src="/logo.webp"
               alt="NaturePulse Logo"
+              width="40"
+              height="40"
               className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-white/20 shadow-md group-hover:scale-105 transition-transform"
             />
           </div>
@@ -50,34 +52,34 @@ export default function Navbar() {
         </Link>
 
         {/* Center Pill Nav Links (Desktop) */}
-        <nav className="hidden md:flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 backdrop-blur-md shadow-inner">
+        <nav className="hidden md:flex items-center gap-1 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 backdrop-blur-md shadow-inner" aria-label="Main Navigation">
           <a
             href="#hero"
-            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
           >
             Explore
           </a>
           <a
             href="#reviews"
-            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
           >
             Community
           </a>
           <a
             href="#journey"
-            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
           >
             The Loop
           </a>
           <a
             href="#pulse"
-            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
           >
             Pulse AI
           </a>
           <a
             href="#pricing"
-            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+            className="px-4 py-1.5 rounded-full text-xs font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors"
           >
             Pricing
           </a>
