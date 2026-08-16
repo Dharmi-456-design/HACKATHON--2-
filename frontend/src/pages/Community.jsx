@@ -224,7 +224,7 @@ export default function Community() {
   useEffect(() => {
     apiFetch('/api/community', {}, null)
       .then((list) => setPosts(Array.isArray(list) ? list.map(toUiPost) : []))
-      .catch(() => {});
+      .catch(() => setCommunityError('Could not load the community feed. Please check your connection and try again.'));
   }, []);
 
   // Reaction Toggle Handler
@@ -367,7 +367,9 @@ export default function Community() {
   // Delete Post
   const handleDeletePost = (postId) => {
     setPosts((prev) => prev.filter((p) => p.id !== postId));
-    apiFetch(`/api/community/${postId}`, { method: 'DELETE' }, tokenFromSession).catch(() => {});
+    apiFetch(`/api/community/${postId}`, { method: 'DELETE' }, tokenFromSession).catch(() => {
+      setCommunityError('The post could not be deleted. Please check your connection and try again.');
+    });
   };
 
   // Add Comment Handler

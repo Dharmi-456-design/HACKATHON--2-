@@ -103,6 +103,7 @@ const NEARBY_TRANSLATIONS = {
 export default function Places() {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const token = session?.access_token;
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = NEARBY_TRANSLATIONS[lang] || NEARBY_TRANSLATIONS.en;
 
@@ -144,14 +145,8 @@ export default function Places() {
   // Persistent State
   const [places, setPlaces] = useState([]);
 
-  const [savedPlaceIds, setSavedPlaceIds] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_saved_places_v1');
-      return saved ? JSON.parse(saved) : ['p-1', 'p-4'];
-    } catch {
-      return ['p-1', 'p-4'];
-    }
-  });
+  const [savedPlaceIds, setSavedPlaceIds] = useState([]);
+  const [bookmarkError, setBookmarkError] = useState('');
 
   // Controls
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -244,16 +239,37 @@ export default function Places() {
     };
   }, []);
 
+  // Load saved place bookmarks from the user profile (server-side)
   useEffect(() => {
-    localStorage.setItem('pulse_saved_places_v1', JSON.stringify(savedPlaceIds));
-  }, [savedPlaceIds]);
+    if (!token) return;
+    let mounted = true;
+    apiFetch('/api/profile', {}, token)
+      .then((p) => {
+        if (mounted && Array.isArray(p?.saved_places)) {
+          setSavedPlaceIds(p.saved_places);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, [token]);
 
-  // Toggle Save Bookmark
+  // Toggle Save Bookmark (persisted to the profile via the API)
   const toggleSavePlace = (id, e) => {
     if (e) e.stopPropagation();
-    setSavedPlaceIds((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
+    setBookmarkError('');
+    const next = savedPlaceIds.includes(id)
+      ? savedPlaceIds.filter((p) => p !== id)
+      : [...savedPlaceIds, id];
+    setSavedPlaceIds(next);
+    if (!token) {
+      setBookmarkError('Sign in to save places. Your bookmark could not be stored.');
+      return;
+    }
+    apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ saved_places: next }) }, token).catch(() => {
+      setBookmarkError('Your bookmark could not be saved. Please check your connection and try again.');
+    });
   };
 
   // Build Route
@@ -423,6 +439,13 @@ export default function Places() {
 
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
+
+        {bookmarkError && (
+          <div className="bg-red-950/80 border border-red-500/40 text-red-200 text-xs sm:text-sm rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+            <span>{bookmarkError}</span>
+            <button onClick={() => setBookmarkError('')} className="text-red-300 hover:text-white cursor-pointer shrink-0">✕</button>
+          </div>
+        )}
         
         {/* ──────────────── LANDSCAPE HERO BANNER WITH PRESERVED SUNSET MOUNTAIN BACKGROUND & FLIGHT TRAILS ──────────────── */}
         <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[280px] flex flex-col justify-between group">

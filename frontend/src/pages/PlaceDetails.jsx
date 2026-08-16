@@ -13,12 +13,15 @@ export default function PlaceDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { session } = useAuth();
+  const token = session?.access_token;
   
   const [place, setPlace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [savedIds, setSavedIds] = useState([]);
+  const [bookmarkError, setBookmarkError] = useState(null);
 
   // Load place and bookmark state
   useEffect(() => {
@@ -51,37 +54,39 @@ export default function PlaceDetails() {
 
     fetchPlaceData();
 
-    // Check bookmark state
-    try {
-      const savedIds = JSON.parse(localStorage.getItem('pulse_saved_places_v1') || '[]');
-      if (Array.isArray(savedIds)) {
-        setIsSaved(savedIds.includes(id));
-      }
-    } catch {
-      setIsSaved(false);
+    // Check bookmark state from the user profile (server-side)
+    if (token) {
+      apiFetch('/api/profile', {}, token)
+        .then((p) => {
+          if (!isMounted) return;
+          const ids = Array.isArray(p?.saved_places) ? p.saved_places : [];
+          setSavedIds(ids);
+          setIsSaved(ids.includes(id));
+        })
+        .catch(() => {});
     }
 
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, token]);
 
-  // Toggle Bookmark
+  // Toggle Bookmark (persisted to the profile via the API)
   const toggleBookmark = () => {
-    try {
-      const savedIds = JSON.parse(localStorage.getItem('pulse_saved_places_v1') || '[]');
-      let updated;
-      if (savedIds.includes(id)) {
-        updated = savedIds.filter((p) => p !== id);
-        setIsSaved(false);
-      } else {
-        updated = [...savedIds, id];
-        setIsSaved(true);
-      }
-      localStorage.setItem('pulse_saved_places_v1', JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to update bookmarks:', e);
+    setBookmarkError(null);
+    const nextSaved = !isSaved;
+    const nextIds = nextSaved
+      ? [...new Set([...savedIds, id])]
+      : savedIds.filter((p) => p !== id);
+    setIsSaved(nextSaved);
+    if (!token) {
+      setBookmarkError('Sign in to save places. Your bookmark could not be stored.');
+      return;
     }
+    apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ saved_places: nextIds }) }, token).catch(() => {
+      setIsSaved(!nextSaved);
+      setBookmarkError('Your bookmark could not be saved. Please check your connection and try again.');
+    });
   };
 
   // Share Place URL
@@ -208,6 +213,13 @@ export default function PlaceDetails() {
 
       {/* ──────────────── MAIN CONTENT CONTAINER ──────────────── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+
+        {bookmarkError && (
+          <div className="bg-red-950/80 border border-red-500/40 text-red-200 text-xs sm:text-sm rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+            <span>{bookmarkError}</span>
+            <button onClick={() => setBookmarkError(null)} className="text-red-300 hover:text-white cursor-pointer shrink-0">✕</button>
+          </div>
+        )}
 
         {/* HERO IMAGE & HEADLINE BANNER */}
         <div className="relative rounded-3xl overflow-hidden border border-[#20452F] shadow-2xl bg-[#0E2015]">

@@ -116,7 +116,7 @@ export default function Journal() {
     if (!token) return;
     apiFetch('/api/journal', {}, token)
       .then((list) => setEntries(Array.isArray(list) ? list.map((x) => ({ ...x, id: x._id || x.id })) : []))
-      .catch(() => {});
+      .catch(() => setAutoSaveStatus('Could not load your journal entries.'));
   }, [token]);
 
   // Save Note Submit
@@ -166,7 +166,9 @@ export default function Journal() {
   const deleteEntry = (id) => {
     setEntries((prev) => prev.filter((e) => e.id !== id));
     if (token && id && !String(id).startsWith('j-')) {
-      apiFetch(`/api/journal/${id}`, { method: 'DELETE' }, token).catch(() => {});
+      apiFetch(`/api/journal/${id}`, { method: 'DELETE' }, token).catch(() => {
+        setAutoSaveStatus('The entry could not be deleted. Please try again.');
+      });
     }
   };
 

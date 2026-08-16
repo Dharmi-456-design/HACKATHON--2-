@@ -93,7 +93,7 @@ export default function Act() {
     if (!token) return;
     apiFetch('/api/actions', {}, token)
       .then((list) => setActions(Array.isArray(list) ? list.map(toUiAction) : []))
-      .catch(() => {});
+      .catch(() => setActError('Could not load your actions. Please check your connection and try again.'));
   }, [token]);
 
   // Complete Action

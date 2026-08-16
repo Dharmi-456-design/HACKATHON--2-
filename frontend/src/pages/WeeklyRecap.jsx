@@ -90,15 +90,11 @@ export default function WeeklyRecap() {
   const [selectedDayNode, setSelectedDayNode] = useState(null);
   const [flippedCardId, setFlippedCardId] = useState(null);
 
-  // Weekly Goals State
-  const [goals, setGoals] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_weekly_goals_v1');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Weekly Goals State (persisted to the profile server-side)
+  const [goals, setGoals] = useState([]);
+  const goalsLoadedRef = useRef(false);
+  const [goalsError, setGoalsError] = useState('');
+  const [recapError, setRecapError] = useState('');
 
   const [newGoalText, setNewGoalText] = useState('');
   const [showGoalInput, setShowGoalInput] = useState(false);
@@ -110,7 +106,9 @@ export default function WeeklyRecap() {
 
   useEffect(() => {
     if (!token) return;
-    apiFetch('/api/weekly-recap', {}, token).then(setRecap).catch(() => {});
+    apiFetch('/api/weekly-recap', {}, token)
+      .then(setRecap)
+      .catch(() => setRecapError('Could not load your weekly recap. Please check your connection and try again.'));
     apiFetch('/api/discoveries', {}, token)
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -125,12 +123,24 @@ export default function WeeklyRecap() {
         }
         setDayCounts(counts);
       })
-      .catch(() => {});
+      .catch(() => setRecapError('Could not load this week\u2019s activity. Please check your connection and try again.'));
+    apiFetch('/api/profile', {}, token)
+      .then((p) => {
+        if (Array.isArray(p?.weekly_goals)) {
+          setGoals(p.weekly_goals);
+        }
+        goalsLoadedRef.current = true;
+      })
+      .catch(() => setRecapError('Could not load your weekly goals. Please check your connection and try again.'));
   }, [token]);
 
   useEffect(() => {
-    localStorage.setItem('pulse_weekly_goals_v1', JSON.stringify(goals));
-  }, [goals]);
+    if (!goalsLoadedRef.current) return;
+    setGoalsError('');
+    apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ weekly_goals: goals }) }, token).catch(() => {
+      setGoalsError('Your goals could not be saved. Please check your connection and try again.');
+    });
+  }, [goals, token]);
 
   // Build the 7-day nodes from real per-day observation counts
   const weekNodes = (() => {
@@ -238,6 +248,13 @@ ${mostActiveDay !== '—' ? `• Most Active Day: ${mostActiveDay} (${mostActive
       
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-10 relative z-10">
+
+        {(recapError || goalsError) && (
+          <div className="space-y-3">
+            {recapError && <ErrorBanner message={recapError} />}
+            {goalsError && <ErrorBanner message={goalsError} />}
+          </div>
+        )}
         
         {/* ──────────────── RADICAL NEW CONCEPT: CELESTIAL ORBITAL HOLOGRAM SPHERE HEADER ──────────────── */}
         <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 py-6 px-4 sm:px-8 border-b border-[#20452F]/60">
