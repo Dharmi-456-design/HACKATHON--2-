@@ -12,11 +12,13 @@ import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 // Multilingual UI Translations for Mission Control Universe
 const MISSION_TRANSLATIONS = {
   en: {
-    heroTag: 'TACTICAL MISSION HUD',
-    heroTitle: 'Ecological Adventure Path',
-    heroSubtitle: 'Complete personalized challenges, earn XP, build daily streaks, and master urban biodiversity.',
+    heroTag: 'Good Morning, Explorer 🌿',
+    heroTitle: 'Your Eco Guide',
+    heroHighlight: 'Better Tomorrow',
+    heroSubtitle1: 'Ask. Learn. Protect.',
+    heroSubtitle2: 'Together we create a sustainable future.',
     createMissionBtn: 'Create Custom Mission',
-    generateAIBtn: '⚡ Generate Challenge',
+    generateAIBtn: '✨ Generate Challenge',
     tabPath: '🗺️ Mission Path',
     tabActive: '⚡ Active Missions',
     tabCompleted: '🏆 Completed',
@@ -37,16 +39,18 @@ const MISSION_TRANSLATIONS = {
     missionCompleted: 'Mission Completed! 🎉',
     earnedXP: 'XP Earned',
     levelTitle: 'Level 4 Commander',
-    xpLabel: 'Total Mission XP',
-    streakLabel: 'Active Streak',
+    xpLabel: 'Eco XP',
+    streakLabel: 'Streak',
     aiAssistantHint: 'Need a hint or breakdown for this step?',
   },
   gu: {
-    heroTag: 'ટેક્ટિકલ મિશન એચયુડી',
-    heroTitle: 'ઇકોલોજીકલ એડવેન્ચર પાથ',
-    heroSubtitle: 'વ્યક્તિગત પડકારો પૂર્ણ કરો, XP કમાઓ, દૈનિક શ્રેણી બનાવો અને શહેરી જૈવવિવિધતામાં પ્રાવીણ્ય મેળવો.',
+    heroTag: 'શુભ સવાર, એક્સપ્લોરર 🌿',
+    heroTitle: 'તમારો ઇકો ગાઇડ',
+    heroHighlight: 'ઉજ્જવળ ભવિષ્ય માટે',
+    heroSubtitle1: 'પૂછો. શીખો. રક્ષણ કરો.',
+    heroSubtitle2: 'સાથે મળીને આપણે એક ટકાઉ ભવિષ્ય બનાવીએ છીએ.',
     createMissionBtn: 'કસ્ટમ મિશન બનાવો',
-    generateAIBtn: '⚡ પડકાર જનરેટ કરો',
+    generateAIBtn: '✨ પડકાર જનરેટ કરો',
     tabPath: '🗺️ મિશન પાથ',
     tabActive: '⚡ સક્રિય મિશનો',
     tabCompleted: '🏆 પૂર્ણ કરેલ',
@@ -67,16 +71,18 @@ const MISSION_TRANSLATIONS = {
     missionCompleted: 'મિશન પૂર્ણ થયું! 🎉',
     earnedXP: 'XP મેળવ્યું',
     levelTitle: 'લેવલ 4 કમાન્ડર',
-    xpLabel: 'કુલ મિશન XP',
-    streakLabel: 'સક્રિય શ્રેણી',
+    xpLabel: 'ઇકો XP',
+    streakLabel: 'શ્રેણી',
     aiAssistantHint: 'આ પગલા માટે સંકેત જોઈએ છે?',
   },
   hi: {
-    heroTag: 'टैक्टिकल मिशन एचयूडी',
-    heroTitle: 'पारिस्थितिक साहसिक पथ',
-    heroSubtitle: 'व्यक्तिगत चुनौतियों को पूरा करें, XP कमाएं, दैनिक स्ट्रीक बनाएं और शहरी जैव विविधता में महारत हासिल करें।',
+    heroTag: 'शुभ प्रभात, एक्सप्लोरर 🌿',
+    heroTitle: 'आपका इको गाइड',
+    heroHighlight: 'बेहतर कल के लिए',
+    heroSubtitle1: 'पूछें। सीखें। रक्षा करें।',
+    heroSubtitle2: 'साथ मिलकर हम एक टिकाऊ भविष्य बनाते हैं।',
     createMissionBtn: 'कस्टम मिशन बनाएं',
-    generateAIBtn: '⚡ चुनौती बनाएं',
+    generateAIBtn: '✨ चुनौती बनाएं',
     tabPath: '🗺️ मिशन पथ',
     tabActive: '⚡ सक्रिय मिशन',
     tabCompleted: '🏆 पूरा किया गया',
@@ -97,8 +103,8 @@ const MISSION_TRANSLATIONS = {
     missionCompleted: 'मिशन पूरा हुआ! 🎉',
     earnedXP: 'XP अर्जित',
     levelTitle: 'लेवल 4 कमांडर',
-    xpLabel: 'कुल मिशन XP',
-    streakLabel: 'सक्रिय स्ट्रीक',
+    xpLabel: 'इको XP',
+    streakLabel: 'स्ट्रीक',
     aiAssistantHint: 'इस चरण के लिए संकेत चाहिए?',
   },
 };
@@ -189,9 +195,9 @@ export default function NatureMissions() {
   const [totalXP, setTotalXP] = useState(() => {
     try {
       const saved = localStorage.getItem('pulse_missions_xp_v1');
-      return saved ? parseInt(saved, 10) : 1250;
+      return saved ? parseInt(saved, 10) : 2450;
     } catch {
-      return 1250;
+      return 2450;
     }
   });
 
@@ -201,12 +207,6 @@ export default function NatureMissions() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [generatePrompt, setGeneratePrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-
-  // Custom Mission Creator State
-  const [customTitle, setCustomTitle] = useState('');
-  const [customCategory, setCustomCategory] = useState('Exploration');
-  const [customDifficulty, setCustomDifficulty] = useState('🟢 Easy');
-  const [customDuration, setCustomDuration] = useState('15 min');
 
   useEffect(() => {
     localStorage.setItem('pulse_missions_v1', JSON.stringify(missions));
@@ -266,44 +266,6 @@ export default function NatureMissions() {
       setGeneratePrompt('');
       setSelectedMission(newMission);
     }, 1500);
-  };
-
-  // Create Custom Mission
-  const handleCreateCustomMission = (e) => {
-    e.preventDefault();
-    if (!customTitle.trim()) return;
-
-    const newMission = {
-      id: `m-${Date.now()}`,
-      title: customTitle.trim(),
-      category: customCategory,
-      difficulty: customDifficulty,
-      duration: customDuration,
-      xpReward: customDifficulty === '🔴 Hard' ? 250 : customDifficulty === '🟡 Medium' ? 180 : 100,
-      status: 'in_progress',
-      steps: [
-        { id: `cs-1`, text: 'Prepare observation area and tools', done: false },
-        { id: `cs-2`, text: 'Execute main mission objective', done: false },
-        { id: `cs-3`, text: 'Record final reflection note', done: false },
-      ],
-      aiHint: 'Stay observant of micro-climate shifts near foliage.',
-      hintOpened: false,
-    };
-
-    setMissions([newMission, ...missions]);
-    setCustomTitle('');
-    setActiveTab('path');
-    setSelectedMission(newMission);
-  };
-
-  // Toggle AI Hint
-  const toggleAIHint = (missionId) => {
-    setMissions((prev) =>
-      prev.map((m) => (m.id === missionId ? { ...m, hintOpened: !m.hintOpened } : m))
-    );
-    if (selectedMission?.id === missionId) {
-      setSelectedMission((prev) => ({ ...prev, hintOpened: !prev.hintOpened }));
-    }
   };
 
   // Delete Mission
@@ -374,69 +336,99 @@ export default function NatureMissions() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── RADICAL UNIQUE HEADER 2: CYBERPUNK TACTICAL HUD COMMAND STRIP (NO GREEN RECTANGLE) ──────────────── */}
-        <div className="relative border-l-4 border-[#4ADE80] pl-6 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-[#0E2015]/40 backdrop-blur-md rounded-r-2xl border-y border-r border-[#20452F]">
-          <div className="space-y-1 max-w-xl">
-            <div className="flex items-center gap-2">
-              <Radio className="w-3.5 h-3.5 text-[#4ADE80] animate-pulse" />
-              <span className="text-[10px] font-mono font-bold text-[#4ADE80] uppercase tracking-widest">
-                {t.heroTag} // STATUS: ACTIVE
-              </span>
-            </div>
+        {/* ──────────────── ATMOSPHERIC DARK FOREST LANDSCAPE HERO BANNER (MATCHING SCREENSHOT) ──────────────── */}
+        <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[300px] flex flex-col justify-between group">
+          
+          {/* HD Misty Forest Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80')` }}
+          />
+          
+          {/* Dark Forest Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#040C07] via-[#040C07]/85 to-[#040C07]/40" />
 
-            <h1 className="font-display text-4xl sm:text-5xl font-black text-white tracking-tight">
-              {t.heroTitle}
+          {/* Glowing Green Energy Leaf Orb on Right */}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-48 h-48 sm:w-64 sm:h-64 pointer-events-none flex items-center justify-center z-10">
+            <motion.div
+              animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.85, 0.4] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute inset-0 rounded-full bg-[#4ADE80]/25 blur-2xl"
+            />
+            
+            <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-2 border-[#4ADE80]/60 flex items-center justify-center relative shadow-[0_0_50px_rgba(74,222,128,0.35)] backdrop-blur-xs">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                className="absolute inset-1 rounded-full border border-dashed border-[#4ADE80]/40"
+              />
+
+              <motion.div
+                animate={{ y: [-4, 4, -4] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-[#2E6141] to-[#102B1B] border border-[#4ADE80] flex items-center justify-center shadow-xl text-3xl sm:text-4xl"
+              >
+                🌿
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Left Overlaid Text Content */}
+          <div className="space-y-3 max-w-xl relative z-10">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#0E2015]/90 text-[#4ADE80] border border-[#4ADE80]/40 text-xs font-semibold backdrop-blur-md">
+              {t.heroTag}
+            </span>
+
+            <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight drop-shadow-md">
+              {t.heroTitle} <br />
+              for a <span className="text-[#4ADE80]">{t.heroHighlight}</span>
             </h1>
 
-            <p className="text-xs text-slate-300 font-normal leading-relaxed">
-              {t.heroSubtitle}
-            </p>
-          </div>
-
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowGenerateModal(true)}
-            className="px-6 py-3 rounded-xl bg-[#4ADE80] text-[#07130B] font-mono font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
-          >
-            <Zap className="w-4 h-4" />
-            <span>{t.generateAIBtn}</span>
-          </motion.button>
-        </div>
-
-        {/* ──────────────── XP REACTOR & STREAK STATUS BAR ──────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-[#0E2015] border border-[#20422E] p-5 rounded-3xl flex items-center justify-between shadow-xl">
-            <div>
-              <p className="text-xs font-bold text-[#4ADE80] uppercase tracking-wider">{t.levelTitle}</p>
-              <h3 className="font-display text-2xl font-extrabold text-white mt-0.5">{totalXP} XP</h3>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#1A3827] border border-[#4ADE80]/50 flex items-center justify-center text-xl">
-              🏆
+            <div className="space-y-0.5 text-xs sm:text-sm text-slate-200">
+              <p className="font-semibold text-slate-100">{t.heroSubtitle1}</p>
+              <p className="text-slate-300/90">{t.heroSubtitle2}</p>
             </div>
           </div>
 
-          <div className="bg-[#0E2015] border border-[#20422E] p-5 rounded-3xl flex items-center justify-between shadow-xl">
-            <div>
-              <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">{t.streakLabel}</p>
-              <h3 className="font-display text-2xl font-extrabold text-white mt-0.5">{streakDays} Days 🔥</h3>
+          {/* Bottom 4 Integrated Stat Pills Overlaid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 relative z-10">
+            <div className="bg-[#0A1A10]/95 border border-[#20422E] p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md">
+              <div>
+                <p className="text-[10px] uppercase font-semibold text-emerald-400">{t.xpLabel}</p>
+                <p className="font-display text-xl font-extrabold text-white mt-0.5">{totalXP.toLocaleString()}</p>
+              </div>
+              <span className="text-lg">🌿</span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#2A1F13] border border-amber-400/50 flex items-center justify-center text-xl">
-              🔥
+
+            <div className="bg-[#0A1A10]/95 border border-[#20422E] p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md">
+              <div>
+                <p className="text-[10px] uppercase font-semibold text-slate-400">{t.streakLabel}</p>
+                <p className="font-display text-xl font-extrabold text-white mt-0.5">{streakDays} Days</p>
+              </div>
+              <span className="text-lg">🔥</span>
+            </div>
+
+            <div className="bg-[#0A1A10]/95 border border-[#20422E] p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md">
+              <div>
+                <p className="text-[10px] uppercase font-semibold text-slate-400">Quests</p>
+                <p className="font-display text-xl font-extrabold text-white mt-0.5">
+                  {missions.filter((m) => m.status === 'completed').length} / {missions.length}
+                </p>
+              </div>
+              <span className="text-lg">⭐</span>
+            </div>
+
+            <div className="bg-[#0A1A10]/95 border border-[#20422E] p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md">
+              <div>
+                <p className="text-[10px] uppercase font-semibold text-slate-400">Rank</p>
+                <p className="font-display text-sm sm:text-base font-extrabold text-[#4ADE80] mt-0.5">Eco Guardian</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-purple-950/80 border border-purple-400/50 flex items-center justify-center text-xs">
+                🟣
+              </div>
             </div>
           </div>
 
-          <div className="bg-[#0E2015] border border-[#20422E] p-5 rounded-3xl flex items-center justify-between shadow-xl">
-            <div>
-              <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Completed Missions</p>
-              <h3 className="font-display text-2xl font-extrabold text-white mt-0.5">
-                {missions.filter((m) => m.status === 'completed').length} / {missions.length}
-              </h3>
-            </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#132738] border border-blue-400/50 flex items-center justify-center text-xl">
-              🎯
-            </div>
-          </div>
         </div>
 
         {/* ──────────────── NAVIGATION TABS ──────────────── */}
@@ -517,69 +509,6 @@ export default function NatureMissions() {
               })}
             </div>
           </div>
-        )}
-
-        {/* ──────────────── SELECTED MISSION STEP READER DRAWER ──────────────── */}
-        {selectedMission && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-[#112318] border border-[#4ADE80]/50 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6"
-          >
-            <div className="flex justify-between items-start border-b border-[#20452F] pb-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-[#1A3827] text-xs font-bold text-[#4ADE80]">
-                    {selectedMission.category}
-                  </span>
-                  <span className="text-xs text-amber-400 font-bold">+{selectedMission.xpReward} XP Reward</span>
-                </div>
-                <h3 className="font-display text-2xl font-bold text-white">{selectedMission.title}</h3>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleDeleteMission(selectedMission.id)}
-                  className="p-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 cursor-pointer"
-                  title="Delete Mission"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-                <button onClick={() => setSelectedMission(null)} className="text-slate-400 hover:text-white cursor-pointer">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">Action Steps & Checklist</p>
-
-              {selectedMission.steps.map((step) => (
-                <div
-                  key={step.id}
-                  onClick={() => toggleStep(selectedMission.id, step.id)}
-                  className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${
-                    step.done
-                      ? 'bg-[#1A3827] border-[#4ADE80] text-slate-200'
-                      : 'bg-[#0E2015] border-[#20422E] text-white hover:border-[#4ADE80]/40'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold ${
-                      step.done ? 'bg-[#4ADE80] border-[#4ADE80] text-[#07130B]' : 'border-slate-500'
-                    }`}>
-                      {step.done && '✓'}
-                    </div>
-                    <span className={`text-xs sm:text-sm font-medium ${step.done ? 'line-through opacity-75' : ''}`}>
-                      {step.text}
-                    </span>
-                  </div>
-
-                  <span className="text-[11px] text-[#4ADE80] font-semibold">{step.done ? 'Done' : 'Tap to complete'}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
         )}
 
       </div>
