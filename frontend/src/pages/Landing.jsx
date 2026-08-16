@@ -229,10 +229,12 @@ export default function Landing() {
     setPulseReply(reply);
   };
 
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
     <div className="min-h-screen bg-[#0A1610] text-white overflow-x-hidden">
       {/* ────────────────────── 0. INITIAL SPLASH INTRO ANIMATION ────────────────────── */}
-      <SplashIntro />
+      <SplashIntro onComplete={() => setSplashDone(true)} />
 
       {/* ────────────────────── REDESIGNED NAVBAR ────────────────────── */}
       <Navbar />
@@ -253,7 +255,7 @@ export default function Landing() {
       </section>
 
       {/* ────────────────────── 4. THE PHILOSOPHY SECTION (ENHANCED TEXT & 4-PHOTO GRID) ────────────────────── */}
-      <section className="py-24 bg-[#0E1E15] text-white border-t border-white/10 select-none">
+      <section className="py-10 bg-[#0E1E15] text-white select-none">
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-widest">

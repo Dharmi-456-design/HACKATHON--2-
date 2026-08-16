@@ -16,6 +16,8 @@ export const SEED_NEARBY_PLACES = [
     name: 'Peepal Canopy Study Sanctuary',
     category: 'Study',
     icon: '📚',
+    lat: 23.0304,
+    lng: 72.5802,
     distance: '450 m',
     walkTime: '6 min walk',
     rating: 4.9,
@@ -53,6 +55,8 @@ export const SEED_NEARBY_PLACES = [
     name: 'Banyan Tree Botanical Garden Café',
     category: 'Cafés',
     icon: '☕',
+    lat: 23.0270,
+    lng: 72.5560,
     distance: '900 m',
     walkTime: '12 min walk',
     rating: 4.8,
@@ -89,6 +93,8 @@ export const SEED_NEARBY_PLACES = [
     name: 'Urban Wetlands & Bird Deck',
     category: 'Parks',
     icon: '🌳',
+    lat: 22.9970,
+    lng: 72.6025,
     distance: '1.4 km',
     walkTime: '18 min walk',
     rating: 4.9,
@@ -125,6 +131,8 @@ export const SEED_NEARBY_PLACES = [
     name: 'Heritage Textiles & Art Pavilion',
     category: 'Culture',
     icon: '🎨',
+    lat: 23.0258,
+    lng: 72.5873,
     distance: '2.1 km',
     walkTime: '8 min drive',
     rating: 4.7,
@@ -516,6 +524,36 @@ export default function PlaceDetails() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* ──────────────── INTERACTIVE GOOGLE MAP LOCATION ──────────────── */}
+        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl overflow-hidden">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-[#4ADE80]" />
+              <h2 className="font-display text-xl font-bold text-white">Interactive Location Map</h2>
+            </div>
+            <span className="text-[11px] text-[#4ADE80] font-bold bg-[#13271C] px-3 py-1 rounded-full border border-[#20422E]">
+              Google Maps Live
+            </span>
+          </div>
+
+          <div className="relative w-full h-72 sm:h-80 rounded-2xl overflow-hidden border border-[#20422E] shadow-inner bg-[#13271C]">
+            <iframe
+              title={`Google Map for ${place.name}`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(place.name + ', ' + (place.address || place.city || 'Ahmedabad'))}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-between text-xs text-slate-300 pt-1">
+            <span>📍 {place.address || place.city || 'Sabarmati Riverfront, Ahmedabad'}</span>
+            <span className="text-[#4ADE80] font-semibold">{place.distance} away</span>
+          </div>
         </div>
 
         {/* ──────────────── AMENITIES & FEATURES ──────────────── */}
