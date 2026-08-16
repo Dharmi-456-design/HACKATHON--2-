@@ -28,10 +28,26 @@ export default function ScrollTypographyHighlight() {
   const total = words.length;
 
   const SHOWCASE = [
-    { title: 'Ancient Forest Canopy', category: 'Forest Park Edge', img: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&q=80' },
-    { title: 'Champa Night Bloom', category: 'Plumeria Rubra', img: 'https://images.unsplash.com/photo-1596073413225-300dd1d416c2?w=600&q=80' },
-    { title: 'Indian Myna Foraging', category: 'Urban Wildlife', img: 'https://images.unsplash.com/photo-1555532538-dcdbd01d373d?w=600&q=80' },
-    { title: 'Wetland Riparian Stream', category: 'Willamette River', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80' },
+    {
+      title: 'Misty Ancient Pine Forest',
+      category: 'Deep Evergreen Canopy',
+      img: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      title: 'Sunlit Rainforest Waterfall',
+      category: 'Tropical Oasis Stream',
+      img: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      title: 'Sun-Drenched Woodland Trail',
+      category: 'Golden Hour Forest',
+      img: 'https://images.unsplash.com/photo-1507041957456-9c397ce39c97?auto=format&fit=crop&w=800&q=80',
+    },
+    {
+      title: 'Dewy Emerald Fern Leaves',
+      category: 'Micro-Habitat Canopy',
+      img: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80',
+    },
   ];
 
   return (
