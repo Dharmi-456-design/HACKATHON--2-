@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Send, Sparkles, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { chatWithPulse } from '../lib/gemini';
+import { chatWithPulse } from '../lib/openrouter';
 import { ErrorBanner, PulseOrb } from '../components/ui';
 
 // Suggested starter prompts
