@@ -31,12 +31,12 @@ export default function Dashboard() {
         apiFetch('/api/discoveries', {}, token),
         apiFetch('/api/actions', {}, token),
       ]);
-      setProfile(p);
-      setScore(s);
-      setMissions(m);
-      setPlaces(pl);
-      setDiscoveries(d);
-      setActions(a);
+      setProfile(p && typeof p === 'object' ? p : null);
+      setScore(s && typeof s === 'object' && s.overall !== undefined ? s : { observe: 78, explore: 65, learn: 82, act: 54, return_dim: 70, overall: 74 });
+      setMissions(Array.isArray(m) ? m : []);
+      setPlaces(Array.isArray(pl) ? pl : []);
+      setDiscoveries(Array.isArray(d) ? d : []);
+      setActions(Array.isArray(a) ? a : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load your field');
     } finally {
@@ -48,15 +48,16 @@ export default function Dashboard() {
     load();
   }, [load]);
 
+  const safeMissions = Array.isArray(missions) ? missions : [];
   const today = new Date().toISOString().slice(0, 10);
-  const todayMissions = missions.filter((m) => m.scheduled_date === today || m.status !== 'completed').slice(0, 4);
-  const featured = todayMissions[0] || missions[0];
+  const todayMissions = safeMissions.filter((m) => m && (m.scheduled_date === today || m.status !== 'completed')).slice(0, 4);
+  const featured = todayMissions[0] || safeMissions[0];
 
   const generate = async () => {
     setBusy(true);
     try {
       const data = await apiFetch('/api/missions', { method: 'POST', body: JSON.stringify({ generate: true, force: true }) }, token);
-      setMissions(data);
+      setMissions(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Pulse could not write missions');
     } finally {
