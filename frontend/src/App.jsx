@@ -64,7 +64,10 @@ export default function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/lithos" element={<LithosHero />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signin" element={<Login />} />
+            <Route path="/auth" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/signup" element={<Register />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/onboarding"

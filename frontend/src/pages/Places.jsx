@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Sparkles, Compass, MapPin, Search, Clock, Star, Navigation, 
   ChevronRight, Filter, Plus, Trash2, CheckCircle2, Shield, User, 
   Coffee, BookOpen, Trees, Palette, ShoppingBag, Utensils, Landmark, 
-  HelpCircle, Eye, EyeOff, X, ArrowRight, Radio, Layers, RotateCcw, Send, Check
+  HelpCircle, Eye, EyeOff, X, ArrowRight, Radio, Layers, RotateCcw, Send, Check,
+  Activity, Gauge, Crosshair, Map, ArrowUpRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch } from '../lib/api';
+import { useLiveLocation, calculateHaversineDistance, formatDistance, formatTravelTime } from '../hooks/useLiveLocation';
 
 // Multilingual UI Translations for Nearby Discovery Engine
 const NEARBY_TRANSLATIONS = {
@@ -16,7 +18,7 @@ const NEARBY_TRANSLATIONS = {
     heroTag: 'SPATIAL DISCOVERY COMPASS',
     heroTitle: 'Discover What Is Around',
     heroHighlight: 'You ✨',
-    heroSubtitle: 'Spatial discovery for quiet study spots, nature sanctuaries, local cafés, and cultural places.',
+    heroSubtitle: 'Spatial discovery for quiet study spots, nature sanctuaries, local cafés, and cultural places with real-time GPS precision.',
     searchPromptTag: 'Find places that inspire your journey',
     askNearbyPlaceholder: 'Search nearby (e.g. Find a quiet place to study nearby…)',
     searchBtn: 'Search Radar',
@@ -44,7 +46,7 @@ const NEARBY_TRANSLATIONS = {
     heroTag: 'સ્પેસિયલ ડિસ્કવરી હોકાયંત્ર',
     heroTitle: 'તમારી આસપાસ શું છે તે',
     heroHighlight: 'શોધો ✨',
-    heroSubtitle: 'શાંત અભ્યાસ સ્થળો, પ્રકૃતિ સ્થાનો, કેફે અને સાંસ્કૃતિક સ્થળો માટે સ્થાનિક સંશોધન.',
+    heroSubtitle: 'શાંત અભ્યાસ સ્થળો, પ્રકૃતિ સ્થાનો, કેફે અને સાંસ્કૃતિક સ્થળો માટે રીઅલ-ટાઇમ જીપીએસ સંશોધન.',
     searchPromptTag: 'તમારી યાત્રાને પ્રેરણા આપે તેવા સ્થળો શોધો',
     askNearbyPlaceholder: 'નજીકમાં શોધો (દા.ત. નજીકમાં શાંત અભ્યાસ સ્થળ શોધો…)',
     searchBtn: 'રડાર શોધો',
@@ -72,7 +74,7 @@ const NEARBY_TRANSLATIONS = {
     heroTag: 'स्पेशल डिस्कवरी कम्पास',
     heroTitle: 'अपनी आसपास की चीजें',
     heroHighlight: 'खोजें ✨',
-    heroSubtitle: 'शांत अध्ययन स्थलों, प्रकृति स्थानों, कैफे और सांस्कृतिक स्थलों की स्थानिक खोज।',
+    heroSubtitle: 'शांत अध्ययन स्थलों, प्रकृति स्थानों, कैफे और सांस्कृतिक स्थलों की रीयल-टाइम जीपीएस खोज।',
     searchPromptTag: 'अपनी यात्रा को प्रेरित करने वाले स्थान खोजें',
     askNearbyPlaceholder: 'आसपास खोजें (जैसे, अध्ययन के लिए एक शांत जगह खोजें…)',
     searchBtn: 'रडार खोजें',
@@ -242,48 +244,46 @@ const SEED_NEARBY_PLACES = [
   },
 ];
 
-// Calculate Haversine distance in KM between two coordinates
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-  const R = 6371; // Earth radius in km
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-function formatDistanceKm(distKm) {
-  if (distKm == null) return null;
-  if (distKm < 1) {
-    const meters = Math.round(distKm * 1000);
-    return `${meters} m`;
-  }
-  return `${distKm.toFixed(1)} km`;
-}
-
-function formatWalkTimeFromKm(distKm) {
-  if (distKm == null) return null;
-  const walkingSpeedKmH = 4.5;
-  const minutes = Math.max(1, Math.round((distKm / walkingSpeedKmH) * 60));
-  if (minutes < 60) {
-    return `${minutes} min walk`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const remMin = minutes % 60;
-  return `${hours} hr ${remMin > 0 ? remMin + 'm' : ''} walk`;
-}
-
 export default function Places() {
   const navigate = useNavigate();
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = NEARBY_TRANSLATIONS[lang] || NEARBY_TRANSLATIONS.en;
+
+  // Real-Time Live Geolocation Hook with watchPosition
+  const {
+    latitude: userLat,
+    longitude: userLng,
+    accuracy: userAccuracy,
+    altitude: userAltitude,
+    heading: userHeading,
+    speed: userSpeed,
+    timestamp: userTimestamp,
+    hasLocation,
+    status: locationStatus,
+    permission: locationPermission,
+    error: locationError,
+    isWatching,
+    isLocating,
+    followUser,
+    setFollowUser,
+    lastUpdatedLabel,
+    accuracyQuality,
+    startWatching,
+    stopWatching,
+    locateMe,
+    recalibrate,
+  } = useLiveLocation({
+    enableHighAccuracy: true,
+    maximumAge: 0,
+    timeout: 20000,
+    autoStart: true,
+  });
+
+  // Reverse Geocoded Locality Name
+  const [locationAddress, setLocationAddress] = useState('Resolving location…');
+  const [sortByDistance, setSortByDistance] = useState(false);
+  const [mapCenterOverride, setMapCenterOverride] = useState(null);
 
   // Persistent State
   const [places, setPlaces] = useState(() => {
@@ -304,26 +304,6 @@ export default function Places() {
     }
   });
 
-  // Live Location State
-  const [userCoords, setUserCoords] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_user_coords');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [isLocating, setIsLocating] = useState(false);
-  const [locationStatus, setLocationStatus] = useState(() => {
-    try {
-      return localStorage.getItem('pulse_user_coords') ? 'active' : 'idle';
-    } catch {
-      return 'idle';
-    }
-  });
-  const [locationAddress, setLocationAddress] = useState('Ahmedabad, Gujarat');
-  const [locationError, setLocationError] = useState(null);
-
   // Controls
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -336,85 +316,64 @@ export default function Places() {
   const [isBuildingRoute, setIsBuildingRoute] = useState(false);
   const [builtRoute, setBuiltRoute] = useState(null);
 
-  // Function to Request and Lock Live GPS Location
-  const requestLiveLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser.');
-      setLocationStatus('error');
-      return;
-    }
-
-    setIsLocating(true);
-    setLocationStatus('locating');
-    setLocationError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-        const coords = { lat: latitude, lng: longitude, accuracy };
-        setUserCoords(coords);
-        setLocationStatus('active');
-        setIsLocating(false);
-        try {
-          localStorage.setItem('pulse_user_coords', JSON.stringify(coords));
-        } catch {}
-
-        // Reverse Geocoding with OpenStreetMap Nominatim
-        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
-          .then((r) => r.json())
-          .then((data) => {
-            if (data && data.address) {
-              const loc = data.address.suburb || data.address.neighbourhood || data.address.city || data.address.town || 'Your Location';
-              setLocationAddress(`${loc}, ${data.address.state || 'Gujarat'}`);
-            }
-          })
-          .catch(() => {
-            setLocationAddress(`${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E`);
-          });
-      },
-      (err) => {
-        setIsLocating(false);
-        setLocationStatus('error');
-        let msg = 'Unable to retrieve location.';
-        if (err.code === 1) msg = 'Location permission denied. Please allow location access.';
-        else if (err.code === 2) msg = 'GPS position unavailable.';
-        else if (err.code === 3) msg = 'Location request timed out.';
-        setLocationError(msg);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-    );
-  };
-
-  // Auto request location on first mount if not already granted
+  // Reverse Geocode when real user GPS coordinates arrive
   useEffect(() => {
-    if (navigator.geolocation && !userCoords) {
-      navigator.permissions?.query?.({ name: 'geolocation' }).then((result) => {
-        if (result.state === 'granted') {
-          requestLiveLocation();
-        }
-      }).catch(() => {});
-    }
-  }, []);
-
-  // Update places dynamically with real calculated distance from userCoords
-  useEffect(() => {
-    if (userCoords && userCoords.lat && userCoords.lng) {
-      setPlaces((prevPlaces) => {
-        return prevPlaces.map((p) => {
-          if (p.lat && p.lng) {
-            const distKm = calculateDistance(userCoords.lat, userCoords.lng, p.lat, p.lng);
-            return {
-              ...p,
-              realDistanceKm: distKm,
-              distance: formatDistanceKm(distKm) || p.distance,
-              walkTime: formatWalkTimeFromKm(distKm) || p.walkTime,
-            };
+    if (userLat != null && userLng != null) {
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data && data.address) {
+            const locality =
+              data.address.suburb ||
+              data.address.neighbourhood ||
+              data.address.residential ||
+              data.address.city ||
+              data.address.town ||
+              'Current Locality';
+            const city = data.address.city || data.address.state_district || data.address.state || '';
+            setLocationAddress(`${locality}${city ? ', ' + city : ''}`);
           }
-          return p;
+        })
+        .catch(() => {
+          setLocationAddress(`${userLat.toFixed(4)}°N, ${userLng.toFixed(4)}°E`);
         });
-      });
     }
-  }, [userCoords]);
+  }, [userLat, userLng]);
+
+  // Dynamically calculate and update real distance to all places whenever user location updates
+  const dynamicPlaces = useMemo(() => {
+    let list = places.map((p) => {
+      if (hasLocation && p.lat != null && p.lng != null) {
+        const realDistKm = calculateHaversineDistance(userLat, userLng, p.lat, p.lng);
+        return {
+          ...p,
+          realDistanceKm: realDistKm,
+          distance: formatDistance(realDistKm) || p.distance,
+          walkTime: formatTravelTime(realDistKm, 'walk') || p.walkTime,
+          driveTime: formatTravelTime(realDistKm, 'drive'),
+        };
+      }
+      return p;
+    });
+
+    if (sortByDistance && hasLocation) {
+      list.sort((a, b) => (a.realDistanceKm || 999) - (b.realDistanceKm || 999));
+    }
+    return list;
+  }, [places, hasLocation, userLat, userLng, sortByDistance]);
+
+  // Handle Locate Me Click
+  const handleLocateMe = useCallback(async () => {
+    try {
+      const pos = await locateMe();
+      if (pos && pos.latitude && pos.longitude) {
+        setMapCenterOverride({ lat: pos.latitude, lng: pos.longitude, timestamp: Date.now() });
+        setSelectedPlace(null);
+      }
+    } catch (e) {
+      // Handled in hook
+    }
+  }, [locateMe]);
 
   // Sync places with API if available
   useEffect(() => {
@@ -605,10 +564,10 @@ export default function Places() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── LANDSCAPE HERO BANNER WITH PRESERVED SUNSET MOUNTAIN BACKGROUND & FLIGHT TRAILS (2ND SCREENSHOT ENHANCED) ──────────────── */}
+        {/* ──────────────── LANDSCAPE HERO BANNER WITH PRESERVED SUNSET MOUNTAIN BACKGROUND & FLIGHT TRAILS ──────────────── */}
         <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[280px] flex flex-col justify-between group">
           
-          {/* PRESERVED HD Sunset Mountain Pine Forest Background Image (DO NOT DELETE!) */}
+          {/* PRESERVED HD Sunset Mountain Pine Forest Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
             style={{ backgroundImage: `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80')` }}
@@ -616,25 +575,6 @@ export default function Places() {
 
           {/* Dark Forest Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#040C07] via-[#040C07]/85 to-[#040C07]/25" />
-
-          {/* Glowing Green Flight Trail with Pins & Paper Airplane */}
-          <div className="absolute right-6 top-1/2 -translate-y-1/2 w-64 sm:w-96 h-48 pointer-events-none hidden sm:flex items-center justify-center z-10">
-            <svg viewBox="0 0 350 180" className="w-full h-full">
-              <path
-                d="M 20 120 Q 90 40, 160 110 T 300 60"
-                fill="none"
-                stroke="#4ADE80"
-                strokeWidth="2"
-                strokeDasharray="6 6"
-                opacity="0.85"
-              />
-              <circle cx="20" cy="120" r="6" fill="#4ADE80" className="animate-pulse" />
-              <circle cx="160" cy="110" r="6" fill="#4ADE80" className="animate-pulse" />
-              <g transform="translate(290, 45) rotate(-15)">
-                <path d="M 0 0 L 25 10 L 10 25 L 8 12 Z" fill="#4ADE80" />
-              </g>
-            </svg>
-          </div>
 
           {/* Top Compass Tag Row & Title */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
@@ -663,21 +603,21 @@ export default function Places() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={requestLiveLocation}
+                onClick={handleLocateMe}
                 disabled={isLocating}
                 className={`px-5 py-3.5 rounded-full font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center gap-2 cursor-pointer ${
-                  locationStatus === 'active'
+                  hasLocation
                     ? 'bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80] shadow-[#4ADE80]/20'
                     : 'bg-[#0E2015]/90 text-white border border-[#20452F] hover:border-[#4ADE80]/60'
                 }`}
               >
-                <Radio className={`w-4 h-4 text-[#4ADE80] ${isLocating ? 'animate-spin' : locationStatus === 'active' ? 'animate-pulse' : ''}`} />
+                <Crosshair className={`w-4 h-4 text-[#4ADE80] ${isLocating ? 'animate-spin' : hasLocation ? 'animate-pulse' : ''}`} />
                 <span>
                   {isLocating
-                    ? 'Acquiring GPS…'
-                    : locationStatus === 'active'
-                    ? '📍 Live GPS Active'
-                    : '📍 Use My Live Location'}
+                    ? 'Acquiring GPS Fix…'
+                    : hasLocation
+                    ? '📍 Locate Me'
+                    : '📍 Enable Live GPS'}
                 </span>
               </motion.button>
 
@@ -694,36 +634,132 @@ export default function Places() {
             </div>
           </div>
 
-          {/* Live GPS Active Status Bar if Available */}
-          {locationStatus === 'active' && userCoords && (
-            <div className="mt-4 pt-3 border-t border-[#4ADE80]/20 flex flex-wrap items-center justify-between text-xs text-slate-200 relative z-10 gap-2">
+          {/* Real-time GPS Error Notice if Permission Denied or Timeout */}
+          {locationError && (
+            <div className="mt-4 p-4 rounded-2xl bg-rose-950/70 border border-rose-500/40 text-xs text-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative z-10">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#4ADE80] animate-ping" />
-                <span className="font-bold text-[#4ADE80]">Live Location Locked:</span>
-                <span>{locationAddress}</span>
-                <span className="text-[10px] text-slate-400 font-mono">({userCoords.lat.toFixed(4)}°N, {userCoords.lng.toFixed(4)}°E)</span>
+                <span className="text-base">⚠️</span>
+                <span>{locationError}</span>
               </div>
               <button
-                onClick={requestLiveLocation}
-                className="text-[11px] text-[#4ADE80] hover:underline cursor-pointer flex items-center gap-1"
+                onClick={handleLocateMe}
+                className="px-4 py-1.5 rounded-xl bg-rose-900/80 hover:bg-rose-800 text-white font-bold transition-colors cursor-pointer shrink-0"
               >
-                <RotateCcw className="w-3 h-3" /> Refresh GPS
+                Retry GPS
               </button>
             </div>
           )}
 
-          {locationError && (
-            <div className="mt-3 p-3 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-xs text-rose-300 flex items-center justify-between relative z-10">
-              <span>⚠️ {locationError}</span>
+        </div>
+
+        {/* ──────────────── REAL-TIME GPS TELEMETRY & ACCURACY DASHBOARD ──────────────── */}
+        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#20422E] pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-2xl bg-[#13271C] border border-[#4ADE80]/40 flex items-center justify-center text-[#4ADE80]">
+                <Activity className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display text-sm sm:text-base font-bold text-white">
+                    Live GPS Telemetry & Accuracy
+                  </h3>
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                    hasLocation
+                      ? 'bg-emerald-950/80 text-[#4ADE80] border-[#4ADE80]/40'
+                      : isLocating
+                      ? 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+                      : 'bg-slate-900 text-slate-400 border-slate-700'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${hasLocation ? 'bg-[#4ADE80] animate-ping' : isLocating ? 'bg-amber-400 animate-pulse' : 'bg-slate-500'}`} />
+                    {hasLocation ? 'LIVE GPS ACTIVE' : isLocating ? 'ACQUIRING FIX' : 'GPS STANDBY'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  {locationAddress}
+                </p>
+              </div>
+            </div>
+
+            {/* Top Right Controls: Follow Mode & Sort */}
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={requestLiveLocation}
-                className="text-white underline font-bold ml-2 cursor-pointer"
+                onClick={() => setFollowUser((prev) => !prev)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                  followUser
+                    ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]'
+                    : 'bg-[#07150C] text-slate-400 border-[#20422E] hover:text-white'
+                }`}
+                title="Automatically pan the map as your GPS position moves"
               >
-                Retry
+                <Radio className={`w-3.5 h-3.5 ${followUser ? 'animate-pulse text-[#4ADE80]' : ''}`} />
+                <span>Follow Me: {followUser ? 'ON' : 'OFF'}</span>
+              </button>
+
+              <button
+                onClick={() => setSortByDistance((prev) => !prev)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+                  sortByDistance
+                    ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]'
+                    : 'bg-[#07150C] text-slate-400 border-[#20422E] hover:text-white'
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>Sort by Closest</span>
+              </button>
+
+              <button
+                onClick={handleLocateMe}
+                disabled={isLocating}
+                className="p-2 rounded-xl bg-[#13271C] border border-[#20422E] hover:border-[#4ADE80]/50 text-[#4ADE80] transition-colors cursor-pointer"
+                title="Recalibrate / Center GPS"
+              >
+                <RotateCcw className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
               </button>
             </div>
-          )}
+          </div>
 
+          {/* Telemetry Metrics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Latitude */}
+            <div className="p-3 rounded-2xl bg-[#07150C] border border-[#20422E] space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Latitude</span>
+              <p className="font-mono text-xs sm:text-sm font-bold text-white">
+                {userLat != null ? `${userLat.toFixed(6)}°` : '—'}
+              </p>
+            </div>
+
+            {/* Longitude */}
+            <div className="p-3 rounded-2xl bg-[#07150C] border border-[#20422E] space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Longitude</span>
+              <p className="font-mono text-xs sm:text-sm font-bold text-white">
+                {userLng != null ? `${userLng.toFixed(6)}°` : '—'}
+              </p>
+            </div>
+
+            {/* GPS Accuracy */}
+            <div className="p-3 rounded-2xl bg-[#07150C] border border-[#20422E] space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold text-slate-400">Accuracy</span>
+                {accuracyQuality && (
+                  <span className={`text-[9px] font-extrabold text-${accuracyQuality.color}-400`}>
+                    {accuracyQuality.level}
+                  </span>
+                )}
+              </div>
+              <p className="font-mono text-xs sm:text-sm font-bold text-[#4ADE80]">
+                {userAccuracy != null ? `±${userAccuracy} m` : '—'}
+              </p>
+            </div>
+
+            {/* Speed & Heading / Last Updated */}
+            <div className="p-3 rounded-2xl bg-[#07150C] border border-[#20422E] space-y-1">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Telemetry Feed</span>
+              <p className="font-mono text-xs sm:text-sm font-bold text-slate-200">
+                {userSpeed != null ? `${userSpeed} km/h` : lastUpdatedLabel}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* ──────────────── SEARCH ROW WITH PROMPT TAG (2ND SCREENSHOT MATCH) ──────────────── */}
@@ -742,13 +778,13 @@ export default function Places() {
                 className="w-full bg-[#07150C] border border-[#20422E] rounded-2xl pl-11 pr-28 py-3.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
               />
               <button
-                onClick={requestLiveLocation}
+                onClick={handleLocateMe}
                 disabled={isLocating}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-[#13271C] border border-[#20422E] hover:border-[#4ADE80]/60 text-[11px] font-bold text-[#4ADE80] flex items-center gap-1.5 cursor-pointer transition-all"
-                title="Get live GPS location"
+                title="Locate me & center map"
               >
-                <Radio className={`w-3 h-3 ${isLocating ? 'animate-spin' : ''}`} />
-                <span>{locationStatus === 'active' ? 'GPS ON' : 'GPS'}</span>
+                <Crosshair className={`w-3 h-3 ${isLocating ? 'animate-spin' : ''}`} />
+                <span>{hasLocation ? 'LOCATED' : 'LOCATE'}</span>
               </button>
             </div>
 
@@ -829,27 +865,39 @@ export default function Places() {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 bg-[#07150C] border border-[#20422E] p-1 rounded-full text-xs">
+                  <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setRadarViewMode('radar')}
-                      className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                        radarViewMode === 'radar'
-                          ? 'bg-[#4ADE80] text-[#07130B]'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
+                      onClick={handleLocateMe}
+                      disabled={isLocating}
+                      className="px-2.5 py-1 rounded-full bg-[#13271C] border border-[#4ADE80]/50 text-[#4ADE80] font-bold text-[11px] hover:bg-[#4ADE80] hover:text-[#07130B] transition-all flex items-center gap-1 cursor-pointer"
+                      title="Center on user GPS position"
                     >
-                      📡 Radar
+                      <Crosshair className={`w-3 h-3 ${isLocating ? 'animate-spin' : ''}`} />
+                      <span>Locate Me</span>
                     </button>
-                    <button
-                      onClick={() => setRadarViewMode('google_maps')}
-                      className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                        radarViewMode === 'google_maps'
-                          ? 'bg-[#4ADE80] text-[#07130B]'
-                          : 'text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      🗺️ Google Maps
-                    </button>
+
+                    <div className="flex items-center gap-1.5 bg-[#07150C] border border-[#20422E] p-1 rounded-full text-xs">
+                      <button
+                        onClick={() => setRadarViewMode('radar')}
+                        className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                          radarViewMode === 'radar'
+                            ? 'bg-[#4ADE80] text-[#07130B]'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        📡 Radar
+                      </button>
+                      <button
+                        onClick={() => setRadarViewMode('google_maps')}
+                        className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                          radarViewMode === 'google_maps'
+                            ? 'bg-[#4ADE80] text-[#07130B]'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        🗺️ Google Maps
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -866,12 +914,14 @@ export default function Places() {
                       src={`https://maps.google.com/maps?q=${encodeURIComponent(
                         selectedPlace 
                           ? `${selectedPlace.name}, ${selectedPlace.address || selectedPlace.city || 'Ahmedabad'}`
+                          : mapCenterOverride
+                          ? `${mapCenterOverride.lat},${mapCenterOverride.lng}`
+                          : hasLocation
+                          ? `${userLat},${userLng}`
                           : searchQuery.trim() 
-                            ? `${searchQuery}, Ahmedabad`
-                            : userCoords
-                              ? `${userCoords.lat},${userCoords.lng}`
-                              : 'Sabarmati Riverfront Park, Ahmedabad'
-                      )}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                          ? `${searchQuery}, Ahmedabad`
+                          : 'Sabarmati Riverfront Park, Ahmedabad'
+                      )}&t=&z=${selectedPlace ? 16 : hasLocation ? 16 : 14}&ie=UTF8&iwloc=&output=embed`}
                     />
                     
                     {/* Active Selected Pin or Live GPS Overlay Badge */}
@@ -879,12 +929,23 @@ export default function Places() {
                       <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-ping" />
                       <span>
                         {selectedPlace
-                          ? `Focused: ${selectedPlace.name}`
-                          : userCoords
-                          ? `Live GPS: ${locationAddress}`
+                          ? `Focused Spot: ${selectedPlace.name}`
+                          : hasLocation
+                          ? `Live GPS: ${locationAddress} (±${userAccuracy || 10}m)`
                           : 'Live Discovery Map'}
                       </span>
                     </div>
+
+                    {/* Quick Centering Button on Map */}
+                    {hasLocation && (
+                      <button
+                        onClick={handleLocateMe}
+                        className="absolute bottom-3 right-3 bg-[#0E2015]/90 hover:bg-[#13271C] text-[#4ADE80] border border-[#4ADE80]/60 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xl flex items-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <Crosshair className="w-3.5 h-3.5" />
+                        <span>Re-center Me</span>
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="relative w-full h-[400px]">
@@ -899,11 +960,12 @@ export default function Places() {
                       animate={{ scale: [1, 1.1, 1] }}
                       transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                       className="absolute left-1/2 top-3/5 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-gradient-to-br from-[#2E6141] to-[#040B06] border-2 border-[#4ADE80] flex flex-col items-center justify-center text-center shadow-2xl z-20 cursor-pointer"
-                      onClick={() => setSelectedPlace(null)}
+                      onClick={handleLocateMe}
+                      title={hasLocation ? `Current GPS: ${userLat?.toFixed(4)}°, ${userLng?.toFixed(4)}° (±${userAccuracy}m)` : 'Click to acquire GPS'}
                     >
-                      <Navigation className={`w-5 h-5 text-[#4ADE80] ${locationStatus === 'active' ? 'rotate-45' : ''}`} />
+                      <Navigation className={`w-5 h-5 text-[#4ADE80] ${hasLocation ? 'rotate-45' : ''}`} />
                       <span className="text-[9px] font-bold text-white tracking-widest uppercase">
-                        {locationStatus === 'active' ? 'GPS' : 'YOU'}
+                        {hasLocation ? 'GPS' : 'YOU'}
                       </span>
                     </motion.div>
 
@@ -1008,7 +1070,7 @@ export default function Places() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {places.map((place) => {
+                {dynamicPlaces.map((place) => {
                   const isFlipped = flippedCardId === place.id;
                   const isSaved = savedPlaceIds.includes(place.id);
 
