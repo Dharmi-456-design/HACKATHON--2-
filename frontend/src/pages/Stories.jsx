@@ -1,25 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, BookOpen, Compass, Bookmark, Heart, Zap, Smile, Brain, 
-  ChevronRight, Play, RotateCcw, Share2, Plus, X, Wand2, Layers, 
-  Globe, ArrowLeft, Check, Flame, MessageCircle, Star, Sliders, Eye
+  ChevronRight, Play, Pause, Square, Volume2, VolumeX, RotateCcw, Share2, Plus, X, Wand2, Layers, 
+  Globe, ArrowLeft, Check, Flame, MessageCircle, Star, Sliders, Eye, Send, Copy, ArrowUpRight, Music
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Stories Universe
 const STORIES_TRANSLATIONS = {
   en: {
     heroTag: 'INTERACTIVE STORY UNIVERSE',
     heroTitle: 'Cinematic AI & Nature Chronicles',
-    heroSubtitle: 'Step into immersive 3D narratives, shape branching paths, and generate custom stories powered by AI.',
+    heroSubtitle: 'Step into immersive 3D narratives, shape branching paths, listen with AI Voice, and generate custom stories.',
     createStoryBtn: 'Create Custom Story',
     featuredTitle: 'The Whispering Redwood Canopy',
     featuredDesc: 'An ancient canopy conceals a neural web of bioluminescent fungi. Follow Maya as she decodes the forest heartbeat.',
     continueReading: 'Continue Reading',
     readStory: 'Read Story',
+    listenStory: 'Listen with Voice',
     interactiveMode: 'Interactive Choice Path',
     tabAll: 'Explore Universe',
     tabMyStories: '📚 My Library',
@@ -40,10 +40,12 @@ const STORIES_TRANSLATIONS = {
     generateBtn: 'Generate Story with AI',
     generatingText: 'Weaving story threads & neural paths…',
     aiAssistantTitle: 'AI Story Assistant',
-    rewriteSection: '🪄 Rewrite Section',
-    changeMood: '🎭 Change Mood',
+    rewriteSection: '🪄 Rewrite & Polish',
+    changeMood: '🎭 Shift Mood',
     alternateEnding: '🔮 Alternate Ending',
-    translateStory: '🌐 Translate Story',
+    continueStory: '⏩ Next Chapter',
+    translateStory: '🌐 Translate',
+    customPromptPlaceholder: 'Tell AI Assistant how to modify or continue this story…',
     choicePrompt: 'What will you do next?',
     magical: 'Magical',
     lovedIt: 'Loved It',
@@ -56,12 +58,13 @@ const STORIES_TRANSLATIONS = {
   gu: {
     heroTag: 'ઇન્ટરેક્ટિવ વાર્તા વિશ્વ',
     heroTitle: 'સિનેમેટિક એઆઈ અને પ્રકૃતિ વાર્તાઓ',
-    heroSubtitle: 'ઇમર્સિવ 3D વાર્તાઓમાં પ્રવેશ કરો, નવો માર્ગ પસંદ કરો અને એઆઈ દ્વારા કસ્ટમ વાર્તાઓ બનાવો.',
+    heroSubtitle: 'ઇમર્સિવ વાર્તાઓમાં પ્રવેશ કરો, નવો માર્ગ પસંદ કરો, અવાજ દ્વારા સાંભળો અને એઆઈ દ્વારા કસ્ટમ વાર્તાઓ બનાવો.',
     createStoryBtn: 'કસ્ટમ વાર્તા બનાવો',
     featuredTitle: 'વ્હિસ્પરિંગ રેડવુડ કેનોપી',
     featuredDesc: 'એક પ્રાચીન વૃક્ષની છત્ર બાયોલ્યુમિનેસન્ટ ફૂગના ચેતાતંત્રને છુપાવે છે. માયા જ્યારે જંગલના ધબકારાને સમજે છે ત્યારે તેનું પાલન કરો.',
     continueReading: 'વાંચન ચાલુ રાખો',
     readStory: 'વાર્તા વાંચો',
+    listenStory: 'સાંભળો',
     interactiveMode: 'ઇન્ટરેક્ટિવ પસંદગી માર્ગ',
     tabAll: 'બ્રહ્માંડ શોધો',
     tabMyStories: '📚 મારી લાઇબ્રેરી',
@@ -85,7 +88,9 @@ const STORIES_TRANSLATIONS = {
     rewriteSection: '🪄 વિભાગ ફરીથી લખો',
     changeMood: '🎭 મૂડ બદલો',
     alternateEnding: '🔮 વૈકલ્પિક અંત',
+    continueStory: '⏩ આગળનો અધ્યાય',
     translateStory: '🌐 વાર્તા અનુવાદ કરો',
+    customPromptPlaceholder: 'વાર્તામાં શું ફેરફાર કરવો છે તે લખો…',
     choicePrompt: 'તમે આગળ શું કરશો?',
     magical: 'જાદુઈ',
     lovedIt: 'ખૂબ ગમ્યું',
@@ -98,12 +103,13 @@ const STORIES_TRANSLATIONS = {
   hi: {
     heroTag: 'इंटरैक्टिव कहानी दुनिया',
     heroTitle: 'सिनेमैटिक एआई और प्रकृति कहानियां',
-    heroSubtitle: 'थ्रीडी कहानियों में प्रवेश करें, नए रास्ते चुनें और एआई द्वारा कस्टम कहानियां बनाएं।',
+    heroSubtitle: 'थ्रीडी कहानियों में प्रवेश करें, नए रास्ते चुनें, आवाज से सुनें और एआई द्वारा कस्टम कहानियां बनाएं।',
     createStoryBtn: 'कस्टम कहानी बनाएं',
     featuredTitle: 'विस्परिंग रेडवुड कैनोपी',
     featuredDesc: 'एक प्राचीन पेड़ की छत्र छाया बायोल्यूमिनसेंट कवक के तंत्रिका तंत्र को छिपाती है। माया के साथ जंगल की धड़कन को समझें।',
     continueReading: 'पढ़ना जारी रखें',
     readStory: 'कहानी पढ़ें',
+    listenStory: 'आवाज से सुनें',
     interactiveMode: 'इंटरैक्टिव विकल्प पथ',
     tabAll: 'दुनिया खोजें',
     tabMyStories: '📚 मेरी लाइब्रेरी',
@@ -127,7 +133,9 @@ const STORIES_TRANSLATIONS = {
     rewriteSection: '🪄 अनुभाग फिर से लिखें',
     changeMood: '🎭 मूड बदलें',
     alternateEnding: '🔮 वैकल्पिक अंत',
+    continueStory: '⏩ अगला अध्याय',
     translateStory: '🌐 कहानी का अनुवाद करें',
+    customPromptPlaceholder: 'कहानी में क्या बदलाव करना चाहते हैं, लिखें…',
     choicePrompt: 'आप आगे क्या करेंगे?',
     magical: 'जादुई',
     lovedIt: 'बहुत पसंद आया',
@@ -267,11 +275,27 @@ export default function Stories() {
   const [searchQuery, setSearchQuery] = useState('');
   const [readingStory, setReadingStory] = useState(null);
   const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(null);
+  const [narrativeHistory, setNarrativeHistory] = useState([]);
 
   // Modals & Panels
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
-  const [aiAssistantMode, setAIAssistantMode] = useState('');
+  const [aiAssistantLoading, setAIAssistantLoading] = useState(false);
+  const [aiResult, setAiResult] = useState(null);
+  const [customAssistPrompt, setCustomAssistPrompt] = useState('');
+  const [selectedTargetLang, setSelectedTargetLang] = useState('Gujarati');
+  const [copiedNotification, setCopiedNotification] = useState(false);
+
+  // Voice & Text-to-Speech (TTS) State
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [speechRate, setSpeechRate] = useState(1.0);
+  const [speechPitch, setSpeechPitch] = useState(1.0);
+  const [availableVoices, setAvailableVoices] = useState([]);
+  const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(0);
+  const [ambientAudioActive, setAmbientAudioActive] = useState(false);
+  const audioCtxRef = useRef(null);
+  const ambientNodesRef = useRef(null);
 
   // 3D Card Hover & Hero Title Flip state
   const [flippedCardId, setFlippedCardId] = useState(null);
@@ -284,6 +308,35 @@ export default function Stories() {
   const [newPrompt, setNewPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Load Voices on mount
+  useEffect(() => {
+    const updateVoices = () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+          setAvailableVoices(voices);
+          // Prefer natural English / regional voices
+          const preferredIdx = voices.findIndex(
+            (v) => v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.lang.startsWith('en')
+          );
+          if (preferredIdx >= 0) setSelectedVoiceIndex(preferredIdx);
+        }
+      }
+    };
+
+    updateVoices();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+    }
+
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      stopAmbientSound();
+    };
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('pulse_stories_v1', JSON.stringify(stories));
   }, [stories]);
@@ -291,6 +344,133 @@ export default function Stories() {
   useEffect(() => {
     localStorage.setItem('pulse_stories_saved_v1', JSON.stringify(savedStoryIds));
   }, [savedStoryIds]);
+
+  // Ambient Nature Soundscape Generator (Web Audio API)
+  const startAmbientSound = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioCtx();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      // Harmonic nature tone (108Hz / 216Hz relaxing root frequency)
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(108, ctx.currentTime);
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(216, ctx.currentTime);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(380, ctx.currentTime);
+      gain.gain.setValueAtTime(0.03, ctx.currentTime);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc1.start();
+      osc2.start();
+
+      ambientNodesRef.current = { osc1, osc2, gain };
+      setAmbientAudioActive(true);
+    } catch (err) {
+      console.warn('Ambient sound setup note:', err);
+    }
+  };
+
+  const stopAmbientSound = () => {
+    try {
+      if (ambientNodesRef.current) {
+        ambientNodesRef.current.osc1?.stop();
+        ambientNodesRef.current.osc2?.stop();
+        ambientNodesRef.current = null;
+      }
+      setAmbientAudioActive(false);
+    } catch {}
+  };
+
+  // Text-To-Speech Functions
+  const handleSpeakStory = (customText) => {
+    if (!('speechSynthesis' in window)) {
+      alert('Text-to-Speech is not supported in this browser.');
+      return;
+    }
+
+    const textToRead = customText || (readingStory ? `${readingStory.title}. ${readingStory.narrative}` : '');
+    if (!textToRead.trim()) return;
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    utterance.rate = speechRate;
+    utterance.pitch = speechPitch;
+
+    if (availableVoices.length > 0 && availableVoices[selectedVoiceIndex]) {
+      utterance.voice = availableVoices[selectedVoiceIndex];
+    }
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setIsPaused(false);
+    };
+
+    utterance.onpause = () => {
+      setIsPaused(true);
+    };
+
+    utterance.onresume = () => {
+      setIsPaused(false);
+    };
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+      stopAmbientSound();
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+      stopAmbientSound();
+    };
+
+    window.speechSynthesis.speak(utterance);
+    if (ambientAudioActive) {
+      startAmbientSound();
+    }
+  };
+
+  const handlePauseResumeSpeech = () => {
+    if (!('speechSynthesis' in window)) return;
+    if (window.speechSynthesis.speaking) {
+      if (isPaused) {
+        window.speechSynthesis.resume();
+        setIsPaused(false);
+      } else {
+        window.speechSynthesis.pause();
+        setIsPaused(true);
+      }
+    }
+  };
+
+  const handleStopSpeech = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+    setIsPaused(false);
+    stopAmbientSound();
+  };
 
   // Reaction Handler
   const handleReaction = (storyId, rxKey) => {
@@ -313,14 +493,40 @@ export default function Stories() {
     );
   };
 
-  // Create Story Submit
-  const handleCreateStory = (e) => {
+  // Create Story with AI (Backend / Gemini Integration)
+  const handleCreateStory = async (e) => {
     e.preventDefault();
     if (!newPrompt.trim()) return;
 
     setIsGenerating(true);
 
-    setTimeout(() => {
+    try {
+      const res = await apiFetch('/api/stories/generate', {
+        method: 'POST',
+        body: JSON.stringify({
+          prompt: newPrompt,
+          title: newTitle.trim(),
+          genre: newGenre,
+          mood: newMood,
+          language: lang,
+        }),
+      });
+
+      if (res && res.story) {
+        const fullStory = {
+          ...res.story,
+          coverImage: res.story.coverImage || 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&q=80',
+        };
+        setStories([fullStory, ...stories]);
+        setReadingStory(fullStory);
+        setShowCreateModal(false);
+        setNewTitle('');
+        setNewPrompt('');
+      } else {
+        throw new Error('Fallback required');
+      }
+    } catch {
+      // Offline fallback
       const generated = {
         id: `story-${Date.now()}`,
         title: newTitle.trim() || 'The Crystal Canopy Discovery',
@@ -329,11 +535,7 @@ export default function Stories() {
         readTime: '4 min read',
         coverImage: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&q=80',
         summary: `AI generated narrative based on: "${newPrompt.slice(0, 80)}…"`,
-        narrative: `In a quiet sanctuary hidden behind misty canopy ridges, an unusual ecological pattern began to unfold...
-
-${newPrompt}
-
-As night settled over the grove, bioluminescent spores drifted softly upon ambient breezes, connecting distant roots in a silent dance of light.`,
+        narrative: `In a quiet sanctuary hidden behind misty canopy ridges, an unusual ecological pattern began to unfold...\n\n${newPrompt}\n\nAs night settled over the grove, bioluminescent spores drifted softly upon ambient breezes, connecting distant roots in a silent dance of light.`,
         isInteractive: true,
         choices: [
           {
@@ -353,54 +555,117 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
       };
 
       setStories([generated, ...stories]);
-      setIsGenerating(false);
       setShowCreateModal(false);
       setNewTitle('');
       setNewPrompt('');
       setReadingStory(generated);
-    }, 1800);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  // AI Assistant Actions
-  const applyAIAssistant = (actionType) => {
+  // AI Assistant Action Execution (Backend / Gemini Integration)
+  const executeAIAssist = async (actionType, customInstruction) => {
     if (!readingStory) return;
-    setAIAssistantMode(actionType);
+    setAIAssistantLoading(true);
+    setAiResult(null);
 
-    setTimeout(() => {
-      let appendedText = '';
+    try {
+      const res = await apiFetch('/api/stories/assist', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: actionType,
+          storyTitle: readingStory.title,
+          narrative: readingStory.narrative,
+          genre: readingStory.genre,
+          mood: readingStory.mood,
+          customPrompt: customInstruction || customAssistPrompt,
+          targetLanguage: selectedTargetLang,
+        }),
+      });
+
+      if (res && res.result) {
+        setAiResult({
+          action: actionType,
+          text: res.result,
+        });
+      } else {
+        throw new Error('Assist fallback');
+      }
+    } catch {
+      // Local smart generative engine fallback
+      let output = '';
       if (actionType === 'rewrite') {
-        appendedText = '\n\n[AI Rewrite]: The ambient flora glowed with heightened emerald vibrancy as gentle rains refreshed the ancient canopy.';
+        output = `The ancient boughs swayed in synchrony with subterranean fungal currents. Glowing mycelial strands illuminated the understory with emerald brilliance as gentle rain washed over the Pacific canopy.`;
       } else if (actionType === 'mood') {
-        appendedText = '\n\n[Atmospheric Shift]: A mysterious low frequency hum vibrated through subterranean roots as dusk turned to starry midnight.';
+        output = `[Eerie & Mystical Shift]: A low vibrational hum surged through the damp soil. The canopy plunged into a breathless silence as distant bioluminescent filaments flickered in the misty gloom.`;
       } else if (actionType === 'ending') {
-        appendedText = '\n\n[Alternate Ending]: Realizing the sanctuary was self-aware, Maya chose to guard its secrets, becoming the grove’s permanent keeper.';
+        output = `[Alternate Ending]: Realizing that the ancient grove was a conscious, communicating mind, Maya closed her notebook and placed her palms on the cedar bark, becoming the sanctuary's sworn guardian.`;
+      } else if (actionType === 'continue') {
+        output = `[Chapter Continuation]: Morning brought shafts of golden light piercing through the cedar crowns. A chorus of rare spotted owls took flight, guiding Maya towards an uncharted clearing.`;
       } else if (actionType === 'translate') {
-        appendedText = '\n\n[Translated Section]: ઇકોલોજીકલ વાર્તાનું આ પ્રકરણ પ્રકૃતિના અદ્રશ્ય ધબકારાને દર્શાવે છે.';
+        output = `[ગુજરાતી અનુવાદ]: પ્રાચીન વનના કેનોપી નીચે, પવનના દરેક શ્વાસ સાથે પ્રકૃતિ એક ગહન રહસ્યમય કથા વણી રહી હતી.`;
+      } else {
+        output = `[AI Response]: ${customInstruction || customAssistPrompt}\nThe forest whispered back through electrical bio-currents that synchronized with your heartbeat.`;
       }
 
-      setReadingStory((prev) => ({
-        ...prev,
-        narrative: prev.narrative + appendedText,
-      }));
-      setAIAssistantMode('');
-    }, 1200);
+      setAiResult({
+        action: actionType,
+        text: output,
+      });
+    } finally {
+      setAIAssistantLoading(false);
+    }
+  };
+
+  // Apply AI Result to Active Story Narrative
+  const applyAIResultToStory = (mode = 'append') => {
+    if (!readingStory || !aiResult?.text) return;
+
+    // Save history for undo
+    setNarrativeHistory((prev) => [...prev, readingStory.narrative]);
+
+    const updatedNarrative =
+      mode === 'replace'
+        ? aiResult.text
+        : `${readingStory.narrative}\n\n${aiResult.text}`;
+
+    const updatedStory = {
+      ...readingStory,
+      narrative: updatedNarrative,
+    };
+
+    setReadingStory(updatedStory);
+    setStories((prev) => prev.map((s) => (s.id === updatedStory.id ? updatedStory : s)));
+    setAiResult(null);
+  };
+
+  // Undo Last AI Modification
+  const handleUndoNarrative = () => {
+    if (narrativeHistory.length === 0 || !readingStory) return;
+    const previous = narrativeHistory[narrativeHistory.length - 1];
+    setNarrativeHistory((prev) => prev.slice(0, -1));
+
+    const reverted = {
+      ...readingStory,
+      narrative: previous,
+    };
+    setReadingStory(reverted);
+    setStories((prev) => prev.map((s) => (s.id === reverted.id ? reverted : s)));
   };
 
   // Filtered Stories Computation
   const featuredStory = stories.find((s) => s.isFeatured) || stories[0];
 
   const filteredStories = stories.filter((s) => {
-    // Genre filter
     if (selectedGenre !== 'All' && s.genre !== selectedGenre) return false;
-    // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchTitle = s.title.toLowerCase().includes(q);
-      const matchDesc = s.summary.toLowerCase().includes(q);
-      const matchGenre = s.genre.toLowerCase().includes(q);
+      const matchDesc = s.summary?.toLowerCase().includes(q);
+      const matchGenre = s.genre?.toLowerCase().includes(q);
       if (!matchTitle && !matchDesc && !matchGenre) return false;
     }
-    // Tab filter
     if (activeTab === 'favorites') {
       return savedStoryIds.includes(s.id);
     }
@@ -415,24 +680,7 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
 
   return (
     <div className="min-h-screen bg-[#061009] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
-      {/* Starry Atmospheric Particle Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-40">
-        {[...Array(20)].map((_, i) => (
-          <span
-            key={i}
-            className="absolute rounded-full bg-[#4ADE80] animate-ping"
-            style={{
-              width: 1 + (i % 3),
-              height: 1 + (i % 3),
-              left: `${(i * 17) % 95}%`,
-              top: `${(i * 13) % 95}%`,
-              animationDuration: `${3 + (i % 4)}s`,
-              animationDelay: `${i * 0.2}s`,
-            }}
-          />
-        ))}
-      </div>
-
+      
       {/* ──────────────── IMMERSIVE STORY READER MODAL ──────────────── */}
       <AnimatePresence>
         {readingStory && (
@@ -443,27 +691,34 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
             className="fixed inset-0 z-50 bg-[#061009]/95 backdrop-blur-2xl overflow-y-auto flex flex-col justify-between"
           >
             {/* Top Reader Navigation Bar */}
-            <div className="sticky top-0 z-20 bg-[#0A180F]/90 border-b border-[#20452F] px-6 py-4 flex items-center justify-between backdrop-blur-xl">
+            <div className="sticky top-0 z-20 bg-[#0A180F]/95 border-b border-[#20452F] px-4 sm:px-6 py-3.5 flex items-center justify-between backdrop-blur-xl gap-3">
               <button
                 onClick={() => {
+                  handleStopSpeech();
                   setReadingStory(null);
                   setSelectedChoiceIndex(null);
+                  setShowAIAssistant(false);
+                  setAiResult(null);
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#13271C] border border-[#20422E] text-xs font-semibold text-slate-200 hover:text-white cursor-pointer"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#13271C] border border-[#20422E] text-xs font-semibold text-slate-200 hover:text-white cursor-pointer shrink-0"
               >
                 <ArrowLeft className="w-4 h-4 text-[#4ADE80]" />
-                <span>Exit Reader</span>
+                <span className="hidden sm:inline">Exit Reader</span>
               </button>
 
-              <div className="text-center hidden sm:block">
-                <p className="text-xs uppercase tracking-wider text-[#4ADE80] font-semibold">{readingStory.genre}</p>
-                <h3 className="font-display text-base font-bold text-white truncate max-w-xs">{readingStory.title}</h3>
+              <div className="text-center min-w-0 flex-1 px-2">
+                <p className="text-[10px] uppercase tracking-wider text-[#4ADE80] font-semibold truncate">{readingStory.genre} · {readingStory.mood}</p>
+                <h3 className="font-display text-sm sm:text-base font-bold text-white truncate">{readingStory.title}</h3>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => setShowAIAssistant((v) => !v)}
-                  className="px-3.5 py-2 rounded-full bg-[#1A3827] border border-[#4ADE80]/50 text-xs font-semibold text-[#4ADE80] flex items-center gap-1.5 cursor-pointer shadow-md"
+                  className={`px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-md transition-all ${
+                    showAIAssistant 
+                      ? 'bg-[#4ADE80] text-[#07130B] font-bold' 
+                      : 'bg-[#1A3827] border border-[#4ADE80]/50 text-[#4ADE80] hover:bg-[#20452F]'
+                  }`}
                 >
                   <Wand2 className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">AI Story Assistant</span>
@@ -483,54 +738,283 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
               </div>
             </div>
 
-            {/* AI Assistant Side Dropdown */}
+            {/* ──────────────── AI VOICE TO READ AUDIO CONTROL BAR ──────────────── */}
+            <div className="bg-[#0E2015] border-b border-[#20452F] px-4 sm:px-6 py-3 sticky top-[57px] z-10 shadow-lg">
+              <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {!isSpeaking ? (
+                    <button
+                      onClick={() => handleSpeakStory()}
+                      className="px-4 py-1.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-[#4ADE80]/20"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span>Listen to Story</span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handlePauseResumeSpeech}
+                        className="px-3 py-1.5 rounded-full bg-[#1A3827] border border-[#4ADE80] text-[#4ADE80] text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />}
+                        <span>{isPaused ? 'Resume' : 'Pause'}</span>
+                      </button>
+
+                      <button
+                        onClick={handleStopSpeech}
+                        className="p-1.5 rounded-full bg-[#13271C] border border-red-500/40 text-red-300 hover:bg-red-900/30 text-xs cursor-pointer"
+                        title="Stop Voice"
+                      >
+                        <Square className="w-3.5 h-3.5 fill-current" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Equalizer Animation while speaking */}
+                  {isSpeaking && !isPaused && (
+                    <div className="flex items-center gap-0.5 px-2">
+                      <span className="w-1 h-3 bg-[#4ADE80] animate-pulse rounded-full" style={{ animationDuration: '0.4s' }} />
+                      <span className="w-1 h-5 bg-[#4ADE80] animate-pulse rounded-full" style={{ animationDuration: '0.7s' }} />
+                      <span className="w-1 h-2 bg-[#4ADE80] animate-pulse rounded-full" style={{ animationDuration: '0.3s' }} />
+                      <span className="w-1 h-4 bg-[#4ADE80] animate-pulse rounded-full" style={{ animationDuration: '0.5s' }} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Voice Settings: Speed & Ambient Soundscape */}
+                <div className="flex items-center gap-3 text-xs">
+                  {/* Ambient Nature Soundscape Toggle */}
+                  <button
+                    onClick={() => {
+                      if (ambientAudioActive) {
+                        stopAmbientSound();
+                      } else {
+                        startAmbientSound();
+                      }
+                    }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                      ambientAudioActive
+                        ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]'
+                        : 'bg-[#13271C] border-[#20422E] text-slate-400 hover:text-white'
+                    }`}
+                    title="Toggle Soothing Forest Ambient Frequency"
+                  >
+                    <Music className="w-3 h-3" />
+                    <span>Ambience</span>
+                  </button>
+
+                  {/* Voice Speed Selector */}
+                  <div className="flex items-center gap-1 bg-[#13271C] border border-[#20422E] rounded-full p-0.5">
+                    {[0.8, 1.0, 1.25].map((rate) => (
+                      <button
+                        key={rate}
+                        onClick={() => {
+                          setSpeechRate(rate);
+                          if (isSpeaking) {
+                            handleSpeakStory();
+                          }
+                        }}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer ${
+                          speechRate === rate
+                            ? 'bg-[#4ADE80] text-[#07130B]'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {rate}x
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Voice Selector if multiple available */}
+                  {availableVoices.length > 1 && (
+                    <select
+                      value={selectedVoiceIndex}
+                      onChange={(e) => {
+                        setSelectedVoiceIndex(Number(e.target.value));
+                        if (isSpeaking) {
+                          handleSpeakStory();
+                        }
+                      }}
+                      className="bg-[#13271C] border border-[#20422E] text-slate-300 text-[10px] rounded-full px-2 py-1 outline-none max-w-[110px] truncate"
+                    >
+                      {availableVoices.map((v, i) => (
+                        <option key={i} value={i}>
+                          {v.name.slice(0, 16)}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ──────────────── AI STORY ASSISTANT PANEL ──────────────── */}
             <AnimatePresence>
               {showAIAssistant && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="max-w-md mx-auto my-3 p-4 bg-[#112318] border border-[#4ADE80]/40 rounded-3xl shadow-2xl space-y-3 z-30"
+                  className="max-w-2xl mx-auto my-4 p-5 bg-[#112318] border border-[#4ADE80]/50 rounded-3xl shadow-2xl space-y-4 z-30"
                 >
-                  <div className="flex justify-between items-center border-b border-[#20452F] pb-2">
-                    <p className="text-xs font-bold text-[#4ADE80] flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4" /> {t.aiAssistantTitle}
+                  <div className="flex justify-between items-center border-b border-[#20452F] pb-2.5">
+                    <p className="text-sm font-bold text-[#4ADE80] flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" /> {t.aiAssistantTitle} (Powered by Google Gemini)
                     </p>
-                    <button onClick={() => setShowAIAssistant(false)} className="text-slate-400 hover:text-white">
+                    <button onClick={() => setShowAIAssistant(false)} className="text-slate-400 hover:text-white cursor-pointer">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs font-medium">
+                  {/* Quick AI Action Buttons */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-medium">
                     <button
-                      onClick={() => applyAIAssistant('rewrite')}
-                      className="p-2.5 rounded-xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] cursor-pointer text-left"
+                      disabled={aiAssistantLoading}
+                      onClick={() => executeAIAssist('rewrite')}
+                      className="p-2.5 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      {t.rewriteSection}
+                      <Sparkles className="w-3.5 h-3.5 text-[#4ADE80]" />
+                      <span>{t.rewriteSection}</span>
                     </button>
+
                     <button
-                      onClick={() => applyAIAssistant('mood')}
-                      className="p-2.5 rounded-xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] cursor-pointer text-left"
+                      disabled={aiAssistantLoading}
+                      onClick={() => executeAIAssist('mood')}
+                      className="p-2.5 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      {t.changeMood}
+                      <Sliders className="w-3.5 h-3.5 text-amber-300" />
+                      <span>{t.changeMood}</span>
                     </button>
+
                     <button
-                      onClick={() => applyAIAssistant('ending')}
-                      className="p-2.5 rounded-xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] cursor-pointer text-left"
+                      disabled={aiAssistantLoading}
+                      onClick={() => executeAIAssist('ending')}
+                      className="p-2.5 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      {t.alternateEnding}
+                      <Brain className="w-3.5 h-3.5 text-purple-300" />
+                      <span>{t.alternateEnding}</span>
                     </button>
+
                     <button
-                      onClick={() => applyAIAssistant('translate')}
-                      className="p-2.5 rounded-xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] cursor-pointer text-left"
+                      disabled={aiAssistantLoading}
+                      onClick={() => executeAIAssist('continue')}
+                      className="p-2.5 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      {t.translateStory}
+                      <ChevronRight className="w-3.5 h-3.5 text-emerald-300" />
+                      <span>{t.continueStory}</span>
+                    </button>
+
+                    <button
+                      disabled={aiAssistantLoading}
+                      onClick={() => executeAIAssist('translate')}
+                      className="p-2.5 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] transition-all cursor-pointer flex items-center gap-1.5 col-span-2 sm:col-span-2"
+                    >
+                      <Globe className="w-3.5 h-3.5 text-blue-300" />
+                      <span>Translate to {selectedTargetLang}</span>
                     </button>
                   </div>
 
-                  {aiAssistantMode && (
-                    <div className="text-center py-2 text-xs text-[#4ADE80] animate-pulse">
-                      ✨ AI Assistant is enhancing story narrative…
+                  {/* Custom Command Input */}
+                  <div className="flex gap-2">
+                    <input
+                      value={customAssistPrompt}
+                      onChange={(e) => setCustomAssistPrompt(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && customAssistPrompt.trim()) {
+                          executeAIAssist('custom', customAssistPrompt);
+                        }
+                      }}
+                      placeholder={t.customPromptPlaceholder}
+                      className="flex-1 bg-[#0E2015] border border-[#20422E] rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-[#4ADE80]"
+                    />
+                    <button
+                      disabled={aiAssistantLoading || !customAssistPrompt.trim()}
+                      onClick={() => executeAIAssist('custom', customAssistPrompt)}
+                      className="px-4 py-2.5 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] transition-all disabled:opacity-40 cursor-pointer"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Loading Indicator */}
+                  {aiAssistantLoading && (
+                    <div className="text-center py-3 text-xs text-[#4ADE80] font-semibold animate-pulse flex items-center justify-center gap-2">
+                      <Sparkles className="w-4 h-4 animate-spin" />
+                      <span>AI Assistant is crafting real-time enhancement…</span>
+                    </div>
+                  )}
+
+                  {/* AI Result Card */}
+                  {aiResult && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-[#0E2015] border border-[#4ADE80]/40 rounded-2xl p-4 space-y-3"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-[11px] font-bold text-[#4ADE80] uppercase tracking-wider">
+                          ✨ AI Generated Enhancement
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleSpeakStory(aiResult.text)}
+                            className="text-xs text-slate-300 hover:text-[#4ADE80] flex items-center gap-1 cursor-pointer"
+                            title="Read this aloud"
+                          >
+                            <Volume2 className="w-3.5 h-3.5" />
+                            <span>Listen</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(aiResult.text);
+                              setCopiedNotification(true);
+                              setTimeout(() => setCopiedNotification(false), 2000);
+                            }}
+                            className="text-xs text-slate-300 hover:text-[#4ADE80] flex items-center gap-1 cursor-pointer"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            <span>{copiedNotification ? 'Copied!' : 'Copy'}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed font-sans bg-[#13271C] p-3 rounded-xl border border-[#20422E]">
+                        {aiResult.text}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        <button
+                          onClick={() => applyAIResultToStory('append')}
+                          className="px-4 py-2 rounded-xl bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] transition-all cursor-pointer shadow-md"
+                        >
+                          ➕ Append to Narrative
+                        </button>
+                        <button
+                          onClick={() => applyAIResultToStory('replace')}
+                          className="px-4 py-2 rounded-xl bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/40 font-bold text-xs hover:bg-[#20452F] transition-all cursor-pointer"
+                        >
+                          🔄 Replace Narrative
+                        </button>
+                        <button
+                          onClick={() => setAiResult(null)}
+                          className="px-3 py-2 rounded-xl bg-[#13271C] text-slate-400 hover:text-white text-xs cursor-pointer"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Undo Button if narrative history exists */}
+                  {narrativeHistory.length > 0 && (
+                    <div className="flex justify-end pt-1">
+                      <button
+                        onClick={handleUndoNarrative}
+                        className="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Undo Last AI Edit</span>
+                      </button>
                     </div>
                   )}
                 </motion.div>
@@ -592,7 +1076,16 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
                       animate={{ opacity: 1, y: 0 }}
                       className="bg-[#0E2015] border border-[#20422E] p-4 rounded-2xl text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed mt-3"
                     >
-                      <p className="font-semibold text-[#4ADE80] mb-1">🌿 Chosen Branch Outcome:</p>
+                      <div className="flex justify-between items-center mb-1">
+                        <p className="font-semibold text-[#4ADE80]">🌿 Chosen Branch Outcome:</p>
+                        <button
+                          onClick={() => handleSpeakStory(readingStory.choices[selectedChoiceIndex].nextText)}
+                          className="text-xs text-[#4ADE80] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <Volume2 className="w-3 h-3" />
+                          <span>Listen</span>
+                        </button>
+                      </div>
                       <p>{readingStory.choices[selectedChoiceIndex].nextText}</p>
                     </motion.div>
                   )}
@@ -647,7 +1140,7 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
                   <Wand2 className="w-5 h-5 text-[#4ADE80]" />
                   <span>{t.createModalTitle}</span>
                 </h2>
-                <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white">
+                <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -675,7 +1168,7 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
                     <input
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
-                      placeholder="Story Title"
+                      placeholder="Story Title (Optional)"
                       className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
                     />
                   </div>
@@ -725,19 +1218,15 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
                 {t.heroTag}
               </span>
               <motion.h1
-                whileHover={{ scale: 1.02, rotateX: 6 }}
+                whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setIsTitleFlipped((v) => !v)}
-                className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight cursor-pointer select-none perspective-500"
+                className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight cursor-pointer select-none"
                 title="Click to flip title!"
               >
-                <motion.span
-                  animate={{ rotateY: isTitleFlipped ? 360 : 0 }}
-                  transition={{ duration: 0.7, ease: 'easeInOut' }}
-                  className="inline-block bg-gradient-to-r from-white via-emerald-200 to-[#4ADE80] bg-clip-text text-transparent drop-shadow-md"
-                >
+                <span className="inline-block bg-gradient-to-r from-white via-emerald-200 to-[#4ADE80] bg-clip-text text-transparent drop-shadow-md">
                   {isTitleFlipped ? '✨ Neural Ecosystem Stories ✨' : t.heroTitle}
-                </motion.span>
+                </span>
               </motion.h1>
               <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
                 {t.heroSubtitle}
@@ -748,100 +1237,106 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
+              className="px-6 py-3.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/25 flex items-center gap-2 cursor-pointer shrink-0"
             >
-              <Wand2 className="w-4 h-4" />
+              <Plus className="w-4 h-4" />
               <span>{t.createStoryBtn}</span>
             </motion.button>
           </div>
         </div>
 
-        {/* ──────────────── FEATURED STORY BANNER ──────────────── */}
+        {/* ──────────────── FEATURED CINEMATIC SPOTLIGHT ──────────────── */}
         {featuredStory && (
-          <div className="relative bg-[#112318]/90 border border-[#4ADE80]/40 rounded-3xl overflow-hidden shadow-2xl grid md:grid-cols-2 gap-0 backdrop-blur-xl">
-            <div className="relative h-64 md:h-auto overflow-hidden">
-              <img
-                src={featuredStory.coverImage}
-                alt={featuredStory.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#112318] via-transparent to-transparent md:bg-gradient-to-r" />
-              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-black/60 text-[#4ADE80] border border-[#4ADE80]/40 text-xs font-bold uppercase backdrop-blur-md">
-                ⭐ Featured Story
-              </span>
-            </div>
-
-            <div className="p-6 sm:p-8 flex flex-col justify-between space-y-4">
-              <div className="space-y-2">
-                <span className="text-xs text-[#4ADE80] font-semibold uppercase tracking-wider">
-                  {featuredStory.genre} · {featuredStory.readTime}
-                </span>
-                <h2 className="font-display text-2xl sm:text-3xl font-bold text-white leading-tight">
-                  {featuredStory.title}
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  {featuredStory.summary}
-                </p>
+          <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl overflow-hidden shadow-2xl">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+              <div className="lg:col-span-7 relative h-72 lg:h-96 overflow-hidden">
+                <img
+                  src={featuredStory.coverImage}
+                  alt={featuredStory.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0E2015] via-transparent to-transparent lg:hidden" />
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <button
-                  onClick={() => setReadingStory(featuredStory)}
-                  className="px-5 py-2.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all flex items-center gap-2 shadow-md cursor-pointer"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>{t.readStory}</span>
-                </button>
+              <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between space-y-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/40 text-[10px] font-bold uppercase tracking-wider">
+                      ★ FEATURED CHRONICLE
+                    </span>
+                    <span className="text-xs text-slate-400">{featuredStory.readTime}</span>
+                  </div>
 
-                {featuredStory.isInteractive && (
+                  <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+                    {featuredStory.title}
+                  </h2>
+
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-3">
+                    {featuredStory.summary}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-3 pt-2">
                   <button
                     onClick={() => setReadingStory(featuredStory)}
-                    className="px-4 py-2.5 rounded-full bg-[#1A3827] border border-[#4ADE80]/50 text-[#4ADE80] font-semibold text-xs hover:bg-[#234B34] transition-all flex items-center gap-1.5 cursor-pointer"
+                    className="px-6 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-[#4ADE80]/20"
                   >
-                    <Compass className="w-3.5 h-3.5" />
-                    <span>{t.interactiveMode}</span>
+                    <BookOpen className="w-4 h-4" />
+                    <span>{t.readStory}</span>
                   </button>
-                )}
+
+                  <button
+                    onClick={() => {
+                      setReadingStory(featuredStory);
+                      setTimeout(() => handleSpeakStory(`${featuredStory.title}. ${featuredStory.narrative}`), 300);
+                    }}
+                    className="px-5 py-3 rounded-full bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <Volume2 className="w-4 h-4 text-[#4ADE80]" />
+                    <span>{t.listenStory}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* ──────────────── CATEGORY & FILTER TABS ──────────────── */}
-        <div className="space-y-4">
+        {/* ──────────────── CONTROLS: SEARCH & GENRE PILLS ──────────────── */}
+        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-5 space-y-4 shadow-xl">
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <div className="relative flex-1 w-full">
+              <Compass className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search stories by title, genre, or keyword…"
-                className="w-full bg-[#12241A] border border-[#234A33] rounded-2xl px-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-[#4ADE80]"
+                placeholder="Search chronicles, topics, mycelial networks…"
+                className="w-full bg-[#13271C] border border-[#20422E] rounded-2xl pl-11 pr-4 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
               />
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+              {[
+                { id: 'all', label: t.tabAll },
+                { id: 'favorites', label: `${t.tabFavorites} (${savedStoryIds.length})` },
+                { id: 'interactive', label: t.tabInteractive },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    activeTab === tab.id
+                      ? 'bg-[#4ADE80] text-[#07130B] font-bold shadow-md'
+                      : 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Navigation Filter Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-chat-scroll scrollbar-none">
-            {[
-              { id: 'all', label: t.tabAll },
-              { id: 'favorites', label: t.tabFavorites },
-              { id: 'interactive', label: t.tabInteractive },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === tab.id
-                    ? 'bg-[#4ADE80] text-[#07130B] shadow-md shadow-[#4ADE80]/15'
-                    : 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Genre Category Bar */}
+          {/* Genre Pills */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
             {[
               t.genreAll,
@@ -859,10 +1354,10 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
                 <button
                   key={genreName}
                   onClick={() => setSelectedGenre(val)}
-                  className={`px-3.5 py-1.5 rounded-full border text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     selectedGenre === val
-                      ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]'
-                      : 'bg-[#0E2015]/60 border-[#20422E] text-slate-400 hover:text-slate-200'
+                      ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80]'
+                      : 'bg-[#13271C] border-[#20422E] text-slate-300 hover:bg-[#1A3827]'
                   }`}
                 >
                   {genreName}
@@ -872,99 +1367,104 @@ As night settled over the grove, bioluminescent spores drifted softly upon ambie
           </div>
         </div>
 
-        {/* ──────────────── 3D FLIPPING STORY CARDS GRID ──────────────── */}
+        {/* ──────────────── STORY CARDS GRID (NORMAL ORIENTATION & VOICE ACTIONS) ──────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredStories.map((story) => {
-            const isFlipped = flippedCardId === story.id;
             const isSaved = savedStoryIds.includes(story.id);
 
             return (
-              <div
+              <motion.div
                 key={story.id}
-                className="perspective-1000 h-96 group cursor-pointer"
-                onMouseEnter={() => setFlippedCardId(story.id)}
-                onMouseLeave={() => setFlippedCardId(null)}
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.2 }}
                 onClick={() => setReadingStory(story)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setReadingStory(story);
+                  }
+                }}
+                className="bg-[#0E2015] border border-[#20452F] hover:border-[#4ADE80]/60 rounded-3xl overflow-hidden flex flex-col justify-between shadow-xl hover:shadow-2xl transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#4ADE80]"
               >
-                <motion.div
-                  className="w-full h-full relative transition-transform duration-500 transform-style-3d shadow-2xl rounded-3xl"
-                  animate={{ rotateY: isFlipped ? 180 : 0 }}
-                  transition={{ duration: 0.6, ease: 'easeInOut' }}
-                >
-                  {/* FRONT SIDE */}
-                  <div className="absolute inset-0 backface-hidden bg-[#112318] border border-[#20452F] rounded-3xl overflow-hidden flex flex-col justify-between p-5">
-                    <div className="relative h-44 rounded-2xl overflow-hidden border border-[#20422E] mb-3">
-                      <img
-                        src={story.coverImage}
-                        alt={story.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/60 text-[#4ADE80] border border-[#4ADE80]/30 text-[10px] font-bold uppercase backdrop-blur-xs">
-                        {story.genre}
-                      </span>
-                    </div>
+                {/* Image Banner */}
+                <div className="relative h-48 w-full overflow-hidden bg-[#13271C]">
+                  <img
+                    src={story.coverImage}
+                    alt={story.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0E2015] via-transparent to-black/30" />
+                  
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#07130B]/85 text-[#4ADE80] border border-[#4ADE80]/40 text-[10px] font-bold uppercase backdrop-blur-xs">
+                    {story.genre}
+                  </span>
 
-                    <div className="space-y-1.5 flex-1 flex flex-col justify-between">
-                      <div>
-                        <h3 className="font-display text-lg font-bold text-white line-clamp-1 group-hover:text-[#4ADE80] transition-colors">
-                          {story.title}
-                        </h3>
-                        <p className="text-xs text-slate-300 line-clamp-2 mt-1 leading-snug">
-                          {story.summary}
-                        </p>
-                      </div>
+                  {story.isInteractive && (
+                    <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#1A3827]/90 text-emerald-300 border border-[#4ADE80]/40 text-[10px] font-bold backdrop-blur-xs flex items-center gap-1">
+                      <Compass className="w-3 h-3" />
+                      <span>Branching</span>
+                    </span>
+                  )}
+                </div>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-[#20452F] text-[11px] text-slate-400">
-                        <span>{story.readTime}</span>
-                        <span className="text-[#4ADE80] font-semibold flex items-center gap-1">
-                          Flip 3D <ChevronRight className="w-3 h-3" />
-                        </span>
-                      </div>
-                    </div>
+                {/* Card Content */}
+                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="space-y-1.5">
+                    <h3 className="font-display text-lg font-bold text-white group-hover:text-[#4ADE80] transition-colors line-clamp-1">
+                      {story.title}
+                    </h3>
+                    <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                      {story.summary}
+                    </p>
                   </div>
 
-                  {/* BACK SIDE */}
-                  <div className="absolute inset-0 backface-hidden rotate-y-180 bg-[#0E2015] border border-[#4ADE80]/50 rounded-3xl p-5 flex flex-col justify-between text-slate-200">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between border-b border-[#20422E] pb-2">
-                        <span className="text-xs font-bold text-[#4ADE80]">{story.genre}</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleSaveStory(story.id);
-                          }}
-                          className={`p-1.5 rounded-full border ${
-                            isSaved ? 'bg-[#4ADE80]/20 border-[#4ADE80] text-[#4ADE80]' : 'border-[#20422E] text-slate-400'
-                          }`}
-                        >
-                          <Bookmark className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                  {/* Card Footer & Action Buttons */}
+                  <div className="pt-3 border-t border-[#20422E] flex items-center justify-between">
+                    <span className="text-[11px] text-slate-400">{story.readTime}</span>
 
-                      <h4 className="font-display text-base font-bold text-white">{story.title}</h4>
-                      <p className="text-xs text-slate-300 leading-relaxed italic">
-                        "{story.summary}"
-                      </p>
-                    </div>
-
-                    <div className="space-y-3 pt-2">
+                    <div className="flex items-center gap-2">
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           setReadingStory(story);
+                          setTimeout(() => handleSpeakStory(`${story.title}. ${story.narrative}`), 300);
                         }}
-                        className="w-full py-2.5 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] transition-all flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+                        className="p-1.5 rounded-full bg-[#13271C] text-slate-300 hover:text-[#4ADE80] hover:bg-[#1A3827] border border-[#20422E] transition-colors"
+                        title="Listen to story"
                       >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        <span>Read Story Now</span>
+                        <Volume2 className="w-3.5 h-3.5" />
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSaveStory(story.id);
+                        }}
+                        className={`p-1.5 rounded-full border transition-all cursor-pointer ${
+                          isSaved
+                            ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80]'
+                            : 'bg-[#13271C] text-slate-400 border-[#20422E] hover:text-white'
+                        }`}
+                        title="Save to Library"
+                      >
+                        <Bookmark className="w-3.5 h-3.5" />
+                      </button>
+
+                      <span className="p-1.5 rounded-full bg-[#13271C] text-slate-300 group-hover:text-[#4ADE80] group-hover:bg-[#1A3827] transition-colors">
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </span>
                     </div>
                   </div>
-                </motion.div>
-              </div>
+                </div>
+              </motion.div>
             );
           })}
         </div>
+
       </div>
     </div>
   );
