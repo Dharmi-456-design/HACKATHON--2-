@@ -229,6 +229,9 @@ export default function Stories() {
   const audioCtxRef = useRef(null);
   const ambientNodesRef = useRef(null);
 
+  // Hero Title Flip state
+  const [isTitleFlipped, setIsTitleFlipped] = useState(false);
+
   // New Story Form State
   const [newTitle, setNewTitle] = useState('');
   const [newGenre, setNewGenre] = useState('Nature & Ecology');
@@ -1347,10 +1350,10 @@ export default function Stories() {
                 { id: 'interactive', label: t.tabInteractive, Icon: Compass },
               ].map(({ id, label, Icon }) => (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                    activeTab === tab.id
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                    activeTab === id
                       ? isDark
                         ? 'bg-[#4ADE80] text-[#07130B] font-bold shadow-md'
                         : 'bg-[#183B28] text-[#FAF7F0] font-bold shadow-sm'

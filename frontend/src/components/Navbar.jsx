@@ -131,9 +131,8 @@ export default function Navbar() {
                     : 'bg-[#1C3727] text-white hover:bg-[#2A4D38]'
                 }`}
               >
-                <Link>
-                Begin <ArrowRight size={14} />
-                </Link>
+                <span>Begin</span>
+                <ArrowRight size={14} />
               </button>
             </div>
           )}
