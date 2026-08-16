@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion';
 import { Star, ShieldCheck, ChevronRight } from 'lucide-react';
 import ReviewsModal from './ReviewsModal';
@@ -88,7 +88,7 @@ const REVIEWS = [
     role: 'Micro-Habitat Analyst',
     quote: 'The soil micro-habitats tracking tool is unmatched. Every urban naturalist needs NaturePulse.',
     rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80',
+    avatar: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=120&q=80',
     stat: 'Micro-Habitat Badge',
     yOffset: 'translate-y-8',
   },
@@ -119,19 +119,41 @@ const REVIEWS = [
 const NUM_TICKS = 120;
 
 export default function HorizontalReviewsTicker() {
-  const containerRef = useRef(null);
+  const targetRef = useRef(null);
+  const trackRef = useRef(null);
   const [hoveredId, setHoveredId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [scrollPos, setScrollPos] = useState(0);
+  const [maxScrollDistance, setMaxScrollDistance] = useState(0);
 
+  // Calculate dynamic horizontal distance based on actual track width vs viewport width
+  const updateScrollDistance = () => {
+    if (trackRef.current) {
+      const scrollWidth = trackRef.current.scrollWidth;
+      const clientWidth = window.innerWidth;
+      const extraPadding = 80;
+      const distance = Math.max(0, scrollWidth - clientWidth + extraPadding);
+      setMaxScrollDistance(distance);
+    }
+  };
+
+  useLayoutEffect(() => {
+    updateScrollDistance();
+    window.addEventListener('resize', updateScrollDistance);
+    return () => window.removeEventListener('resize', updateScrollDistance);
+  }, []);
+
+  // Framer Motion useScroll hook bound to targetRef
   const { scrollYProgress } = useScroll({
-    target: containerRef,
+    target: targetRef,
     offset: ['start start', 'end end'],
   });
 
+  // Smooth physics spring easing for zero jitter/flicker
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 90,
-    damping: 18,
+    damping: 20,
+    mass: 0.5,
     restDelta: 0.001,
   });
 
@@ -139,17 +161,23 @@ export default function HorizontalReviewsTicker() {
     setScrollPos(latest);
   });
 
-  // Transform scroll progress to horizontal translation percentage (0% to -72%)
-  const x = useTransform(smoothProgress, [0, 1], ['0%', '-72%']);
+  // Map scroll progress (0 to 1) so cards visually travel from LEFT to RIGHT (-maxScrollDistance to 0)
+  const x = useTransform(smoothProgress, [0, 1], [-maxScrollDistance, 0]);
+
+  // Initial Card Entrance: Cards start slightly below and move UPWARD into position as section enters viewport
+  const cardsY = useTransform(smoothProgress, [0, 0.15], [35, 0]);
+  const cardsOpacity = useTransform(smoothProgress, [0, 0.1], [0.3, 1]);
 
   return (
     <>
-      <div ref={containerRef} className="relative h-[380vh] bg-[#0E1E15] text-white">
-        {/* Sticky Viewport Container - Locks page scroll while scrolling comments left-to-right */}
-        <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-8 px-6 sm:px-12 select-none">
+      {/* Outer Section - Pinning duration tuned to 120vh to guarantee zero empty space between sections */}
+      <div ref={targetRef} className="relative h-[120vh] bg-[#0E1E15] text-white">
+        
+        {/* Sticky Viewport Container - Pins section while user completes Card 1 -> Card 10 */}
+        <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-6 px-6 sm:px-12 select-none">
           
           {/* Header Bar */}
-          <div className="max-w-7xl w-full mx-auto flex items-end justify-between z-20 pt-2">
+          <div className="max-w-7xl w-full mx-auto flex items-end justify-between z-20 pt-2 shrink-0">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-wider mb-2">
                 <ShieldCheck size={14} /> VERIFIED COMMUNITY IMPACT
@@ -159,17 +187,17 @@ export default function HorizontalReviewsTicker() {
               </h2>
             </div>
 
-            {/* Read All Reviews Button (Opens Modal) */}
+            {/* Read All Reviews Button */}
             <button
               onClick={() => setModalOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] text-sm font-semibold border border-white/20 transition-all cursor-pointer shadow-lg hover:scale-[1.03]"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] text-sm font-semibold border border-white/20 transition-all cursor-pointer shadow-lg hover:scale-[1.03] shrink-0"
             >
               Read all reviews <ChevronRight size={16} />
             </button>
           </div>
 
-          {/* Linear Group of Mini Lines (Wave Scrubber Bar) */}
-          <div className="relative max-w-7xl w-full mx-auto my-4 z-20">
+          {/* Linear Wave Scrubber Bar (Dynamic Green Peak following scroll progress) */}
+          <div className="relative max-w-7xl w-full mx-auto my-2 sm:my-4 z-20 shrink-0">
             <div className="flex items-center justify-between gap-1 h-12 px-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
               {Array.from({ length: NUM_TICKS }).map((_, i) => {
                 const tickProgress = i / (NUM_TICKS - 1);
@@ -201,14 +229,23 @@ export default function HorizontalReviewsTicker() {
             {/* Scrubber Label */}
             <div className="flex items-center justify-between text-[11px] font-mono text-white/50 px-3 mt-1.5 uppercase tracking-widest">
               <span>01 / START</span>
-              <span className="text-[#96CD7B]">SCROLL LEFT TO RIGHT</span>
+              <span className="text-[#96CD7B]">
+                {scrollPos >= 0.98 ? '✓ ALL 10 CARDS COMPLETED' : 'SCROLL LEFT → RIGHT (10 CARDS)'}
+              </span>
               <span>10 / END</span>
             </div>
           </div>
 
-          {/* Horizontal Staircase Ticker Cards (Reference Image Light Theme Styling) */}
-          <div className="relative w-full overflow-visible z-10 my-auto">
-            <motion.div style={{ x }} className="flex gap-6 sm:gap-8 items-center pl-4 pr-32">
+          {/* Horizontal Staircase Ticker Cards (Cards Enter UPWARD -> Move LEFT to RIGHT -> Focus Hover Blur) */}
+          <motion.div
+            style={{ y: cardsY, opacity: cardsOpacity }}
+            className="relative w-full overflow-hidden z-10 my-auto py-2"
+          >
+            <motion.div
+              ref={trackRef}
+              style={{ x }}
+              className="flex gap-6 sm:gap-8 items-center pl-4 sm:pl-8 pr-16 w-max"
+            >
               {REVIEWS.map((r) => {
                 const isHovered = hoveredId === r.id;
                 const isAnyHovered = hoveredId !== null;
@@ -228,7 +265,6 @@ export default function HorizontalReviewsTicker() {
                       isHovered ? 'bg-[#FAF9F6] shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-2 border-[#96CD7B]' : 'border border-black/10'
                     }`}
                   >
-                    {/* Top Row: Author Avatar + Name & Role */}
                     <div>
                       <div className="flex items-center gap-3.5 mb-5 pb-4 border-b border-black/10">
                         <img
@@ -242,13 +278,11 @@ export default function HorizontalReviewsTicker() {
                         </div>
                       </div>
 
-                      {/* Quote Text (Reference Design Styling) */}
                       <p className="text-xs sm:text-sm text-[#2A2A2A] leading-relaxed font-normal">
                         "{r.quote}"
                       </p>
                     </div>
 
-                    {/* Bottom Rating Stars & Badge */}
                     <div className="flex items-center justify-between pt-3 border-t border-black/10">
                       <div className="flex items-center gap-1 text-amber-500">
                         {[...Array(r.rating)].map((_, i) => (
@@ -264,11 +298,11 @@ export default function HorizontalReviewsTicker() {
                 );
               })}
             </motion.div>
-          </div>
+          </motion.div>
 
           {/* Bottom Hint */}
-          <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/40 z-20 pb-2">
-            <span>Hover card to focus & blur surrounding comments</span>
+          <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/40 z-20 pb-2 shrink-0">
+            <span>Scroll vertically to complete all 10 cards horizontally (LEFT → RIGHT)</span>
             <span>10 Verified Explorer Reports</span>
           </div>
 

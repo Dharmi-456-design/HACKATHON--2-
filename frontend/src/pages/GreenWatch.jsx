@@ -420,6 +420,8 @@ function ReportForm({ token, onReported }) {
     setUploads((prev) => prev.filter((u) => u.id !== id));
   };
 
+  const [gpsAccuracy, setGpsAccuracy] = useState(null);
+
   const useMyLocation = () => {
     if (!navigator.geolocation) {
       setError('Geolocation is not available in this browser. Enter coordinates manually.');
@@ -429,15 +431,35 @@ function ReportForm({ token, onReported }) {
     setError('');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setLng(pos.coords.longitude.toFixed(6));
-        setLat(pos.coords.latitude.toFixed(6));
+        const longitude = pos.coords.longitude;
+        const latitude = pos.coords.latitude;
+        const acc = Math.round(pos.coords.accuracy);
+        setLng(longitude.toFixed(6));
+        setLat(latitude.toFixed(6));
+        setGpsAccuracy(acc);
         setLocating(false);
+
+        // Reverse geocode to autofill address if empty
+        if (!address.trim()) {
+          fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
+            .then((r) => r.json())
+            .then((data) => {
+              if (data && data.display_name) {
+                setAddress(data.display_name);
+              }
+            })
+            .catch(() => {});
+        }
       },
-      () => {
+      (err) => {
         setLocating(false);
-        setError('Location could not be read. Enter longitude and latitude manually.');
+        let msg = 'Location could not be read. Enter longitude and latitude manually.';
+        if (err.code === 1) msg = 'Location permission was denied. Please allow location access.';
+        else if (err.code === 2) msg = 'GPS position is unavailable on this device.';
+        else if (err.code === 3) msg = 'GPS request timed out. Please try again.';
+        setError(msg);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
@@ -469,7 +491,7 @@ function ReportForm({ token, onReported }) {
         ...(address.trim() ? { address: address.trim() } : {}),
       };
       const data = await gwFetch('/api/issues', { method: 'POST', body: JSON.stringify(payload) }, token);
-      setTitle(''); setDescription(''); setCategory(''); setAddress(''); setLng(''); setLat('');
+      setTitle(''); setDescription(''); setCategory(''); setAddress(''); setLng(''); setLat(''); setGpsAccuracy(null);
       setUploads((prev) => { prev.forEach((u) => u.preview && URL.revokeObjectURL(u.preview)); return []; });
       if (data?.issue) onReported(data.issue);
       else onReported(null);
@@ -505,10 +527,15 @@ function ReportForm({ token, onReported }) {
             <input className={inputCls} type="number" step="any" value={lng} onChange={(e) => setLng(e.target.value)} placeholder="Lng, e.g. 72.8777" />
             <input className={inputCls} type="number" step="any" value={lat} onChange={(e) => setLat(e.target.value)} placeholder="Lat, e.g. 19.0760" />
           </div>
-          <div className="mt-2">
+          <div className="mt-2 flex items-center justify-between">
             <GhostButton type="button" onClick={useMyLocation} disabled={locating}>
-              <MapPin size={14} /> {locating ? 'Locating…' : 'Use my location'}
+              <MapPin size={14} /> {locating ? 'Acquiring GPS…' : 'Use my current location'}
             </GhostButton>
+            {gpsAccuracy != null && (
+              <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                GPS Accuracy: ±{gpsAccuracy}m
+              </span>
+            )}
           </div>
         </Field>
       </Card>
