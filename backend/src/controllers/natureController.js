@@ -917,8 +917,8 @@ Return ONLY JSON with this shape:
 
 Rules:
 - If you can reasonably identify the species or object, set identified=true, confidence="high" or "medium".
-- If you cannot reasonably identify a species, set identified=false, confidence="uncertain", common_name=null, scientific_name=null.
-- confidence_pct must be a number 0-100 matching the confidence level (high 85-99, medium 60-84, low 40-59, uncertain 0-39).
+- If you cannot identify with reasonable confidence, ALWAYS give your best guess: set identified=false, confidence="low" or "uncertain", and fill common_name and scientific_name with your most likely candidate (never leave common_name null). Choose the most plausible species that matches the visible features, and make that guess clear in uncertainty_note.
+- confidence_pct must be a number 0-100 matching the confidence level (high 85-99, medium 60-84, low 40-59, uncertain 0-39). A best-guess identification should score 0-59.
 - Describe only what is visible. Do not invent range, rarity, edibility, or toxicity.
 - why_it_matters should be one grounded paragraph about ecological or human relationship, without exaggeration.
 - experience_suggestion must be a real-world next step.
