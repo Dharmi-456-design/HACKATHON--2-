@@ -16,6 +16,8 @@ const {
   getStories,
   createStory,
   deleteStory,
+  generateAIStory,
+  assistAIStory,
   getCommunityPosts,
   createCommunityPost,
   getActions,
@@ -32,6 +34,8 @@ const router = express.Router();
 // AI Chatbot & Image Analysis
 router.post('/pulse', asyncHandler(handlePulseChat));
 router.post('/analyze', asyncHandler(handleImageAnalyze));
+router.post('/stories/generate', asyncHandler(generateAIStory));
+router.post('/stories/assist', asyncHandler(assistAIStory));
 
 // Profile
 router.route('/profile').get(asyncHandler(getProfile)).put(asyncHandler(updateProfile));
