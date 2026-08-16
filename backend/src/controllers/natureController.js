@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const {
   Profile,
   Discovery,
@@ -207,6 +208,30 @@ const getPlaces = async (req, res) => {
     places = await Place.insertMany(DEFAULT_PLACES);
   }
   res.json(places);
+};
+
+const getPlaceById = async (req, res) => {
+  const { id } = req.params;
+  let place = null;
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    place = await Place.findById(id);
+  }
+  if (!place) {
+    place = await Place.findOne({ _id: id }).catch(() => null);
+  }
+  if (!place) {
+    const places = await Place.find({});
+    place = places.find(
+      (p) =>
+        p._id.toString() === id ||
+        p.id === id ||
+        p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === id
+    );
+  }
+  if (!place) {
+    return res.status(404).json({ error: 'Place not found' });
+  }
+  res.json(place);
 };
 
 // Stories
@@ -473,6 +498,7 @@ module.exports = {
   createMission,
   updateMission,
   getPlaces,
+  getPlaceById,
   getStories,
   createStory,
   deleteStory,

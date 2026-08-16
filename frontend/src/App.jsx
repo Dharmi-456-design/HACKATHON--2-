@@ -11,6 +11,7 @@ import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import Lens from './pages/Lens';
 import Places from './pages/Places';
+import PlaceDetails from './pages/PlaceDetails';
 import Act from './pages/Act';
 import Journal from './pages/Journal';
 import Stories from './pages/Stories';
@@ -86,6 +87,7 @@ export default function App() {
               <Route index element={<Dashboard />} />
               <Route path="lens" element={<Lens />} />
               <Route path="places" element={<Places />} />
+              <Route path="places/:id" element={<PlaceDetails />} />
               <Route path="act" element={<Act />} />
               <Route path="journal" element={<Journal />} />
               <Route path="stories" element={<Stories />} />
