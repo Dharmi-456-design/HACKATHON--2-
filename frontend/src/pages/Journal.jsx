@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Sparkles, BookOpen, PenTool, Pin, Trash2, Edit3, Heart, Save, 
   Search, Calendar, Filter, Mic, Lock, Eye, ArrowRight, X, Lightbulb, 
-  Smile, CloudRain, Sun, Leaf, Flame, HelpCircle, Archive, Compass, Check, BookMarked
+  Smile, CloudRain, Sun, Leaf, Flame, HelpCircle, Archive, Compass, Check, 
+  Quote, Moon, Trees, MessageSquare, Database
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,64 +13,82 @@ import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 // Multilingual UI Translations for Living Botanical Parchment Journal
 const JOURNAL_TRANSLATIONS = {
   en: {
-    heroTag: 'FIELD NOTES ARCHIVE',
-    heroTitle: 'Private Nature Thinking Canvas',
+    heroTag: 'YOUR PRIVATE SPACE',
+    heroTitle: 'Private Nature Thinking',
+    heroHighlight: 'Canvas 🍃',
     heroSubtitle: 'A quiet, distraction-free space for your personal thoughts, field reflections, and eco-discoveries.',
-    newNoteTitle: 'Capture a New Field Reflection',
+    zenModeBtn: '✨ Zen Writing Mode',
+    zenSubtitle: 'Focus. Write. Reflect.',
+    tabJournalTitle: 'Journal Canvas',
+    tabJournalSub: 'Write freely',
+    tabIdeaTitle: 'Idea Vault',
+    tabIdeaSub: 'Capture ideas',
+    tabMemoryTitle: 'Memory Capsules',
+    tabMemorySub: 'Save moments',
+    tabAskTitle: 'Ask My Journal',
+    tabAskSub: 'Get insights',
+    newReflectionTitle: 'Capture a New Field Reflection',
+    newReflectionSub: 'Let your thoughts flow like a stream.',
     titlePlaceholder: 'e.g., Peepal Leaf Droplets After Dawn Rain…',
     bodyPlaceholder: 'What changed. What stayed. What you almost missed in nature today…',
-    saveNoteBtn: 'Save to Private Vault',
-    zenModeBtn: '✨ Zen Writing Mode',
-    exitZenBtn: 'Exit Zen Mode',
-    tabJournal: '📖 Journal Canvas',
-    tabIdeaVault: '💡 Idea Vault',
-    tabMemoryCapsules: '🔒 Memory Capsules',
-    tabAskJournal: '🔮 Ask My Journal',
     moodLabel: 'Botanical Atmosphere Mood',
-    searchPlaceholder: 'Search field notes, moods, tags…',
-    autoSaveStatus: 'Saved to Private Vault ✓',
-    askJournalPrompt: 'Ask about your saved journal reflections…',
-    aiReflectBtn: '✨ Reflection',
+    moodSub: 'Set the vibe of your writing space',
+    saveBtn: 'Save to Private Vault',
+    saveSub: 'Keep it safe, keep it yours',
+    quoteText: 'Nature is not a place to visit, it is home.',
+    quoteAuthor: '— Gary Snyder',
   },
   gu: {
-    heroTag: 'ફીલ્ડ નોટ્સ આર્કાઇવ',
-    heroTitle: 'ખાનગી પ્રકૃતિ વિચાર કેનવાસ',
+    heroTag: 'તમારી ખાનગી જગ્યા',
+    heroTitle: 'ખાનગી પ્રકૃતિ વિચાર',
+    heroHighlight: 'કેનવાસ 🍃',
     heroSubtitle: 'તમારા વ્યક્તિગત વિચારો અને પ્રકૃતિના અવલોકનો માટે એક શાંત, વિક્ષેપ મુક્ત જગ્યા.',
-    newNoteTitle: 'નવું અવલોકન લખો',
+    zenModeBtn: '✨ ઝેન રાઇટિંગ મોડ',
+    zenSubtitle: 'ધ્યાન. લખાણ. મંતવ્ય.',
+    tabJournalTitle: 'જર્નલ કેનવાસ',
+    tabJournalSub: 'મુક્તપણે લખો',
+    tabIdeaTitle: 'આઇડિયા વોલ્ટ',
+    tabIdeaSub: 'વિચારો સેવ કરો',
+    tabMemoryTitle: 'મેમરી કેપ્સ્યુલ્સ',
+    tabMemorySub: 'ક્ષણો સેવ કરો',
+    tabAskTitle: 'મારા જર્નલને પૂછો',
+    tabAskSub: 'માહિતી મેળવો',
+    newReflectionTitle: 'નવું અવલોકન લખો',
+    newReflectionSub: 'તમારા વિચારોને વહેવા દો.',
     titlePlaceholder: 'દા.ત., વરસાદ પછી પીપળાના પાંદડા પરનું પાણી…',
     bodyPlaceholder: 'આજે પ્રકૃતિમાં તમે શું જોયું અને અનુભવ્યું…',
-    saveNoteBtn: 'પ્રાઇવેટ વોલ્ટમાં સેવ કરો',
-    zenModeBtn: '✨ ઝેન રાઇટિંગ મોડ',
-    exitZenBtn: 'ઝેન મોડમાંથી બહાર નીકળો',
-    tabJournal: '📖 જર્નલ કેનવાસ',
-    tabIdeaVault: '💡 આઇડિયા વોલ્ટ',
-    tabMemoryCapsules: '🔒 મેમરી કેપ્સ્યુલ્સ',
-    tabAskJournal: '🔮 મારા જર્નલને પૂછો',
     moodLabel: 'મૂડ અને વાતાવરણ',
-    searchPlaceholder: 'નોંધો, મૂડ, ટેગ્સ શોધો…',
-    autoSaveStatus: 'વોલ્ટમાં સેવ થયું ✓',
-    askJournalPrompt: 'તમારી નોંધો વિશે પૂછો…',
-    aiReflectBtn: '✨ રિફ્લેક્શન',
+    moodSub: 'લેખન ક્ષેત્રનું વાતાવરણ પસંદ કરો',
+    saveBtn: 'પ્રાઇવેટ વોલ્ટમાં સેવ કરો',
+    saveSub: 'સુરક્ષિત રાખો',
+    quoteText: 'પ્રકૃતિ માત્ર મુલાકાત લેવાની જગ્યા નથી, તે આપણું ઘર છે.',
+    quoteAuthor: '— ગેરી સ્નાઇડર',
   },
   hi: {
-    heroTag: 'फील्ड नोट्स आर्काइव',
-    heroTitle: 'निजी प्रकृति विचार कैनवास',
+    heroTag: 'आपका निजी स्थान',
+    heroTitle: 'निजी प्रकृति विचार',
+    heroHighlight: 'कैनवास 🍃',
     heroSubtitle: 'आपके व्यक्तिगत विचारों और प्रकृति के अवलोकनों के लिए एक शांत, व्याकुलता-मुक्त स्थान।',
-    newNoteTitle: 'नया अवलोकन लिखें',
+    zenModeBtn: '✨ ज़ेन राइटिंग मोड',
+    zenSubtitle: 'ध्यान। लेखन। विचार।',
+    tabJournalTitle: 'जर्नल कैनवास',
+    tabJournalSub: 'स्वतंत्र रूप से लिखें',
+    tabIdeaTitle: 'आइडिया वॉल्ट',
+    tabIdeaSub: 'विचार सहेजें',
+    tabMemoryTitle: 'मेमोरी कैप्सूल',
+    tabMemorySub: 'क्षण सहेजें',
+    tabAskTitle: 'मेरे जर्नल से पूछें',
+    tabAskSub: 'अंतर्दृष्टि प्राप्त करें',
+    newReflectionTitle: 'नया अवलोकन लिखें',
+    newReflectionSub: 'अपने विचारों को बहने दें।',
     titlePlaceholder: 'जैसे, बारिश के बाद पीपल के पत्तों पर पानी…',
     bodyPlaceholder: 'आज प्रकृति में आपने क्या देखा और महसूस किया…',
-    saveNoteBtn: 'प्राइवेट वॉल्ट में सहेजें',
-    zenModeBtn: '✨ ज़ेन राइटिंग मोड',
-    exitZenBtn: 'ज़ेन मोड से बाहर निकलें',
-    tabJournal: '📖 जर्नल कैनवास',
-    tabIdeaVault: '💡 आइडिया वॉल्ट',
-    tabMemoryCapsules: '🔒 मेमोरी कैप्सूल',
-    tabAskJournal: '🔮 मेरे जर्नल से पूछें',
     moodLabel: 'मूड़ और वातावरण',
-    searchPlaceholder: 'नोट्स, मूड, टैग खोजें…',
-    autoSaveStatus: 'वॉल्ट में सहेजा गया ✓',
-    askJournalPrompt: 'अपने नोट्स के बारे में पूछें…',
-    aiReflectBtn: '✨ रिफ्लेक्शन',
+    moodSub: 'लेखन क्षेत्र का वातावरण चुनें',
+    saveBtn: 'प्राइवेट वॉल्ट में सहेजें',
+    saveSub: 'सुरक्षित रखें',
+    quoteText: 'प्रकृति केवल घूमने की जगह नहीं है, यह हमारा घर है।',
+    quoteAuthor: '— गैरी स्नाइडर',
   },
 };
 
@@ -79,7 +98,7 @@ const SEED_ENTRIES = [
     id: 'j-1',
     title: 'Peepal Leaf Droplets After Dawn Rain',
     body: 'The morning humidity was 88%. Standing under the ancient Peepal tree near the river bank, water droplets formed golden spheres on the leaf veins.',
-    mood: '🌿 Quiet Canopy',
+    mood: 'Quiet Canopy',
     weather: 'Cool Rain · 24°C',
     date: 'Aug 16, 2026',
     pinned: true,
@@ -90,7 +109,7 @@ const SEED_ENTRIES = [
     id: 'j-2',
     title: 'Swallowtail Butterfly Feeding Rhythm',
     body: 'Observed 2 swallowtails feeding on yellow Champa flowers between 10:00 AM and 11:30 AM. Their wing frequency slowed during peak sun exposure.',
-    mood: '☀️ Sunlit Bloom',
+    mood: 'Sunlit Meadow',
     weather: 'Clear Skies · 31°C',
     date: 'Aug 14, 2026',
     pinned: false,
@@ -104,7 +123,7 @@ export default function Journal() {
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = JOURNAL_TRANSLATIONS[lang] || JOURNAL_TRANSLATIONS.en;
 
-  // Persistent Journal State
+  // Persistent State
   const [entries, setEntries] = useState(() => {
     try {
       const saved = localStorage.getItem('pulse_journal_entries_v1');
@@ -117,35 +136,17 @@ export default function Journal() {
   // Active States
   const [activeTab, setActiveTab] = useState('journal');
   const [isZenMode, setIsZenMode] = useState(false);
+  const [selectedMood, setSelectedMood] = useState('Quiet Canopy');
   const [flippedCardId, setFlippedCardId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
-  // New Note State
+  // Form State
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [mood, setMood] = useState('🌿 Quiet Canopy');
-  const [weather, setWeather] = useState('Cool Rain · 24°C');
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
-
-  // Ask Journal State
-  const [askInput, setAskInput] = useState('');
-  const [askMessages, setAskMessages] = useState([
-    { id: 1, sender: 'ai', text: 'Welcome to "Ask My Journal". You can analyze your private field notes and answer questions about your observations.' },
-  ]);
 
   useEffect(() => {
     localStorage.setItem('pulse_journal_entries_v1', JSON.stringify(entries));
   }, [entries]);
-
-  // Auto-Save Effect
-  useEffect(() => {
-    if (!title.trim() && !body.trim()) return;
-    setAutoSaveStatus('Saving draft…');
-    const timer = setTimeout(() => {
-      setAutoSaveStatus(t.autoSaveStatus);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [title, body, t.autoSaveStatus]);
 
   // Save Note Submit
   const handleSaveNote = (e) => {
@@ -156,25 +157,20 @@ export default function Journal() {
       id: `j-${Date.now()}`,
       title: title.trim() || 'Untitled Reflection',
       body: body.trim(),
-      mood,
-      weather,
+      mood: selectedMood,
+      weather: '26°C · Field Observation',
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
       pinned: false,
       wordCount: body.trim().split(/\s+/).length,
-      aiReflection: `Key Theme: ${title.trim() || 'Nature observation'}`,
+      aiReflection: `Key Theme: ${title.trim() || 'Nature reflection'}`,
     };
 
     setEntries([newEntry, ...entries]);
     setTitle('');
     setBody('');
+    setAutoSaveStatus('Saved to Private Vault ✓');
+    setTimeout(() => setAutoSaveStatus(''), 2500);
     if (isZenMode) setIsZenMode(false);
-  };
-
-  // Toggle Pin Note
-  const togglePin = (id) => {
-    setEntries((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, pinned: !e.pinned } : e))
-    );
   };
 
   // Delete Note
@@ -182,32 +178,14 @@ export default function Journal() {
     setEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
-  // Ask Journal Handler
-  const handleAskJournal = (e) => {
-    e.preventDefault();
-    if (!askInput.trim()) return;
-
-    const userMsg = { id: Date.now(), sender: 'user', text: askInput.trim() };
-    setAskMessages((prev) => [...prev, userMsg]);
-    setAskInput('');
-
-    setTimeout(() => {
-      const summary = `Based on your private journal: On Aug 16, you noted Peepal leaf droplets during 88% humidity. On Aug 14, you observed Swallowtail butterfly feeding rhythms during peak solar hours.`;
-      setAskMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'ai', text: summary }]);
-    }, 1000);
-  };
-
-  // Filtered Entries
-  const filteredEntries = entries.filter((e) => {
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchTitle = e.title.toLowerCase().includes(q);
-      const matchBody = e.body.toLowerCase().includes(q);
-      const matchMood = e.mood.toLowerCase().includes(q);
-      if (!matchTitle && !matchBody && !matchMood) return false;
-    }
-    return true;
-  });
+  // Mood Options Array
+  const MOOD_OPTIONS = [
+    { id: 'Quiet Canopy', label: 'Quiet Canopy', icon: <Leaf className="w-4 h-4 text-emerald-400" /> },
+    { id: 'Rain Whisper', label: 'Rain Whisper', icon: <CloudRain className="w-4 h-4 text-cyan-400" /> },
+    { id: 'Sunlit Meadow', label: 'Sunlit Meadow', icon: <Sun className="w-4 h-4 text-amber-400" /> },
+    { id: 'Forest Calm', label: 'Forest Calm', icon: <Trees className="w-4 h-4 text-[#4ADE80]" /> },
+    { id: 'Evening Hush', label: 'Evening Hush', icon: <Moon className="w-4 h-4 text-indigo-400" /> },
+  ];
 
   return (
     <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
@@ -231,7 +209,7 @@ export default function Journal() {
                 onClick={() => setIsZenMode(false)}
                 className="px-4 py-2 rounded-full bg-[#13271C] border border-[#20422E] text-xs font-bold text-slate-200 hover:text-white cursor-pointer"
               >
-                {t.exitZenBtn}
+                Exit Zen Mode
               </button>
             </div>
 
@@ -259,7 +237,7 @@ export default function Journal() {
                 onClick={handleSaveNote}
                 className="px-8 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm cursor-pointer shadow-xl"
               >
-                {t.saveNoteBtn}
+                {t.saveBtn}
               </button>
             </div>
           </motion.div>
@@ -267,200 +245,249 @@ export default function Journal() {
       </AnimatePresence>
 
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 relative z-10">
         
-        {/* ──────────────── RADICAL UNIQUE HEADER 4: PARCHMENT SCROLL STRIP (NO GREEN RECTANGLE) ──────────────── */}
-        <div className="relative py-6 px-4 border-b border-[#20452F] flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#13271C] border border-[#4ADE80]/40 flex items-center justify-center text-[#4ADE80] text-2xl font-mono shadow-md shrink-0">
-              ✒️
-            </div>
-            <div className="space-y-1">
-              <span className="text-[10px] font-mono font-bold text-[#4ADE80] uppercase tracking-widest">
-                {t.heroTag}
-              </span>
-              <h1 className="font-display text-4xl sm:text-5xl font-black text-white tracking-tight">
-                {t.heroTitle}
-              </h1>
-              <p className="text-xs text-slate-300 font-normal leading-relaxed">
-                {t.heroSubtitle}
-              </p>
-            </div>
+        {/* ──────────────── ATMOSPHERIC DARK FOREST HERO BANNER (MATCHING SCREENSHOT) ──────────────── */}
+        <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[220px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 group">
+          
+          {/* HD Misty Forest Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1511497584788-8767611136f6?auto=format&fit=crop&w=1600&q=80')` }}
+          />
+
+          {/* Dark Overlay Gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#040C07] via-[#040C07]/85 to-[#040C07]/40" />
+
+          {/* Left Content Overlaid */}
+          <div className="space-y-3 max-w-xl relative z-10">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#4ADE80] bg-[#0E2015]/90 px-3 py-1 rounded-full border border-[#4ADE80]/30 backdrop-blur-md">
+              <Leaf className="w-3.5 h-3.5" />
+              {t.heroTag}
+            </span>
+
+            <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight drop-shadow-md">
+              {t.heroTitle} <span className="text-[#4ADE80]">{t.heroHighlight}</span>
+            </h1>
+
+            <p className="text-xs sm:text-sm text-slate-200 font-normal leading-relaxed">
+              {t.heroSubtitle}
+            </p>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsZenMode(true)}
-            className="px-6 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>{t.zenModeBtn}</span>
-          </motion.button>
-        </div>
-
-        {/* ──────────────── NAVIGATION TABS ──────────────── */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-chat-scroll scrollbar-none">
-          {[
-            { id: 'journal', label: t.tabJournal },
-            { id: 'ideaVault', label: t.tabIdeaVault },
-            { id: 'memoryCapsules', label: t.tabMemoryCapsules },
-            { id: 'askJournal', label: t.tabAskJournal },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                activeTab === tab.id
-                  ? 'bg-[#4ADE80] text-[#07130B] shadow-md shadow-[#4ADE80]/15'
-                  : 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
-              }`}
+          {/* Right Side Controls & Glowing Leaf Orb */}
+          <div className="flex items-center gap-4 relative z-10 shrink-0">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsZenMode(true)}
+              className="px-5 py-3 rounded-2xl bg-[#0E2517]/90 border border-[#4ADE80]/40 text-left hover:border-[#4ADE80] transition-all shadow-xl cursor-pointer backdrop-blur-md"
             >
-              {tab.label}
-            </button>
-          ))}
+              <div className="flex items-center gap-2 text-[#4ADE80] font-bold text-xs">
+                <Sparkles className="w-4 h-4" />
+                <span>{t.zenModeBtn}</span>
+              </div>
+              <p className="text-[10px] text-slate-300 mt-0.5">{t.zenSubtitle}</p>
+            </motion.button>
+
+            <div className="relative w-28 h-28 hidden sm:flex items-center justify-center">
+              <motion.div
+                animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.9, 0.5] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute inset-0 rounded-full bg-[#4ADE80]/25 blur-xl"
+              />
+              <div className="w-24 h-24 rounded-full border-2 border-[#4ADE80]/60 flex items-center justify-center relative shadow-[0_0_40px_rgba(74,222,128,0.3)] backdrop-blur-xs">
+                <motion.div
+                  animate={{ y: [-3, 3, -3] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  className="w-14 h-14 rounded-full bg-gradient-to-br from-[#2E6141] to-[#102B1B] border border-[#4ADE80] flex items-center justify-center shadow-lg text-2xl"
+                >
+                  🍃
+                </motion.div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        {/* ──────────────── TAB 1: JOURNAL WRITING CANVAS ──────────────── */}
-        {activeTab === 'journal' && (
-          <div className="space-y-8">
-            
-            {/* New Reflection Input Box */}
-            <div className="bg-[#112318] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl">
-              <div className="flex justify-between items-center">
-                <h3 className="font-display text-xl font-bold text-white flex items-center gap-2">
-                  <PenTool className="w-5 h-5 text-[#4ADE80]" />
-                  <span>{t.newNoteTitle}</span>
-                </h3>
-
-                {autoSaveStatus && (
-                  <span className="text-xs text-[#4ADE80] font-mono">{autoSaveStatus}</span>
-                )}
-              </div>
-
-              <form onSubmit={handleSaveNote} className="space-y-4">
-                <input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder={t.titlePlaceholder}
-                  className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-4 py-3 text-sm text-white outline-none focus:border-[#4ADE80]"
-                />
-
-                <textarea
-                  rows={4}
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  placeholder={t.bodyPlaceholder}
-                  className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl p-4 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80] resize-none"
-                />
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 font-semibold">{t.moodLabel}:</span>
-                    <select
-                      value={mood}
-                      onChange={(e) => setMood(e.target.value)}
-                      className="bg-[#0E2015] border border-[#20422E] text-xs text-white rounded-xl px-3 py-1.5 outline-none focus:border-[#4ADE80]"
-                    >
-                      <option value="🌿 Quiet Canopy">🌿 Quiet Canopy</option>
-                      <option value="🌧️ Rainy Canopy">🌧️ Rainy Canopy</option>
-                      <option value="☀️ Sunlit Bloom">☀️ Sunlit Bloom</option>
-                      <option value="🍂 Weathered Bark">🍂 Weathered Bark</option>
-                    </select>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="px-6 py-2.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] cursor-pointer shadow-lg shrink-0"
-                  >
-                    {t.saveNoteBtn}
-                  </button>
-                </div>
-              </form>
+        {/* ──────────────── 4 GLASS TAB CARDS ──────────────── */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            onClick={() => setActiveTab('journal')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 shadow-lg ${
+              activeTab === 'journal'
+                ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
+                : 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+            }`}
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg shrink-0">
+              📖
             </div>
-
-            {/* Past Reflections Grid with 3D Flip */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-display text-2xl font-bold text-white">Saved Field Reflections</h3>
-                <span className="text-xs text-slate-400">Hover Card to 3D Flip</span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {filteredEntries.map((entry) => {
-                  const isFlipped = flippedCardId === entry.id;
-                  return (
-                    <div
-                      key={entry.id}
-                      className="perspective-1000 h-52 cursor-pointer"
-                      onMouseEnter={() => setFlippedCardId(entry.id)}
-                      onMouseLeave={() => setFlippedCardId(null)}
-                    >
-                      <motion.div
-                        className="w-full h-full relative transition-transform duration-500 transform-style-3d shadow-xl rounded-3xl"
-                        animate={{ rotateY: isFlipped ? 180 : 0 }}
-                      >
-                        {/* FRONT REFLECTION CARD */}
-                        <div className="absolute inset-0 backface-hidden bg-[#112318] border border-[#20452F] rounded-3xl p-6 flex flex-col justify-between">
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-start">
-                              <span className="px-3 py-0.5 rounded-full bg-[#1A3827] text-xs font-bold text-[#4ADE80]">
-                                {entry.mood}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    togglePin(entry.id);
-                                  }}
-                                  className={`p-1 text-xs ${entry.pinned ? 'text-amber-400' : 'text-slate-500'}`}
-                                >
-                                  📌
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteEntry(entry.id);
-                                  }}
-                                  className="text-slate-500 hover:text-red-400 cursor-pointer"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-
-                            <h4 className="font-display text-lg font-bold text-white line-clamp-1">{entry.title}</h4>
-                            <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed">{entry.body}</p>
-                          </div>
-
-                          <div className="flex justify-between items-center text-[11px] text-slate-400 pt-2 border-t border-[#20422E]">
-                            <span>{entry.date}</span>
-                            <span className="text-[#4ADE80] font-bold">Hover Flip 3D →</span>
-                          </div>
-                        </div>
-
-                        {/* BACK REFLECTION CARD */}
-                        <div className="absolute inset-0 backface-hidden rotate-y-180 bg-[#0E2015] border border-[#4ADE80]/50 rounded-3xl p-6 flex flex-col justify-between text-slate-200">
-                          <div>
-                            <h5 className="font-display text-sm font-bold text-[#4ADE80]">Reflection Synthesis</h5>
-                            <p className="text-xs text-slate-300 mt-2 leading-relaxed italic">
-                              "{entry.aiReflection}"
-                            </p>
-                          </div>
-                          <div className="flex justify-between items-center text-[10px] text-slate-400">
-                            <span>Word Count: {entry.wordCount} words</span>
-                            <span className="text-[#4ADE80] font-semibold">Private & Encrypted</span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </div>
-                  );
-                })}
-              </div>
+            <div>
+              <h4 className="font-display text-sm font-bold text-white">{t.tabJournalTitle}</h4>
+              <p className="text-[11px] text-slate-400">{t.tabJournalSub}</p>
             </div>
-
           </div>
-        )}
+
+          <div
+            onClick={() => setActiveTab('idea')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between shadow-lg ${
+              activeTab === 'idea'
+                ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
+                : 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+            }`}
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg shrink-0">
+                🌱
+              </div>
+              <div>
+                <h4 className="font-display text-sm font-bold text-white">{t.tabIdeaTitle}</h4>
+                <p className="text-[11px] text-slate-400">{t.tabIdeaSub}</p>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-[#1A3827] text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/30">12</span>
+          </div>
+
+          <div
+            onClick={() => setActiveTab('memory')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between shadow-lg ${
+              activeTab === 'memory'
+                ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
+                : 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+            }`}
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg shrink-0">
+                🫙
+              </div>
+              <div>
+                <h4 className="font-display text-sm font-bold text-white">{t.tabMemoryTitle}</h4>
+                <p className="text-[11px] text-slate-400">{t.tabMemorySub}</p>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-[#1A3827] text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/30">8</span>
+          </div>
+
+          <div
+            onClick={() => setActiveTab('ask')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between shadow-lg ${
+              activeTab === 'ask'
+                ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
+                : 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+            }`}
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg shrink-0">
+                💬
+              </div>
+              <div>
+                <h4 className="font-display text-sm font-bold text-white">{t.tabAskTitle}</h4>
+                <p className="text-[11px] text-slate-400">{t.tabAskSub}</p>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded-full bg-[#1A3827] text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/30">3</span>
+          </div>
+        </div>
+
+        {/* ──────────────── CAPTURE A NEW FIELD REFLECTION FORM ──────────────── */}
+        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="flex items-center gap-3 border-b border-[#20452F] pb-4">
+            <div className="w-10 h-10 rounded-full bg-[#1A3827] border border-[#4ADE80]/50 flex items-center justify-center text-[#4ADE80] text-lg">
+              🍃
+            </div>
+            <div>
+              <h3 className="font-display text-xl font-bold text-white">{t.newReflectionTitle}</h3>
+              <p className="text-xs text-slate-400">{t.newReflectionSub}</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveNote} className="space-y-4">
+            <div className="relative flex items-center bg-[#07150C] border border-[#20422E] rounded-2xl overflow-hidden focus-within:border-[#4ADE80] transition-all">
+              <div className="px-4 py-3.5 border-r border-[#20422E] bg-[#0E2015] text-[#4ADE80]">
+                🍃
+              </div>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t.titlePlaceholder}
+                className="w-full bg-transparent px-4 py-3.5 text-xs sm:text-sm text-white outline-none placeholder:text-slate-500"
+              />
+            </div>
+
+            <div className="relative flex items-start bg-[#07150C] border border-[#20422E] rounded-2xl overflow-hidden focus-within:border-[#4ADE80] transition-all">
+              <div className="px-4 py-4 border-r border-[#20422E] bg-[#0E2015] text-[#4ADE80] self-stretch flex items-start">
+                “
+              </div>
+              <textarea
+                rows={4}
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder={t.bodyPlaceholder}
+                className="w-full bg-transparent p-4 text-xs sm:text-sm text-white outline-none placeholder:text-slate-500 resize-none"
+              />
+            </div>
+
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-4 border-t border-[#20452F]">
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs font-bold text-slate-200">{t.moodLabel}</p>
+                  <p className="text-[10px] text-slate-400">{t.moodSub}</p>
+                </div>
+
+                <div className="flex items-center gap-3 overflow-x-auto pb-1">
+                  {MOOD_OPTIONS.map((m) => {
+                    const isSelected = selectedMood === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setSelectedMood(m.id)}
+                        className="flex flex-col items-center gap-1.5 cursor-pointer group"
+                      >
+                        <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                          isSelected
+                            ? 'bg-[#1A3827] border-2 border-[#4ADE80] shadow-lg shadow-[#4ADE80]/20 scale-105'
+                            : 'bg-[#07150C] border border-[#20422E] group-hover:border-[#4ADE80]/50'
+                        }`}>
+                          {m.icon}
+                        </div>
+                        <span className={`text-[10px] font-semibold ${isSelected ? 'text-[#4ADE80]' : 'text-slate-400'}`}>
+                          {m.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full md:w-auto px-8 py-4 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center justify-center gap-3 cursor-pointer shrink-0"
+              >
+                <div className="w-7 h-7 rounded-full bg-[#07130B]/20 flex items-center justify-center text-xs">
+                  🍃
+                </div>
+                <div className="text-left">
+                  <p className="font-extrabold">{t.saveBtn}</p>
+                  <p className="text-[10px] opacity-80 font-normal">{t.saveSub}</p>
+                </div>
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* ──────────────── GARY SNYDER QUOTE STRIP ──────────────── */}
+        <div className="bg-gradient-to-r from-[#06140B] via-[#0E2517] to-[#040C07] border border-[#20452F] rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl text-[#4ADE80]">“</span>
+            <p className="text-xs sm:text-sm font-medium text-slate-200">
+              "{t.quoteText}" <span className="text-[#4ADE80] font-bold ml-2">{t.quoteAuthor}</span>
+            </p>
+          </div>
+          <Trees className="w-5 h-5 text-[#4ADE80]/40 hidden sm:block" />
+        </div>
 
       </div>
     </div>
