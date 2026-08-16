@@ -247,10 +247,10 @@ export default function Journal() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 relative z-10">
         
-        {/* ──────────────── EXACT MATCH 2ND SCREENSHOT: ATMOSPHERIC DARK FOREST LANDSCAPE HERO BANNER ──────────────── */}
-        <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[260px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 group">
+        {/* ──────────────── ATMOSPHERIC DARK FOREST LANDSCAPE HERO BANNER (NO ROUND CIRCLE ICON) ──────────────── */}
+        <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[240px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 group">
           
-          {/* High-Definition Dark Misty Forest Background Image (EXACT MATCH FOR 2ND SCREENSHOT) */}
+          {/* High-Definition Dark Misty Forest Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
             style={{ backgroundImage: `url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80')` }}
@@ -275,10 +275,8 @@ export default function Journal() {
             </p>
           </div>
 
-          {/* Right Side Controls & Glowing Green Leaf Orb */}
-          <div className="flex items-center gap-5 relative z-10 shrink-0">
-            
-            {/* Zen Mode Button */}
+          {/* Right Side Control Button */}
+          <div className="relative z-10 shrink-0">
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -291,30 +289,6 @@ export default function Journal() {
               </div>
               <p className="text-[10px] text-slate-300 mt-0.5">{t.zenSubtitle}</p>
             </motion.button>
-
-            {/* Glowing Green Energy Leaf Orb */}
-            <div className="relative w-32 h-32 hidden sm:flex items-center justify-center">
-              <motion.div
-                animate={{ scale: [1, 1.18, 1], opacity: [0.4, 0.9, 0.4] }}
-                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute inset-0 rounded-full bg-[#4ADE80]/30 blur-2xl"
-              />
-              <div className="w-28 h-28 rounded-full border-2 border-[#4ADE80]/60 flex items-center justify-center relative shadow-[0_0_50px_rgba(74,222,128,0.35)] backdrop-blur-xs">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
-                  className="absolute inset-1 rounded-full border border-dashed border-[#4ADE80]/40"
-                />
-                <motion.div
-                  animate={{ y: [-3, 3, -3] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2E6141] to-[#102B1B] border border-[#4ADE80] flex items-center justify-center shadow-xl text-3xl"
-                >
-                  🍃
-                </motion.div>
-              </div>
-            </div>
-
           </div>
 
         </div>

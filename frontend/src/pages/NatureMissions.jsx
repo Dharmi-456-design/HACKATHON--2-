@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { 
   Sparkles, ShieldCheck, Trophy, Flame, Zap, Target, Clock, CheckCircle2, 
   ChevronRight, Play, Plus, Trash2, X, Wand2, Compass, MapPin, Award, 
-  RotateCcw, ArrowLeft, Check, Layers, AlertCircle, BarChart2, Star, Radio
+  RotateCcw, ArrowLeft, Check, Layers, AlertCircle, BarChart2, Star, Radio,
+  Leaf, Users, Feather, Trees, Crown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,6 +43,8 @@ const MISSION_TRANSLATIONS = {
     xpLabel: 'Eco XP',
     streakLabel: 'Streak',
     aiAssistantHint: 'Need a hint or breakdown for this step?',
+    achievementsTitle: '🏆 Ecological Milestone Badges',
+    leaderboardTitle: '🌐 Community Eco Leaderboard',
   },
   gu: {
     heroTag: 'શુભ સવાર, એક્સપ્લોરર 🌿',
@@ -74,6 +77,8 @@ const MISSION_TRANSLATIONS = {
     xpLabel: 'ઇકો XP',
     streakLabel: 'શ્રેણી',
     aiAssistantHint: 'આ પગલા માટે સંકેત જોઈએ છે?',
+    achievementsTitle: '🏆 ઇકોલોજીકલ સિદ્ધિ બેજ',
+    leaderboardTitle: '🌐 કમ્યુનિટી લીડરબોર્ડ',
   },
   hi: {
     heroTag: 'शुभ प्रभात, एक्सप्लोरर 🌿',
@@ -106,6 +111,8 @@ const MISSION_TRANSLATIONS = {
     xpLabel: 'इको XP',
     streakLabel: 'स्ट्रीक',
     aiAssistantHint: 'इस चरण के लिए संकेत चाहिए?',
+    achievementsTitle: '🏆 पारिस्थितिक उपलब्धि बैज',
+    leaderboardTitle: '🌐 कम्युनिटी लीडरबोर्ड',
   },
 };
 
@@ -125,7 +132,6 @@ const SEED_MISSIONS = [
       { id: 's3', text: 'Log 2 distinct bird sounds or leaf rustles in Nature Pulse', done: false },
     ],
     aiHint: 'Early morning between 6:00 AM and 7:15 AM provides peak birdsong clarity.',
-    hintOpened: false,
   },
   {
     id: 'm-102',
@@ -141,7 +147,6 @@ const SEED_MISSIONS = [
       { id: 's6', text: 'Identify if it is crustose or foliose lichen', done: false },
     ],
     aiHint: 'Mosses act as micro-ecosystem sponges, absorbing urban rainwater.',
-    hintOpened: false,
   },
   {
     id: 'm-103',
@@ -157,7 +162,6 @@ const SEED_MISSIONS = [
       { id: 's9', text: 'Record observation in Biodiversity Passport', done: false },
     ],
     aiHint: 'Sphinx moths and silk moths are attracted to white LED garden lamps.',
-    hintOpened: false,
   },
   {
     id: 'm-104',
@@ -173,8 +177,23 @@ const SEED_MISSIONS = [
       { id: 's12', text: 'Fill with clean water and post Community update', done: true },
     ],
     aiHint: 'Shallow water dishes prevent bird drowning while aiding migratory species.',
-    hintOpened: false,
   }
+];
+
+// Seed Milestones Badges
+const SEED_BADGES = [
+  { id: 'b1', name: 'Canopy Guardian', icon: '🌱', unlocked: true, desc: 'Completed 5 shade tree observations' },
+  { id: 'b2', name: 'Birdsong Analyst', icon: '🐦', unlocked: true, desc: 'Logged 10 dawn bird flight calls' },
+  { id: 'b3', name: 'Pollinator Protector', icon: '🦋', unlocked: true, desc: 'Planted native nectar seeds' },
+  { id: 'b4', name: 'Master Eco Scholar', icon: '👑', unlocked: false, desc: 'Reach 3,000 XP & Level 5 Commander' },
+];
+
+// Seed Leaderboard Users
+const SEED_LEADERBOARD = [
+  { rank: 1, name: 'Aarav Patel', xp: '3,820 XP', streak: '14 Days', badge: '👑 Master Commander' },
+  { rank: 2, name: 'You (Explorer)', xp: '2,450 XP', streak: '7 Days', badge: '🟣 Eco Guardian' },
+  { rank: 3, name: 'Priya Sharma', xp: '2,180 XP', streak: '9 Days', badge: '🌱 Canopy Protector' },
+  { rank: 4, name: 'David Miller', xp: '1,950 XP', streak: '5 Days', badge: '🐦 Bird Naturalist' },
 ];
 
 export default function NatureMissions() {
@@ -207,6 +226,11 @@ export default function NatureMissions() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [generatePrompt, setGeneratePrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Custom Mission Creator State
+  const [customTitle, setCustomTitle] = useState('');
+  const [customCategory, setCustomCategory] = useState('Exploration');
+  const [customDifficulty, setCustomDifficulty] = useState('🟢 Easy');
 
   useEffect(() => {
     localStorage.setItem('pulse_missions_v1', JSON.stringify(missions));
@@ -257,7 +281,6 @@ export default function NatureMissions() {
           { id: `s-${Date.now()}-3`, text: 'Share your findings with the community', done: false },
         ],
         aiHint: 'Focus on observing local variations during golden hour light.',
-        hintOpened: false,
       };
 
       setMissions([newMission, ...missions]);
@@ -266,6 +289,33 @@ export default function NatureMissions() {
       setGeneratePrompt('');
       setSelectedMission(newMission);
     }, 1500);
+  };
+
+  // Create Custom Mission
+  const handleCreateCustomMission = (e) => {
+    e.preventDefault();
+    if (!customTitle.trim()) return;
+
+    const newMission = {
+      id: `m-${Date.now()}`,
+      title: customTitle.trim(),
+      category: customCategory,
+      difficulty: customDifficulty,
+      duration: '15 min',
+      xpReward: customDifficulty === '🔴 Hard' ? 250 : customDifficulty === '🟡 Medium' ? 180 : 100,
+      status: 'in_progress',
+      steps: [
+        { id: `cs-1`, text: 'Prepare observation area and tools', done: false },
+        { id: `cs-2`, text: 'Execute main mission objective', done: false },
+        { id: `cs-3`, text: 'Record final reflection note', done: false },
+      ],
+      aiHint: 'Stay observant of micro-climate shifts near foliage.',
+    };
+
+    setMissions([newMission, ...missions]);
+    setCustomTitle('');
+    setActiveTab('path');
+    setSelectedMission(newMission);
   };
 
   // Delete Mission
@@ -336,42 +386,17 @@ export default function NatureMissions() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── ATMOSPHERIC DARK FOREST LANDSCAPE HERO BANNER (MATCHING SCREENSHOT) ──────────────── */}
+        {/* ──────────────── HERO BANNER WITH CLEAN DARK FOREST LANDSCAPE (RIGHT-SIDE GRAPHIC REMOVED COMPLETELY) ──────────────── */}
         <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[300px] flex flex-col justify-between group">
           
-          {/* HD Misty Forest Background Image */}
+          {/* HD Dark Forest Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
             style={{ backgroundImage: `url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80')` }}
           />
-          
-          {/* Dark Forest Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#040C07] via-[#040C07]/85 to-[#040C07]/40" />
 
-          {/* Glowing Green Energy Leaf Orb on Right */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-48 h-48 sm:w-64 sm:h-64 pointer-events-none flex items-center justify-center z-10">
-            <motion.div
-              animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.85, 0.4] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute inset-0 rounded-full bg-[#4ADE80]/25 blur-2xl"
-            />
-            
-            <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-2 border-[#4ADE80]/60 flex items-center justify-center relative shadow-[0_0_50px_rgba(74,222,128,0.35)] backdrop-blur-xs">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                className="absolute inset-1 rounded-full border border-dashed border-[#4ADE80]/40"
-              />
-
-              <motion.div
-                animate={{ y: [-4, 4, -4] }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-[#2E6141] to-[#102B1B] border border-[#4ADE80] flex items-center justify-center shadow-xl text-3xl sm:text-4xl"
-              >
-                🌿
-              </motion.div>
-            </div>
-          </div>
+          {/* Dark Atmospheric Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#040C07] via-[#040C07]/90 to-[#040C07]/40" />
 
           {/* Left Overlaid Text Content */}
           <div className="space-y-3 max-w-xl relative z-10">
@@ -390,7 +415,7 @@ export default function NatureMissions() {
             </div>
           </div>
 
-          {/* Bottom 4 Integrated Stat Pills Overlaid */}
+          {/* Bottom 4 Integrated Stat Pills */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 relative z-10">
             <div className="bg-[#0A1A10]/95 border border-[#20422E] p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md">
               <div>
@@ -455,60 +480,260 @@ export default function NatureMissions() {
 
         {/* ──────────────── TAB 1: CHECKPOINT MISSION PATH ──────────────── */}
         {activeTab === 'path' && (
-          <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative overflow-hidden">
-            <h3 className="font-display text-2xl font-bold text-white">Ecological Checkpoint Mission Trail</h3>
+          <div className="space-y-8">
+            
+            {/* Missions Grid */}
+            <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative overflow-hidden">
+              <div className="flex justify-between items-center">
+                <h3 className="font-display text-2xl font-bold text-white">Ecological Checkpoint Mission Trail</h3>
+                <span className="text-xs text-[#4ADE80] font-semibold">Tap any Mission to Expand Checklist</span>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {missions.map((mission) => {
-                const isSelected = selectedMission?.id === mission.id;
-                const isDone = mission.status === 'completed';
-                const completedStepsCount = mission.steps.filter((s) => s.done).length;
-                const progressPct = Math.round((completedStepsCount / mission.steps.length) * 100);
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {missions.map((mission) => {
+                  const isSelected = selectedMission?.id === mission.id;
+                  const isDone = mission.status === 'completed';
+                  const completedStepsCount = mission.steps.filter((s) => s.done).length;
+                  const progressPct = Math.round((completedStepsCount / mission.steps.length) * 100);
 
-                return (
-                  <motion.div
-                    key={mission.id}
-                    whileHover={{ scale: 1.04 }}
-                    onClick={() => setSelectedMission(mission)}
-                    className={`p-5 rounded-3xl border transition-all cursor-pointer shadow-xl relative overflow-hidden flex flex-col justify-between h-56 ${
-                      isSelected
-                        ? 'bg-[#1A3827] border-[#4ADE80] shadow-[#4ADE80]/30'
-                        : isDone
-                        ? 'bg-[#0E2015] border-[#4ADE80]/40'
-                        : 'bg-[#13271C] border-[#20422E] hover:border-[#4ADE80]/50'
+                  return (
+                    <motion.div
+                      key={mission.id}
+                      whileHover={{ scale: 1.04 }}
+                      onClick={() => setSelectedMission(mission)}
+                      className={`p-5 rounded-3xl border transition-all cursor-pointer shadow-xl relative overflow-hidden flex flex-col justify-between h-56 ${
+                        isSelected
+                          ? 'bg-[#1A3827] border-[#4ADE80] shadow-[#4ADE80]/30'
+                          : isDone
+                          ? 'bg-[#0E2015] border-[#4ADE80]/40'
+                          : 'bg-[#13271C] border-[#20422E] hover:border-[#4ADE80]/50'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#0E2015] text-[#4ADE80] border border-[#4ADE80]/30">
+                            {mission.difficulty}
+                          </span>
+                          <span className="text-xs text-amber-400 font-bold">+{mission.xpReward} XP</span>
+                        </div>
+
+                        <h4 className="font-display text-base font-bold text-white line-clamp-2 mt-1">
+                          {mission.title}
+                        </h4>
+                      </div>
+
+                      <div className="space-y-2 pt-2 border-t border-[#20422E]">
+                        <div className="flex justify-between items-center text-[11px] text-slate-400">
+                          <span>{completedStepsCount}/{mission.steps.length} Steps</span>
+                          <span className="text-[#4ADE80] font-bold">{progressPct}%</span>
+                        </div>
+
+                        <div className="w-full bg-[#0E2015] h-2 rounded-full overflow-hidden">
+                          <div
+                            className="bg-[#4ADE80] h-full rounded-full transition-all duration-300"
+                            style={{ width: `${progressPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* ──────────────── UNLOCKABLE ACHIEVEMENT MILESTONES ──────────────── */}
+            <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+              <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
+                <div>
+                  <h3 className="font-display text-2xl font-bold text-white">{t.achievementsTitle}</h3>
+                  <p className="text-xs text-slate-400">Complete missions to unlock regional badges</p>
+                </div>
+                <Trophy className="w-6 h-6 text-amber-400" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {SEED_BADGES.map((badge) => (
+                  <div
+                    key={badge.id}
+                    className={`p-4 rounded-2xl border flex items-center gap-3.5 transition-all ${
+                      badge.unlocked
+                        ? 'bg-[#13271C] border-[#4ADE80]/50 text-white'
+                        : 'bg-[#07150C] border-[#20422E] opacity-60'
                     }`}
                   >
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#0E2015] text-[#4ADE80] border border-[#4ADE80]/30">
-                          {mission.difficulty}
-                        </span>
-                        <span className="text-xs text-amber-400 font-bold">+{mission.xpReward} XP</span>
-                      </div>
-
-                      <h4 className="font-display text-base font-bold text-white line-clamp-2 mt-1">
-                        {mission.title}
-                      </h4>
+                    <div className="w-12 h-12 rounded-2xl bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-2xl shrink-0">
+                      {badge.icon}
                     </div>
-
-                    <div className="space-y-2 pt-2 border-t border-[#20422E]">
-                      <div className="flex justify-between items-center text-[11px] text-slate-400">
-                        <span>{completedStepsCount}/{mission.steps.length} Steps</span>
-                        <span className="text-[#4ADE80] font-bold">{progressPct}%</span>
-                      </div>
-
-                      <div className="w-full bg-[#0E2015] h-2 rounded-full overflow-hidden">
-                        <div
-                          className="bg-[#4ADE80] h-full rounded-full transition-all duration-300"
-                          style={{ width: `${progressPct}%` }}
-                        />
-                      </div>
+                    <div>
+                      <h4 className="font-display text-sm font-bold text-white">{badge.name}</h4>
+                      <p className="text-[10px] text-slate-400">{badge.desc}</p>
                     </div>
-                  </motion.div>
-                );
-              })}
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* ──────────────── COMMUNITY ECO LEADERBOARD ──────────────── */}
+            <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+              <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
+                <div>
+                  <h3 className="font-display text-2xl font-bold text-white">{t.leaderboardTitle}</h3>
+                  <p className="text-xs text-slate-400">Weekly rankings of top ecological explorers</p>
+                </div>
+                <Users className="w-6 h-6 text-[#4ADE80]" />
+              </div>
+
+              <div className="space-y-3">
+                {SEED_LEADERBOARD.map((user) => (
+                  <div
+                    key={user.rank}
+                    className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${
+                      user.rank === 2
+                        ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-md'
+                        : 'bg-[#13271C] border-[#20422E] text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className={`w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs ${
+                        user.rank === 1 ? 'bg-amber-400 text-black' : user.rank === 2 ? 'bg-[#4ADE80] text-black' : 'bg-[#0E2015] text-slate-400'
+                      }`}>
+                        #{user.rank}
+                      </span>
+                      <div>
+                        <h4 className="font-display text-sm font-bold text-white">{user.name}</h4>
+                        <p className="text-[10px] text-slate-400">{user.badge}</p>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-sm font-extrabold text-[#4ADE80]">{user.xp}</span>
+                      <p className="text-[10px] text-slate-400">{user.streak}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
+        )}
+
+        {/* ──────────────── TAB 4: CUSTOM CREATOR ──────────────── */}
+        {activeTab === 'create' && (
+          <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+            <h3 className="font-display text-2xl font-bold text-white">Create Custom Mission Objective</h3>
+
+            <form onSubmit={handleCreateCustomMission} className="space-y-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Mission Title</label>
+                <input
+                  required
+                  value={customTitle}
+                  onChange={(e) => setCustomTitle(e.target.value)}
+                  placeholder="e.g., Document 3 native tree shade canopies in your neighborhood..."
+                  className="w-full bg-[#13271C] border border-[#20422E] rounded-2xl px-4 py-3 text-sm text-white outline-none focus:border-[#4ADE80]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Category</label>
+                  <select
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    className="w-full bg-[#13271C] border border-[#20422E] text-xs text-white rounded-2xl px-4 py-3 outline-none focus:border-[#4ADE80]"
+                  >
+                    <option value="Exploration">Exploration</option>
+                    <option value="Learning">Learning</option>
+                    <option value="Creativity">Creativity</option>
+                    <option value="Personal Goals">Personal Goals</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Difficulty</label>
+                  <select
+                    value={customDifficulty}
+                    onChange={(e) => setCustomDifficulty(e.target.value)}
+                    className="w-full bg-[#13271C] border border-[#20422E] text-xs text-white rounded-2xl px-4 py-3 outline-none focus:border-[#4ADE80]"
+                  >
+                    <option value="🟢 Easy">🟢 Easy (100 XP)</option>
+                    <option value="🟡 Medium">🟡 Medium (180 XP)</option>
+                    <option value="🔴 Hard">🔴 Hard (250 XP)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3.5 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] transition-all shadow-xl cursor-pointer"
+              >
+                Create & Add Mission
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ──────────────── SELECTED MISSION DRAWER ──────────────── */}
+        {selectedMission && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-[#112318] border border-[#4ADE80]/50 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6"
+          >
+            <div className="flex justify-between items-start border-b border-[#20452F] pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-[#1A3827] text-xs font-bold text-[#4ADE80]">
+                    {selectedMission.category}
+                  </span>
+                  <span className="text-xs text-amber-400 font-bold">+{selectedMission.xpReward} XP Reward</span>
+                </div>
+                <h3 className="font-display text-2xl font-bold text-white">{selectedMission.title}</h3>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleDeleteMission(selectedMission.id)}
+                  className="p-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 cursor-pointer"
+                  title="Delete Mission"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => setSelectedMission(null)} className="text-slate-400 hover:text-white cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">Action Steps & Checklist</p>
+
+              {selectedMission.steps.map((step) => (
+                <div
+                  key={step.id}
+                  onClick={() => toggleStep(selectedMission.id, step.id)}
+                  className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${
+                    step.done
+                      ? 'bg-[#1A3827] border-[#4ADE80] text-slate-200'
+                      : 'bg-[#0E2015] border-[#20422E] text-white hover:border-[#4ADE80]/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold ${
+                      step.done ? 'bg-[#4ADE80] border-[#4ADE80] text-[#07130B]' : 'border-slate-500'
+                    }`}>
+                      {step.done && '✓'}
+                    </div>
+                    <span className={`text-xs sm:text-sm font-medium ${step.done ? 'line-through opacity-75' : ''}`}>
+                      {step.text}
+                    </span>
+                  </div>
+
+                  <span className="text-[11px] text-[#4ADE80] font-semibold">{step.done ? 'Done' : 'Tap to complete'}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         )}
 
       </div>
