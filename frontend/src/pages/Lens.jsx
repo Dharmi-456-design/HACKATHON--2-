@@ -187,6 +187,12 @@ export default function Lens() {
           common_name: analysis?.common_name || 'Unnamed observation',
           scientific_name: analysis?.scientific_name || '',
           confidence: analysis?.confidence || 'uncertain',
+          confidence_pct: Number.isFinite(Number(analysis?.confidence_pct))
+            ? Math.max(0, Math.min(100, Math.round(Number(analysis.confidence_pct))))
+            : analysis?.confidence === 'high' ? 90
+              : analysis?.confidence === 'medium' ? 65
+                : analysis?.confidence === 'low' ? 40
+                  : 20,
           category: analysis?.category || 'other',
           description: analysis?.description || notes,
           why_it_matters: analysis?.why_it_matters || '',

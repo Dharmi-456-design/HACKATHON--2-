@@ -40,7 +40,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '8mb' }));
 
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
