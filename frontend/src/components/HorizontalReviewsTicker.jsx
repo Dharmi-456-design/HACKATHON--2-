@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion';
-import { Star, ShieldCheck, Quote, ChevronRight } from 'lucide-react';
+import { Star, ShieldCheck, ChevronRight } from 'lucide-react';
 import ReviewsModal from './ReviewsModal';
 
 const REVIEWS = [
@@ -13,7 +13,7 @@ const REVIEWS = [
     rating: 5,
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
     stat: '42 Observations logged',
-    yOffset: '-y-4',
+    yOffset: '-translate-y-4',
   },
   {
     id: 2,
@@ -35,7 +35,7 @@ const REVIEWS = [
     rating: 5,
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
     stat: '5D Score: 94/100',
-    yOffset: '-translate-y-3',
+    yOffset: '-translate-y-2',
   },
   {
     id: 4,
@@ -116,7 +116,7 @@ const REVIEWS = [
   },
 ];
 
-const NUM_TICKS = 120;
+const NUM_TICKS = 110;
 
 export default function HorizontalReviewsTicker() {
   const containerRef = useRef(null);
@@ -130,8 +130,8 @@ export default function HorizontalReviewsTicker() {
   });
 
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 24,
+    stiffness: 100,
+    damping: 20,
     restDelta: 0.001,
   });
 
@@ -140,16 +140,16 @@ export default function HorizontalReviewsTicker() {
   });
 
   // Transform scroll progress to horizontal translation percentage
-  const x = useTransform(smoothProgress, [0, 1], ['0%', '-68%']);
+  const x = useTransform(smoothProgress, [0, 1], ['0%', '-70%']);
 
   return (
     <>
       <div ref={containerRef} className="relative h-[360vh] bg-[#0E1E15] text-white">
-        {/* Sticky Viewport Container */}
-        <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-10 px-6 sm:px-12 select-none">
+        {/* Sticky Viewport Container - Locks page scroll during left-to-right comment scroll */}
+        <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-8 px-6 sm:px-12 select-none">
           
           {/* Header Bar */}
-          <div className="max-w-7xl w-full mx-auto flex items-end justify-between z-20 pt-4">
+          <div className="max-w-7xl w-full mx-auto flex items-end justify-between z-20 pt-2">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-wider mb-2">
                 <ShieldCheck size={14} /> VERIFIED COMMUNITY IMPACT
@@ -168,18 +168,18 @@ export default function HorizontalReviewsTicker() {
             </button>
           </div>
 
-          {/* Liquid Gaussian Equalizer Progress Scrubber Bar */}
-          <div className="relative max-w-7xl w-full mx-auto my-6 z-20">
-            <div className="flex items-center justify-between gap-1 h-12 px-2 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+          {/* Linear Equalizer Progress Scrubber Bar */}
+          <div className="relative max-w-7xl w-full mx-auto my-4 z-20">
+            <div className="flex items-center justify-between gap-1 h-12 px-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
               {Array.from({ length: NUM_TICKS }).map((_, i) => {
                 const tickProgress = i / (NUM_TICKS - 1);
                 const distance = Math.abs(tickProgress - scrollPos);
                 
-                // Continuous Gaussian Wave Peak (dynamic even when static)
-                const wave = Math.exp(-Math.pow(distance / 0.08, 2));
-                const heightPx = Math.max(6, Math.round(wave * 34 + 6));
-                const opacity = 0.25 + wave * 0.75;
-                const isPeak = wave > 0.85;
+                // Continuous Smooth Gaussian Wave Peak
+                const wave = Math.exp(-Math.pow(distance / 0.07, 2));
+                const heightPx = Math.max(8, Math.round(wave * 32 + 8));
+                const opacity = 0.3 + wave * 0.7;
+                const isWaveActive = wave > 0.5;
 
                 return (
                   <div
@@ -188,10 +188,10 @@ export default function HorizontalReviewsTicker() {
                       height: `${heightPx}px`,
                       opacity,
                     }}
-                    className={`w-1 rounded-full transition-all duration-150 ${
-                      isPeak
-                        ? 'bg-[#96CD7B] shadow-[0_0_12px_#96CD7B]'
-                        : 'bg-white/40'
+                    className={`w-1 rounded-full transition-all duration-100 ${
+                      isWaveActive
+                        ? 'bg-[#96CD7B] shadow-[0_0_10px_#96CD7B]'
+                        : 'bg-white/35'
                     }`}
                   />
                 );
@@ -200,9 +200,9 @@ export default function HorizontalReviewsTicker() {
             
             {/* Scrubber Label */}
             <div className="flex items-center justify-between text-[11px] font-mono text-white/50 px-3 mt-1.5 uppercase tracking-widest">
-              <span>01 / Start</span>
-              <span className="text-[#96CD7B]">Scroll to read stories</span>
-              <span>10 / End</span>
+              <span>01 / START</span>
+              <span className="text-[#96CD7B]">SCROLL TO READ STORIES</span>
+              <span>10 / END</span>
             </div>
           </div>
 
