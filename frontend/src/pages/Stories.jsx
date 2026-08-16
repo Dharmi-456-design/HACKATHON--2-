@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
+import { DEFAULT_STORIES } from '../data/storiesData';
 
 // Multilingual UI Translations for Stories Universe
 const STORIES_TRANSLATIONS = {
@@ -153,7 +154,41 @@ export default function Stories() {
   const t = STORIES_TRANSLATIONS[lang] || STORIES_TRANSLATIONS.en;
 
   // Persistent Stories State
-  const [stories, setStories] = useState([]);
+  const [stories, setStories] = useState(DEFAULT_STORIES);
+
+  // Fetch remote user-created stories on mount
+  useEffect(() => {
+    let isMounted = true;
+    apiFetch('/api/stories')
+      .then((data) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const formatted = data.map((item) => ({
+            id: item._id || item.id,
+            title: item.title,
+            genre: item.genre || '🌿 Nature & Eco',
+            mood: item.mood || 'Serene',
+            readTime: item.readTime || '4 min read',
+            isFeatured: false,
+            isInteractive: Boolean(item.choices?.length),
+            choices: item.choices || [],
+            isMine: true,
+            coverImage: item.image_url || item.coverImage || 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&q=80',
+            summary: item.narrative ? item.narrative.slice(0, 160) + '...' : '',
+            narrative: item.narrative || '',
+            reactions: item.reactions || { magical: 12, lovedIt: 24, unexpected: 5, funny: 0, thoughtful: 18 },
+          }));
+          setStories((prev) => {
+            const existingIds = new Set(formatted.map((s) => s.id));
+            const remaining = prev.filter((s) => !existingIds.has(s.id));
+            return [...formatted, ...remaining];
+          });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const [savedStoryIds, setSavedStoryIds] = useState([]);
 
