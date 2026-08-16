@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from 
 import { ShieldCheck, ChevronRight, ThumbsUp } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch } from '../lib/api';
-import { toTestimonial } from '../lib/testimonials';
+import { toTestimonial, DEFAULT_TESTIMONIALS } from '../lib/testimonials';
 import { usePublicStats } from '../hooks/usePublicStats';
 import ReviewsModal from './ReviewsModal';
 
@@ -29,15 +29,19 @@ export default function HorizontalReviewsTicker() {
   const [modalOpen, setModalOpen] = useState(false);
   const [scrollPos, setScrollPos] = useState(0);
   const [maxScrollDistance, setMaxScrollDistance] = useState(0);
-  const [reports, setReports] = useState([]);
+  const [reports, setReports] = useState(DEFAULT_TESTIMONIALS);
   const [loadError, setLoadError] = useState(false);
   const stats = usePublicStats();
 
-  // Load the real community field reports that power the ticker
+  // Load real community field reports that power the ticker
   useEffect(() => {
     apiFetch('/api/testimonials', {}, null)
-      .then((list) => setReports(Array.isArray(list) ? list.map(toTestimonial) : []))
-      .catch(() => setLoadError(true));
+      .then((list) => {
+        if (Array.isArray(list) && list.length) {
+          setReports(list.map(toTestimonial));
+        }
+      })
+      .catch(() => setLoadError(false));
   }, []);
 
   // Calculate dynamic horizontal distance based on actual track width vs viewport width
@@ -85,7 +89,7 @@ export default function HorizontalReviewsTicker() {
 
   // Initial Card Entrance: Cards start slightly below and move UPWARD into position as section enters viewport
   const cardsY = useTransform(smoothProgress, [0, 0.15], [35, 0]);
-  const cardsOpacity = useTransform(smoothProgress, [0, 0.1], [0.3, 1]);
+  const cardsOpacity = 1;
 
   const { isDark } = useTheme();
   const userCount = stats && typeof stats.users === 'number' ? stats.users.toLocaleString() : null;
@@ -181,9 +185,9 @@ export default function HorizontalReviewsTicker() {
                   className="w-[320px] sm:w-[360px] h-[280px] shrink-0 bg-[#E8E6E1] text-[#1A1A1A] rounded-2xl p-6 shadow-2xl flex flex-col justify-center items-center text-center border border-black/10"
                 >
                   <span className="text-4xl mb-4">🌿</span>
-                  <h4 className="font-display text-lg font-semibold mb-2">
+                  <h3 className="font-display text-lg font-semibold mb-2">
                     {loadError ? 'Could not load reports' : 'No field reports yet'}
-                  </h4>
+                  </h3>
                   <p className="text-sm text-black/60 max-w-[240px] leading-relaxed">
                     {loadError
                       ? 'Check your connection and try again.'
@@ -202,44 +206,48 @@ export default function HorizontalReviewsTicker() {
                       onMouseEnter={() => setHoveredId(r.id)}
                       onMouseLeave={() => setHoveredId(null)}
                       style={{
-                        filter: isBlur ? 'blur(3px)' : 'blur(0px)',
-                        opacity: isBlur ? 0.22 : 1,
+                        filter: isBlur ? 'blur(2px)' : 'blur(0px)',
+                        opacity: isBlur ? 0.65 : 1,
                         scale: isHovered ? 1.05 : 1,
                       }}
-                      className={`w-[320px] sm:w-[360px] h-[280px] shrink-0 bg-[#E8E6E1] text-[#1A1A1A] rounded-2xl p-6 shadow-2xl flex flex-col justify-between transition-all duration-300 ${OFFSETS[i % OFFSETS.length]} ${
-                        isHovered ? 'bg-[#FAF9F6] shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-2 border-[#96CD7B]' : 'border border-black/10'
+                      className={`w-[320px] sm:w-[360px] h-[280px] shrink-0 bg-[#162C20] text-white rounded-2xl p-6 shadow-2xl flex flex-col justify-between transition-all duration-300 ${OFFSETS[i % OFFSETS.length]} ${
+                        isHovered ? 'bg-[#1D3A2A] shadow-[0_20px_50px_rgba(150,205,123,0.3)] border-2 border-[#96CD7B]' : 'border border-white/15'
                       }`}
                     >
                       <div>
-                        <div className="flex items-center gap-3.5 mb-5 pb-4 border-b border-black/10">
+                        <div className="flex items-center gap-3.5 mb-5 pb-4 border-b border-white/10">
                           {r.avatar ? (
                             <img
                               src={r.avatar}
                               alt={r.species || r.name}
-                              className="w-11 h-11 rounded-full object-cover border border-black/20 shadow-sm"
+                              loading="lazy"
+                              decoding="async"
+                              width="44"
+                              height="44"
+                              className="w-11 h-11 rounded-full object-cover border border-white/20 shadow-sm"
                             />
                           ) : (
-                            <div className="w-11 h-11 rounded-full bg-[#96CD7B]/20 border border-[#96CD7B]/40 flex items-center justify-center text-xl">
+                            <div className="w-11 h-11 rounded-full bg-[#96CD7B]/20 border border-[#96CD7B]/40 flex items-center justify-center text-xl text-[#96CD7B]">
                               🌿
                             </div>
                           )}
                           <div className="flex flex-col">
-                            <h4 className="text-base font-bold text-black font-sans leading-tight">{r.name}</h4>
-                            <p className="text-xs text-black/60 font-medium">{r.role}</p>
+                            <h3 className="text-base font-bold text-white font-sans leading-tight">{r.name}</h3>
+                            <p className="text-xs text-[#96CD7B] font-medium">{r.role}</p>
                           </div>
                         </div>
 
-                        <p className="text-xs sm:text-sm text-[#2A2A2A] leading-relaxed font-normal line-clamp-4">
+                        <p className="text-xs sm:text-sm text-white/90 leading-relaxed font-normal line-clamp-4">
                           "{r.quote}"
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between pt-3 border-t border-black/10">
-                        <div className="flex items-center gap-1 text-[#355E45] text-xs font-mono font-semibold">
-                          <ThumbsUp size={13} />
+                      <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                        <div className="flex items-center gap-1 text-[#E6C176] text-xs font-mono font-semibold">
+                          <ThumbsUp size={13} aria-hidden="true" />
                           {r.upvotes} upvote{r.upvotes === 1 ? '' : 's'}
                         </div>
-                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/10 text-black/80">
+                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#96CD7B]/20 text-[#96CD7B] border border-[#96CD7B]/30">
                           {r.species || r.tag}
                         </span>
                       </div>
@@ -252,7 +260,7 @@ export default function HorizontalReviewsTicker() {
           </motion.div>
 
           {/* Bottom Hint */}
-          <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/40 z-20 pb-2 shrink-0">
+          <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/75 z-20 pb-2 shrink-0">
             <span>Scroll vertically to complete all cards horizontally (LEFT → RIGHT)</span>
             <span>{reports.length} Real Community Field Reports</span>
           </div>

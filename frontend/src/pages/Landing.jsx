@@ -141,9 +141,9 @@ function JourneyHoverCard({ step, i }) {
               <span className="text-xs font-mono text-[#E6C176] font-bold">0{i + 1} / 06</span>
             </div>
 
-            <h4 className="font-display text-xl text-white font-semibold mt-1">
+            <h3 className="font-display text-xl text-white font-semibold mt-1">
               {step.title} Practice
-            </h4>
+            </h3>
             <p className="mt-2 text-xs sm:text-sm text-white/90 leading-relaxed font-light">
               {PRACTICE_TIPS[i].tip}
             </p>
@@ -172,7 +172,13 @@ function FaqAccordionItem({ faq, index }) {
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >
-      <div className="w-full p-6 text-left flex items-center justify-between gap-4 cursor-pointer select-none group">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-controls={`faq-answer-${index}`}
+        className="w-full p-6 text-left flex items-center justify-between gap-4 cursor-pointer select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#96CD7B]"
+      >
         <div className="flex items-center gap-3.5">
           <span className="text-xs font-mono font-bold text-[#E6C176]">0{index + 1}</span>
           <h3 className={`font-display text-lg sm:text-xl font-semibold transition-colors ${isOpen ? 'text-[#96CD7B]' : 'text-white group-hover:text-[#96CD7B]'}`}>
@@ -186,18 +192,19 @@ function FaqAccordionItem({ faq, index }) {
               isOpen ? 'bg-[#96CD7B] text-[#0A1610] rotate-180 scale-110' : 'bg-white/10 text-[#96CD7B]'
             }`}
           >
-            <ChevronDown size={18} />
+            <ChevronDown size={18} aria-hidden="true" />
           </div>
         </div>
-      </div>
+      </button>
 
       <AnimatePresence initial={false}>
         {isOpen && (
           <motion.div
+            id={`faq-answer-${index}`}
             initial={{ height: 0, opacity: 0, y: -6 }}
             animate={{ height: 'auto', opacity: 1, y: 0 }}
             exit={{ height: 0, opacity: 0, y: -6 }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="overflow-hidden"
           >
             <div className="p-6 pt-0 border-t border-white/10 mt-1">
@@ -239,8 +246,9 @@ export default function Landing() {
       {/* ────────────────────── REDESIGNED NAVBAR ────────────────────── */}
       <Navbar />
 
-      {/* ────────────────────── 1. LITHOS CURSOR-FOLLOWING SPOTLIGHT HERO ────────────────────── */}
-      <section id="hero">
+      <main id="main-content">
+        {/* ────────────────────── 1. LITHOS CURSOR-FOLLOWING SPOTLIGHT HERO ────────────────────── */}
+        <section id="hero">
         <LithosHero />
       </section>
 
@@ -259,7 +267,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-5 sm:px-6">
           <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-widest">
-              <Sparkles size={14} /> ECOLOGICAL FOUNDATION
+              <Sparkles size={14} aria-hidden="true" /> ECOLOGICAL FOUNDATION
             </div>
 
             {/* Increased prominent size for "The Philosophy" */}
@@ -287,6 +295,10 @@ export default function Landing() {
                 <img
                   src={photo.img}
                   alt={photo.title}
+                  loading="lazy"
+                  decoding="async"
+                  width="400"
+                  height="320"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0A1610] via-[#0A1610]/40 to-transparent opacity-90 group-hover:opacity-75 transition-opacity" />
@@ -452,6 +464,10 @@ export default function Landing() {
             <img
               src="/landing_preview.jpg"
               alt="NaturePulse Dashboard Preview"
+              loading="lazy"
+              decoding="async"
+              width="1024"
+              height="576"
               className="w-full h-auto object-cover group-hover:scale-102 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A1610] via-transparent to-transparent pointer-events-none" />
@@ -480,6 +496,10 @@ export default function Landing() {
             <img
               src="/login_nature.jpg"
               alt="Calm Nature Observation Path"
+              loading="lazy"
+              decoding="async"
+              width="600"
+              height="480"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A1610]/80 via-transparent to-transparent" />
@@ -509,7 +529,7 @@ export default function Landing() {
                     <ArrowRight size={14} />
                   </div>
                   <div>
-                    <h4 className="font-display text-xl text-white font-semibold">{b.title}</h4>
+                    <h3 className="font-display text-xl text-white font-semibold">{b.title}</h3>
                     <p className="mt-1.5 text-sm text-white/75 leading-relaxed font-light">{b.desc}</p>
                   </div>
                 </div>
@@ -605,8 +625,9 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ────────────────────── 13. FINAL CTA SECTION WITH VELORAH VIDEO MOCK ────────────────────── */}
-      <CtaSection />
+        {/* ────────────────────── 13. FINAL CTA SECTION WITH VELORAH VIDEO MOCK ────────────────────── */}
+        <CtaSection />
+      </main>
 
       {/* ────────────────────── 14. 3D INTERACTIVE ECOSYSTEM FOOTER ────────────────────── */}
       <Interactive3DFooter />

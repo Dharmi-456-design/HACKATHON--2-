@@ -1,10 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Filter, ShieldCheck, ThumbsUp } from 'lucide-react';
 
 export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState('All');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   const tags = ['All', ...new Set(reports.map((r) => r.tag).filter(Boolean))];
 
@@ -23,7 +32,12 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reviews-modal-title"
+          className="fixed inset-0 z-[150] flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+        >
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -38,16 +52,16 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="relative w-full max-w-5xl bg-[#0E1E15] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 my-auto text-white overflow-hidden max-h-[85vh] flex flex-col"
           >
             {/* Header */}
             <div className="flex items-start justify-between border-b border-white/10 pb-6 mb-6 shrink-0">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-wider mb-2">
-                  <ShieldCheck size={14} /> REAL COMMUNITY FIELD REPORTS
+                  <ShieldCheck size={14} aria-hidden="true" /> REAL COMMUNITY FIELD REPORTS
                 </div>
-                <h2 className="font-display text-2xl sm:text-3xl font-bold">
+                <h2 id="reviews-modal-title" className="font-display text-2xl sm:text-3xl font-bold">
                   What Urban Explorers Share
                 </h2>
                 <p className="text-sm text-white/70 mt-1">
@@ -57,17 +71,20 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
 
               <button
                 onClick={onClose}
+                aria-label="Close field reports modal"
                 className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer"
               >
-                <X size={18} />
+                <X size={18} aria-hidden="true" />
               </button>
             </div>
 
             {/* Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-6 shrink-0">
               <div className="relative w-full sm:w-72">
-                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                <Search size={16} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                <label htmlFor="search-field-reports" className="sr-only">Search field reports</label>
                 <input
+                  id="search-field-reports"
                   type="text"
                   placeholder="Search field reports..."
                   value={search}
@@ -77,7 +94,7 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
               </div>
 
               <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 scrollbar-hide">
-                <Filter size={14} className="text-white/40 shrink-0" />
+                <Filter size={14} aria-hidden="true" className="text-white/40 shrink-0" />
                 {tags.map((t) => (
                   <button
                     key={t}
@@ -116,7 +133,7 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
                           {r.species || r.tag}
                         </span>
                         <div className="flex items-center gap-1.5 text-[#96CD7B] text-xs font-mono">
-                          <ThumbsUp size={13} />
+                          <ThumbsUp size={13} aria-hidden="true" />
                           {r.upvotes}
                         </div>
                       </div>
@@ -131,6 +148,10 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
                         <img
                           src={r.avatar}
                           alt={r.name}
+                          loading="lazy"
+                          decoding="async"
+                          width="40"
+                          height="40"
                           className="w-10 h-10 rounded-full object-cover border border-white/20"
                         />
                       ) : (

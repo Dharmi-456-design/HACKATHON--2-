@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Leaf, ThumbsUp, MapPin } from 'lucide-react';
 import { apiFetch } from '../lib/api';
-import { toTestimonial } from '../lib/testimonials';
+import { toTestimonial, DEFAULT_TESTIMONIALS } from '../lib/testimonials';
 import { usePublicStats } from '../hooks/usePublicStats';
 
 function FadeUp({ children, delay = 0, y = 24, className = '' }) {
@@ -22,13 +22,17 @@ function FadeUp({ children, delay = 0, y = 24, className = '' }) {
 
 // Live preview panel: newest real community field report + real aggregate stats
 function LivePreviewPanel() {
-  const [report, setReport] = useState(null);
+  const [report, setReport] = useState(() => DEFAULT_TESTIMONIALS[0]);
   const stats = usePublicStats();
 
   useEffect(() => {
     apiFetch('/api/testimonials', {}, null)
-      .then((list) => setReport(Array.isArray(list) && list.length ? toTestimonial(list[0]) : null))
-      .catch(() => setReport(null));
+      .then((list) => {
+        if (Array.isArray(list) && list.length) {
+          setReport(toTestimonial(list[0]));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -172,13 +176,10 @@ export default function CtaSection() {
         <LivePreviewPanel />
       </motion.div>
 
-      {/* Foreground grass — in front of dashboard, parallax Y */}
-      <motion.img
-        src="https://res.cloudinary.com/dy5er7kv5/image/upload/q_auto/f_auto/v1780586778/cta-bg_mlwy5s.png"
-        alt=""
-        aria-hidden
-        style={{ y: grassY }}
-        className="pointer-events-none select-none absolute left-0 right-0 bottom-[-40px] sm:bottom-[-80px] lg:bottom-[-140px] w-full z-30 object-cover"
+      {/* Bottom ambient backdrop glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute left-0 right-0 bottom-0 h-24 bg-gradient-to-t from-[#060E09] to-transparent z-30"
       />
     </section>
   );
