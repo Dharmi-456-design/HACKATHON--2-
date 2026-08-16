@@ -282,6 +282,7 @@ export default function Stories() {
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [aiAssistantLoading, setAIAssistantLoading] = useState(false);
   const [aiResult, setAiResult] = useState(null);
+  const [storyError, setStoryError] = useState('');
   const [customAssistPrompt, setCustomAssistPrompt] = useState('');
   const [selectedTargetLang, setSelectedTargetLang] = useState('Gujarati');
   const [copiedNotification, setCopiedNotification] = useState(false);
@@ -499,6 +500,7 @@ export default function Stories() {
     if (!newPrompt.trim()) return;
 
     setIsGenerating(true);
+    setStoryError('');
 
     try {
       const res = await apiFetch('/api/stories/generate', {
@@ -515,6 +517,8 @@ export default function Stories() {
       if (res && res.story) {
         const fullStory = {
           ...res.story,
+          id: `story-${Date.now()}`,
+          isMine: true,
           coverImage: res.story.coverImage || 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&q=80',
         };
         setStories([fullStory, ...stories]);
@@ -522,43 +526,19 @@ export default function Stories() {
         setShowCreateModal(false);
         setNewTitle('');
         setNewPrompt('');
+        apiFetch('/api/stories', {
+          method: 'POST',
+          body: JSON.stringify({
+            title: fullStory.title,
+            narrative: fullStory.narrative || fullStory.summary || '',
+            species_highlights: [],
+          }),
+        }).catch(() => {});
       } else {
-        throw new Error('Fallback required');
+        setStoryError(res?.error || 'Could not generate the story. Please try again.');
       }
-    } catch {
-      // Offline fallback
-      const generated = {
-        id: `story-${Date.now()}`,
-        title: newTitle.trim() || 'The Crystal Canopy Discovery',
-        genre: newGenre,
-        mood: newMood,
-        readTime: '4 min read',
-        coverImage: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&q=80',
-        summary: `AI generated narrative based on: "${newPrompt.slice(0, 80)}…"`,
-        narrative: `In a quiet sanctuary hidden behind misty canopy ridges, an unusual ecological pattern began to unfold...\n\n${newPrompt}\n\nAs night settled over the grove, bioluminescent spores drifted softly upon ambient breezes, connecting distant roots in a silent dance of light.`,
-        isInteractive: true,
-        choices: [
-          {
-            id: 'gen-c1',
-            text: '🌟 Follow the glowing spore trail deeper into the ancient grove',
-            nextText: 'The spore trail led to a hidden waterfalls where ancient petroglyphs illuminated under starlight...',
-          },
-          {
-            id: 'gen-c2',
-            text: '🔬 Collect leaf sample for neural pattern analysis',
-            nextText: 'The scanner revealed intricate fractal veins storing century-old environmental memory...',
-          },
-        ],
-        reactions: { magical: 1, lovedIt: 2, unexpected: 1, funny: 0, thoughtful: 3 },
-        isFeatured: false,
-        progress: 0,
-      };
-
-      setStories([generated, ...stories]);
-      setShowCreateModal(false);
-      setNewTitle('');
-      setNewPrompt('');
-      setReadingStory(generated);
+    } catch (err) {
+      setStoryError(err?.message || 'Could not generate the story. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -569,6 +549,7 @@ export default function Stories() {
     if (!readingStory) return;
     setAIAssistantLoading(true);
     setAiResult(null);
+    setStoryError('');
 
     try {
       const res = await apiFetch('/api/stories/assist', {
@@ -590,29 +571,10 @@ export default function Stories() {
           text: res.result,
         });
       } else {
-        throw new Error('Assist fallback');
+        setStoryError(res?.error || 'The AI assistant could not produce a result.');
       }
-    } catch {
-      // Local smart generative engine fallback
-      let output = '';
-      if (actionType === 'rewrite') {
-        output = `The ancient boughs swayed in synchrony with subterranean fungal currents. Glowing mycelial strands illuminated the understory with emerald brilliance as gentle rain washed over the Pacific canopy.`;
-      } else if (actionType === 'mood') {
-        output = `[Eerie & Mystical Shift]: A low vibrational hum surged through the damp soil. The canopy plunged into a breathless silence as distant bioluminescent filaments flickered in the misty gloom.`;
-      } else if (actionType === 'ending') {
-        output = `[Alternate Ending]: Realizing that the ancient grove was a conscious, communicating mind, Maya closed her notebook and placed her palms on the cedar bark, becoming the sanctuary's sworn guardian.`;
-      } else if (actionType === 'continue') {
-        output = `[Chapter Continuation]: Morning brought shafts of golden light piercing through the cedar crowns. A chorus of rare spotted owls took flight, guiding Maya towards an uncharted clearing.`;
-      } else if (actionType === 'translate') {
-        output = `[ગુજરાતી અનુવાદ]: પ્રાચીન વનના કેનોપી નીચે, પવનના દરેક શ્વાસ સાથે પ્રકૃતિ એક ગહન રહસ્યમય કથા વણી રહી હતી.`;
-      } else {
-        output = `[AI Response]: ${customInstruction || customAssistPrompt}\nThe forest whispered back through electrical bio-currents that synchronized with your heartbeat.`;
-      }
-
-      setAiResult({
-        action: actionType,
-        text: output,
-      });
+    } catch (err) {
+      setStoryError(err?.message || 'The AI assistant is temporarily unavailable.');
     } finally {
       setAIAssistantLoading(false);
     }
@@ -673,7 +635,7 @@ export default function Stories() {
       return s.isInteractive;
     }
     if (activeTab === 'my_stories') {
-      return s.id.startsWith('story-1') || s.id.startsWith('story-Date');
+      return s.isMine;
     }
     return true;
   });
@@ -859,7 +821,7 @@ export default function Stories() {
                 >
                   <div className="flex justify-between items-center border-b border-[#20452F] pb-2.5">
                     <p className="text-sm font-bold text-[#4ADE80] flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" /> {t.aiAssistantTitle} (Powered by Google Gemini)
+                      <Sparkles className="w-4 h-4" /> {t.aiAssistantTitle}
                     </p>
                     <button onClick={() => setShowAIAssistant(false)} className="text-slate-400 hover:text-white cursor-pointer">
                       <X className="w-4 h-4" />
@@ -941,6 +903,14 @@ export default function Stories() {
                     <div className="text-center py-3 text-xs text-[#4ADE80] font-semibold animate-pulse flex items-center justify-center gap-2">
                       <Sparkles className="w-4 h-4 animate-spin" />
                       <span>AI Assistant is crafting real-time enhancement…</span>
+                    </div>
+                  )}
+
+                  {/* AI Error */}
+                  {storyError && (
+                    <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200 flex items-start gap-2">
+                      <span className="mt-0.5 text-red-400 font-bold">✕</span>
+                      <span>{storyError}</span>
                     </div>
                   )}
 
@@ -1200,6 +1170,13 @@ export default function Stories() {
                   <Sparkles className="w-4 h-4" />
                   <span>{isGenerating ? t.generatingText : t.generateBtn}</span>
                 </button>
+
+                {storyError && (
+                  <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200 flex items-start gap-2">
+                    <span className="mt-0.5 text-red-400 font-bold">✕</span>
+                    <span>{storyError}</span>
+                  </div>
+                )}
               </form>
             </motion.div>
           </motion.div>

@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const {
   getProfile,
   updateProfile,
@@ -11,6 +12,7 @@ const {
   getMissions,
   createMission,
   updateMission,
+  deleteMission,
   getPlaces,
   getPlaceById,
   getStories,
@@ -20,50 +22,82 @@ const {
   assistAIStory,
   getCommunityPosts,
   createCommunityPost,
+  deleteCommunityPost,
   getActions,
+  createAction,
+  updateAction,
+  deleteAction,
   getStreak,
   getBestTime,
   getWeeklyRecap,
+  getConnection,
   handlePulseChat,
   handleImageAnalyze,
 } = require('../controllers/natureController');
 const asyncHandler = require('../utils/asyncHandler');
+const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// AI Chatbot & Image Analysis
-router.post('/pulse', asyncHandler(handlePulseChat));
-router.post('/analyze', asyncHandler(handleImageAnalyze));
-router.post('/stories/generate', asyncHandler(generateAIStory));
-router.post('/stories/assist', asyncHandler(assistAIStory));
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many AI requests. Please slow down and try again.' },
+});
 
-// Profile
-router.route('/profile').get(asyncHandler(getProfile)).put(asyncHandler(updateProfile));
+// AI Chatbot & Image Analysis (public but rate-limited; keys stay server-side)
+router.post('/pulse', aiLimiter, asyncHandler(handlePulseChat));
+router.post('/analyze', aiLimiter, asyncHandler(handleImageAnalyze));
+router.post('/stories/generate', aiLimiter, asyncHandler(generateAIStory));
+router.post('/stories/assist', aiLimiter, asyncHandler(assistAIStory));
+
+// Profile (private)
+router.route('/profile').get(protect, asyncHandler(getProfile)).put(protect, asyncHandler(updateProfile));
 
 // Discoveries
-router.route('/discoveries').get(asyncHandler(getDiscoveries)).post(asyncHandler(createDiscovery)).delete(asyncHandler(deleteDiscovery));
+router
+  .route('/discoveries')
+  .get(asyncHandler(getDiscoveries))
+  .post(protect, asyncHandler(createDiscovery));
+router.delete('/discoveries/:id', protect, asyncHandler(deleteDiscovery));
 
-// Journal
-router.route('/journal').get(asyncHandler(getJournal)).post(asyncHandler(createJournalEntry)).delete(asyncHandler(deleteJournalEntry));
+// Journal (private)
+router
+  .route('/journal')
+  .get(protect, asyncHandler(getJournal))
+  .post(protect, asyncHandler(createJournalEntry));
+router.delete('/journal/:id', protect, asyncHandler(deleteJournalEntry));
 
-// Missions
-router.route('/missions').get(asyncHandler(getMissions)).post(asyncHandler(createMission));
-router.route('/missions/:id').patch(asyncHandler(updateMission));
+// Missions (private)
+router.route('/missions').get(protect, asyncHandler(getMissions)).post(protect, asyncHandler(createMission));
+router.route('/missions/:id').patch(protect, asyncHandler(updateMission)).delete(protect, asyncHandler(deleteMission));
 
-// Places
+// Places (public)
 router.route('/places').get(asyncHandler(getPlaces));
 router.route('/places/:id').get(asyncHandler(getPlaceById));
 
 // Stories
-router.route('/stories').get(asyncHandler(getStories)).post(asyncHandler(createStory)).delete(asyncHandler(deleteStory));
+router
+  .route('/stories')
+  .get(asyncHandler(getStories))
+  .post(protect, asyncHandler(createStory))
+  .delete(protect, asyncHandler(deleteStory));
 
 // Community
-router.route('/community').get(asyncHandler(getCommunityPosts)).post(asyncHandler(createCommunityPost));
+router
+  .route('/community')
+  .get(asyncHandler(getCommunityPosts))
+  .post(protect, asyncHandler(createCommunityPost));
+router.route('/community/:id').delete(protect, asyncHandler(deleteCommunityPost));
 
-// Actions, Streaks & Insights
-router.route('/actions').get(asyncHandler(getActions));
-router.route('/streak').get(asyncHandler(getStreak));
-router.route('/best-time').get(asyncHandler(getBestTime));
-router.route('/weekly-recap').get(asyncHandler(getWeeklyRecap));
+// Actions, Streaks & Insights (private)
+router.route('/actions').get(protect, asyncHandler(getActions)).post(protect, asyncHandler(createAction));
+router.route('/actions/:id').patch(protect, asyncHandler(updateAction)).delete(protect, asyncHandler(deleteAction));
+router.route('/streak').get(protect, asyncHandler(getStreak));
+router.route('/best-time').get(protect, asyncHandler(getBestTime));
+router.route('/weekly-recap').get(protect, asyncHandler(getWeeklyRecap));
+router.route('/connection').get(protect, asyncHandler(getConnection));
 
 module.exports = router;

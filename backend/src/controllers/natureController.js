@@ -9,6 +9,9 @@ const {
   CommunityPost,
   Action,
 } = require('../models/Nature');
+const { sanitizeText, sanitizeMultiline } = require('../utils/sanitize');
+
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // Seed starter data if collections are empty
 const DEFAULT_PLACES = [
@@ -62,13 +65,86 @@ const DEFAULT_PLACES = [
   },
 ];
 
-const DEFAULT_MISSIONS = [
+const profileAllowlist = [
+  'display_name',
+  'city',
+  'region',
+  'available_minutes',
+  'interests',
+  'onboarding_complete',
+];
+
+const discoveryAllowlist = [
+  'common_name',
+  'scientific_name',
+  'confidence',
+  'confidence_pct',
+  'category',
+  'description',
+  'why_it_matters',
+  'experience_suggestion',
+  'place_name',
+  'city',
+  'image_url',
+  'is_public',
+  'notes',
+  'raw_analysis',
+];
+
+const journalAllowlist = ['title', 'body', 'mood', 'weather', 'place_name', 'image_url'];
+const missionAllowlist = [
+  'title',
+  'description',
+  'mission_type',
+  'duration_minutes',
+  'status',
+  'location_hint',
+  'why_it_matters',
+  'scheduled_date',
+  'completed_at',
+];
+const storyAllowlist = ['title', 'narrative', 'species_highlights', 'image_url'];
+const communityPostAllowlist = [
+  'common_name',
+  'scientific_name',
+  'category',
+  'note',
+  'image_url',
+  'confidence',
+  'city',
+];
+const actionAllowlist = ['title', 'category', 'status', 'points', 'minutes', 'description', 'image_url', 'impact_note'];
+
+const pick = (obj, keys) => {
+  const out = {};
+  for (const key of keys) {
+    if (obj[key] !== undefined) out[key] = obj[key];
+  }
+  return out;
+};
+
+const getOrCreateProfile = async (user) => {
+  let profile = await Profile.findOne({ user: user._id });
+  if (!profile) {
+    profile = await Profile.create({
+      user: user._id,
+      display_name: user.name || 'Explorer',
+      city: '',
+      region: '',
+      available_minutes: 20,
+      interests: [],
+      onboarding_complete: false,
+    });
+  }
+  return profile;
+};
+
+const missionDefaults = [
   {
     title: 'Listen to tree canopy at dawn',
     description: 'Stand under the largest tree in your neighborhood for 5 minutes without looking at your phone.',
     mission_type: 'observe',
     duration_minutes: 10,
-    status: 'scheduled',
     location_hint: 'Any nearby tree',
     why_it_matters: 'Slowing down helps tune your sensory system to ambient nature sounds.',
   },
@@ -77,7 +153,6 @@ const DEFAULT_MISSIONS = [
     description: 'Touch 3 different patches of moss on trees, walls, or ground. Notice moisture and thickness differences.',
     mission_type: 'explore',
     duration_minutes: 15,
-    status: 'scheduled',
     location_hint: 'Shaded wall or tree base',
     why_it_matters: 'Mosses act as micro-ecosystem sponges, filtering urban rainwater.',
   },
@@ -86,7 +161,6 @@ const DEFAULT_MISSIONS = [
     description: 'Check a light source near outdoor plants after dusk.',
     mission_type: 'learn',
     duration_minutes: 20,
-    status: 'scheduled',
     location_hint: 'Porch light or park lamp',
     why_it_matters: 'Moths are essential nocturnal pollinators often overlooked.',
   },
@@ -94,111 +168,168 @@ const DEFAULT_MISSIONS = [
 
 // Profile
 const getProfile = async (req, res) => {
-  let profile = await Profile.findOne(req.user ? { user: req.user._id } : {});
-  if (!profile) {
-    profile = await Profile.create({
-      user: req.user?._id,
-      display_name: req.user?.name || 'Explorer',
-      city: 'Portland',
-      region: 'Oregon',
-      available_minutes: 20,
-      interests: ['urban wild', 'trees & bark'],
-      onboarding_complete: true,
-    });
-  }
+  const profile = await getOrCreateProfile(req.user);
   res.json(profile);
 };
 
 const updateProfile = async (req, res) => {
-  let profile = await Profile.findOne(req.user ? { user: req.user._id } : {});
-  if (!profile) {
-    profile = new Profile({ user: req.user?._id, ...req.body });
-  } else {
-    Object.assign(profile, req.body);
+  const profile = await getOrCreateProfile(req.user);
+  const updates = pick(req.body || {}, profileAllowlist);
+  if (updates.available_minutes !== undefined) {
+    const minutes = Number(updates.available_minutes);
+    if (Number.isNaN(minutes) || minutes < 0 || minutes > 1440) {
+      return res.status(400).json({ error: 'available_minutes must be between 0 and 1440.' });
+    }
+    updates.available_minutes = minutes;
   }
+  if (updates.display_name !== undefined) {
+    updates.display_name = sanitizeText(updates.display_name, 80) || 'Explorer';
+  }
+  if (updates.city !== undefined) updates.city = sanitizeText(updates.city, 80);
+  if (updates.region !== undefined) updates.region = sanitizeText(updates.region, 80);
+  if (updates.interests !== undefined && Array.isArray(updates.interests)) {
+    updates.interests = updates.interests.map((i) => sanitizeText(String(i), 40)).filter(Boolean).slice(0, 20);
+  }
+  Object.assign(profile, updates);
   await profile.save();
   res.json(profile);
 };
 
 // Discoveries
 const getDiscoveries = async (req, res) => {
-  const query = req.user ? { $or: [{ user: req.user._id }, { is_public: true }] } : {};
-  const discoveries = await Discovery.find(query).sort({ createdAt: -1 });
+  const query = req.user
+    ? { $or: [{ user: req.user._id }, { is_public: true }] }
+    : { is_public: true };
+  const discoveries = await Discovery.find(query).sort({ createdAt: -1 }).limit(200);
   res.json(discoveries);
 };
 
 const createDiscovery = async (req, res) => {
-  const discovery = await Discovery.create({
-    user: req.user?._id,
-    ...req.body,
-  });
+  const body = pick(req.body || {}, discoveryAllowlist);
+  if (!body.common_name || !String(body.common_name).trim()) {
+    return res.status(400).json({ error: 'A species name is required.' });
+  }
+  body.common_name = sanitizeText(body.common_name, 120);
+  if (body.scientific_name) body.scientific_name = sanitizeText(body.scientific_name, 160);
+  if (body.description) body.description = sanitizeMultiline(body.description, 4000);
+  if (body.notes) body.notes = sanitizeMultiline(body.notes, 2000);
+  if (body.place_name) body.place_name = sanitizeText(body.place_name, 160);
+  if (body.city) body.city = sanitizeText(body.city, 120);
+  const discovery = await Discovery.create({ user: req.user._id, ...body });
   res.status(201).json(discovery);
 };
 
 const deleteDiscovery = async (req, res) => {
-  const { id } = req.body;
-  await Discovery.findByIdAndDelete(id);
+  const id = req.params.id || req.body?.id;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid discovery id.' });
+  }
+  const discovery = await Discovery.findOne({ _id: id, user: req.user._id });
+  if (!discovery) {
+    return res.status(404).json({ error: 'Discovery not found or not yours.' });
+  }
+  await discovery.deleteOne();
   res.json({ success: true });
 };
 
 // Journal
 const getJournal = async (req, res) => {
-  const query = req.user ? { user: req.user._id } : {};
-  let entries = await JournalEntry.find(query).sort({ createdAt: -1 });
-  if (!entries.length) {
-    entries = [
-      {
-        _id: 'j1',
-        title: 'Morning rain on cedar bark',
-        body: 'The rain turned the dry cedar bark almost black. The smell of damp needles was unmistakable. Saw two chickadees flitting between lower branches.',
-        mood: 'quiet',
-        weather: 'Soft rain, 12°C',
-        createdAt: new Date().toISOString(),
-      },
-    ];
-  }
+  const entries = await JournalEntry.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(200);
   res.json(entries);
 };
 
 const createJournalEntry = async (req, res) => {
-  const entry = await JournalEntry.create({
-    user: req.user?._id,
-    ...req.body,
-  });
+  const body = pick(req.body || {}, journalAllowlist);
+  if (!body.title || !String(body.title).trim() || !body.body || !String(body.body).trim()) {
+    return res.status(400).json({ error: 'Title and body are required.' });
+  }
+  body.title = sanitizeText(body.title, 200);
+  body.body = sanitizeMultiline(body.body, 20000);
+  if (body.mood) body.mood = sanitizeText(body.mood, 80);
+  if (body.weather) body.weather = sanitizeText(body.weather, 120);
+  if (body.place_name) body.place_name = sanitizeText(body.place_name, 160);
+  const entry = await JournalEntry.create({ user: req.user._id, ...body });
   res.status(201).json(entry);
 };
 
 const deleteJournalEntry = async (req, res) => {
-  const { id } = req.body;
-  await JournalEntry.findByIdAndDelete(id);
+  const id = req.params.id || req.body?.id;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid journal id.' });
+  }
+  const entry = await JournalEntry.findOne({ _id: id, user: req.user._id });
+  if (!entry) {
+    return res.status(404).json({ error: 'Entry not found or not yours.' });
+  }
+  await entry.deleteOne();
   res.json({ success: true });
 };
 
 // Missions
 const getMissions = async (req, res) => {
-  let missions = await Mission.find(req.user ? { user: req.user._id } : {}).sort({ createdAt: -1 });
-  if (!missions.length) {
-    missions = DEFAULT_MISSIONS.map((m, idx) => ({
-      ...m,
-      _id: `m${idx + 1}`,
-      scheduled_date: new Date().toISOString().slice(0, 10),
-    }));
-  }
+  const missions = await Mission.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(100);
   res.json(missions);
 };
 
 const createMission = async (req, res) => {
-  const mission = await Mission.create({
-    user: req.user?._id,
-    ...req.body,
-  });
+  const raw = req.body || {};
+  if (raw.generate) {
+    const count = Math.min(Number(raw.count) || 1, 6);
+    const minutes = Number(raw.minutes) || null;
+    const chosen = missionDefaults.slice(0, count);
+    const created = await Mission.insertMany(
+      chosen.map((m) => ({
+        ...m,
+        user: req.user._id,
+        duration_minutes: minutes || m.duration_minutes,
+        scheduled_date: new Date().toISOString().slice(0, 10),
+      }))
+    );
+    return res.status(201).json(created);
+  }
+  const body = pick(raw, missionAllowlist);
+  if (!body.title || !String(body.title).trim()) {
+    return res.status(400).json({ error: 'A mission title is required.' });
+  }
+  body.title = sanitizeText(body.title, 200);
+  if (body.description) body.description = sanitizeMultiline(body.description, 4000);
+  if (body.location_hint) body.location_hint = sanitizeText(body.location_hint, 200);
+  if (body.why_it_matters) body.why_it_matters = sanitizeMultiline(body.why_it_matters, 2000);
+  const mission = await Mission.create({ user: req.user._id, ...body });
   res.status(201).json(mission);
 };
 
 const updateMission = async (req, res) => {
   const { id } = req.params;
-  const mission = await Mission.findByIdAndUpdate(id, req.body, { new: true });
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid mission id.' });
+  }
+  const mission = await Mission.findOne({ _id: id, user: req.user._id });
+  if (!mission) {
+    return res.status(404).json({ error: 'Mission not found or not yours.' });
+  }
+  const updates = pick(req.body || {}, missionAllowlist);
+  if (updates.title !== undefined) updates.title = sanitizeText(updates.title, 200);
+  if (updates.description !== undefined) updates.description = sanitizeText(updates.description, 4000);
+  if (updates.status === 'completed' && !updates.completed_at) {
+    updates.completed_at = new Date();
+  }
+  Object.assign(mission, updates);
+  await mission.save();
   res.json(mission);
+};
+
+const deleteMission = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid mission id.' });
+  }
+  const mission = await Mission.findOne({ _id: id, user: req.user._id });
+  if (!mission) {
+    return res.status(404).json({ error: 'Mission not found or not yours.' });
+  }
+  await mission.deleteOne();
+  res.json({ success: true });
 };
 
 // Places
@@ -213,18 +344,14 @@ const getPlaces = async (req, res) => {
 const getPlaceById = async (req, res) => {
   const { id } = req.params;
   let place = null;
-  if (mongoose.Types.ObjectId.isValid(id)) {
+  if (isValidId(id)) {
     place = await Place.findById(id);
-  }
-  if (!place) {
-    place = await Place.findOne({ _id: id }).catch(() => null);
   }
   if (!place) {
     const places = await Place.find({});
     place = places.find(
       (p) =>
         p._id.toString() === id ||
-        p.id === id ||
         p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') === id
     );
   }
@@ -236,31 +363,43 @@ const getPlaceById = async (req, res) => {
 
 // Stories
 const getStories = async (req, res) => {
-  let stories = await Story.find({}).sort({ createdAt: -1 });
-  if (!stories.length) {
-    stories = [
-      {
-        _id: 's1',
-        title: 'Thread of Urban Adaptation',
-        narrative: 'Across your latest notes, native flora and urban wildlife show an interconnected rhythm.',
-        createdAt: new Date().toISOString(),
-      },
-    ];
-  }
+  const stories = await Story.find({}).sort({ createdAt: -1 }).limit(100);
   res.json(stories);
 };
 
 const createStory = async (req, res) => {
-  const story = await Story.create({
-    user: req.user?._id,
-    ...req.body,
-  });
+  const body = pick(req.body || {}, storyAllowlist);
+  if (!body.title || !String(body.title).trim()) {
+    return res.status(400).json({ error: 'A story title is required.' });
+  }
+  body.title = sanitizeText(body.title, 300);
+  if (body.narrative) body.narrative = sanitizeMultiline(body.narrative, 50000);
+  if (Array.isArray(body.species_highlights)) {
+    body.species_highlights = body.species_highlights
+      .map((s) => sanitizeText(String(s), 120))
+      .filter(Boolean)
+      .slice(0, 30);
+  }
+  const story = await Story.create({ user: req.user._id, ...body });
   res.status(201).json(story);
+};
+
+const deleteStory = async (req, res) => {
+  const id = req.params.id || req.body?.id;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid story id.' });
+  }
+  const story = await Story.findOne({ _id: id, user: req.user._id });
+  if (!story) {
+    return res.status(404).json({ error: 'Story not found or not yours.' });
+  }
+  await story.deleteOne();
+  res.json({ success: true });
 };
 
 const generateAIStory = async (req, res) => {
   const { prompt, genre = 'Nature & Eco', mood = 'Mystical', title, language = 'en' } = req.body || {};
-  if (!prompt) {
+  if (!prompt || !String(prompt).trim()) {
     return res.status(400).json({ error: 'Prompt is required' });
   }
 
@@ -310,37 +449,15 @@ Return ONLY a valid JSON object matching this structure:
         id: `story-${Date.now()}`,
         ...ai.data,
         isInteractive: true,
-        reactions: { magical: 1, lovedIt: 2, unexpected: 0, funny: 0, thoughtful: 1 },
       },
     });
   }
 
-  // High quality fallback
-  const fallbackStory = {
-    id: `story-${Date.now()}`,
-    title: title || 'Echoes of the Living Canopy',
-    genre,
-    mood,
-    readTime: '3 min read',
-    summary: `A transformative ecological journey: "${prompt.slice(0, 70)}..."`,
-    narrative: `Beneath the ancient forest boughs, the air was thick with the scent of damp moss, pine needles, and sweet decaying earth.\n\n${prompt}\n\nAs dusk settled into the valley, bioluminescent mycelial threads beneath the tree roots pulsed with a rhythmic, steady heartbeat — sending vibrational whispers through every branch and leaf in the sanctuary.`,
-    isInteractive: true,
-    choices: [
-      {
-        id: 'c1',
-        text: 'Follow the subterranean glow deeper into the ancient grove',
-        nextText: 'The glowing roots converged around an ancient hollow cedar, where amber tree sap reflected the constellations above.',
-      },
-      {
-        id: 'c2',
-        text: 'Listen quietly to the acoustic frequency of the evening wind',
-        nextText: 'The wind filtered through thousands of needles, composing a natural harmonic chord that seemed to synchronize with your own breathing.',
-      },
-    ],
-    reactions: { magical: 2, lovedIt: 1, unexpected: 0, funny: 0, thoughtful: 2 },
-  };
-
-  res.json({ success: true, story: fallbackStory });
+  res.status(503).json({
+    success: false,
+    ai_available: false,
+    error: 'The story generator is temporarily unavailable. Please try again shortly.',
+  });
 };
 
 const assistAIStory = async (req, res) => {
@@ -375,83 +492,249 @@ Provide output that directly fits into or enriches the narrative.`;
     return res.json({ success: true, result: ai.text.trim(), action });
   }
 
-  const fallbacks = {
-    rewrite: `The canopy deepened into a tapestry of emerald and gold, where ancient boughs swayed in synchrony with subterranean fungal currents, whispering forgotten ecological truths.`,
-    mood: `A sudden chilling mist rolled through the understory. The canopy fell into an absolute, breathless hush as distant bioluminescent tendrils flickered in the darkness.`,
-    ending: `[Alternate Ending]: Realizing that the entire forest was a single conscious organism, Maya released her notes to the wind, deciding that some wonders are meant only to be experienced, never captured.`,
-    continue: `[Chapter Continuation]: The morning sun broke through the canopy in radiant shafts of gold. A chorus of hidden songbirds stirred the treetops, signaling the dawn of a newly awakened ecosystem.`,
-    translate: `[અનુવાદિત વાર્તા]: પ્રાચીન વનની છત્રછાયા હેઠળ, પવનના દરેક શ્વાસ સાથે પ્રકૃતિ એક નવું ગીત ગાઈ રહી હતી.`,
-  };
-
-  res.json({ success: true, result: fallbacks[action] || fallbacks.rewrite, action });
-};
-
-const deleteStory = async (req, res) => {
-  const { id } = req.body;
-  await Story.findByIdAndDelete(id);
-  res.json({ success: true });
+  res.status(503).json({
+    success: false,
+    ai_available: false,
+    error: 'The story assistant is temporarily unavailable. Please try again shortly.',
+  });
 };
 
 // Community
 const getCommunityPosts = async (req, res) => {
-  let posts = await CommunityPost.find({}).sort({ createdAt: -1 });
-  if (!posts.length) {
-    const discoveries = await Discovery.find({ is_public: true }).sort({ createdAt: -1 }).limit(10);
-    posts = discoveries.map((d) => ({
-      _id: d._id,
-      common_name: d.common_name,
-      scientific_name: d.scientific_name,
-      category: d.category,
-      city: d.city || 'Portland',
-      image_url: d.image_url,
-      note: d.notes || d.description,
-      confidence: d.confidence,
-      createdAt: d.createdAt,
-    }));
+  const posts = await CommunityPost.find({}).sort({ createdAt: -1 }).limit(100);
+  if (posts.length) {
+    return res.json(posts);
   }
-  res.json(posts);
+  const discoveries = await Discovery.find({ is_public: true }).sort({ createdAt: -1 }).limit(30);
+  const derived = discoveries.map((d) => ({
+    _id: d._id,
+    common_name: d.common_name,
+    scientific_name: d.scientific_name,
+    category: d.category,
+    city: d.city || 'Portland',
+    image_url: d.image_url,
+    note: d.notes || d.description,
+    confidence: d.confidence,
+    createdAt: d.createdAt,
+  }));
+  res.json(derived);
 };
 
 const createCommunityPost = async (req, res) => {
-  const post = await CommunityPost.create({
-    user: req.user?._id,
-    ...req.body,
-  });
+  const body = pick(req.body || {}, communityPostAllowlist);
+  if (!body.common_name || !String(body.common_name).trim()) {
+    return res.status(400).json({ error: 'A species name is required.' });
+  }
+  body.common_name = sanitizeText(body.common_name, 120);
+  if (body.scientific_name) body.scientific_name = sanitizeText(body.scientific_name, 160);
+  if (body.note) body.note = sanitizeMultiline(body.note, 2000);
+  if (body.city) body.city = sanitizeText(body.city, 120);
+  const post = await CommunityPost.create({ user: req.user._id, ...body });
   res.status(201).json(post);
+};
+
+const deleteCommunityPost = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid community post id.' });
+  }
+  const post = await CommunityPost.findOne({ _id: id, user: req.user._id });
+  if (!post) {
+    return res.status(404).json({ error: 'Post not found or not yours.' });
+  }
+  await post.deleteOne();
+  res.json({ success: true });
 };
 
 // Actions
 const getActions = async (req, res) => {
-  let actions = await Action.find(req.user ? { user: req.user._id } : {});
-  if (!actions.length) {
-    actions = [
-      { _id: 'a1', title: 'Plant native pollinator flowers', category: 'habitat', status: 'todo', points: 25 },
-      { _id: 'a2', title: 'Pick up litter along local stream', category: 'cleanliness', status: 'done', points: 15 },
-      { _id: 'a3', title: 'Install a window bird-strike decal', category: 'wildlife', status: 'todo', points: 20 },
-    ];
-  }
+  const actions = await Action.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(200);
   res.json(actions);
+};
+
+const createAction = async (req, res) => {
+  const body = pick(req.body || {}, actionAllowlist);
+  if (!body.title || !String(body.title).trim()) {
+    return res.status(400).json({ error: 'An action title is required.' });
+  }
+  body.title = sanitizeText(body.title, 200);
+  if (body.description) body.description = sanitizeMultiline(body.description, 2000);
+  if (body.impact_note) body.impact_note = sanitizeMultiline(body.impact_note, 2000);
+  const action = await Action.create({ user: req.user._id, ...body });
+  res.status(201).json(action);
+};
+
+const updateAction = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid action id.' });
+  }
+  const action = await Action.findOne({ _id: id, user: req.user._id });
+  if (!action) {
+    return res.status(404).json({ error: 'Action not found or not yours.' });
+  }
+  const updates = pick(req.body || {}, actionAllowlist);
+  Object.assign(action, updates);
+  await action.save();
+  res.json(action);
+};
+
+const deleteAction = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidId(id)) {
+    return res.status(400).json({ error: 'Invalid action id.' });
+  }
+  const action = await Action.findOne({ _id: id, user: req.user._id });
+  if (!action) {
+    return res.status(404).json({ error: 'Action not found or not yours.' });
+  }
+  await action.deleteOne();
+  res.json({ success: true });
 };
 
 // Streak & Stats
 const getStreak = async (req, res) => {
-  res.json({ streak: 4, last_active: new Date().toISOString() });
+  const [discoveries, entries, missions] = await Promise.all([
+    Discovery.find({ user: req.user._id }).select('createdAt'),
+    JournalEntry.find({ user: req.user._id }).select('createdAt'),
+    Mission.find({ user: req.user._id, status: 'completed' }).select('completed_at createdAt'),
+  ]);
+
+  const daySet = new Set();
+  const addDays = (items, dateField) => {
+    for (const item of items) {
+      const d = item[dateField] || item.createdAt;
+      if (d) daySet.add(new Date(d).toISOString().slice(0, 10));
+    }
+  };
+  addDays(discoveries, 'createdAt');
+  addDays(entries, 'createdAt');
+  addDays(missions, 'completed_at');
+
+  const lastActive = [...daySet].sort().pop() || new Date().toISOString().slice(0, 10);
+
+  let streak = 0;
+  let cursor = new Date(lastActive);
+  while (daySet.has(cursor.toISOString().slice(0, 10))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  if (streak === 0) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (daySet.has(yesterday.toISOString().slice(0, 10))) streak = 0;
+  }
+
+  res.json({ streak, last_active: lastActive });
 };
 
 const getBestTime = async (req, res) => {
-  res.json({ suggestion: 'Golden hour — best light for observation', condition: 'morning' });
+  const discoveries = await Discovery.find({ user: req.user._id }).select('createdAt');
+  if (discoveries.length) {
+    const hourCounts = {};
+    for (const d of discoveries) {
+      const hour = new Date(d.createdAt).getHours();
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+    }
+    const bestHour = Object.keys(hourCounts).reduce((a, b) =>
+      hourCounts[a] >= hourCounts[b] ? a : b
+    );
+    const h = Number(bestHour);
+    const condition = h < 6 ? 'dawn' : h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 21 ? 'evening' : 'night';
+    res.json({
+      suggestion: `Most of your observations cluster around ${h < 12 ? 'the morning' : h < 17 ? 'midday' : h < 21 ? 'the late afternoon/evening' : 'night'} — that is when you are most tuned in.`,
+      condition,
+      best_hour: h,
+    });
+    return;
+  }
+  res.json({
+    suggestion: 'Early morning or late afternoon is often best — most species are most active then.',
+    condition: 'morning',
+  });
 };
 
 const getWeeklyRecap = async (req, res) => {
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const discoveries = await Discovery.find({
+    user: req.user._id,
+    createdAt: { $gte: weekAgo },
+  }).sort({ createdAt: -1 });
+
+  const activeDays = new Set(
+    discoveries.map((d) => new Date(d.createdAt).toISOString().slice(0, 10))
+  ).size;
+  const species = discoveries.filter((d) => d.common_name && d.common_name !== 'Natural Flora Observation');
+  const totalSpecies = species.length;
+
+  if (!totalSpecies) {
+    return res.json({
+      slides: [
+        {
+          title: 'No observations recorded yet this week',
+          stat: '0',
+          stat_label: 'species logged',
+          description: 'Head out with the Lens and make your first discovery of the week.',
+        },
+      ],
+      total_species: 0,
+      total_days: activeDays,
+    });
+  }
+
+  const top = species.reduce((best, d) =>
+    (d.confidence_pct || 0) >= (best.confidence_pct || 0) ? d : best
+  );
+  const names = [...new Set(species.map((d) => d.common_name))].slice(0, 6);
+
   res.json({
     slides: [
-      { title: 'You explored 5 days this week', stat: '5', stat_label: 'days outside', description: 'Great job staying connected.' },
-      { title: 'You discovered 3 species', stat: '3', stat_label: 'new species', species_list: ['Indian Myna', 'Champa (Plumeria)', 'Banyan Tree'] },
-      { title: 'Your top find was the Champa', stat: '97%', stat_label: 'confidence', top_species: { common_name: 'Champa (Plumeria)', scientific_name: 'Plumeria rubra', category: 'flowers' } },
+      {
+        title: `You explored ${Math.max(activeDays, 1)} day${activeDays === 1 ? '' : 's'} this week`,
+        stat: String(Math.max(activeDays, 1)),
+        stat_label: 'days outside',
+        description: 'Every observation deepens your local record.',
+      },
+      {
+        title: `You discovered ${totalSpecies} species`,
+        stat: String(totalSpecies),
+        stat_label: 'new species',
+        species_list: names,
+      },
+      {
+        title: `Your top find was ${top.common_name}`,
+        stat: `${top.confidence_pct || '--'}%`,
+        stat_label: 'confidence',
+        top_species: top,
+      },
     ],
-    total_species: 3,
-    total_days: 5,
+    total_species: totalSpecies,
+    total_days: activeDays,
   });
+};
+
+const getConnection = async (req, res) => {
+  const [discoveries, entries, missions, actions] = await Promise.all([
+    Discovery.find({ user: req.user._id }).select('place_name city createdAt'),
+    JournalEntry.find({ user: req.user._id }).select('createdAt'),
+    Mission.find({ user: req.user._id, status: 'completed' }).select('_id'),
+    Action.find({ user: req.user._id, status: 'done' }).select('_id'),
+  ]);
+
+  const observe = Math.min(100, discoveries.length * 20);
+  const placesVisited = new Set(
+    discoveries.map((d) => (d.place_name || d.city || '').trim()).filter(Boolean)
+  ).size;
+  const explore = Math.min(100, placesVisited * 25);
+  const learn = Math.min(100, entries.length * 20);
+  const act = Math.min(100, actions.length * 25);
+  const activeDays = new Set(
+    discoveries.concat(entries).map((d) => new Date(d.createdAt).toISOString().slice(0, 10))
+  ).size;
+  const return_dim = Math.min(100, activeDays * 20);
+  const overall = Math.round((observe + explore + learn + act + return_dim) / 5);
+
+  res.json({ observe, explore, learn, act, return_dim, overall });
 };
 
 const PULSE_SYSTEM = `You are Pulse, the guide inside NaturePulse, an AI-powered Nature Relationship Platform.
@@ -466,6 +749,7 @@ Offer one clear next step when useful. Keep replies under 180 words unless the u
 
 async function callGeminiApi({ prompt, system, imageBase64, mimeType, json = false, temperature = 0.5 }) {
   const key = process.env.GEMINI_API_KEY || '';
+  if (!key) return { unavailable: true, reason: 'missing-key' };
   const models = ['gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'];
 
   const parts = [];
@@ -545,9 +829,9 @@ const handlePulseChat = async (req, res) => {
     return res.json({ content: ai.text, text: ai.text });
   }
 
-  res.json({
-    content: 'I noticed your observation. Let us look closer at the living details around your area.',
-    text: 'I noticed your observation. Let us look closer at the living details around your area.',
+  res.status(503).json({
+    ai_available: false,
+    error: 'Pulse is temporarily unavailable. Please try again shortly.',
   });
 };
 
@@ -596,20 +880,9 @@ Rules:
     return res.json({ ...ai.data, ai_available: true });
   }
 
-  // Smart structured fallback if network fails
-  res.json({
-    identified: true,
-    confidence: 'high',
-    common_name: 'Natural Flora Observation',
-    scientific_name: 'Plantae sp.',
-    category: 'plant',
-    visible_features: ['Distinct leafy foliage', 'Natural organic texture', 'Healthy vegetative growth'],
-    description: 'A vibrant botanical specimen photographed in natural ambient lighting.',
-    why_it_matters: 'Urban and garden flora provide vital oxygen, microclimates, and essential refuge for pollinators.',
-    experience_suggestion: 'Observe the leaf veins and touch the surface moisture gently.',
-    ecological_role: 'Local oxygenator and habitat provider',
-    uncertainty_note: null,
-    ai_available: true,
+  res.status(503).json({
+    ai_available: false,
+    error: 'Species analysis is temporarily unavailable. Please try again shortly.',
   });
 };
 
@@ -635,9 +908,13 @@ module.exports = {
   getCommunityPosts,
   createCommunityPost,
   getActions,
+  createAction,
+  updateAction,
+  deleteAction,
   getStreak,
   getBestTime,
   getWeeklyRecap,
+  getConnection,
   handlePulseChat,
   handleImageAnalyze,
 };

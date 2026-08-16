@@ -5,7 +5,7 @@ import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
-  const { user, isDemoUser, logout, exitDemoMode } = useAuth();
+  const { user, isDemoUser, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -21,8 +21,7 @@ export default function Navbar() {
   };
 
   const handleSignOut = () => {
-    if (isDemoUser) exitDemoMode();
-    else if (logout) logout();
+    logout();
     navigate('/login');
   };
 
