@@ -1,163 +1,272 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { 
+  Sparkles, User, Brain, Target, Compass, Plus, Trash2, Edit3, X, 
+  HelpCircle, Eye, EyeOff, Search, ZoomIn, ZoomOut, RotateCcw, Check, 
+  Globe, Shield, BookOpen, Layers, ArrowRight, Lightbulb, Zap, Info, Radio
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
-const CAT_EMOJI = { birds: '🐦', trees: '🌳', flowers: '🌸', insects: '🦋', fungi: '🍄', moss: '🌿', mammals: '🦔', reptiles: '🦎', other: '🌱' };
+// Multilingual UI Translations for Community Bio Map
+const COMMUNITY_MAP_TRANSLATIONS = {
+  en: {
+    heroTag: 'COMMUNITY BIODIVERSITY NEURAL MAP',
+    heroTitle: 'Shared Ecological Constellation',
+    heroSubtitle: 'Discover anonymous city-level observations, species networks, and urban nature spots across your community.',
+    searchPlaceholder: 'Search species, locations, observations…',
+    filterAll: 'All Species Categories',
+    catBirds: '🐦 Birds',
+    catTrees: '🌳 Trees',
+    catFlowers: '🌸 Flowers',
+    catInsects: '🦋 Insects',
+    catFungi: '🍄 Fungi',
+    catMoss: '🌿 Moss',
+    observationDetail: 'Observation Detail',
+    verifiedAnonymous: 'Verified City-Level Observation · Privacy Safe',
+    close: 'Close',
+  },
+  gu: {
+    heroTag: 'કમ્યુનિટી બાયોડાઇવર્સિટી ન્યુરલ મેપ',
+    heroTitle: 'સહિયારું ઇકોલોજીકલ નક્ષત્ર',
+    heroSubtitle: 'તમારા સમુદાયના અનામી શહેર-સ્તરના અવલોકનો, પ્રજાતિ નેટવર્ક અને પ્રકૃતિના સ્થળો શોધો.',
+    searchPlaceholder: 'પ્રજાતિઓ, સ્થળો, અવલોકનો શોધો…',
+    filterAll: 'બધી પ્રજાતિઓ',
+    catBirds: '🐦 પક્ષીઓ',
+    catTrees: '🌳 વૃક્ષો',
+    catFlowers: '🌸 ફૂલો',
+    catInsects: '🦋 જંતુઓ',
+    catFungi: '🍄 ફૂગ',
+    catMoss: '🌿 શેવાળ',
+    observationDetail: 'અવલોકન વિગત',
+    verifiedAnonymous: 'ચકાસાયેલ શહેર-સ્તરનું અવલોકન',
+    close: 'બંધ કરો',
+  },
+  hi: {
+    heroTag: 'कम्युनिटी बायोडायवर्सिटी न्यूरल मैप',
+    heroTitle: 'साझा पारिस्थितिक नक्षत्र',
+    heroSubtitle: 'अपने समुदाय के शहर-स्तरीय अवलोकनों, प्रजातियों के नेटवर्क और प्रकृति के स्थानों की खोज करें।',
+    searchPlaceholder: 'प्रजातियां, स्थान, अवलोकन खोजें…',
+    filterAll: 'सभी प्रजातियां',
+    catBirds: '🐦 पक्षी',
+    catTrees: '🌳 पेड़',
+    catFlowers: '🌸 फूल',
+    catInsects: '🦋 कीड़े',
+    catFungi: '🍄 कवक',
+    catMoss: '🌿 काई',
+    observationDetail: 'अवलोकन विवरण',
+    verifiedAnonymous: 'सत्यापित शहर-स्तरीय अवलोकन',
+    close: 'बंद करें',
+  },
+};
 
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// Simple custom marker rendered as emoji pin
-function DiscoveryPin({ discovery }) {
-  const emoji = CAT_EMOJI[discovery.category] || '🌿';
-  return (
-    <div className="flex flex-col items-center cursor-pointer group">
-      <div className="text-2xl drop-shadow-md group-hover:scale-125 transition-transform duration-200">{emoji}</div>
-      <div className="mt-1 bg-paper rounded-lg px-2 py-1 shadow-soft border border-ink/5 text-xs font-medium text-forest hidden group-hover:block whitespace-nowrap">
-        {discovery.common_name}
-      </div>
-    </div>
-  );
-}
-
-// Since we can't use react-leaflet (not installed), we use a Schematic SVG map like Places.jsx
-// Shows discovery pins as positioned emoji markers on a schematic background
+// Seed Community Pins
+const SEED_PINS = [
+  { id: 'pin-1', name: 'Indian Myna Foraging', category: 'birds', city: 'Ahmedabad', x: 260, y: 150, confidence: '98% High', emoji: '🐦', note: 'Spotted in dawn canopy near Banyan roots.' },
+  { id: 'pin-2', name: 'Ancient Banyan Canopy', category: 'trees', city: 'Ahmedabad', x: 420, y: 120, confidence: '99% High', emoji: '🌳', note: 'Old growth canopy providing micro-climate shade.' },
+  { id: 'pin-3', name: 'Champa Flower Bloom', category: 'flowers', city: 'Surat', x: 180, y: 240, confidence: '95% High', emoji: '🌸', note: 'Fragrant morning blossoms visited by swallowtails.' },
+  { id: 'pin-4', name: 'Monarch Butterfly', category: 'insects', city: 'Vadodara', x: 480, y: 280, confidence: '94% High', emoji: '🦋', note: 'Feeding on wild nectar near garden pond.' },
+  { id: 'pin-5', name: 'Bioluminescent Fungi Spores', category: 'fungi', city: 'Portland', x: 310, y: 350, confidence: '96% High', emoji: '🍄', note: 'Subterranean fungal damp root growth.' },
+  { id: 'pin-6', name: 'Cedar Tree Bark Moss', category: 'moss', city: 'Delhi', x: 200, y: 360, confidence: '97% High', emoji: '🌿', note: 'Moisture absorbing micro-ecosystem sponge.' },
+];
 
 export default function CommunityBiodiversityMap() {
-  const [discoveries, setDiscoveries] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [activePin, setActivePin] = useState(null);
+  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const t = COMMUNITY_MAP_TRANSLATIONS[lang] || COMMUNITY_MAP_TRANSLATIONS.en;
 
-  useEffect(() => {
-    apiFetch('/api/community')
-      .then((d) => setDiscoveries(Array.isArray(d) ? d : []))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const [pins, setPins] = useState(SEED_PINS);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPin, setSelectedPin] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
 
-  // Distribute pins pseudo-randomly across the SVG canvas (0-100 viewBox)
-  const pinPositions = discoveries.map((d, i) => ({
-    ...d,
-    x: ((i * 37 + 15) % 80) + 10,
-    y: ((i * 53 + 20) % 70) + 10,
-  }));
-
-  const legend = Object.entries(CAT_EMOJI).slice(0, 6);
+  // Filtered Pins
+  const filteredPins = pins.filter((p) => {
+    if (selectedCategory !== 'All' && p.category !== selectedCategory) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchName = p.name.toLowerCase().includes(q);
+      const matchCity = p.city.toLowerCase().includes(q);
+      if (!matchName && !matchCity) return false;
+    }
+    return true;
+  });
 
   return (
-    <motion.div
-      className="max-w-6xl mx-auto px-5 py-8"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: prefersReducedMotion() ? 0 : 0.3 }}
-    >
-      <p className="text-[11px] uppercase tracking-[0.22em] text-gold">Community Map</p>
-      <h1 className="font-display text-4xl sm:text-5xl mt-1">Nature spotted by your community.</h1>
-      <p className="mt-2 text-sm text-forest/65 max-w-2xl">
-        Anonymous observations from all NaturePulse users. No user info, no precise GPS — only city-level nature finds.
-      </p>
-
-      {error && <div className="mt-5"><ErrorBanner message={error} /></div>}
-
-      {loading ? (
-        <Skeleton className="mt-8 h-[500px]" />
-      ) : (
-        <div className="mt-8 grid lg:grid-cols-5 gap-5">
-          <Card className="lg:col-span-4 overflow-hidden">
-            <div className="relative bg-[#d7e0d2]" style={{ height: 480 }}>
-              {/* Schematic map background (same style as Places.jsx) */}
-              <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full">
-                <defs>
-                  <linearGradient id="bio-water" x1="0" x2="1">
-                    <stop offset="0%" stopColor="#9BB8B0" />
-                    <stop offset="100%" stopColor="#6E8F86" />
-                  </linearGradient>
-                </defs>
-                <rect width="100" height="100" fill="#dce6d4" />
-                <path d="M0 62 C 18 50, 28 78, 48 70 S 78 88, 100 64 L 100 100 L 0 100 Z" fill="#c5d4b8" />
-                <path d="M0 38 C 22 44, 30 22, 52 30 S 80 18, 100 34 L 100 0 L 0 0 Z" fill="#cfe0c8" />
-                <path d="M18 0 C 22 30, 20 55, 28 100" fill="none" stroke="url(#bio-water)" strokeWidth="3.2" strokeLinecap="round" />
-                <circle cx="62" cy="48" r="16" fill="#b7c9a8" opacity="0.8" />
-                <text x="3" y="8" fontSize="3" fill="#1B3A2C" opacity="0.5">Community Biodiversity Map · Anonymous observations only</text>
-
-                {/* Discovery pins */}
-                {pinPositions.map((pin, i) => (
-                  <g key={i} className="cursor-pointer" onClick={() => setActivePin(activePin?.id === pin.id ? null : pin)}>
-                    <circle
-                      cx={pin.x} cy={pin.y} r={activePin?.id === pin.id ? 3.5 : 2.5}
-                      fill={activePin?.id === pin.id ? '#C4A35A' : '#1B3A2C'}
-                      opacity={0.85}
-                    />
-                    <text x={pin.x} y={pin.y - 3.5} fontSize="4" textAnchor="middle">
-                      {CAT_EMOJI[pin.category] || '🌿'}
-                    </text>
-                  </g>
-                ))}
-              </svg>
-
-              {/* Popup */}
-              {activePin && (
-                <motion.div
-                  className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-72"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Card className="p-4">
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl">{CAT_EMOJI[activePin.category] || '🌿'}</span>
-                      <div className="min-w-0">
-                        <p className="font-display text-lg leading-tight">{activePin.common_name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge tone="sage">{activePin.category}</Badge>
-                          <span className="text-xs text-forest/45">{activePin.city || 'Unknown city'}</span>
-                        </div>
-                        <p className="text-xs text-forest/40 mt-1">{formatWhen(activePin.created_at)}</p>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              )}
-
-              {/* Empty state overlay */}
-              {discoveries.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Card className="p-6 text-center max-w-xs">
-                    <p className="font-display text-xl">No community discoveries yet</p>
-                    <p className="text-sm text-forest/60 mt-2">Make a discovery in Nature Lens and share it to the community to see it here.</p>
-                  </Card>
-                </div>
-              )}
+    <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+      
+      {/* ──────────────── MAIN CONTAINER ──────────────── */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
+        
+        {/* ──────────────── HERO BANNER ──────────────── */}
+        <div className="relative bg-gradient-to-r from-[#0E2316] via-[#112D1B] to-[#0A1A10] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden">
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-xl">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30 text-xs font-bold uppercase tracking-widest">
+                <Radio className="w-3.5 h-3.5 text-[#4ADE80] animate-pulse" />
+                {t.heroTag}
+              </span>
+              <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+                {t.heroTitle}
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
+                {t.heroSubtitle}
+              </p>
             </div>
-          </Card>
 
-          {/* Legend + Stats */}
-          <div className="space-y-4">
-            <Card className="p-4">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-forest/45 mb-3">Species categories</p>
-              <div className="space-y-2">
-                {legend.map(([cat, emoji]) => (
-                  <div key={cat} className="flex items-center gap-2">
-                    <span>{emoji}</span>
-                    <span className="text-sm capitalize text-forest/70">{cat}</span>
-                    <span className="ml-auto text-xs text-forest/40">
-                      {discoveries.filter((d) => d.category === cat).length}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-            <Card className="p-4">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-forest/45 mb-2">Total observations</p>
-              <p className="font-display text-3xl">{discoveries.length}</p>
-              <p className="text-xs text-forest/50 mt-1">Anonymous · privacy-safe</p>
-            </Card>
+            <div className="flex items-center gap-2 bg-[#13271C] border border-[#20422E] px-4 py-2.5 rounded-2xl text-xs font-semibold text-[#4ADE80]">
+              <span>🛡️ {t.verifiedAnonymous}</span>
+            </div>
           </div>
         </div>
-      )}
-    </motion.div>
+
+        {/* ──────────────── SEARCH & FILTER BAR ──────────────── */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="relative flex-1 w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t.searchPlaceholder}
+                className="w-full bg-[#12241A] border border-[#234A33] rounded-2xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-[#4ADE80]"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.4))}
+                className="p-3 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.7))}
+                className="p-3 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+            {[
+              t.filterAll,
+              t.catBirds,
+              t.catTrees,
+              t.catFlowers,
+              t.catInsects,
+              t.catFungi,
+              t.catMoss,
+            ].map((catLabel, idx) => {
+              const val = idx === 0 ? 'All' : ['birds', 'trees', 'flowers', 'insects', 'fungi', 'moss'][idx - 1];
+              return (
+                <button
+                  key={catLabel}
+                  onClick={() => setSelectedCategory(val)}
+                  className={`px-3.5 py-1.5 rounded-full border text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                    selectedCategory === val
+                      ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]'
+                      : 'bg-[#0E2015]/60 border-[#20422E] text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {catLabel}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ──────────────── INTERACTIVE COMMUNITY MAP CANVAS ──────────────── */}
+        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden min-h-[480px]">
+          <div
+            className="relative w-full h-[460px] transition-transform duration-300 origin-center"
+            style={{ transform: `scale(${zoomLevel})` }}
+          >
+            {/* SVG Connecting Web */}
+            <svg viewBox="0 0 700 460" className="absolute inset-0 w-full h-full pointer-events-none">
+              {filteredPins.map((p) => (
+                <g key={p.id}>
+                  <line
+                    x1={350}
+                    y1={230}
+                    x2={p.x}
+                    y2={p.y}
+                    stroke={selectedPin?.id === p.id ? '#4ADE80' : '#20422E'}
+                    strokeWidth={selectedPin?.id === p.id ? '2.5' : '1.2'}
+                    strokeDasharray={selectedPin?.id === p.id ? 'none' : '4'}
+                  />
+                </g>
+              ))}
+            </svg>
+
+            {/* Central City Hub Node */}
+            <motion.div
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#2E6141] via-[#1A3827] to-[#040B06] border-2 border-[#4ADE80] flex flex-col items-center justify-center text-center shadow-2xl z-20 cursor-pointer"
+              onClick={() => setSelectedPin(null)}
+            >
+              <Globe className="w-6 h-6 text-[#4ADE80]" />
+              <span className="text-[10px] font-bold text-white tracking-wider uppercase">HUB</span>
+            </motion.div>
+
+            {/* Floating Species Nodes */}
+            {filteredPins.map((p) => {
+              const isSelected = selectedPin?.id === p.id;
+              return (
+                <motion.div
+                  key={p.id}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedPin(p)}
+                  style={{ left: p.x, top: p.y }}
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 px-3 py-2 rounded-2xl border transition-all cursor-pointer shadow-lg z-20 flex items-center gap-2 ${
+                    isSelected
+                      ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-[#4ADE80]/30 scale-110'
+                      : 'bg-[#13271C]/90 border-[#20422E] text-slate-200 hover:border-[#4ADE80]/50'
+                  }`}
+                >
+                  <span className="text-base">{p.emoji}</span>
+                  <span className="text-xs font-bold whitespace-nowrap">{p.name}</span>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ──────────────── SELECTED PIN DETAIL DRAWER ──────────────── */}
+        {selectedPin && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-[#112318] border border-[#4ADE80]/40 rounded-3xl p-6 shadow-2xl space-y-4"
+          >
+            <div className="flex justify-between items-start border-b border-[#20452F] pb-3">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{selectedPin.emoji}</span>
+                <div>
+                  <h3 className="font-display text-xl font-bold text-white">{selectedPin.name}</h3>
+                  <p className="text-xs text-[#4ADE80] font-semibold">{selectedPin.city} · {selectedPin.confidence}</p>
+                </div>
+              </div>
+
+              <button onClick={() => setSelectedPin(null)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-normal">
+              "{selectedPin.note}"
+            </p>
+          </motion.div>
+        )}
+
+      </div>
+    </div>
   );
 }
