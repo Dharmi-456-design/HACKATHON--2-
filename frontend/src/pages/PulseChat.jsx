@@ -94,47 +94,7 @@ const LANGUAGES = [
   { code: 'hi', name: 'Hindi', native: 'हिंदी', flag: '🇮🇳' },
 ];
 
-const TRANSLATION_LOOKUP = {
-  'what is photosynthesis?': {
-    en: 'What is photosynthesis?',
-    gu: 'પ્રકાશસંશ્લેષણ શું છે?',
-    hi: 'प्रकाश संश्लेषण क्या है?',
-  },
-  'પ્રકાશસંશ્લેષણ શું છે?': {
-    en: 'What is photosynthesis?',
-    gu: 'પ્રકાશસંશ્લેષણ શું છે?',
-    hi: 'प्रकाश संश्लेषण क्या है?',
-  },
-  'प्रकाश संश्लेषण क्या है?': {
-    en: 'What is photosynthesis?',
-    gu: 'પ્રકાશસંશ્લેષણ શું છે?',
-    hi: 'प्रकाश संश्लेषण क्या है?',
-  },
-};
 
-function translateTextFast(str = '', targetLang = 'en') {
-  if (!str) return str;
-  const s = str.trim();
-  const match = TRANSLATION_LOOKUP[s.toLowerCase()];
-  if (match && match[targetLang]) {
-    return match[targetLang];
-  }
-
-  const lower = s.toLowerCase();
-  if (lower.includes('photosynthesis') || lower.includes('પ્રકાશસંશ્લેષણ') || lower.includes('प्रकाश संश्लेषण')) {
-    if (targetLang === 'gu') return 'પ્રકાશસંશ્લેષણ એ એવી પ્રક્રિયા છે જેના દ્વારા લીલા છોડ અને વૃક્ષો પોષક તત્ત્વો બનાવવા અને વાતાવરણમાં ઓક્સિજન છોડવા માટે સૂર્યપ્રકાશ, પાણી અને કાર્બન ડાયોક્સાઇડનો ઉપયોગ કરે છે.';
-    if (targetLang === 'hi') return 'प्रकाश संश्लेषण वह प्रक्रिया है जिसके द्वारा हरे पौधे और पेड़ पोषक तत्वों को संश्लेषित करने और वायुमंडल में ऑक्सीजन छोड़ने के लिए सूर्य के प्रकाश, पानी और कार्बन डाइऑक्साइड का उपयोग करते हैं।';
-    return 'Photosynthesis is the process by which green plants and trees use sunlight, water, and carbon dioxide to synthesize nutrients and release oxygen into the atmosphere.';
-  }
-
-  if (lower.includes('bird') || lower.includes('પક્ષી') || lower.includes('पक्षी') || lower.includes('lake') || lower.includes('તળાવ') || lower.includes('झील')) {
-    if (targetLang === 'gu') return 'તળાવ કે જળાશય પાસે સવારે તમે કિંગફિશર (કિલકિલા), બગલા (Egret), જળમુરઘી (Coot) અને બતક જોઈ શકો છો.';
-    if (targetLang === 'hi') return 'सुबह के समय झील के पास आप किंगफिशर, बगुला (Egret), जलमुर्गी (Coot) और बत्तख देख सकते हैं।';
-    return 'Near a lake in the morning, you can typically spot Kingfishers, Egrets, Coots, and Herons.';
-  }
-
-  return s;
-}
 
 // Larger, Taller Glowing EKG Pulse Orb
 function EkgPulseOrb({ size = 84, active = false }) {

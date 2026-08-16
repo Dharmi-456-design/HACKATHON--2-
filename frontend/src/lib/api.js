@@ -131,106 +131,72 @@ let mockStories = [
 
 let mockPulse = [];
 
-function generatePulseResponse(content = '', language = 'en') {
-  const query = content.toLowerCase().trim();
+export async function callGeminiDirectly({ prompt, imageBase64, contentType, language = 'en', json = false }) {
+  const key = import.meta.env.VITE_GEMINI_API_KEY || '';
+  if (!key) return null;
 
-  // Extract name if introduced
-  let name = '';
-  const nameMatch = query.match(/(?:my name is|maru name|mera naam)\s+([a-zA-Z]+)/i);
-  if (nameMatch && nameMatch[1]) {
-    name = nameMatch[1].charAt(0).toUpperCase() + nameMatch[1].slice(1);
+  const models = ['gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'];
+  const parts = [];
+
+  let formattedPrompt = prompt;
+  if (language && language !== 'en') {
+    formattedPrompt += ` (Please reply in ${language === 'gu' ? 'Gujarati' : language === 'hi' ? 'Hindi' : language} language)`;
   }
 
-  // Questions about Photosynthesis
-  if (
-    query.includes('photosynthesis') ||
-    query.includes('પ્રકાશસંશ્લેષણ') ||
-    query.includes('प्रकाश संश्लेषण')
-  ) {
-    if (language === 'gu') {
-      return `પ્રકાશસંશ્લેષણ એ એવી પ્રક્રિયા છે જેના દ્વારા લીલા છોડ અને વૃક્ષો પોષક તત્ત્વો બનાવવા અને વાતાવરણમાં ઓક્સિજન છોડવા માટે સૂર્યપ્રકાશ, પાણી અને કાર્બન ડાયોક્સાઇડનો ઉપયોગ કરે છે.`;
-    }
-    if (language === 'hi') {
-      return `प्रकाश संश्लेषण वह प्रक्रिया है जिसके द्वारा हरे पौधे और पेड़ पोषक तत्वों को संश्लेषित करने और वायुमंडल में ऑक्सीजन छोड़ने के लिए सूर्य के प्रकाश, पानी और कार्बन डाइऑक्साइड का उपयोग करते हैं।`;
-    }
-    return `Photosynthesis is the process by which green plants and trees use sunlight, water, and carbon dioxide to synthesize nutrients and release oxygen into the atmosphere.`;
+  if (formattedPrompt) parts.push({ text: formattedPrompt });
+  if (imageBase64) {
+    parts.push({
+      inline_data: {
+        mime_type: contentType || 'image/jpeg',
+        data: imageBase64,
+      },
+    });
   }
 
-  // Specific questions about birds / lakes / water
-  if (
-    query.includes('bird') ||
-    query.includes('પક્ષી') ||
-    query.includes('पक्षी') ||
-    query.includes('lake') ||
-    query.includes('તળાવ') ||
-    query.includes('झील') ||
-    query.includes('water')
-  ) {
-    if (language === 'gu') {
-      return `તળાવ કે જળાશય પાસે સવારે તમે કિંગફિશર (કિલકિલા), બગલા (Egret), જળમુરઘી (Coot) અને બતક જોઈ શકો છો. સવારે 6 થી 8 ની વચ્ચે શાંતિથી સૂર્યોદય સમયે અવલોકન કરવાથી પક્ષીઓની ગતિવિધિ સૌથી વધુ જોવા મળે છે.`;
+  const body = {
+    contents: [{ role: 'user', parts }],
+    generationConfig: {
+      temperature: json ? 0.2 : 0.6,
+      maxOutputTokens: 2048,
+      ...(json ? { responseMimeType: 'application/json' } : {}),
+    },
+    systemInstruction: {
+      parts: [
+        {
+          text: `You are Pulse, the guide inside NaturePulse, an AI-powered Nature Relationship Platform.
+Your purpose is to help people notice, understand, experience, and care for the living world already around them.
+Voice: calm, encouraging, intelligent, practical. Never preachy, never cute, never corporate.
+Speak in grounded paragraphs. Prefer specific sensory cues over slogans.
+Never invent a species identification, toxicity claim, rarity status, or exact location.
+If you are unsure, say so and describe only what is knowable.
+Offer one clear next step when useful. Keep replies under 180 words unless the user asks for more.`
+        }
+      ]
     }
-    if (language === 'hi') {
-      return `सुबह के समय झील के पास आप किंगफिशर, बगुला (Egret), जलमुर्गी (Coot) और बत्तख देख सकते हैं। सुबह 6 से 8 बजे के बीच शांत बैठकर देखने से पक्षियों की सबसे सुंदर गतिविधियां दिखाई देती हैं।`;
-    }
-    return `Near a lake in the morning, you can typically spot Kingfishers, Egrets, Coots, and Herons. Early morning between 6:00 AM and 8:00 AM is the ideal time to observe their feeding and flight patterns.`;
-  }
+  };
 
-  // Specific questions about trees / plants / flora
-  if (
-    query.includes('tree') ||
-    query.includes('વૃક્ષ') ||
-    query.includes('પેડ') ||
-    query.includes('पेड़') ||
-    query.includes('plant') ||
-    query.includes('છોડ') ||
-    query.includes('पौधा')
-  ) {
-    if (language === 'gu') {
-      return `સ્થાનિક વૃક્ષો જેમ કે પીપળો, વડ, લીમડો અને ગુલમોહર સ્થાનિક પક્ષીઓ અને જંતુઓ માટે આશ્રયસ્થાન પ્રદાન કરે છે. તમે તેમના પાંદડાની રચના અને છાલનો રંગ જોઈને ઓળખી શકો છો.`;
+  for (const model of models) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
+        if (text) {
+          if (json) {
+            try { return JSON.parse(text); } catch(e) {}
+          }
+          return text;
+        }
+      }
+    } catch(e) {
+      console.warn(`Gemini client fallback trying next model after ${model}:`, e.message);
     }
-    if (language === 'hi') {
-      return `स्थानीय पेड़ जैसे पीपल, बरगद, नीम और गुलमोहर स्थानीय पक्षियों और कीटों को आश्रय देते हैं। आप उनकी पत्तियों की बनावट और छाल के रंग से उन्हें आसानी से पहचान सकते हैं।`;
-    }
-    return `Local trees like Banyan, Neem, Peepal, and Gulmohar provide critical shelter for native birds and pollinators. Look closely at leaf margins and bark texture to spot subtle variations.`;
   }
-
-  // General introductory intent
-  const isGeneralPrompt =
-    query.includes('want to know') ||
-    query.includes('janva mangu') ||
-    query.includes('jaanna chahta') ||
-    query.includes('jaanna chahti') ||
-    query.includes('tell me something') ||
-    query.includes('kuch batao') ||
-    query.includes('kaik janva') ||
-    query === 'hello' ||
-    query === 'hi' ||
-    query === 'hey' ||
-    query.includes('namaste') ||
-    query.includes('maru name') ||
-    query.includes('mera naam');
-
-  if (isGeneralPrompt) {
-    if (language === 'gu') {
-      const greeting = name ? `નમસ્તે ${name}! ` : `નમસ્તે! `;
-      return `${greeting}ચોક્કસ, તમે આજે શું જાણવા માંગો છો? મને તમારી આસપાસના પક્ષીઓ, વૃક્ષો, છોડ અથવા વાતાવરણ વિશે પૂછો.`;
-    }
-    if (language === 'hi') {
-      const greeting = name ? `नमस्ते ${name}! ` : `नमस्ते! `;
-      return `${greeting}बिल्कुल, आप क्या जानना चाहते हैं? मुझसे अपने आस-पास के पक्षियों, पेड़ों, पौधों या वातावरण के बारे में पूछें।`;
-    }
-    const greeting = name ? `Hello ${name}! ` : `Hello! `;
-    return `${greeting}Sure, what would you like to know today? Feel free to ask me about local birds, trees, plants, or the ecosystem around you.`;
-  }
-
-  // Default intelligent response without echoing or quoting user input
-  if (language === 'gu') {
-    return `આ એક ખૂબ જ અદ્ભુત પ્રશ્ન છે. તમારી સ્થાનિક ઇકોસિસ્ટમમાં જૈવવિવિધતા ખૂબ જ સમૃદ્ધ છે. જો તમે તમારી આસપાસના ચોક્કસ સ્થળ વિશે જણાવશો, તો હું તમને વધુ ચોક્કસ માહિતી આપી શકીશ.`;
-  }
-  if (language === 'hi') {
-    return `यह बहुत ही बेहतरीन सवाल है। आपके स्थानीय पारिस्थितिकी तंत्र में जैव विविधता बहुत समृद्ध है। यदि आप अपने आस-पास के किसी विशिष्ट स्थान के बारे में बताएंगे, तो मैं आपको और सटीक जानकारी दे सकूंगा।`;
-  }
-  return `That is a great observation. Your local ecosystem is filled with subtle biodiversity rhythms. If you tell me more about your specific location or the time of day, I can give you even more targeted insights.`;
+  return null;
 }
 
 async function getMockData(path, options = {}) {
@@ -296,17 +262,15 @@ async function getMockData(path, options = {}) {
         created_at: new Date().toISOString(),
       };
 
-      let replyContent;
-      if (body.imageBase64) {
-        if (body.language === 'gu') {
-          replyContent = 'આ તસવીરમાં કુદરતી વનસ્પતિ અને તેની સપાટીની રચના સ્પષ્ટ દેખાય છે. આ સૂક્ષ્મ-પર્યાવરણ સ્થાનિક પક્ષીઓ અને કીટકો માટે ભેજ અને આશ્રય પૂરો પાડે છે. આને ૨ મિનિટ સુધી નજીકથી જોઈને તેની બનાવટ અનુભવો.';
-        } else if (body.language === 'hi') {
-          replyContent = 'इस प्राकृतिक अवलोकन में पौधों की सूक्ष्म संरचना और बनावट साफ दिखाई दे रही है। यह स्थानीय परागणकों और पक्षियों के लिए एक प्राकृतिक आश्रय है। इसे कुछ मिनट ध्यान से देखें और इसकी बनावट को महसूस करें।';
-        } else {
-          replyContent = 'I can see the natural foliage patterns and living textures in this observation. This micro-habitat helps retain ambient moisture and provides vital shelter for local pollinators and foraging birds. Take 2 quiet minutes to observe the fine details and textures along its edges.';
-        }
-      } else {
-        replyContent = generatePulseResponse(body.content, body.language);
+      let replyContent = await callGeminiDirectly({
+        prompt: body.content || 'Look at this observation and describe what you notice.',
+        imageBase64: body.imageBase64,
+        contentType: body.contentType,
+        language: body.language || 'en',
+      });
+
+      if (!replyContent) {
+        replyContent = 'I noticed your observation. Let us explore the fine living details of the flora and fauna in your area.';
       }
 
       const assistantMsg = {
