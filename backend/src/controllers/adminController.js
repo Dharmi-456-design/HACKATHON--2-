@@ -5,6 +5,7 @@ const { STATUSES, PRIORITIES } = require('../models/Issue');
 const { awardPoints, POINTS_PER_RESOLUTION } = require('../services/pointsService');
 const Notification = require('../models/Notification');
 const asyncHandler = require('../utils/asyncHandler');
+const { sanitizeText } = require('../utils/sanitize');
 
 const checkValidation = (req) => {
   const errors = validationResult(req);
@@ -43,7 +44,7 @@ const changeStatus = asyncHandler(async (req, res, next) => {
       status,
       changedBy: req.user._id,
       changedAt: new Date(),
-      note: note || '',
+      note: note ? sanitizeText(note, 300) : '',
     });
   }
 
@@ -58,7 +59,7 @@ const changeStatus = asyncHandler(async (req, res, next) => {
     await Notification.create({
       user: issue.reportedBy,
       issue: issue._id,
-      message: `Your issue "${issue.title}" status was updated to ${status}.`
+      message: `Your issue "${sanitizeText(issue.title, 120)}" status was updated to ${status}.`
     });
   }
 
@@ -171,19 +172,27 @@ const exportCsv = asyncHandler(async (req, res) => {
     .populate('reportedBy', 'name email')
     .sort({ createdAt: -1 });
 
+  // CSV-formula injection guard: a leading =,+,-,@ is treated by spreadsheets
+  // as a formula, so we prefix it with a single quote to neutralize it.
+  const csvField = (value) => {
+    let s = String(value ?? '');
+    if (/^[=+\-@]/.test(s)) s = "'" + s;
+    return `"${s.replace(/"/g, '""')}"`;
+  };
+
   const fields = ['ID', 'Title', 'Category', 'Status', 'Priority', 'Reporter', 'Reporter Email', 'Created At'];
   const csvLines = [fields.join(',')];
 
   issues.forEach(issue => {
     const row = [
-      issue._id,
-      `"${(issue.title || '').replace(/"/g, '""')}"`,
-      issue.category,
-      issue.status,
-      issue.priority,
-      `"${issue.reportedBy?.name || 'Unknown'}"`,
-      issue.reportedBy?.email || 'Unknown',
-      issue.createdAt.toISOString()
+      csvField(issue._id),
+      csvField(issue.title),
+      csvField(issue.category),
+      csvField(issue.status),
+      csvField(issue.priority),
+      csvField(issue.reportedBy?.name),
+      csvField(issue.reportedBy?.email),
+      csvField(issue.createdAt.toISOString()),
     ];
     csvLines.push(row.join(','));
   });

@@ -6,10 +6,15 @@ const asyncHandler = require('../utils/asyncHandler');
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
+// Progressive delays applied before returning a generic login error,
+// indexed by consecutive failed-attempt count (1s, 2s, 5s, 15s, 30s).
+const FAIL_DELAYS_MS = [0, 1000, 2000, 5000, 15000, 30000];
 
 // Precomputed hash used only to equalize response timing when an email is unknown,
 // preventing timing-based account enumeration (see authController login).
 const DUMMY_HASH = bcrypt.hashSync('dummy-timing-equalizer', 12);
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const checkValidation = (req) => {
   const errors = validationResult(req);
@@ -52,6 +57,7 @@ const login = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email }).select('+password');
 
   if (user && user.isLocked()) {
+    await sleep(FAIL_DELAYS_MS[FAIL_DELAYS_MS.length - 1]);
     res.status(429);
     throw new Error('Too many attempts. Please try again later.');
   }
@@ -63,11 +69,18 @@ const login = asyncHandler(async (req, res, next) => {
   if (!user || !valid) {
     if (user) {
       user.failedAttempts = (user.failedAttempts || 0) + 1;
-      if (user.failedAttempts >= MAX_FAILED_ATTEMPTS) {
+      const attempt = user.failedAttempts;
+      if (attempt >= MAX_FAILED_ATTEMPTS) {
         user.lockUntil = new Date(Date.now() + LOCKOUT_MS);
         user.failedAttempts = 0;
       }
       await user.save();
+      // Progressive delay: slower responses after each failure slow down brute
+      // force while barely affecting a user who mistypes once or twice.
+      await sleep(FAIL_DELAYS_MS[Math.min(attempt, FAIL_DELAYS_MS.length - 1)]);
+    } else {
+      // Unknown email: short delay to match a first-time wrong password.
+      await sleep(FAIL_DELAYS_MS[1]);
     }
     res.status(401);
     throw new Error('Invalid email or password');

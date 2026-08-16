@@ -24,6 +24,9 @@ export default function Login() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -47,6 +50,25 @@ export default function Login() {
     try { await signInWithGoogle('NaturePulse'); }
     catch (err) { setError(err?.message || 'Google sign-in failed.'); }
     finally { setGoogleBusy(false); }
+  };
+
+  const handleForgot = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!email.trim()) { setError('Enter your email address first.'); return; }
+    setResetBusy(true);
+    try {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (err) throw err;
+      setResetSent(true);
+      setShowForgot(false);
+    } catch (err) {
+      setError(err?.message || 'Could not send a reset link. Please try again.');
+    } finally {
+      setResetBusy(false);
+    }
   };
 
   const isDisabled = busy || googleBusy;
@@ -178,10 +200,43 @@ export default function Login() {
                 <label className="block text-xs font-semibold uppercase tracking-[0.14em] text-forest/70">
                   Password
                 </label>
-                <button type="button" className="text-xs text-forest/50 hover:text-ink transition-colors">
+                <button
+                  type="button"
+                  onClick={() => { setShowForgot(!showForgot); setError(''); }}
+                  className="text-xs text-forest/50 hover:text-ink transition-colors"
+                >
                   Forgot password?
                 </button>
               </div>
+
+              {resetSent && (
+                <div className="mb-4 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-700">
+                  If an account exists for that email, a password reset link is on its way.
+                </div>
+              )}
+
+              {showForgot && (
+                <form onSubmit={handleForgot} className="mb-4 space-y-3 rounded-xl border border-forest/20 bg-forest/5 p-3">
+                  <p className="text-xs text-forest/80">
+                    Enter your email and we'll send a password reset link.
+                  </p>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    className="w-full bg-paper border border-ink/10 rounded-lg px-3.5 py-2.5 text-sm text-ink placeholder:text-forest/30 outline-none focus:border-ink focus:ring-3 focus:ring-ink/10 transition-all duration-200 disabled:opacity-50"
+                  />
+                  <button
+                    type="submit"
+                    disabled={resetBusy}
+                    className="w-full bg-forest text-cream rounded-lg py-2.5 text-sm font-semibold hover:bg-ink transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {resetBusy ? 'Sending…' : 'Send reset link'}
+                  </button>
+                </form>
+              )}
               <div className="relative">
                 <input
                   type={showPass ? 'text' : 'password'}
