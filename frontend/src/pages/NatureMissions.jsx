@@ -629,10 +629,11 @@ export default function NatureMissions() {
                 ))}
               </div>
             </div>
-          );
-        }
-        return null;
-      })()}
+          </div>
+        );
+      }
+      return null;
+    })()}
 
         {/* ──────────────── TAB 4: CUSTOM CREATOR ──────────────── */}
         {activeTab === 'create' && (
