@@ -275,7 +275,7 @@ export default function CtaSection() {
     <section
       ref={sectionRef}
       id="cta"
-      className="relative w-full overflow-hidden bg-black text-white font-sans"
+      className="relative w-full text-white font-sans"
       style={{ background: 'linear-gradient(to bottom, transparent 0%, #14191E 100%)' }}
     >
       <div className="relative mx-auto max-w-[1080px] px-4 sm:px-6 pt-24 sm:pt-32 md:pt-40 pb-[440px] sm:pb-[520px] md:pb-[440px]">

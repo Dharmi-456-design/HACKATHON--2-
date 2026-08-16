@@ -6,7 +6,6 @@ import { PulseOrb } from '../components/ui';
 import SplashIntro from '../components/SplashIntro';
 import Navbar from '../components/Navbar';
 import LithosHero from '../components/LithosHero';
-import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
 import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 import AnimatedStatCard from '../components/AnimatedStatCard';
 import PricingSection from '../components/PricingSection';
@@ -242,11 +241,6 @@ export default function Landing() {
       {/* ────────────────────── 1. LITHOS CURSOR-FOLLOWING SPOTLIGHT HERO ────────────────────── */}
       <section id="hero">
         <LithosHero />
-      </section>
-
-      {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER & STAIRCASE CARDS ────────────────────── */}
-      <section id="reviews">
-        <HorizontalReviewsTicker />
       </section>
 
       {/* ────────────────────── 3. SCROLL TYPOGRAPHY HIGHLIGHT ────────────────────── */}
@@ -515,76 +509,6 @@ export default function Landing() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ────────────────────── 10. COMMUNITY TESTIMONIALS (CSS BORDER FIX) ────────────────────── */}
-      <section className="py-24 bg-[#14281C] border-t border-white/10 select-none">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6">
-          <p className="text-xs font-mono uppercase tracking-[0.24em] text-[#E6C176] text-center font-semibold mb-2">
-            COMMUNITY TESTIMONIALS
-          </p>
-
-          <h2 className="font-display text-4xl sm:text-6xl text-center mb-16 text-white font-bold flex justify-center flex-wrap gap-x-3 sm:gap-x-4 select-none [perspective:800px]">
-            {"Stories from the field.".split(" ").map((word, wIdx) => (
-              <span key={wIdx} className="inline-block whitespace-nowrap">
-                {word.split("").map((char, cIdx) => (
-                  <motion.span
-                    key={cIdx}
-                    whileHover={{ rotateY: 360, y: -8, scale: 1.25, color: '#96CD7B' }}
-                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ transformStyle: 'preserve-3d', display: 'inline-block' }}
-                    className="inline-block transition-colors cursor-pointer font-bold"
-                  >
-                    {char}
-                  </motion.span>
-                ))}
-              </span>
-            ))}
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
-            {[
-              { text: "It completely changed how I walk to work. I notice the moss on the brick walls now.", name: "Sarah L.", loc: "Urban Ecologist", role: "Verified Observer" },
-              { text: "The missions are perfectly sized. 10 minutes is actually 10 minutes. It respects my time.", name: "Marcus T.", loc: "Software Engineer", role: "Habitat Explorer" },
-              { text: "I love that it doesn't force me to pretend I know the exact Latin name of every bird.", name: "Elena R.", loc: "Amateur Birdwatcher", role: "Field Journaler" }
-            ].map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -10, scale: 1.02 }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="group relative p-8 rounded-3xl bg-white/5 border border-white/15 hover:border-[#96CD7B] shadow-2xl transition-all cursor-pointer overflow-hidden box-border"
-              >
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex gap-1 text-amber-400">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <span key={s} className="text-sm">★</span>
-                    ))}
-                  </div>
-                  <span className="text-[10px] uppercase font-mono tracking-wider px-3 py-1 rounded-full bg-[#96CD7B]/20 text-[#96CD7B] border border-[#96CD7B]/30">
-                    {t.role}
-                  </span>
-                </div>
-
-                <p className="text-white/90 italic mb-6 leading-relaxed text-sm sm:text-base font-light">
-                  "{t.text}"
-                </p>
-
-                <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-                  <div>
-                    <p className="font-display font-bold text-white text-base group-hover:text-[#96CD7B] transition-colors">{t.name}</p>
-                    <p className="text-xs text-white/60">{t.loc}</p>
-                  </div>
-                  <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[#96CD7B]">
-                    <Sparkles size={15} />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
           </div>
         </div>
       </section>
