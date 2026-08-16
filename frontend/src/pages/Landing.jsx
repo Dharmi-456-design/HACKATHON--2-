@@ -191,12 +191,13 @@ function FaqAccordionItem({ faq, index }) {
 }
 
 export default function Landing() {
-  const { user, isDemoUser } = useAuth();
+  const { user, isDemoUser, exitDemoMode } = useAuth();
   const navigate = useNavigate();
+  const isLoggedIn = !!(user || isDemoUser);
 
   const handleDashboardClick = (e) => {
     e.preventDefault();
-    if (user || isDemoUser) {
+    if (isLoggedIn) {
       navigate('/app');
     } else {
       navigate('/login');
@@ -205,7 +206,62 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[#0A1610] text-white">
-      {/* ────────────────────── 1. MEASURED CURSOR-FOLLOWING SPOTLIGHT VIDEO HERO ────────────────────── */}
+      {/* Fixed Navbar Header */}
+      <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-[#0A1610]/85 border-b border-white/10 transition-colors">
+        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2.5">
+            <img src="/logo.png" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shadow-sm" />
+            <span className="font-display text-xl tracking-tight text-white font-semibold">NaturePulse</span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-8 text-sm text-white/80 font-medium">
+            <a href="#hero" className="hover:text-white transition-colors">3D Experience</a>
+            <a href="#journey" className="hover:text-white transition-colors">The journey</a>
+            <a href="#pulse" className="hover:text-white transition-colors">Pulse AI</a>
+            <a href="#reviews" className="hover:text-white transition-colors">Community</a>
+            {isLoggedIn && (
+              <button onClick={handleDashboardClick} className="hover:text-white transition-colors cursor-pointer font-semibold text-[#97CDAB]">
+                Dashboard
+              </button>
+            )}
+          </nav>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            {isLoggedIn ? (
+              <>
+                <button
+                  onClick={exitDemoMode}
+                  className="hidden sm:inline-flex text-xs px-2.5 py-1.5 rounded-lg border border-white/15 text-white/70 hover:text-red-300 hover:border-red-400/40 transition-colors cursor-pointer"
+                >
+                  Sign out
+                </button>
+                <Link
+                  to="/app"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#97CDAB] text-[#0A1610] font-semibold text-sm px-4 py-2 hover:bg-white transition-colors cursor-pointer shadow-xs"
+                >
+                  Dashboard <ArrowRight size={14} />
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="inline-flex text-sm px-3 py-2 text-white/85 hover:text-white font-semibold transition-colors"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/register"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#97CDAB] text-[#0A1610] font-semibold text-sm px-4 py-2 hover:bg-white transition-colors cursor-pointer shadow-xs"
+                >
+                  Begin <ArrowRight size={14} />
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* ────────────────────── 1. LITHOS CURSOR-FOLLOWING SPOTLIGHT HERO SECTION ────────────────────── */}
       <section id="hero">
         <MeasuredHero />
       </section>
