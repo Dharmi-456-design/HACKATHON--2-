@@ -6,6 +6,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import InteractiveHeroSphere from '../components/InteractiveHeroSphere';
 import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
 import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
+import AnimatedStatCard from '../components/AnimatedStatCard';
 
 const JOURNEY = [
   { icon: Eye, title: 'Observe', body: 'Notice what is already beside you — bark, birdsong, a wet seam of moss.' },
@@ -168,7 +169,7 @@ export default function Landing() {
       </section>
 
       {/* --- NEW SECTION: Statistics --- */}
-      <section className="py-20 bg-forest text-cream">
+      <section className="py-20 bg-forest text-white">
         <div className="max-w-6xl mx-auto px-5 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
             { val: '12k+', label: 'Active Observers' },
@@ -176,10 +177,7 @@ export default function Landing() {
             { val: '80k', label: 'Field Notes' },
             { val: '100%', label: 'Privacy Focused' },
           ].map((s) => (
-            <div key={s.label}>
-              <p className="font-display text-4xl sm:text-5xl text-gold">{s.val}</p>
-              <p className="mt-2 text-xs uppercase tracking-widest text-cream/70">{s.label}</p>
-            </div>
+            <AnimatedStatCard key={s.label} value={s.val} label={s.label} />
           ))}
         </div>
       </section>
