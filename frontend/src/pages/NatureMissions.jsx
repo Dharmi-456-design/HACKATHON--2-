@@ -8,7 +8,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Mission Control Universe
@@ -117,92 +116,11 @@ const MISSION_TRANSLATIONS = {
   },
 };
 
-// Seed Missions
-const SEED_MISSIONS = [
-  {
-    id: 'm-101',
-    title: 'Listen to Tree Canopy at Dawn',
-    category: 'Exploration',
-    difficulty: '🟢 Easy',
-    duration: '10 min',
-    xpReward: 100,
-    status: 'in_progress',
-    steps: [
-      { id: 's1', text: 'Find a shaded Banyan or Peepal tree near your location', done: true },
-      { id: 's2', text: 'Stand quietly for 5 minutes without phone distractions', done: true },
-      { id: 's3', text: 'Log 2 distinct bird sounds or leaf rustles in Nature Pulse', done: false },
-    ],
-    aiHint: 'Early morning between 6:00 AM and 7:15 AM provides peak birdsong clarity.',
-  },
-  {
-    id: 'm-102',
-    title: 'Discover 3 Distinct Moss & Lichen Textures',
-    category: 'Learning',
-    difficulty: '🟡 Medium',
-    duration: '15 min',
-    xpReward: 180,
-    status: 'in_progress',
-    steps: [
-      { id: 's4', text: 'Inspect shaded wall bases or moist tree trunks', done: true },
-      { id: 's5', text: 'Touch 3 different patches and observe moisture levels', done: false },
-      { id: 's6', text: 'Identify if it is crustose or foliose lichen', done: false },
-    ],
-    aiHint: 'Mosses act as micro-ecosystem sponges, absorbing urban rainwater.',
-  },
-  {
-    id: 'm-103',
-    title: 'Identify Night Moth Visitors Near Light',
-    category: 'Challenges',
-    difficulty: '🔴 Hard',
-    duration: '20 min',
-    xpReward: 250,
-    status: 'not_started',
-    steps: [
-      { id: 's7', text: 'Check an outdoor lamp after dusk near garden plants', done: false },
-      { id: 's8', text: 'Use Nature Lens camera stack to scan wing patterns', done: false },
-      { id: 's9', text: 'Record observation in Biodiversity Passport', done: false },
-    ],
-    aiHint: 'Sphinx moths and silk moths are attracted to white LED garden lamps.',
-  },
-  {
-    id: 'm-104',
-    title: 'Install Bird Water Dish Before Summer',
-    category: 'Personal Goals',
-    difficulty: '🟡 Medium',
-    duration: '25 min',
-    xpReward: 200,
-    status: 'completed',
-    steps: [
-      { id: 's10', text: 'Select a shallow clay dish for garden or balcony', done: true },
-      { id: 's11', text: 'Place in shaded corner away from urban predators', done: true },
-      { id: 's12', text: 'Fill with clean water and post Community update', done: true },
-    ],
-    aiHint: 'Shallow water dishes prevent bird drowning while aiding migratory species.',
-  }
-];
-
-// Seed Milestones Badges
-const SEED_BADGES = [
-  { id: 'b1', name: 'Canopy Guardian', icon: '🌱', unlocked: true, desc: 'Completed 5 shade tree observations' },
-  { id: 'b2', name: 'Birdsong Analyst', icon: '🐦', unlocked: true, desc: 'Logged 10 dawn bird flight calls' },
-  { id: 'b3', name: 'Pollinator Protector', icon: '🦋', unlocked: true, desc: 'Planted native nectar seeds' },
-  { id: 'b4', name: 'Master Eco Scholar', icon: '👑', unlocked: false, desc: 'Reach 3,000 XP & Level 5 Commander' },
-];
-
-// Seed Leaderboard Users
-const SEED_LEADERBOARD = [
-  { rank: 1, name: 'Aarav Patel', xp: '3,820 XP', streak: '14 Days', badge: '👑 Master Commander' },
-  { rank: 2, name: 'You (Explorer)', xp: '2,450 XP', streak: '7 Days', badge: '🟣 Eco Guardian' },
-  { rank: 3, name: 'Priya Sharma', xp: '2,180 XP', streak: '9 Days', badge: '🌱 Canopy Protector' },
-  { rank: 4, name: 'David Miller', xp: '1,950 XP', streak: '5 Days', badge: '🐦 Bird Naturalist' },
-];
-
 export default function NatureMissions() {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = MISSION_TRANSLATIONS[lang] || MISSION_TRANSLATIONS.en;
   const token = session?.access_token;
-  const demoMode = isDemoMode();
 
   const toUiMission = (m) => {
     const type = m.mission_type || 'explore';
@@ -231,26 +149,11 @@ export default function NatureMissions() {
   };
 
   // Persistent States
-  const [missions, setMissions] = useState(() => {
-    if (!demoMode) return [];
-    try {
-      const saved = localStorage.getItem('pulse_missions_v1');
-      return saved ? JSON.parse(saved) : SEED_MISSIONS;
-    } catch {
-      return SEED_MISSIONS;
-    }
-  });
+  const [missions, setMissions] = useState([]);
 
-  const [totalXP, setTotalXP] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_missions_xp_v1');
-      return saved ? parseInt(saved, 10) : 2450;
-    } catch {
-      return 2450;
-    }
-  });
+  const [totalXP, setTotalXP] = useState(0);
 
-  const [streakDays, setStreakDays] = useState(7);
+  const [streakDays, setStreakDays] = useState(0);
   const [activeTab, setActiveTab] = useState('path');
   const [selectedMission, setSelectedMission] = useState(null);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
@@ -277,14 +180,6 @@ export default function NatureMissions() {
       })
       .catch(() => {});
   }, [token]);
-
-  useEffect(() => {
-    if (demoMode) localStorage.setItem('pulse_missions_v1', JSON.stringify(missions));
-  }, [missions, demoMode]);
-
-  useEffect(() => {
-    if (demoMode) localStorage.setItem('pulse_missions_xp_v1', totalXP.toString());
-  }, [totalXP, demoMode]);
 
   const pushMissionStatus = (mission) => {
     if (!token || !mission.id || String(mission.id).startsWith('m-')) return;
@@ -319,33 +214,6 @@ export default function NatureMissions() {
 
     setIsGenerating(true);
     setMissionError('');
-
-    if (!token || demoMode) {
-      setTimeout(() => {
-        const newMission = {
-          id: `m-${Date.now()}`,
-          title: generatePrompt.trim(),
-          category: 'Challenges',
-          difficulty: '🟡 Medium',
-          duration: '15 min',
-          xpReward: 150,
-          status: 'in_progress',
-          steps: [
-            { id: `s-${Date.now()}-1`, text: 'Explore core concepts of the challenge', done: false },
-            { id: `s-${Date.now()}-2`, text: 'Log your observations in Nature Pulse', done: false },
-            { id: `s-${Date.now()}-3`, text: 'Share your findings with the community', done: false },
-          ],
-          aiHint: 'Focus on observing local variations during golden hour light.',
-        };
-
-        setMissions([newMission, ...missions]);
-        setIsGenerating(false);
-        setShowGenerateModal(false);
-        setGeneratePrompt('');
-        setSelectedMission(newMission);
-      }, 600);
-      return;
-    }
 
     try {
       const created = await apiFetch(
@@ -429,6 +297,17 @@ export default function NatureMissions() {
       apiFetch(`/api/missions/${missionId}`, { method: 'DELETE' }, token).catch(() => {});
     }
   };
+
+  const completedCount = missions.filter((m) => m.status === 'completed').length;
+  const badges = [
+    { id: 'b1', name: 'First Steps', icon: '🌱', unlocked: completedCount >= 1, desc: 'Complete your first mission' },
+    { id: 'b2', name: 'Canopy Guardian', icon: '🌿', unlocked: completedCount >= 3, desc: 'Complete 3 missions' },
+    { id: 'b3', name: 'Pollinator Protector', icon: '🦋', unlocked: completedCount >= 5, desc: 'Complete 5 missions' },
+    { id: 'b4', name: 'Master Eco Scholar', icon: '👑', unlocked: completedCount >= 10, desc: 'Complete 10 missions' },
+  ];
+  const impactStats = [
+    { rank: 1, name: user?.name || 'You', xp: `${totalXP.toLocaleString()} XP`, streak: `${streakDays} Day${streakDays === 1 ? '' : 's'}`, badge: 'Your Mission Path' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
@@ -680,7 +559,7 @@ export default function NatureMissions() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {SEED_BADGES.map((badge) => (
+                {badges.map((badge) => (
                   <div
                     key={badge.id}
                     className={`p-4 rounded-2xl border flex items-center gap-3.5 transition-all ${
@@ -701,18 +580,18 @@ export default function NatureMissions() {
               </div>
             </div>
 
-            {/* ──────────────── COMMUNITY ECO LEADERBOARD ──────────────── */}
+            {/* ──────────────── ECO IMPACT LEADERBOARD ──────────────── */}
             <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
               <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
                 <div>
                   <h3 className="font-display text-2xl font-bold text-white">{t.leaderboardTitle}</h3>
-                  <p className="text-xs text-slate-400">Weekly rankings of top ecological explorers</p>
+                  <p className="text-xs text-slate-400">Your mission path progress this week</p>
                 </div>
                 <Users className="w-6 h-6 text-[#4ADE80]" />
               </div>
 
               <div className="space-y-3">
-                {SEED_LEADERBOARD.map((user) => (
+                {impactStats.map((user) => (
                   <div
                     key={user.rank}
                     className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${

@@ -11,8 +11,9 @@ const SUNLIT_FOREST_IMG = 'https://plus.unsplash.com/premium_photo-1667076649924
 export default function Dashboard() {
   const { session, user } = useAuth();
   const token = session?.access_token;
+  const EMPTY_SCORE = { observe: 0, explore: 0, learn: 0, act: 0, return_dim: 0, overall: 0 };
   const [profile, setProfile] = useState(null);
-  const [score, setScore] = useState({ observe: 78, explore: 65, learn: 82, act: 54, return_dim: 70, overall: 74 });
+  const [score, setScore] = useState(EMPTY_SCORE);
   const [missions, setMissions] = useState([]);
   const [places, setPlaces] = useState([]);
   const [discoveries, setDiscoveries] = useState([]);
@@ -34,7 +35,7 @@ export default function Dashboard() {
         apiFetch('/api/actions', {}, token),
       ]);
       setProfile(p && typeof p === 'object' ? p : null);
-      setScore(s && typeof s === 'object' && s.overall !== undefined ? s : { observe: 78, explore: 65, learn: 82, act: 54, return_dim: 70, overall: 74 });
+      setScore(s && typeof s === 'object' && s.overall !== undefined ? s : EMPTY_SCORE);
       setMissions(Array.isArray(m) ? m : []);
       setPlaces(Array.isArray(pl) ? pl : []);
       setDiscoveries(Array.isArray(d) ? d : []);
@@ -234,7 +235,9 @@ export default function Dashboard() {
               <p className="font-display text-4xl font-extrabold text-white">
                 {score.overall}<span className="text-slate-400 text-lg font-normal">/100</span>
               </p>
-              <p className="text-xs text-[#4ADE80] font-semibold mt-1">Commander Level 4</p>
+              <p className="text-xs text-[#4ADE80] font-semibold mt-1">
+                {score.overall >= 80 ? 'Commander Level 4' : score.overall >= 60 ? 'Commander Level 3' : score.overall >= 40 ? 'Commander Level 2' : 'Commander Level 1'}
+              </p>
             </div>
 
             <DimBars score={score} />

@@ -215,6 +215,18 @@ const createDiscovery = async (req, res) => {
   if (body.notes) body.notes = sanitizeMultiline(body.notes, 2000);
   if (body.place_name) body.place_name = sanitizeText(body.place_name, 160);
   if (body.city) body.city = sanitizeText(body.city, 120);
+  if (body.category) {
+    const categoryMap = {
+      plant: 'trees',
+      bird: 'birds',
+      insect: 'insects',
+      mammal: 'mammals',
+      habitat: 'other',
+      water: 'other',
+    };
+    const mapped = categoryMap[body.category];
+    if (mapped) body.category = mapped;
+  }
   const discovery = await Discovery.create({ user: req.user._id, ...body });
   res.status(201).json(discovery);
 };

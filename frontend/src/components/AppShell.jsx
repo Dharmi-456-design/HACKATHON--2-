@@ -47,7 +47,7 @@ const LINKS = [
 const MOBILE_PRIMARY = [LINKS[0], LINKS[1], LINKS[2], LINKS[7]];
 
 export default function AppShell() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { theme } = useTheme();
   const nav = useNavigate();
   const [more, setMore] = useState(false);

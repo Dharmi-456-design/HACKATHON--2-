@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
-import { isDemoMode } from '../utils/demoMode';
 
 // Multilingual UI Translations for Community Bio Map
 const COMMUNITY_MAP_TRANSLATIONS = {
@@ -62,20 +61,9 @@ const COMMUNITY_MAP_TRANSLATIONS = {
   },
 };
 
-// Seed Community Pins
-const SEED_PINS = [
-  { id: 'pin-1', name: 'Indian Myna Foraging', category: 'birds', city: 'Ahmedabad', x: 260, y: 150, confidence: '98% High', emoji: '🐦', note: 'Spotted in dawn canopy near Banyan roots.' },
-  { id: 'pin-2', name: 'Ancient Banyan Canopy', category: 'trees', city: 'Ahmedabad', x: 420, y: 120, confidence: '99% High', emoji: '🌳', note: 'Old growth canopy providing micro-climate shade.' },
-  { id: 'pin-3', name: 'Champa Flower Bloom', category: 'flowers', city: 'Surat', x: 180, y: 240, confidence: '95% High', emoji: '🌸', note: 'Fragrant morning blossoms visited by swallowtails.' },
-  { id: 'pin-4', name: 'Monarch Butterfly', category: 'insects', city: 'Vadodara', x: 480, y: 280, confidence: '94% High', emoji: '🦋', note: 'Feeding on wild nectar near garden pond.' },
-  { id: 'pin-5', name: 'Bioluminescent Fungi Spores', category: 'fungi', city: 'Portland', x: 310, y: 350, confidence: '96% High', emoji: '🍄', note: 'Subterranean fungal damp root growth.' },
-  { id: 'pin-6', name: 'Cedar Tree Bark Moss', category: 'moss', city: 'Delhi', x: 200, y: 360, confidence: '97% High', emoji: '🌿', note: 'Moisture absorbing micro-ecosystem sponge.' },
-];
-
 export default function CommunityBiodiversityMap() {
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = COMMUNITY_MAP_TRANSLATIONS[lang] || COMMUNITY_MAP_TRANSLATIONS.en;
-  const demoMode = isDemoMode();
 
   const categoryToKey = (cat) => {
     const c = String(cat || '').toLowerCase();
@@ -107,7 +95,7 @@ export default function CommunityBiodiversityMap() {
     };
   };
 
-  const [pins, setPins] = useState(() => (demoMode ? SEED_PINS : []));
+  const [pins, setPins] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPin, setSelectedPin] = useState(null);
@@ -115,11 +103,10 @@ export default function CommunityBiodiversityMap() {
   const [mapViewMode, setMapViewMode] = useState('constellation'); // 'constellation' | 'google_maps'
 
   useEffect(() => {
-    if (demoMode) return;
     apiFetch('/api/community', {}, null)
       .then((list) => setPins(Array.isArray(list) ? list.map(toPin) : []))
       .catch(() => {});
-  }, [demoMode]);
+  }, []);
 
   // Filtered Pins
   const filteredPins = pins.filter((p) => {

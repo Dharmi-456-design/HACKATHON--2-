@@ -2,9 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
 import { Camera, Save, Share2, Trash2, RefreshCw, Leaf, Eye, Lightbulb } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { apiFetch, fileToResizedBase64, formatWhen } from '../lib/api';
+import { apiFetch, uploadImage, fileToResizedBase64, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Field, GhostButton, PrimaryButton, Skeleton, inputCls } from '../components/ui';
-import { isDemoMode, demoAnalyze } from '../utils/demoMode';
 import ShareCard from '../components/ShareCard';
 
 const prefersReducedMotion = () =>
@@ -122,7 +121,6 @@ export default function Lens() {
   const [coachMode, setCoachMode] = useState(false);
   const [lookStep, setLookStep] = useState(0);
   const [showShare, setShowShare] = useState(false);
-  const demoMode = isDemoMode();
 
   // STATE: 'capture' | 'scanning' | 'result'
   const state = !preview ? 'capture' : analyzing ? 'scanning' : analysis ? 'result' : 'capture';
@@ -164,12 +162,10 @@ export default function Lens() {
     setAnalyzing(true);
     setError('');
     try {
-      const data = demoMode
-        ? await demoAnalyze()
-        : await apiFetch('/api/analyze', {
-            method: 'POST',
-            body: JSON.stringify({ imageBase64: filePayload.base64, contentType: filePayload.mime, city: profile?.city, note: notes }),
-          }, token);
+      const data = await apiFetch('/api/analyze', {
+          method: 'POST',
+          body: JSON.stringify({ imageBase64: filePayload.base64, contentType: filePayload.mime, city: profile?.city, note: notes }),
+        }, token);
       setAnalysis(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Pulse could not read this image');
@@ -183,10 +179,7 @@ export default function Lens() {
     setSaving(true);
     setError('');
     try {
-      const up = await apiFetch('/api/upload', {
-        method: 'POST',
-        body: JSON.stringify({ fileName: filePayload.name, fileBase64: filePayload.base64, contentType: filePayload.mime }),
-      }, token);
+      const up = await uploadImage({ base64: filePayload.base64, mime: filePayload.mime, fileName: filePayload.name, token });
       const created = await apiFetch('/api/discoveries', {
         method: 'POST',
         body: JSON.stringify({
@@ -254,11 +247,6 @@ export default function Lens() {
             Pulse reads the photograph and returns structured notes. Low confidence stays unnamed.
           </p>
         </div>
-        {demoMode && (
-          <span className="shrink-0 bg-gold/20 text-gold rounded-full text-xs px-3 py-1 border border-gold/20 ml-4">
-            Demo Mode
-          </span>
-        )}
       </div>
 
       {error && <div className="mt-5"><ErrorBanner message={error} /></div>}
@@ -332,7 +320,6 @@ export default function Lens() {
                         />
                       ))}
                     </div>
-                    {demoMode && <p className="text-xs text-gold">Demo Mode · Using sample species</p>}
                   </div>
                 </Card>
               </motion.div>
