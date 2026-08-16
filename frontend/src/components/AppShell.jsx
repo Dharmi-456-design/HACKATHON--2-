@@ -86,7 +86,7 @@ export default function AppShell() {
         animate={{ width: collapsed ? 68 : 240 }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
         className={`hidden md:flex flex-col border-r sticky top-0 h-screen shrink-0 z-20 overflow-hidden select-none
-          ${isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#F8F9FA] border-ink/8'}`}
+          ${isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FAF7F0] border-ink/8'}`}
       >
         {/* Brand & Toggle Header */}
         <div className="h-16 px-3 flex items-center shrink-0 border-b border-transparent">
@@ -172,7 +172,7 @@ export default function AppShell() {
                   isActive
                     ? isDark
                       ? 'bg-[#96CD7B]/20 text-[#96CD7B] font-semibold'
-                      : 'bg-[#1C3727] text-[#F8F9FA] font-semibold shadow-sm'
+                      : 'bg-[#1C3727] text-[#FAF7F0] font-semibold shadow-sm'
                     : isDark
                       ? 'text-white/60 hover:bg-white/6 hover:text-white/90'
                       : 'text-forest/70 hover:bg-[#E2EFE0] hover:text-forest'
@@ -194,7 +194,7 @@ export default function AppShell() {
           {!collapsed ? (
             <>
               {/* Theme Toggle Pill */}
-              <div className={`rounded-xl px-1 py-1 ${isDark ? 'bg-white/4' : 'bg-[#F3F5F1]'}`}>
+              <div className={`rounded-xl px-1 py-1 ${isDark ? 'bg-white/4' : 'bg-[#EDE6D8]/60'}`}>
                 <ThemeToggle variant="pill" />
               </div>
 
@@ -279,7 +279,7 @@ export default function AppShell() {
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Mobile top bar */}
         <header className={`md:hidden flex items-center justify-between px-4 py-3 border-b sticky top-0 z-20
-          ${isDark ? 'bg-[#111f17] border-white/8' : 'bg-white border-ink/8'}`}
+          ${isDark ? 'bg-[#111f17] border-white/8' : 'bg-[#FAF7F0] border-ink/8'}`}
         >
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="NaturePulse Logo" className="w-8 h-8 rounded-lg object-cover shrink-0" />
@@ -301,11 +301,11 @@ export default function AppShell() {
           >
             <div
               className={`absolute bottom-16 inset-x-3 rounded-3xl p-4 shadow-lift border
-                ${isDark ? 'bg-[#16271F] border-white/10' : 'bg-white border-ink/10'}`}
+                ${isDark ? 'bg-[#16271F] border-white/10' : 'bg-[#FAF7F0] border-ink/10'}`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Theme pill in the drawer */}
-              <div className={`rounded-xl px-1 py-1 mb-3 ${isDark ? 'bg-white/4' : 'bg-[#F3F5F1]'}`}>
+              <div className={`rounded-xl px-1 py-1 mb-3 ${isDark ? 'bg-white/4' : 'bg-[#EDE6D8]/60'}`}>
                 <ThemeToggle variant="pill" />
               </div>
 
@@ -316,7 +316,7 @@ export default function AppShell() {
                     to={l.to}
                     onClick={() => setMore(false)}
                     className={`flex flex-col items-center gap-1 py-3 rounded-2xl text-xs transition-colors
-                      ${isDark ? 'bg-white/5 text-white/70 hover:bg-white/10' : 'bg-[#F3F5F1] text-forest hover:bg-[#E8EDE5]'}`}
+                      ${isDark ? 'bg-white/5 text-white/70 hover:bg-white/10' : 'bg-[#EDE6D8]/70 text-forest hover:bg-[#E2DDD0]'}`}
                   >
                     <l.icon size={18} strokeWidth={1.8} />
                     {l.label.split(' ')[0]}
@@ -326,7 +326,7 @@ export default function AppShell() {
                   to="/app/settings"
                   onClick={() => setMore(false)}
                   className={`flex flex-col items-center gap-1 py-3 rounded-2xl text-xs transition-colors
-                    ${isDark ? 'bg-white/5 text-white/70 hover:bg-white/10' : 'bg-[#F3F5F1] text-forest hover:bg-[#E8EDE5]'}`}
+                    ${isDark ? 'bg-white/5 text-white/70 hover:bg-white/10' : 'bg-[#EDE6D8]/70 text-forest hover:bg-[#E2DDD0]'}`}
                 >
                   <Settings size={18} strokeWidth={1.8} />
                   Settings
@@ -346,7 +346,7 @@ export default function AppShell() {
 
         {/* Mobile bottom nav */}
         <nav className={`md:hidden fixed bottom-0 inset-x-0 backdrop-blur-md border-t px-2 py-2 grid grid-cols-5 gap-1 z-30
-          ${isDark ? 'bg-[#111f17]/95 border-white/8' : 'bg-white/95 border-ink/8'}`}
+          ${isDark ? 'bg-[#111f17]/95 border-white/8' : 'bg-[#FAF7F0]/95 border-ink/8'}`}
         >
           {MOBILE_PRIMARY.map((l) => (
             <NavLink

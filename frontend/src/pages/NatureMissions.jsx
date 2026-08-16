@@ -318,7 +318,7 @@ export default function NatureMissions() {
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
-      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#FAF7F0] text-[#0F2418] selection:bg-emerald-200 selection:text-emerald-900'
     }`}>
       
       {/* ──────────────── GENERATE MISSION MODAL ──────────────── */}
@@ -335,27 +335,37 @@ export default function NatureMissions() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#112318] border border-[#4ADE80]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4"
+              className={`rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 border transition-colors ${
+                isDark ? 'bg-[#112318] border-[#4ADE80]/40 text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] shadow-sm'
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center border-b border-[#20452F] pb-3">
-                <h3 className="font-display text-xl font-bold text-white flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-[#4ADE80]" />
+              <div className={`flex justify-between items-center border-b pb-3 ${
+                isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+              }`}>
+                <h3 className={`font-display text-xl font-bold flex items-center gap-2 ${
+                  isDark ? 'text-white' : 'text-[#0F2418]'
+                }`}>
+                  <Zap className={`w-5 h-5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                   <span>Generate Challenge</span>
                 </h3>
-                <button onClick={() => setShowGenerateModal(false)} className="text-slate-400 hover:text-white cursor-pointer">
+                <button onClick={() => setShowGenerateModal(false)} className={`cursor-pointer ${
+                  isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
+                }`}>
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <form onSubmit={handleGenerateAIMission} className="space-y-4">
                 {missionError && (
-                  <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200">
+                  <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-500">
                     {missionError}
                   </div>
                 )}
                 <div>
-                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
+                  <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
+                    isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                  }`}>
                     Challenge Idea or Goal
                   </label>
                   <textarea
@@ -364,14 +374,20 @@ export default function NatureMissions() {
                     value={generatePrompt}
                     onChange={(e) => setGeneratePrompt(e.target.value)}
                     placeholder="e.g., Learn how swallowtail butterflies find urban flowering plants..."
-                    className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl p-3.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80] resize-none"
+                    className={`w-full rounded-2xl p-3.5 text-xs sm:text-sm outline-none resize-none transition-colors border ${
+                      isDark
+                        ? 'bg-[#0E2015] border-[#20422E] text-white focus:border-[#4ADE80]'
+                        : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
+                    }`}
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={isGenerating}
-                  className="w-full py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] cursor-pointer shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                  className={`w-full py-3 rounded-full font-bold text-sm cursor-pointer shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-all ${
+                    isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                  }`}
                 >
                   <Zap className="w-4 h-4" />
                   <span>{isGenerating ? 'Synthesizing Mission…' : 'Generate Mission'}</span>
@@ -385,7 +401,7 @@ export default function NatureMissions() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── HERO BANNER WITH CLEAN DARK FOREST LANDSCAPE (RIGHT-SIDE GRAPHIC REMOVED COMPLETELY) ──────────────── */}
+        {/* ──────────────── HERO BANNER ──────────────── */}
         <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[300px] flex flex-col justify-between group">
           
           {/* HD Dark Forest Background Image */}
@@ -416,38 +432,48 @@ export default function NatureMissions() {
 
           {/* Bottom 4 Integrated Stat Pills */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 relative z-10">
-            <div className="bg-[#0A1A10]/95 border border-[#20422E] p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md">
+            <div className={`p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md border ${
+              isDark ? 'bg-[#0A1A10]/95 border-[#20422E]' : 'bg-[#FDFBF7]/95 border-[#E3DDD1]'
+            }`}>
               <div>
-                <p className="text-[10px] uppercase font-semibold text-emerald-400">{t.xpLabel}</p>
-                <p className="font-display text-xl font-extrabold text-white mt-0.5">{totalXP.toLocaleString()}</p>
+                <p className={`text-[10px] uppercase font-semibold ${isDark ? 'text-emerald-400' : 'text-[#183B28]'}`}>{t.xpLabel}</p>
+                <p className={`font-display text-xl font-extrabold mt-0.5 ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{totalXP.toLocaleString()}</p>
               </div>
               <span className="text-lg">🌿</span>
             </div>
 
-            <div className="bg-[#0A1A10]/95 border border-[#20422E] p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md">
+            <div className={`p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md border ${
+              isDark ? 'bg-[#0A1A10]/95 border-[#20422E]' : 'bg-[#FDFBF7]/95 border-[#E3DDD1]'
+            }`}>
               <div>
-                <p className="text-[10px] uppercase font-semibold text-slate-400">{t.streakLabel}</p>
-                <p className="font-display text-xl font-extrabold text-white mt-0.5">{streakDays} Days</p>
+                <p className={`text-[10px] uppercase font-semibold ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.streakLabel}</p>
+                <p className={`font-display text-xl font-extrabold mt-0.5 ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{streakDays} Days</p>
               </div>
               <span className="text-lg">🔥</span>
             </div>
 
-            <div className="bg-[#0A1A10]/95 border border-[#20422E] p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md">
+            <div className={`p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md border ${
+              isDark ? 'bg-[#0A1A10]/95 border-[#20422E]' : 'bg-[#FDFBF7]/95 border-[#E3DDD1]'
+            }`}>
               <div>
-                <p className="text-[10px] uppercase font-semibold text-slate-400">Quests</p>
-                <p className="font-display text-xl font-extrabold text-white mt-0.5">
+                <p className={`text-[10px] uppercase font-semibold ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.Quests || 'Quests'}</p>
+                <p className={`font-display text-xl font-extrabold mt-0.5 ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
                   {missions.filter((m) => m.status === 'completed').length} / {missions.length}
                 </p>
               </div>
               <span className="text-lg">⭐</span>
             </div>
 
-            <div className="bg-[#0A1A10]/95 border border-[#20422E] p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md">
+            <div className={`p-3.5 rounded-2xl flex items-center justify-between shadow-lg backdrop-blur-md border ${
+              isDark ? 'bg-[#0A1A10]/95 border-[#20422E]' : 'bg-[#FDFBF7]/95 border-[#E3DDD1]'
+            }`}>
               <div>
-                <p className="text-[10px] uppercase font-semibold text-slate-400">Rank</p>
-                <p className="font-display text-sm sm:text-base font-extrabold text-[#4ADE80] mt-0.5">Eco Guardian</p>
+                <p className={`text-[10px] uppercase font-semibold ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>Rank</p>
+                <p className={`font-display text-sm sm:text-base font-extrabold mt-0.5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>Eco Guardian</p>
               </div>
-              <div className="w-8 h-8 rounded-full bg-purple-950/80 border border-purple-400/50 flex items-center justify-center text-xs">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs border ${
+                isDark ? 'bg-purple-950/80 border-purple-400/50' : 'bg-[#E1EFE0] border-[#C3DEC0]'
+              }`}>
                 🟣
               </div>
             </div>
@@ -468,8 +494,12 @@ export default function NatureMissions() {
               onClick={() => setActiveTab(tab.id)}
               className={`px-5 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 activeTab === tab.id
-                  ? 'bg-[#4ADE80] text-[#07130B] shadow-md shadow-[#4ADE80]/15'
-                  : 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
+                  ? isDark
+                    ? 'bg-[#4ADE80] text-[#07130B] shadow-md shadow-[#4ADE80]/15'
+                    : 'bg-[#183B28] text-[#FAF7F0] shadow-md'
+                  : isDark
+                    ? 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
+                    : 'bg-[#FDFBF7] border border-[#E3DDD1] text-[#0F2418] hover:bg-[#F2ECE1] shadow-xs'
               }`}
             >
               {tab.label}
@@ -481,33 +511,32 @@ export default function NatureMissions() {
         {(activeTab === 'path' || activeTab === 'active' || activeTab === 'completed') && (
           <div className="space-y-8">
             {/* Missions Grid */}
-            <div className={`border rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative overflow-hidden ${
-              isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-white border-emerald-900/15'
+            <div className={`rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative overflow-hidden border transition-colors ${
+              isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
             }`}>
               <div className="flex justify-between items-center">
-                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  {activeTab === 'active' ? '⚡ Active In-Progress Quests' : activeTab === 'completed' ? '🏆 Completed Achievements' : 'Ecological Checkpoint Mission Trail'}
-                </h3>
-                <span className="text-xs text-[#4ADE80] font-semibold">Tap any Mission to Expand Checklist</span>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Ecological Checkpoint Mission Trail</h3>
+                <span className={`text-xs font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>Tap any Mission to Expand Checklist</span>
               </div>
 
-              {((activeTab === 'active'
-                ? missions.filter((m) => m.status !== 'completed')
-                : activeTab === 'completed'
-                ? missions.filter((m) => m.status === 'completed')
-                : missions).length === 0) && (
+              {missions.length === 0 && (
                 <div className={`border border-dashed rounded-3xl p-10 text-center space-y-3 ${
-                  isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-emerald-50 border-emerald-200'
+                  isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
                 }`}>
                   <p className="text-3xl">🌿</p>
-                  <p className={`font-display text-lg font-bold ${isDark ? 'text-[#4ADE80]' : 'text-slate-900'}`}>
-                    {activeTab === 'completed' ? 'No completed missions yet' : 'No active missions'}
+                  <p className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>No missions yet</p>
+                  <p className={`text-xs max-w-sm mx-auto ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
+                    Generate a challenge from the lightning button, create a custom mission, or finish onboarding to get your first mission set.
                   </p>
-                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                    {activeTab === 'completed'
-                      ? 'Complete action items on any active mission card to earn XP and move them here.'
-                      : 'Create a custom mission or click Generate Challenge to start your next quest!'}
-                  </p>
+                  <button
+                    onClick={() => setShowGenerateModal(true)}
+                    className={`mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-xs cursor-pointer ${
+                      isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                    }`}
+                  >
+                    <Zap className="w-4 h-4" />
+                    Generate Challenge
+                  </button>
                 </div>
               )}
 
@@ -528,27 +557,54 @@ export default function NatureMissions() {
                       onClick={() => setSelectedMission(mission)}
                       className={`p-5 rounded-3xl border transition-all cursor-pointer shadow-xl relative overflow-hidden flex flex-col justify-between h-56 ${
                         isSelected
-                          ? 'bg-[#1A3827] border-[#4ADE80] ring-2 ring-[#4ADE80]'
-                          : isDark ? 'bg-[#07150C] border-[#20422E] hover:border-[#4ADE80]/50' : 'bg-[#F4F7F4] border-slate-200 hover:border-emerald-500'
+                          ? isDark
+                            ? 'bg-[#1A3827] border-[#4ADE80] shadow-[#4ADE80]/30'
+                            : 'bg-[#E1EFE0] border-[#183B28] text-[#0F2418] shadow-md ring-1 ring-[#183B28]'
+                          : isDone
+                          ? isDark
+                            ? 'bg-[#0E2015] border-[#4ADE80]/40'
+                            : 'bg-[#F2ECE1] border-[#C3DEC0] text-[#0F2418]'
+                          : isDark
+                            ? 'bg-[#13271C] border-[#20422E] hover:border-[#4ADE80]/50 text-white'
+                            : 'bg-[#FDFBF7] border-[#E3DDD1] hover:border-[#183B28] text-[#0F2418] shadow-sm'
                       }`}
                     >
                       <div className="space-y-2">
-                        <div className="flex justify-between items-start">
-                          <span className="px-3 py-1 rounded-full bg-[#1A3827] text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/30">
-                            {mission.category}
+                        <div className="flex justify-between items-center">
+                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                            isDark ? 'bg-[#0E2015] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+                          }`}>
+                            {mission.difficulty}
                           </span>
-                          <span className="text-xs text-amber-400 font-extrabold">+{mission.xpReward} XP</span>
+                          <span className={`text-xs font-bold ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>+{mission.xpReward} XP</span>
                         </div>
-                        <h4 className={`font-display text-base font-bold line-clamp-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{mission.title}</h4>
+
+                        <h4 className={`font-display text-base font-bold line-clamp-2 mt-1 ${
+                          isDark ? 'text-white' : 'text-[#0F2418]'
+                        }`}>
+                          {mission.title}
+                        </h4>
                       </div>
 
-                      <div className="space-y-2 pt-2 border-t border-emerald-950/15">
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="text-slate-400">{completedStepsCount} of {mission.steps.length} Steps</span>
-                          <span className="text-[#4ADE80] font-bold">{progressPct}%</span>
+                      <div className={`space-y-2 pt-2 border-t ${
+                        isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'
+                      }`}>
+                        <div className={`flex justify-between items-center text-[11px] ${
+                          isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                        }`}>
+                          <span>{completedStepsCount}/{mission.steps.length} Steps</span>
+                          <span className={`font-bold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>{progressPct}%</span>
                         </div>
-                        <div className="w-full bg-[#13271C] h-2 rounded-full overflow-hidden">
-                          <div className="bg-[#4ADE80] h-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
+
+                        <div className={`w-full h-2 rounded-full overflow-hidden ${
+                          isDark ? 'bg-[#0E2015]' : 'bg-[#EDE6D8]'
+                        }`}>
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              isDark ? 'bg-[#4ADE80]' : 'bg-[#183B28]'
+                            }`}
+                            style={{ width: `${progressPct}%` }}
+                          />
                         </div>
                       </div>
                     </motion.div>
@@ -558,13 +614,17 @@ export default function NatureMissions() {
             </div>
 
             {/* ──────────────── UNLOCKABLE ACHIEVEMENT MILESTONES ──────────────── */}
-            <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-              <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
+            <div className={`rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border transition-colors ${
+              isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+            }`}>
+              <div className={`flex justify-between items-center border-b pb-4 ${
+                isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+              }`}>
                 <div>
-                  <h3 className="font-display text-2xl font-bold text-white">{t.achievementsTitle}</h3>
-                  <p className="text-xs text-slate-400">Complete missions to unlock regional badges</p>
+                  <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.achievementsTitle}</h3>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>Complete missions to unlock regional badges</p>
                 </div>
-                <Trophy className="w-6 h-6 text-amber-400" />
+                <Trophy className="w-6 h-6 text-amber-500" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -573,16 +633,18 @@ export default function NatureMissions() {
                     key={badge.id}
                     className={`p-4 rounded-2xl border flex items-center gap-3.5 transition-all ${
                       badge.unlocked
-                        ? 'bg-[#13271C] border-[#4ADE80]/50 text-white'
-                        : 'bg-[#07150C] border-[#20422E] opacity-60'
+                        ? isDark ? 'bg-[#13271C] border-[#4ADE80]/50 text-white' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#0F2418]'
+                        : isDark ? 'bg-[#07150C] border-[#20422E] opacity-60 text-slate-400' : 'bg-[#F2ECE1] border-[#E0D8C8] opacity-60 text-[#3E5C48]'
                     }`}
                   >
-                    <div className="w-12 h-12 rounded-2xl bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-2xl shrink-0">
+                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center text-2xl shrink-0 ${
+                      isDark ? 'bg-[#1A3827] border-[#4ADE80]/40' : 'bg-[#FDFBF7] border-[#C3DEC0]'
+                    }`}>
                       {badge.icon}
                     </div>
                     <div>
-                      <h4 className="font-display text-sm font-bold text-white">{badge.name}</h4>
-                      <p className="text-[10px] text-slate-400">{badge.desc}</p>
+                      <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{badge.name}</h4>
+                      <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{badge.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -590,13 +652,17 @@ export default function NatureMissions() {
             </div>
 
             {/* ──────────────── ECO IMPACT LEADERBOARD ──────────────── */}
-            <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-              <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
+            <div className={`rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border transition-colors ${
+              isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+            }`}>
+              <div className={`flex justify-between items-center border-b pb-4 ${
+                isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+              }`}>
                 <div>
-                  <h3 className="font-display text-2xl font-bold text-white">{t.leaderboardTitle}</h3>
-                  <p className="text-xs text-slate-400">Your mission path progress this week</p>
+                  <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.leaderboardTitle}</h3>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>Your mission path progress this week</p>
                 </div>
-                <Users className="w-6 h-6 text-[#4ADE80]" />
+                <Users className={`w-6 h-6 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
               </div>
 
               <div className="space-y-3">
@@ -605,25 +671,25 @@ export default function NatureMissions() {
                     key={user.rank}
                     className={`p-4 rounded-2xl border flex items-center justify-between transition-all ${
                       user.rank === 2
-                        ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-md'
-                        : 'bg-[#13271C] border-[#20422E] text-slate-300'
+                        ? isDark ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-md' : 'bg-[#E1EFE0] border-[#183B28] text-[#0F2418]'
+                        : isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418]'
                     }`}
                   >
                     <div className="flex items-center gap-4">
                       <span className={`w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs ${
-                        user.rank === 1 ? 'bg-amber-400 text-black' : user.rank === 2 ? 'bg-[#4ADE80] text-black' : 'bg-[#0E2015] text-slate-400'
+                        user.rank === 1 ? 'bg-amber-400 text-black' : user.rank === 2 ? 'bg-[#4ADE80] text-black' : isDark ? 'bg-[#0E2015] text-slate-400' : 'bg-[#EDE6D8] text-[#0F2418]'
                       }`}>
                         #{user.rank}
                       </span>
                       <div>
-                        <h4 className="font-display text-sm font-bold text-white">{user.name}</h4>
-                        <p className="text-[10px] text-slate-400">{user.badge}</p>
+                        <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{user.name}</h4>
+                        <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{user.badge}</p>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-sm font-extrabold text-[#4ADE80]">{user.xp}</span>
-                      <p className="text-[10px] text-slate-400">{user.streak}</p>
+                      <span className={`text-sm font-extrabold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>{user.xp}</span>
+                      <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{user.streak}</p>
                     </div>
                   </div>
                 ))}
@@ -634,33 +700,47 @@ export default function NatureMissions() {
 
         {/* ──────────────── TAB 4: CUSTOM CREATOR ──────────────── */}
         {activeTab === 'create' && (
-          <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-            <h3 className="font-display text-2xl font-bold text-white">Create Custom Mission Objective</h3>
+          <div className={`rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border transition-colors ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+          }`}>
+            <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Create Custom Mission Objective</h3>
 
             <form onSubmit={handleCreateCustomMission} className="space-y-4">
               {missionError && (
-                <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200">
+                <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-500">
                   {missionError}
                 </div>
               )}
               <div>
-                <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Mission Title</label>
+                <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
+                  isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                }`}>Mission Title</label>
                 <input
                   required
                   value={customTitle}
                   onChange={(e) => setCustomTitle(e.target.value)}
                   placeholder="e.g., Document 3 native tree shade canopies in your neighborhood..."
-                  className="w-full bg-[#13271C] border border-[#20422E] rounded-2xl px-4 py-3 text-sm text-white outline-none focus:border-[#4ADE80]"
+                  className={`w-full rounded-2xl px-4 py-3 text-sm outline-none transition-colors border ${
+                    isDark
+                      ? 'bg-[#13271C] border-[#20422E] text-white focus:border-[#4ADE80]'
+                      : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Category</label>
+                  <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
+                    isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                  }`}>Category</label>
                   <select
                     value={customCategory}
                     onChange={(e) => setCustomCategory(e.target.value)}
-                    className="w-full bg-[#13271C] border border-[#20422E] text-xs text-white rounded-2xl px-4 py-3 outline-none focus:border-[#4ADE80]"
+                    className={`w-full text-xs rounded-2xl px-4 py-3 outline-none border transition-colors ${
+                      isDark
+                        ? 'bg-[#13271C] border-[#20422E] text-white focus:border-[#4ADE80]'
+                        : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
+                    }`}
                   >
                     <option value="Exploration">Exploration</option>
                     <option value="Learning">Learning</option>
@@ -670,11 +750,17 @@ export default function NatureMissions() {
                 </div>
 
                 <div>
-                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">Difficulty</label>
+                  <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
+                    isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                  }`}>Difficulty</label>
                   <select
                     value={customDifficulty}
                     onChange={(e) => setCustomDifficulty(e.target.value)}
-                    className="w-full bg-[#13271C] border border-[#20422E] text-xs text-white rounded-2xl px-4 py-3 outline-none focus:border-[#4ADE80]"
+                    className={`w-full text-xs rounded-2xl px-4 py-3 outline-none border transition-colors ${
+                      isDark
+                        ? 'bg-[#13271C] border-[#20422E] text-white focus:border-[#4ADE80]'
+                        : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
+                    }`}
                   >
                     <option value="Easy">Easy (100 XP)</option>
                     <option value="Medium">Medium (180 XP)</option>
@@ -685,9 +771,11 @@ export default function NatureMissions() {
 
               <button
                 type="submit"
-                className="w-full py-3.5 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] transition-all shadow-xl cursor-pointer"
+                className={`w-full py-3.5 rounded-2xl font-bold text-sm transition-all shadow-xl cursor-pointer ${
+                  isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                }`}
               >
-                Create & Add Mission
+                Create &amp; Add Mission
               </button>
             </form>
           </div>
@@ -698,35 +786,45 @@ export default function NatureMissions() {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[#112318] border border-[#4ADE80]/50 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6"
+            className={`rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 border transition-colors ${
+              isDark ? 'bg-[#112318] border-[#4ADE80]/50' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-xl'
+            }`}
           >
-            <div className="flex justify-between items-start border-b border-[#20452F] pb-4">
+            <div className={`flex justify-between items-start border-b pb-4 ${
+              isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+            }`}>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-[#1A3827] text-xs font-bold text-[#4ADE80]">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    isDark ? 'bg-[#1A3827] text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28]'
+                  }`}>
                     {selectedMission.category}
                   </span>
-                  <span className="text-xs text-amber-400 font-bold">+{selectedMission.xpReward} XP Reward</span>
+                  <span className={`text-xs font-bold ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>+{selectedMission.xpReward} XP Reward</span>
                 </div>
-                <h3 className="font-display text-2xl font-bold text-white">{selectedMission.title}</h3>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{selectedMission.title}</h3>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleDeleteMission(selectedMission.id)}
-                  className="p-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 cursor-pointer"
+                  className="p-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 cursor-pointer"
                   title="Delete Mission"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-                <button onClick={() => setSelectedMission(null)} className="text-slate-400 hover:text-white cursor-pointer">
+                <button onClick={() => setSelectedMission(null)} className={`cursor-pointer ${
+                  isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
+                }`}>
                   <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
             <div className="space-y-3">
-              <p className="text-xs uppercase tracking-wider text-slate-400 font-bold">Action Steps & Checklist</p>
+              <p className={`text-xs uppercase tracking-wider font-bold ${
+                isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+              }`}>Action Steps &amp; Checklist</p>
 
               {selectedMission.steps.map((step) => (
                 <div
@@ -734,13 +832,19 @@ export default function NatureMissions() {
                   onClick={() => toggleStep(selectedMission.id, step.id)}
                   className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${
                     step.done
-                      ? 'bg-[#1A3827] border-[#4ADE80] text-slate-200'
-                      : 'bg-[#0E2015] border-[#20422E] text-white hover:border-[#4ADE80]/40'
+                      ? isDark
+                        ? 'bg-[#1A3827] border-[#4ADE80] text-slate-200'
+                        : 'bg-[#E1EFE0] border-[#183B28] text-[#0F2418]'
+                      : isDark
+                        ? 'bg-[#0E2015] border-[#20422E] text-white hover:border-[#4ADE80]/40'
+                        : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:border-[#183B28]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold ${
-                      step.done ? 'bg-[#4ADE80] border-[#4ADE80] text-[#07130B]' : 'border-slate-500'
+                      step.done
+                        ? isDark ? 'bg-[#4ADE80] border-[#4ADE80] text-[#07130B]' : 'bg-[#183B28] border-[#183B28] text-[#FAF7F0]'
+                        : isDark ? 'border-slate-500' : 'border-[#D4CBB8]'
                     }`}>
                       {step.done && '✓'}
                     </div>
@@ -749,7 +853,7 @@ export default function NatureMissions() {
                     </span>
                   </div>
 
-                  <span className="text-[11px] text-[#4ADE80] font-semibold">{step.done ? 'Done' : 'Tap to complete'}</span>
+                  <span className={`text-[11px] font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>{step.done ? 'Done' : 'Tap to complete'}</span>
                 </div>
               ))}
             </div>

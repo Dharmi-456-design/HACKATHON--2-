@@ -110,13 +110,13 @@ export default function Dashboard() {
   const hour = new Date().getHours();
   const greet = hour < 11 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-  const cardBg = isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/10 text-slate-800 shadow-xl';
-  const subCardBg = isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-emerald-950/8';
-  const accentText = isDark ? 'text-[#4ADE80]' : 'text-emerald-700';
+  const cardBg = isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] shadow-xl';
+  const subCardBg = isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]';
+  const accentText = isDark ? 'text-[#4ADE80]' : 'text-[#183B28]';
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
-      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#FAF7F0] text-[#0F2418] selection:bg-emerald-200 selection:text-emerald-900'
     }`}>
       
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
@@ -124,7 +124,7 @@ export default function Dashboard() {
         
         {/* ──────────────── SUNLIT FOREST LANDSCAPE HERO HEADER BANNER ──────────────── */}
         <div className={`relative border rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[280px] flex flex-col justify-between group ${
-          isDark ? 'border-[#20452F]' : 'border-emerald-900/15'
+          isDark ? 'border-[#20452F]' : 'border-[#183B28]/20'
         }`}>
           
           {/* HD Sunlit Emerald Forest Background Image */}
@@ -224,19 +224,19 @@ export default function Dashboard() {
                     <Badge tone="gold">{featured.status || 'in_progress'}</Badge>
                   </div>
 
-                  <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                  <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>
                     {featured.description || 'Find a shaded Peepal or Banyan canopy and observe dawn birdsong frequency.'}
                   </p>
 
                   {featured.why_it_matters && (
                     <p className={`text-xs italic leading-relaxed p-3 rounded-2xl border ${
-                      isDark ? 'text-[#4ADE80] bg-[#07150C] border-[#20422E]' : 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                      isDark ? 'text-[#4ADE80] bg-[#07150C] border-[#20422E]' : 'text-[#183B28] bg-[#E1EFE0] border-[#C3DEC0]'
                     }`}>
                       “{featured.why_it_matters}”
                     </p>
                   )}
 
-                  <div className={`flex items-center gap-1.5 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <div className={`flex items-center gap-1.5 text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
                     <MapPin size={12} className={accentText} />
                     <span>{featured.location_hint || 'Sabarmati Riverfront Park Sector B'}</span>
                   </div>
@@ -248,7 +248,7 @@ export default function Dashboard() {
                       </PrimaryButton>
                     )}
                     <Link to="/app/lens" className={`inline-flex items-center gap-2 rounded-full border text-xs font-bold px-5 py-2.5 transition-all ${
-                      isDark ? 'border-[#20422E] bg-[#13271C] text-white hover:bg-[#1A3827]' : 'border-emerald-900/15 bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
+                      isDark ? 'border-[#20422E] bg-[#13271C] text-white hover:bg-[#1A3827]' : 'border-[#183B28] bg-[#E1EFE0] text-[#183B28] hover:bg-[#D4E8D2]'
                     }`}>
                       Open Nature Lens
                     </Link>
@@ -263,15 +263,15 @@ export default function Dashboard() {
           {/* NATURE CONNECTION RING CARD */}
           <div className={`border rounded-3xl p-6 shadow-2xl flex flex-col items-center justify-between text-center space-y-4 ${cardBg}`}>
             <div className="w-full text-left">
-              <span className={`text-[10px] uppercase font-bold tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Nature Connection</span>
-              <h3 className={`font-display text-xl font-bold mt-0.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>Ecological Score</h3>
+              <span className={`text-[10px] uppercase font-bold tracking-wider ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>Nature Connection</span>
+              <h3 className={`font-display text-xl font-bold mt-0.5 ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Ecological Score</h3>
             </div>
 
             <ConnectionRing score={score} />
 
             <div>
-              <p className={`font-display text-4xl font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {score.overall}<span className={`text-lg font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>/100</span>
+              <p className={`font-display text-4xl font-extrabold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
+                {score.overall}<span className={`text-lg font-normal ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>/100</span>
               </p>
               <p className={`text-xs font-semibold mt-1 ${accentText}`}>
                 {score.overall >= 80 ? 'Commander Level 4' : score.overall >= 60 ? 'Commander Level 3' : score.overall >= 40 ? 'Commander Level 2' : 'Commander Level 1'}
@@ -283,8 +283,8 @@ export default function Dashboard() {
 
           {/* MORE MISSIONS TODAY */}
           <div className={`border rounded-3xl p-6 shadow-2xl space-y-4 ${cardBg}`}>
-            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#20452F]' : 'border-emerald-900/10'}`}>
-              <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>More For Today</h3>
+            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'}`}>
+              <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>More For Today</h3>
               <Link to="/app/missions" className={`text-xs hover:underline flex items-center gap-1 font-semibold ${accentText}`}>
                 All <ArrowRight size={12} />
               </Link>
@@ -295,8 +295,8 @@ export default function Dashboard() {
                 <div key={m.id} className={`rounded-2xl border p-3.5 space-y-1 ${subCardBg}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className={`text-xs font-bold line-clamp-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{m.title}</p>
-                      <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      <p className={`text-xs font-bold line-clamp-1 ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{m.title}</p>
+                      <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
                         {TYPE_LABEL[m.mission_type] || m.mission_type} · {m.duration_minutes}m
                       </p>
                     </div>
@@ -316,8 +316,8 @@ export default function Dashboard() {
 
           {/* NEARBY NATURE PLACES */}
           <div className={`border rounded-3xl p-6 shadow-2xl space-y-4 ${cardBg}`}>
-            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#20452F]' : 'border-emerald-900/10'}`}>
-              <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Nearby Nature</h3>
+            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'}`}>
+              <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Nearby Nature</h3>
               <Link to="/app/places" className={`text-xs hover:underline flex items-center gap-1 font-semibold ${accentText}`}>
                 Map <ArrowRight size={12} />
               </Link>
@@ -328,7 +328,7 @@ export default function Dashboard() {
                 <div key={p.id} className={`flex items-center gap-3 border p-2.5 rounded-2xl ${subCardBg}`}>
                   <img src={p.image_url || SUNLIT_FOREST_IMG} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0" />
                   <div className="min-w-0">
-                    <p className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{p.name}</p>
+                    <p className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{p.name}</p>
                     <p className={`text-[10px] font-semibold ${accentText}`}>{p.type} · {p.walk_minutes || 10} min walk</p>
                   </div>
                 </div>
@@ -338,8 +338,8 @@ export default function Dashboard() {
 
           {/* RECENT DISCOVERIES */}
           <div className={`border rounded-3xl p-6 shadow-2xl space-y-4 ${cardBg}`}>
-            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#20452F]' : 'border-emerald-900/10'}`}>
-              <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Recent Discoveries</h3>
+            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'}`}>
+              <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Recent Discoveries</h3>
               <Link to="/app/lens" className={`text-xs hover:underline flex items-center gap-1 font-semibold ${accentText}`}>
                 Lens <ArrowRight size={12} />
               </Link>
@@ -348,8 +348,8 @@ export default function Dashboard() {
             <div className="space-y-3">
               {discoveries.slice(0, 3).map((d) => (
                 <div key={d.id} className={`border p-3 rounded-2xl space-y-0.5 ${subCardBg}`}>
-                  <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{d.common_name}</p>
-                  <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{d.category} · {formatWhen(d.created_at)}</p>
+                  <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{d.common_name}</p>
+                  <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{d.category} · {formatWhen(d.created_at)}</p>
                 </div>
               ))}
               {!discoveries.length && (
@@ -360,8 +360,8 @@ export default function Dashboard() {
 
           {/* ENVIRONMENTAL ACTIONS WIDGET */}
           <div className={`lg:col-span-3 border rounded-3xl p-6 shadow-2xl space-y-4 ${cardBg}`}>
-            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#20452F]' : 'border-emerald-900/10'}`}>
-              <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Environmental Action Engine</h3>
+            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'}`}>
+              <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Environmental Action Engine</h3>
               <Link to="/app/act" className={`text-xs hover:underline flex items-center gap-1 font-semibold ${accentText}`}>
                 Engine <ArrowRight size={12} />
               </Link>
@@ -371,12 +371,12 @@ export default function Dashboard() {
               {actions.slice(0, 4).map((a) => (
                 <div key={a.id} className={`rounded-2xl border p-4 space-y-2 ${subCardBg}`}>
                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    isDark ? 'bg-[#1A3827] text-[#4ADE80]' : 'bg-emerald-100 text-emerald-800'
+                    isDark ? 'bg-[#1A3827] text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28]'
                   }`}>
                     {a.category}
                   </span>
-                  <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{a.title}</p>
-                  <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{a.minutes} min · {a.status}</p>
+                  <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{a.title}</p>
+                  <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{a.minutes} min · {a.status}</p>
                 </div>
               ))}
             </div>

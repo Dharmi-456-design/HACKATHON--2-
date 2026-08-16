@@ -155,14 +155,18 @@ export default function BiodiversityPassport() {
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
-      isDark ? 'bg-[#060D09] text-slate-100 selection:bg-[#E6C176]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-amber-200 selection:text-amber-950'
+      isDark ? 'bg-[#060D09] text-slate-100 selection:bg-[#E6C176]/30 selection:text-white' : 'bg-[#FAF7F0] text-[#0F2418] selection:bg-amber-200 selection:text-amber-950'
     }`}>
       
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── RADICAL NEW CONCEPT: LEATHER & GOLD EMBOSSED HEADER ──────────────── */}
-        <div className="relative bg-gradient-to-r from-[#14261B] via-[#1D3828] to-[#122419] border-2 border-[#E6C176]/50 rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* ──────────────── LEATHER & GOLD EMBOSSED HEADER ──────────────── */}
+        <div className={`relative rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 border-2 transition-all ${
+          isDark
+            ? 'bg-gradient-to-r from-[#14261B] via-[#1D3828] to-[#122419] border-[#E6C176]/50'
+            : 'bg-gradient-to-r from-[#173A25] via-[#204E33] to-[#173A25] border-amber-400/60 shadow-xl'
+        }`}>
           
           <div className="space-y-2 max-w-xl z-10 text-center md:text-left">
             <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#2A4B36] text-[#E6C176] border border-[#E6C176]/40 text-xs font-extrabold uppercase tracking-widest shadow-md">
@@ -194,30 +198,42 @@ export default function BiodiversityPassport() {
         </div>
 
         {/* ──────────────── SPREAD NAVIGATION CONTROLS ──────────────── */}
-        <div className="flex items-center justify-between bg-[#112318] border border-[#E6C176]/30 rounded-2xl px-6 py-3 text-xs font-bold text-[#E6C176]">
+        <div className={`flex items-center justify-between rounded-2xl px-6 py-3 text-xs font-bold border transition-colors ${
+          isDark
+            ? 'bg-[#112318] border-[#E6C176]/30 text-[#E6C176]'
+            : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#916B25] shadow-md'
+        }`}>
           <button
             onClick={() => setSpreadIndex((s) => Math.max(s - 1, 0))}
             disabled={spreadIndex === 0}
-            className="flex items-center gap-1.5 hover:text-white disabled:opacity-30 cursor-pointer"
+            className={`flex items-center gap-1.5 disabled:opacity-30 cursor-pointer ${
+              isDark ? 'hover:text-white text-[#E6C176]' : 'hover:text-[#183B28] text-[#916B25]'
+            }`}
           >
             <span>{t.prevPageBtn}</span>
           </button>
 
-          <span className="text-white font-mono text-sm tracking-widest">
+          <span className={`font-mono text-sm tracking-widest font-bold ${
+            isDark ? 'text-white' : 'text-[#0F2418]'
+          }`}>
             SPREAD 0{spreadIndex + 1} / 03
           </span>
 
           <button
             onClick={() => setSpreadIndex((s) => Math.min(s + 1, 2))}
             disabled={spreadIndex === 2}
-            className="flex items-center gap-1.5 hover:text-white disabled:opacity-30 cursor-pointer"
+            className={`flex items-center gap-1.5 disabled:opacity-30 cursor-pointer ${
+              isDark ? 'hover:text-white text-[#E6C176]' : 'hover:text-[#183B28] text-[#916B25]'
+            }`}
           >
             <span>{t.nextPageBtn}</span>
           </button>
         </div>
 
-        {/* ──────────────── REALISTIC DUAL-PAGE BOOKLET SPREAD (LEFT + RIGHT PAGES) ──────────────── */}
-        <div className="bg-[#0E2015] border-4 border-[#254532] rounded-3xl p-4 sm:p-8 shadow-2xl relative overflow-hidden">
+        {/* ──────────────── REALISTIC DUAL-PAGE BOOKLET SPREAD ──────────────── */}
+        <div className={`rounded-3xl p-4 sm:p-8 shadow-2xl relative overflow-hidden border-4 transition-colors ${
+          isDark ? 'bg-[#0E2015] border-[#254532]' : 'bg-[#EDE6D8] border-[#D4CBB8]'
+        }`}>
           
           <AnimatePresence mode="wait">
             
@@ -232,48 +248,58 @@ export default function BiodiversityPassport() {
                 className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch"
               >
                 {/* LEFT PAGE: PASSPORT HOLDER IDENTITY CARD */}
-                <div className="bg-[#12271C] border border-[#E6C176]/40 rounded-2xl p-6 space-y-6 flex flex-col justify-between shadow-xl relative">
-                  <div className="border-b border-[#20452F] pb-4 flex justify-between items-center">
-                    <span className="text-[10px] font-black text-[#E6C176] uppercase tracking-widest">
+                <div className={`rounded-2xl p-6 space-y-6 flex flex-col justify-between shadow-xl relative border transition-colors ${
+                  isDark ? 'bg-[#12271C] border-[#E6C176]/40' : 'bg-[#FDFBF7] border-[#E3DDD1]'
+                }`}>
+                  <div className={`border-b pb-4 flex justify-between items-center ${
+                    isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+                  }`}>
+                    <span className="text-[10px] font-black text-[#B89240] dark:text-[#E6C176] uppercase tracking-widest">
                       {t.leftPageTitle}
                     </span>
-                    <span className="text-xs text-amber-300 font-bold">OFFICIAL #84920</span>
+                    <span className="text-xs text-[#916B25] dark:text-amber-300 font-bold">OFFICIAL #84920</span>
                   </div>
 
-                  <div className="flex items-center gap-4 bg-[#0A1A10] p-4 rounded-xl border border-[#20422E]">
-                    <div className="w-16 h-16 rounded-2xl bg-[#1D3828] border-2 border-[#E6C176] flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+                  <div className={`flex items-center gap-4 p-4 rounded-xl border ${
+                    isDark ? 'bg-[#0A1A10] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
+                  }`}>
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1D3828] to-[#14261B] border-2 border-[#E6C176] flex items-center justify-center text-2xl font-bold text-white shadow-lg shrink-0">
                       👤
                     </div>
                     <div>
-                      <h3 className="font-display text-xl font-black text-white">{profile?.display_name || user?.name || 'Nature Pulse Explorer'}</h3>
-                      <p className="text-xs text-[#E6C176] font-semibold">{level}</p>
-                      <p className="text-[10px] text-slate-400 mt-1">{issueDate}</p>
+                      <h3 className={`font-display text-xl font-black ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{profile?.display_name || user?.name || 'Nature Pulse Explorer'}</h3>
+                      <p className="text-xs text-[#916B25] dark:text-[#E6C176] font-semibold">{level}</p>
+                      <p className="text-[10px] text-[#3E5C48] dark:text-slate-400 mt-1">{issueDate}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 text-xs text-slate-300">
-                    <div className="flex justify-between py-1 border-b border-[#20422E]">
+                  <div className={`space-y-2 text-xs ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>
+                    <div className={`flex justify-between py-1 border-b ${isDark ? 'border-[#20422E]' : 'border-[#E0D8C8]'}`}>
                       <span>Primary Language:</span>
-                      <span className="text-[#E6C176] font-bold">English, ગુજરાતી & Hindi</span>
+                      <span className="text-[#183B28] dark:text-[#E6C176] font-bold">English, ગુજરાતી & Hindi</span>
                     </div>
-                    <div className="flex justify-between py-1 border-b border-[#20422E]">
+                    <div className={`flex justify-between py-1 border-b ${isDark ? 'border-[#20422E]' : 'border-[#E0D8C8]'}`}>
                       <span>Active Streak:</span>
-                      <span className="text-emerald-400 font-bold">{streakDays} Day{streakDays === 1 ? '' : 's'} 🔥</span>
+                      <span className="text-[#183B28] dark:text-emerald-400 font-bold">{streakDays} Day{streakDays === 1 ? '' : 's'} 🔥</span>
                     </div>
                     <div className="flex justify-between py-1">
                       <span>Total Earned XP:</span>
-                      <span className="text-amber-400 font-bold">{xp.toLocaleString()} XP</span>
+                      <span className="text-[#916B25] dark:text-amber-400 font-bold">{xp.toLocaleString()} XP</span>
                     </div>
                   </div>
                 </div>
 
                 {/* RIGHT PAGE: PASSPORT MILESTONES SUMMARY */}
-                <div className="bg-[#12271C] border border-[#E6C176]/40 rounded-2xl p-6 space-y-6 flex flex-col justify-between shadow-xl relative">
-                  <div className="border-b border-[#20452F] pb-4 flex justify-between items-center">
-                    <span className="text-[10px] font-black text-[#E6C176] uppercase tracking-widest">
+                <div className={`rounded-2xl p-6 space-y-6 flex flex-col justify-between shadow-xl relative border transition-colors ${
+                  isDark ? 'bg-[#12271C] border-[#E6C176]/40' : 'bg-[#FDFBF7] border-[#E3DDD1]'
+                }`}>
+                  <div className={`border-b pb-4 flex justify-between items-center ${
+                    isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+                  }`}>
+                    <span className="text-[10px] font-black text-[#B89240] dark:text-[#E6C176] uppercase tracking-widest">
                       {t.rightPageTitle}
                     </span>
-                    <span className="text-xs text-emerald-400 font-bold">VERIFIED</span>
+                    <span className="text-xs text-[#183B28] dark:text-emerald-400 font-bold">VERIFIED</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -283,21 +309,27 @@ export default function BiodiversityPassport() {
                       { title: 'Field Notes', val: `${entries.length} Notes`, icon: '📚' },
                       { title: 'Eco Score', val: `${score}% Connection`, icon: '🌿' },
                     ].map((m, i) => (
-                      <div key={i} className="bg-[#0A1A10] border border-[#20422E] p-3.5 rounded-xl space-y-1">
+                      <div key={i} className={`p-3.5 rounded-xl space-y-1 border ${
+                        isDark ? 'bg-[#0A1A10] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
+                      }`}>
                         <span className="text-lg">{m.icon}</span>
-                        <p className="text-[10px] text-slate-400 uppercase font-semibold">{m.title}</p>
-                        <h4 className="font-display text-sm font-bold text-white">{m.val}</h4>
+                        <p className="text-[10px] text-[#3E5C48] uppercase font-semibold">{m.title}</p>
+                        <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{m.val}</h4>
                       </div>
                     ))}
                   </div>
 
-                  <div className="bg-[#0A1A10] border border-[#E6C176]/30 p-4 rounded-xl space-y-2">
-                    <div className="flex justify-between text-xs text-[#E6C176] font-bold">
+                  <div className={`p-4 rounded-xl space-y-2 border ${
+                    isDark ? 'bg-[#0A1A10] border-[#E6C176]/30' : 'bg-[#F2ECE1] border-[#E0D8C8]'
+                  }`}>
+                    <div className="flex justify-between text-xs text-[#916B25] dark:text-[#E6C176] font-bold">
                       <span>Passport Document Progress</span>
                       <span>{progressPct}% Complete</span>
                     </div>
-                    <div className="w-full bg-[#12271C] h-2.5 rounded-full overflow-hidden">
-                      <div className="bg-gradient-to-r from-[#E6C176] to-[#4ADE80] h-full rounded-full" style={{ width: `${progressPct}%` }} />
+                    <div className={`w-full h-2.5 rounded-full overflow-hidden ${
+                      isDark ? 'bg-[#12271C]' : 'bg-[#EDE6D8]'
+                    }`}>
+                      <div className="bg-gradient-to-r from-amber-500 to-emerald-600 h-full rounded-full" style={{ width: `${progressPct}%` }} />
                     </div>
                   </div>
                 </div>
@@ -314,14 +346,18 @@ export default function BiodiversityPassport() {
                 transition={{ duration: 0.4 }}
                 className="space-y-4"
               >
-                <div className="border-b border-[#20452F] pb-3 flex justify-between items-center">
-                  <h3 className="font-display text-2xl font-bold text-white">Digital Journey Stamps Collection</h3>
-                  <span className="text-xs text-[#E6C176] font-bold">Hover Card to 3D Flip</span>
+                <div className={`border-b pb-3 flex justify-between items-center ${
+                  isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+                }`}>
+                  <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Digital Journey Stamps Collection</h3>
+                  <span className="text-xs text-[#916B25] dark:text-[#E6C176] font-bold">Hover Card to 3D Flip</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {displayStamps.length === 0 ? (
-                    <p className="text-xs text-slate-400 bg-[#12271C] border border-dashed border-[#E6C176]/30 rounded-2xl p-6 text-center col-span-full">
+                    <p className={`text-xs rounded-2xl p-6 text-center col-span-full border border-dashed ${
+                      isDark ? 'text-slate-400 bg-[#12271C] border-[#E6C176]/30' : 'text-[#3E5C48] bg-[#FDFBF7] border-[#E3DDD1]'
+                    }`}>
                       Your achievement stamps appear here as you record observations, finish missions, write journal notes, and log eco actions.
                     </p>
                   ) : (
@@ -339,24 +375,28 @@ export default function BiodiversityPassport() {
                           animate={{ rotateY: isFlipped ? 180 : 0 }}
                         >
                           {/* FRONT SIDE */}
-                          <div className="absolute inset-0 backface-hidden bg-[#12271C] border border-[#E6C176]/50 rounded-2xl p-5 flex flex-col justify-between">
+                          <div className={`absolute inset-0 backface-hidden rounded-2xl p-5 flex flex-col justify-between border ${
+                            isDark ? 'bg-[#12271C] border-[#E6C176]/50 text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] shadow-md'
+                          }`}>
                             <div className="flex justify-between items-start">
                               <span className="text-3xl">{st.icon}</span>
-                              <span className="text-xs font-black text-[#E6C176]">+{st.xp} XP</span>
+                              <span className="text-xs font-black text-[#916B25] dark:text-[#E6C176]">+{st.xp} XP</span>
                             </div>
                             <div>
-                              <h4 className="font-display text-base font-bold text-white">{st.title}</h4>
-                              <p className="text-[10px] text-slate-400 mt-1">{st.date}</p>
+                              <h4 className={`font-display text-base font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{st.title}</h4>
+                              <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{st.date}</p>
                             </div>
                           </div>
 
                           {/* BACK SIDE */}
-                          <div className="absolute inset-0 backface-hidden rotate-y-180 bg-[#1D3828] border border-[#E6C176] rounded-2xl p-5 flex flex-col justify-between text-slate-200">
+                          <div className={`absolute inset-0 backface-hidden rotate-y-180 rounded-2xl p-5 flex flex-col justify-between border ${
+                            isDark ? 'bg-[#1D3828] border-[#E6C176] text-slate-200' : 'bg-[#FAF2E4] border-[#D4A359] text-[#0F2418] shadow-md'
+                          }`}>
                             <div>
-                              <h5 className="font-display text-xs font-bold text-[#E6C176]">{st.category}</h5>
-                              <p className="text-xs text-slate-200 mt-2 leading-relaxed">{st.desc}</p>
+                              <h5 className="font-display text-xs font-bold text-[#916B25] dark:text-[#E6C176]">{st.category}</h5>
+                              <p className={`text-xs mt-2 leading-relaxed ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>{st.desc}</p>
                             </div>
-                            <span className="text-[10px] text-emerald-400 font-bold">Verified Achievement</span>
+                            <span className="text-[10px] text-[#183B28] dark:text-emerald-400 font-bold">Verified Achievement</span>
                           </div>
                         </motion.div>
                       </div>
@@ -376,26 +416,32 @@ export default function BiodiversityPassport() {
                 transition={{ duration: 0.4 }}
                 className="space-y-4"
               >
-                <h3 className="font-display text-2xl font-bold text-white border-b border-[#20452F] pb-3">
+                <h3 className={`font-display text-2xl font-bold border-b pb-3 ${
+                  isDark ? 'text-white border-[#20452F]' : 'text-[#0F2418] border-[#E3DDD1]'
+                }`}>
                   Chronological Journey Trail
                 </h3>
 
                 <div className="space-y-3">
                   {journeyItems.length === 0 ? (
-                    <p className="text-xs text-slate-400 bg-[#12271C] border border-dashed border-[#E6C176]/30 rounded-2xl p-6 text-center">
+                    <p className={`text-xs rounded-2xl p-6 text-center border border-dashed ${
+                      isDark ? 'text-slate-400 bg-[#12271C] border-[#E6C176]/30' : 'text-[#3E5C48] bg-[#FDFBF7] border-[#E3DDD1]'
+                    }`}>
                       Your journey trail begins with your first observation.
                     </p>
                   ) : (
                   journeyItems.map((tr, idx) => (
-                    <div key={idx} className="flex items-center gap-4 bg-[#12271C] border border-[#20422E] p-4 rounded-2xl">
-                      <div className="w-10 h-10 rounded-full bg-[#1D3828] border border-[#E6C176] flex items-center justify-center text-xs font-bold text-[#E6C176]">
+                    <div key={idx} className={`flex items-center gap-4 p-4 rounded-2xl border ${
+                      isDark ? 'bg-[#12271C] border-[#20422E]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+                    }`}>
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1D3828] to-[#14261B] border border-[#E6C176] flex items-center justify-center text-xs font-bold text-[#E6C176] shrink-0">
                         0{idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-display text-sm font-bold text-white">{tr.title}</h4>
-                        <p className="text-xs text-slate-300 truncate">{tr.desc}</p>
+                        <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{tr.title}</h4>
+                        <p className={`text-xs truncate ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>{tr.desc}</p>
                       </div>
-                      <span className="text-[10px] text-[#E6C176] font-bold">{tr.date}</span>
+                      <span className="text-[10px] text-[#916B25] dark:text-[#E6C176] font-bold">{tr.date}</span>
                     </div>
                   ))
                   )}
