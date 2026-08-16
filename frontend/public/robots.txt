@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /lithos
+Disallow: /app/
+Disallow: /admin/
+Disallow: /settings/
+Disallow: /reset-password
+
+Sitemap: https://naturepulse.app/sitemap.xml

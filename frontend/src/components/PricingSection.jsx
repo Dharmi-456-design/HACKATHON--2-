@@ -103,6 +103,9 @@ export default function PricingSection() {
             </span>
             <button
               onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+              aria-label="Toggle between monthly and yearly billing"
+              role="switch"
+              aria-checked={billingCycle === 'yearly'}
               className="w-14 h-8 rounded-full bg-white/10 border border-white/20 p-1 flex items-center transition-colors cursor-pointer"
             >
               <motion.div

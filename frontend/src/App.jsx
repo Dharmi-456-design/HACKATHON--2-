@@ -1,30 +1,42 @@
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import AppShell from './components/AppShell';
-import Landing from './pages/Landing';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ResetPassword from './pages/ResetPassword';
-import Onboarding from './pages/Onboarding';
-import Dashboard from './pages/Dashboard';
-import Lens from './pages/Lens';
-import Places from './pages/Places';
-import PlaceDetails from './pages/PlaceDetails';
-import Act from './pages/Act';
-import Journal from './pages/Journal';
-import Stories from './pages/Stories';
-import Community from './pages/Community';
-import PulseChat from './pages/PulseChat';
-import Settings from './pages/Settings';
-import BiodiversityPassport from './pages/BiodiversityPassport';
-import NatureMissions from './pages/NatureMissions';
-import CommunityBiodiversityMap from './pages/CommunityBiodiversityMap';
-import WeeklyRecap from './pages/WeeklyRecap';
-import LithosHero from './components/LithosHero';
-import { useEffect, useState } from 'react';
 import { apiFetch } from './lib/api';
+
+// Landing is imported eagerly for instantaneous homepage LCP
+import Landing from './pages/Landing';
+
+// Code-split all secondary and authenticated routes
+const AppShell = lazy(() => import('./components/AppShell'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Lens = lazy(() => import('./pages/Lens'));
+const Places = lazy(() => import('./pages/Places'));
+const PlaceDetails = lazy(() => import('./pages/PlaceDetails'));
+const Act = lazy(() => import('./pages/Act'));
+const Journal = lazy(() => import('./pages/Journal'));
+const Stories = lazy(() => import('./pages/Stories'));
+const Community = lazy(() => import('./pages/Community'));
+const PulseChat = lazy(() => import('./pages/PulseChat'));
+const Settings = lazy(() => import('./pages/Settings'));
+const BiodiversityPassport = lazy(() => import('./pages/BiodiversityPassport'));
+const NatureMissions = lazy(() => import('./pages/NatureMissions'));
+const CommunityBiodiversityMap = lazy(() => import('./pages/CommunityBiodiversityMap'));
+const WeeklyRecap = lazy(() => import('./pages/WeeklyRecap'));
+const LithosHero = lazy(() => import('./components/LithosHero'));
+
+function RouteFallback() {
+  return (
+    <div className="min-h-screen bg-[#0A1610] flex items-center justify-center">
+      <div className="w-8 h-8 rounded-full border-2 border-[#96CD7B]/30 border-t-[#96CD7B] animate-spin" />
+    </div>
+  );
+}
 
 function Gate({ children }) {
   const { token, loading } = useAuth();
@@ -44,11 +56,7 @@ function Gate({ children }) {
   }, [token, loading]);
 
   if (!ready) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-moss/30 border-t-moss animate-spin" />
-      </div>
-    );
+    return <RouteFallback />;
   }
   if (!onboarded) return <Navigate to="/onboarding" replace />;
   return children;
@@ -59,50 +67,52 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/lithos" element={<LithosHero />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signin" element={<Login />} />
-            <Route path="/auth" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/signup" element={<Register />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route
-              path="/onboarding"
-              element={
-                <ProtectedRoute>
-                  <Onboarding />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app"
-              element={
-                <ProtectedRoute>
-                  <Gate>
-                    <AppShell />
-                  </Gate>
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Dashboard />} />
-              <Route path="lens" element={<Lens />} />
-              <Route path="places" element={<Places />} />
-              <Route path="places/:id" element={<PlaceDetails />} />
-              <Route path="act" element={<Act />} />
-              <Route path="journal" element={<Journal />} />
-              <Route path="stories" element={<Stories />} />
-              <Route path="community" element={<Community />} />
-              <Route path="pulse" element={<PulseChat />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="passport" element={<BiodiversityPassport />} />
-              <Route path="missions" element={<NatureMissions />} />
-              <Route path="community-map" element={<CommunityBiodiversityMap />} />
-              <Route path="recap" element={<WeeklyRecap />} />
-            </Route>
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/lithos" element={<LithosHero />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signin" element={<Login />} />
+              <Route path="/auth" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/signup" element={<Register />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route
+                path="/onboarding"
+                element={
+                  <ProtectedRoute>
+                    <Onboarding />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/app"
+                element={
+                  <ProtectedRoute>
+                    <Gate>
+                      <AppShell />
+                    </Gate>
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="lens" element={<Lens />} />
+                <Route path="places" element={<Places />} />
+                <Route path="places/:id" element={<PlaceDetails />} />
+                <Route path="act" element={<Act />} />
+                <Route path="journal" element={<Journal />} />
+                <Route path="stories" element={<Stories />} />
+                <Route path="community" element={<Community />} />
+                <Route path="pulse" element={<PulseChat />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="passport" element={<BiodiversityPassport />} />
+                <Route path="missions" element={<NatureMissions />} />
+                <Route path="community-map" element={<CommunityBiodiversityMap />} />
+                <Route path="recap" element={<WeeklyRecap />} />
+              </Route>
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>

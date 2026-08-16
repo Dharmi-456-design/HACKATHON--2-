@@ -4,8 +4,8 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 const TEXT = "A relationship with nature is recognized long before it is defined. Your everyday surroundings shape how you perceive, protect, and reconnect with the living world. We help cultivate that difference.";
 
 function Word({ children, progress, range }) {
-  const opacity = useTransform(progress, range, [0.22, 1]);
-  const color = useTransform(progress, range, ['rgba(255, 255, 255, 0.22)', 'rgba(255, 255, 255, 1)']);
+  const opacity = useTransform(progress, range, [0.72, 1]);
+  const color = useTransform(progress, range, ['rgba(255, 255, 255, 0.72)', 'rgba(255, 255, 255, 1)']);
   const y = useTransform(progress, range, [4, 0]);
 
   return (
@@ -86,6 +86,10 @@ export default function ScrollTypographyHighlight() {
             <img
               src={item.img}
               alt={item.title}
+              loading="lazy"
+              decoding="async"
+              width="400"
+              height="500"
               className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
