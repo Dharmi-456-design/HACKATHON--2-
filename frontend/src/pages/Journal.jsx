@@ -8,7 +8,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Living Botanical Parchment Journal
@@ -93,49 +92,14 @@ const JOURNAL_TRANSLATIONS = {
   },
 };
 
-// Seed Journal Entries
-const SEED_ENTRIES = [
-  {
-    id: 'j-1',
-    title: 'Peepal Leaf Droplets After Dawn Rain',
-    body: 'The morning humidity was 88%. Standing under the ancient Peepal tree near the river bank, water droplets formed golden spheres on the leaf veins.',
-    mood: 'Quiet Canopy',
-    weather: 'Cool Rain · 24°C',
-    date: 'Aug 16, 2026',
-    pinned: true,
-    wordCount: 32,
-    aiReflection: 'Key Theme: Canopy condensation & urban micro-climate dampness.',
-  },
-  {
-    id: 'j-2',
-    title: 'Swallowtail Butterfly Feeding Rhythm',
-    body: 'Observed 2 swallowtails feeding on yellow Champa flowers between 10:00 AM and 11:30 AM. Their wing frequency slowed during peak sun exposure.',
-    mood: 'Sunlit Meadow',
-    weather: 'Clear Skies · 31°C',
-    date: 'Aug 14, 2026',
-    pinned: false,
-    wordCount: 28,
-    aiReflection: 'Key Theme: Insect pollination activity during peak solar hours.',
-  },
-];
-
 export default function Journal() {
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = JOURNAL_TRANSLATIONS[lang] || JOURNAL_TRANSLATIONS.en;
   const token = session?.access_token;
-  const demoMode = isDemoMode();
 
   // Persistent State
-  const [entries, setEntries] = useState(() => {
-    if (!demoMode) return [];
-    try {
-      const saved = localStorage.getItem('pulse_journal_entries_v1');
-      return saved ? JSON.parse(saved) : SEED_ENTRIES;
-    } catch {
-      return SEED_ENTRIES;
-    }
-  });
+  const [entries, setEntries] = useState([]);
 
   // Active States
   const [activeTab, setActiveTab] = useState('journal');
@@ -154,10 +118,6 @@ export default function Journal() {
       .then((list) => setEntries(Array.isArray(list) ? list.map((x) => ({ ...x, id: x._id || x.id })) : []))
       .catch(() => {});
   }, [token]);
-
-  useEffect(() => {
-    if (demoMode) localStorage.setItem('pulse_journal_entries_v1', JSON.stringify(entries));
-  }, [entries, demoMode]);
 
   // Save Note Submit
   const handleSaveNote = async (e) => {
@@ -196,7 +156,8 @@ export default function Journal() {
         setAutoSaveStatus('Could not save — please try again.');
       }
     } else {
-      setAutoSaveStatus('Saved locally (demo) ✓');
+      setEntries((prev) => prev.filter((x) => x.id !== localEntry.id));
+      setAutoSaveStatus('Sign in to save your entry.');
     }
     setTimeout(() => setAutoSaveStatus(''), 2500);
   };

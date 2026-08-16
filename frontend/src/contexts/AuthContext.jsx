@@ -2,15 +2,6 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { apiFetch, getToken, setToken, clearToken } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { signInWithGoogle as performGoogleSignIn } from '../lib/googleAuth';
-import { isDemoMode } from '../utils/demoMode';
-
-// ── Demo user object (only used when demo mode is explicitly enabled) ────────
-const DEMO_USER = {
-  id: 'demo-user-00000000',
-  email: 'demo@naturepulse.app',
-  name: 'Demo Explorer',
-};
-const DEMO_KEY = 'np_demo_login';
 
 // ── Context ───────────────────────────────────────────────────────────────────
 const AuthContext = createContext({
@@ -18,50 +9,36 @@ const AuthContext = createContext({
   token: null,
   session: null,
   loading: true,
-  isDemoUser: false,
   login: async () => {},
   register: async () => {},
   signInWithGoogle: async () => {},
   logout: () => {},
-  enterDemoMode: () => {},
-  exitDemoMode: () => {},
 });
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setAuthToken] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isDemoUser, setIsDemoUser] = useState(false);
 
-  // Helper to format Supabase user into NaturePulse user schema
-  const formatSupabaseUser = (sbUser) => {
-    if (!sbUser) return null;
-    return {
-      id: sbUser.id,
-      email: sbUser.email,
-      name:
-        sbUser.user_metadata?.full_name ||
-        sbUser.user_metadata?.name ||
-        sbUser.user_metadata?.user_name ||
-        (sbUser.email ? sbUser.email.split('@')[0] : 'Explorer'),
-      role: 'citizen',
-      points: 50,
-      avatar_url: sbUser.user_metadata?.avatar_url || sbUser.user_metadata?.picture || null,
-    };
-  };
+  // Exchange a Supabase OAuth session for a NaturePulse backend JWT, so the
+  // token we store matches what the backend `protect` middleware verifies.
+  const exchangeSupabaseSession = useCallback(async (session) => {
+    if (!session?.access_token) return null;
+    try {
+      const data = await apiFetch('/api/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ access_token: session.access_token }),
+      });
+      return data?.token && data?.user ? data : null;
+    } catch (err) {
+      console.warn('[AuthContext] Supabase session exchange failed:', err);
+      return null;
+    }
+  }, []);
 
   // On mount: restore session from Supabase OAuth or local JWT
   useEffect(() => {
     let mounted = true;
-
-    // Check demo mode first
-    if (sessionStorage.getItem(DEMO_KEY) === '1' && isDemoMode()) {
-      setUser(DEMO_USER);
-      setAuthToken('demo-token');
-      setIsDemoUser(true);
-      setLoading(false);
-      return;
-    }
 
     // Check Supabase session for Google Auth
     const checkSupabaseAuth = async () => {
@@ -70,10 +47,17 @@ export function AuthProvider({ children }) {
         if (!mounted) return false;
 
         if (session && session.user) {
-          const appUser = formatSupabaseUser(session.user);
-          setUser(appUser);
-          setAuthToken(session.access_token);
-          setToken(session.access_token);
+          const exchanged = await exchangeSupabaseSession(session);
+          if (!mounted) return false;
+          if (exchanged) {
+            setUser(exchanged.user);
+            setAuthToken(exchanged.token);
+            setToken(exchanged.token);
+          } else {
+            setUser(null);
+            setAuthToken(null);
+            clearToken();
+          }
           setLoading(false);
           return true;
         }
@@ -119,17 +103,21 @@ export function AuthProvider({ children }) {
       if (!mounted) return;
 
       if (session && session.user) {
-        const appUser = formatSupabaseUser(session.user);
-        setUser(appUser);
-        setAuthToken(session.access_token);
-        setToken(session.access_token);
-        setLoading(false);
-      } else if (event === 'SIGNED_OUT') {
-        if (!sessionStorage.getItem(DEMO_KEY)) {
+        const exchanged = await exchangeSupabaseSession(session);
+        if (!mounted) return;
+        if (exchanged) {
+          setUser(exchanged.user);
+          setAuthToken(exchanged.token);
+          setToken(exchanged.token);
+        } else if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
           setUser(null);
           setAuthToken(null);
           clearToken();
         }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setAuthToken(null);
+        clearToken();
       }
     });
 
@@ -176,23 +164,7 @@ export function AuthProvider({ children }) {
     clearToken();
     setAuthToken(null);
     setUser(null);
-    setIsDemoUser(false);
-    sessionStorage.removeItem(DEMO_KEY);
-    sessionStorage.removeItem('np_demo');
   }, []);
-
-  const enterDemoMode = useCallback(() => {
-    sessionStorage.setItem(DEMO_KEY, '1');
-    sessionStorage.setItem('np_demo', '1');
-    setUser(DEMO_USER);
-    setAuthToken('demo-token');
-    setIsDemoUser(true);
-    setLoading(false);
-  }, []);
-
-  const exitDemoMode = useCallback(() => {
-    logout();
-  }, [logout]);
 
   return (
     <AuthContext.Provider
@@ -201,13 +173,10 @@ export function AuthProvider({ children }) {
         token,
         session: token ? { access_token: token, user } : null,
         loading,
-        isDemoUser,
         login,
         register,
         signInWithGoogle,
         logout,
-        enterDemoMode,
-        exitDemoMode,
       }}
     >
       {children}

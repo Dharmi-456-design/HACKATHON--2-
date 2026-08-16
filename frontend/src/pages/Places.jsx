@@ -100,150 +100,6 @@ const NEARBY_TRANSLATIONS = {
   },
 };
 
-// Seed Real Local Discoveries (7 Total Places)
-const SEED_NEARBY_PLACES = [
-  {
-    id: 'p-1',
-    name: 'Peepal Canopy Study Sanctuary',
-    category: 'Study',
-    icon: '🎓',
-    lat: 23.0304,
-    lng: 72.5802,
-    distance: '450 m',
-    walkTime: '6 min walk',
-    rating: 4.9,
-    isOpen: true,
-    hours: '7:00 AM - 9:00 PM',
-    address: 'Sabarmati Riverfront Park, Block B',
-    city: 'Ahmedabad',
-    mapX: 220,
-    mapY: 280,
-    image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'High quietness score (94%), shade canopy, open now, within 6 min walk.',
-    price: 'Free',
-  },
-  {
-    id: 'p-2',
-    name: 'Sunset Hill Café',
-    category: 'Cafés',
-    icon: '☕',
-    lat: 23.0270,
-    lng: 72.5560,
-    distance: '1.3 km',
-    walkTime: '12 min walk',
-    rating: 4.8,
-    isOpen: true,
-    hours: '8:00 AM - 10:00 PM',
-    address: 'Law Garden Road, Opposite Museum',
-    city: 'Ahmedabad',
-    mapX: 520,
-    mapY: 310,
-    image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Organic herbal tea, outdoor seating under banyan shade, strong Wi-Fi.',
-    price: '$$',
-  },
-  {
-    id: 'p-3',
-    name: 'Heritage Textiles & Art Pavilion',
-    category: 'Culture',
-    icon: '🏛️',
-    lat: 23.0258,
-    lng: 72.5873,
-    distance: '2.1 km',
-    walkTime: '8 min drive',
-    rating: 4.7,
-    isOpen: false,
-    hours: 'Opens tomorrow 10:00 AM',
-    address: 'Old City Cultural Promenade',
-    city: 'Ahmedabad',
-    mapX: 440,
-    mapY: 140,
-    image: 'https://images.unsplash.com/photo-1518998053901-5348d3961a04?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Traditional indigo dye exhibitions and historic architecture.',
-    price: '$',
-  },
-  {
-    id: 'p-4',
-    name: 'Whispering Woods Nature Reserve',
-    category: 'Parks',
-    icon: '🌲',
-    lat: 23.0410,
-    lng: 72.5690,
-    distance: '0.8 km',
-    walkTime: '10 min walk',
-    rating: 4.7,
-    isOpen: true,
-    hours: '6:00 AM - 8:00 PM',
-    address: 'Eco Park North Sector',
-    city: 'Ahmedabad',
-    mapX: 300,
-    mapY: 120,
-    image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Dense pine tree canopy with shaded reading benches and birdsong.',
-    price: 'Free',
-  },
-  {
-    id: 'p-5',
-    name: 'Green Brew Organic Roastery',
-    category: 'Cafés',
-    icon: '☕',
-    lat: 23.0350,
-    lng: 72.5450,
-    distance: '1.1 km',
-    walkTime: '14 min walk',
-    rating: 4.6,
-    isOpen: true,
-    hours: '8:00 AM - 9:00 PM',
-    address: 'University Road Block 4',
-    city: 'Ahmedabad',
-    mapX: 180,
-    mapY: 340,
-    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Zero-waste coffee beans, solar-powered espresso, quiet balcony seating.',
-    price: '$$',
-  },
-  {
-    id: 'p-6',
-    name: 'Lotus Lake Botanical Park',
-    category: 'Parks',
-    icon: '🌲',
-    lat: 22.9970,
-    lng: 72.6025,
-    distance: '1.6 km',
-    walkTime: '20 min walk',
-    rating: 4.8,
-    isOpen: true,
-    hours: '5:30 AM - 7:30 PM',
-    address: 'East City Wetland Corridor',
-    city: 'Ahmedabad',
-    mapX: 580,
-    mapY: 200,
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Beautiful lotus flower pond with migratory bird watching deck.',
-    price: 'Free',
-  },
-  {
-    id: 'p-7',
-    name: 'Banyan Tree Quiet Reading Nook',
-    category: 'Study',
-    icon: '🎓',
-    lat: 23.0330,
-    lng: 72.5620,
-    distance: '650 m',
-    walkTime: '8 min walk',
-    rating: 4.9,
-    isOpen: true,
-    hours: '24 Hours',
-    address: 'Central Library Courtyard',
-    city: 'Ahmedabad',
-    mapX: 380,
-    mapY: 260,
-    image: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=800&q=80',
-    whyRecommend: 'Open 24/7, high-speed Wi-Fi, shaded courtyard under 100-year-old banyan.',
-    price: 'Free',
-  },
-];
-
 export default function Places() {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -286,14 +142,7 @@ export default function Places() {
   const [mapCenterOverride, setMapCenterOverride] = useState(null);
 
   // Persistent State
-  const [places, setPlaces] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pulse_nearby_places_v1');
-      return saved ? JSON.parse(saved) : SEED_NEARBY_PLACES;
-    } catch {
-      return SEED_NEARBY_PLACES;
-    }
-  });
+  const [places, setPlaces] = useState([]);
 
   const [savedPlaceIds, setSavedPlaceIds] = useState(() => {
     try {
@@ -381,16 +230,11 @@ export default function Places() {
     apiFetch('/api/places')
       .then((data) => {
         if (mounted && Array.isArray(data) && data.length > 0) {
-          // Merge API data with seed attributes
-          const merged = data.map((apiItem, idx) => {
-            const seedMatch = SEED_NEARBY_PLACES.find((s) => s.id === apiItem.id || s.id === apiItem._id) || SEED_NEARBY_PLACES[idx % SEED_NEARBY_PLACES.length];
-            return {
-              ...seedMatch,
-              ...apiItem,
-              id: apiItem.id || apiItem._id || seedMatch.id,
-              image: apiItem.image || apiItem.image_url || seedMatch.image,
-            };
-          });
+          const merged = data.map((apiItem) => ({
+            ...apiItem,
+            id: apiItem.id || apiItem._id,
+            image: apiItem.image || apiItem.image_url || '',
+          }));
           setPlaces(merged);
         }
       })
@@ -399,10 +243,6 @@ export default function Places() {
       mounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem('pulse_nearby_places_v1', JSON.stringify(places));
-  }, [places]);
 
   useEffect(() => {
     localStorage.setItem('pulse_saved_places_v1', JSON.stringify(savedPlaceIds));

@@ -5,11 +5,11 @@ import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
-  const { user, isDemoUser, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isLoggedIn = Boolean(user || isDemoUser);
+  const isLoggedIn = Boolean(user);
 
   const handleDashboardClick = (e) => {
     e.preventDefault();

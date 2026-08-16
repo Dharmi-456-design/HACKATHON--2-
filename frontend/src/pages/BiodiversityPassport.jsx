@@ -8,7 +8,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { isDemoMode } from '../utils/demoMode';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Leather & Gold Passport
@@ -54,39 +53,19 @@ const PASSPORT_TRANSLATIONS = {
   },
 };
 
-// Digital Stamps Seed
-const SEED_STAMPS = [
-  { id: 'st-1', title: 'FIRST AI CHAT 💬', date: 'Aug 10, 2026', category: 'Milestones', xp: 100, desc: 'Initiated first AI conversation on Urban Peepal Canopy.', icon: '💬', unlocked: true },
-  { id: 'st-2', title: 'MISSION MASTER ⚡', date: 'Aug 12, 2026', category: 'Missions', xp: 250, desc: 'Completed Peepal dawn listening challenge.', icon: '⚡', unlocked: true },
-  { id: 'st-3', title: 'STORY TRAVELER 📚', date: 'Aug 14, 2026', category: 'Stories', xp: 200, desc: 'Explored 3D decision story in Ancient Cedar Forest.', icon: '📚', unlocked: true },
-  { id: 'st-4', title: '7-DAY STREAK 🔥', date: 'Aug 15, 2026', category: 'Streaks', xp: 300, desc: 'Active every single day this week across Nature Lens and Pulse.', icon: '🔥', unlocked: true },
-  { id: 'st-5', title: 'MULTILINGUAL 🌐', date: 'Aug 16, 2026', category: 'Language', xp: 150, desc: 'Switched fluently between English, Gujarati and Hindi.', icon: '🌐', unlocked: true },
-  { id: 'st-6', title: 'ECO DISCOVERY 🌿', date: 'Aug 16, 2026', category: 'Discoveries', xp: 220, desc: 'Saved 5 micro-climate observations to Bio Map.', icon: '🌿', unlocked: true },
-];
-
 export default function BiodiversityPassport() {
   const { session, user } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = PASSPORT_TRANSLATIONS[lang] || PASSPORT_TRANSLATIONS.en;
   const token = session?.access_token;
-  const demoMode = isDemoMode();
 
   // Book Spread State (0: Cover & Overview, 1: Stamps & Trail, 2: AI Guide)
   const [spreadIndex, setSpreadIndex] = useState(0);
-  const [stamps, setStamps] = useState(() => {
-    if (!demoMode) return [];
-    try {
-      const saved = localStorage.getItem('pulse_passport_stamps_v1');
-      return saved ? JSON.parse(saved) : SEED_STAMPS;
-    } catch {
-      return SEED_STAMPS;
-    }
-  });
 
   const [flippedStampId, setFlippedStampId] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  // Real achievement data (non-demo)
+  // Real achievement data
   const [profile, setProfile] = useState(null);
   const [discoveries, setDiscoveries] = useState([]);
   const [missions, setMissions] = useState([]);
@@ -96,7 +75,7 @@ export default function BiodiversityPassport() {
   const [connection, setConnection] = useState(null);
 
   useEffect(() => {
-    if (demoMode || !token) return;
+    if (!token) return;
     Promise.all([
       apiFetch('/api/profile', {}, token),
       apiFetch('/api/discoveries', {}, token),
@@ -116,29 +95,21 @@ export default function BiodiversityPassport() {
         setConnection(c);
       })
       .catch(() => {});
-  }, [demoMode, token]);
-
-  useEffect(() => {
-    if (demoMode) localStorage.setItem('pulse_passport_stamps_v1', JSON.stringify(stamps));
-  }, [stamps, demoMode]);
+  }, [token]);
 
   const completedMissions = missions.filter((m) => m.status === 'completed');
   const actionsDone = actions.filter((a) => a.status === 'done' || a.status === 'completed');
-  const streakDays = demoMode ? 7 : streakData?.streak || 0;
+  const streakDays = streakData?.streak || 0;
   const xp = completedMissions.length * 150 + actionsDone.length * 25;
-  const score = demoMode ? 98 : connection?.overall || 0;
+  const score = connection?.overall || 0;
 
   const fmtDate = (iso) => {
     if (!iso) return '—';
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
-  const issueDate = demoMode
-    ? 'ISSUED: AUG 2026'
-    : `ISSUED: ${fmtDate(profile?.createdAt || new Date().toISOString()).toUpperCase()}`;
+  const issueDate = `ISSUED: ${fmtDate(profile?.createdAt || new Date().toISOString()).toUpperCase()}`;
 
-  const realStamps = demoMode
-    ? []
-    : [
+  const displayStamps = [
         discoveries.length > 0 && { id: 'st-d', title: 'ECO DISCOVERY 🌿', date: fmtDate(discoveries[discoveries.length - 1]?.createdAt), category: 'Discoveries', xp: 220, desc: `${discoveries.length} field observation${discoveries.length === 1 ? '' : 's'} recorded with the Lens.`, icon: '🌿' },
         completedMissions.length > 0 && { id: 'st-m', title: 'MISSION MASTER ⚡', date: fmtDate(completedMissions[completedMissions.length - 1]?.completed_at || completedMissions[completedMissions.length - 1]?.createdAt), category: 'Missions', xp: 250, desc: `Completed ${completedMissions.length} challenge${completedMissions.length === 1 ? '' : 's'}.`, icon: '⚡' },
         entries.length > 0 && { id: 'st-j', title: 'FIELD NOTES 📖', date: fmtDate(entries[entries.length - 1]?.createdAt), category: 'Journal', xp: 150, desc: `${entries.length} private reflection${entries.length === 1 ? '' : 's'} written.`, icon: '📖' },
@@ -146,11 +117,7 @@ export default function BiodiversityPassport() {
         streakDays > 0 && { id: 'st-k', title: `${Math.min(streakDays, 7)}-DAY STREAK 🔥`, date: 'Current', category: 'Streaks', xp: 300, desc: `Active ${streakDays} day${streakDays === 1 ? '' : 's'} in a row.`, icon: '🔥' },
       ].filter(Boolean);
 
-  const displayStamps = demoMode ? stamps : realStamps;
-
-  const level = demoMode
-    ? t.passportLevel
-    : score >= 80
+  const level = score >= 80
       ? 'Eco Guardian'
       : score >= 50
         ? 'Level 3 Explorer'
@@ -158,21 +125,14 @@ export default function BiodiversityPassport() {
           ? 'Level 1 Beginner'
           : 'Ready to Begin';
 
-  const journeyItems = demoMode
-    ? [
-        { title: 'First Conversation', desc: 'Discussed Peepal canopy cooling effect on Monday.', date: 'Aug 10, 2026' },
-        { title: 'Completed First Mission', desc: 'Finished dawn listening challenge (+100 XP).', date: 'Aug 12, 2026' },
-        { title: 'Read Interactive Story', desc: 'Explored 3D choice paths in Cedar Forest.', date: 'Aug 14, 2026' },
-        { title: 'Bio Map Unlocked', desc: 'Saved 6 micro-climate observation nodes.', date: 'Aug 16, 2026' },
-      ]
-    : [
+  const journeyItems = [
         discoveries.length > 0 && { title: 'First Observation', desc: `${discoveries[discoveries.length - 1]?.common_name || 'Field observation'} recorded with Nature Lens.`, date: fmtDate(discoveries[discoveries.length - 1]?.createdAt) },
         completedMissions.length > 0 && { title: 'First Completed Mission', desc: `Completed "${completedMissions[completedMissions.length - 1]?.title}".`, date: fmtDate(completedMissions[completedMissions.length - 1]?.completed_at || completedMissions[completedMissions.length - 1]?.createdAt) },
         entries.length > 0 && { title: 'First Field Note', desc: 'Wrote your first private reflection.', date: fmtDate(entries[entries.length - 1]?.createdAt) },
         actionsDone.length > 0 && { title: 'First Eco Action', desc: `Logged "${actionsDone[actionsDone.length - 1]?.title}".`, date: fmtDate(actionsDone[actionsDone.length - 1]?.updatedAt || actionsDone[actionsDone.length - 1]?.createdAt) },
       ].filter(Boolean);
 
-  const progressPct = demoMode ? 68 : Math.min(100, displayStamps.length * 15 + (score > 0 ? 10 : 0));
+  const progressPct = Math.min(100, displayStamps.length * 15 + (score > 0 ? 10 : 0));
 
   // Export Passport Handler
   const handleExportPassport = () => {
