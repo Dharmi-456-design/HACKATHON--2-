@@ -247,21 +247,21 @@ export default function Journal() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 relative z-10">
         
-        {/* ──────────────── ATMOSPHERIC DARK FOREST HERO BANNER (MATCHING SCREENSHOT) ──────────────── */}
-        <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[220px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 group">
+        {/* ──────────────── EXACT MATCH 2ND SCREENSHOT: ATMOSPHERIC DARK FOREST LANDSCAPE HERO BANNER ──────────────── */}
+        <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[260px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 group">
           
-          {/* HD Misty Forest Background Image */}
+          {/* High-Definition Dark Misty Forest Background Image (EXACT MATCH FOR 2ND SCREENSHOT) */}
           <div 
             className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1511497584788-8767611136f6?auto=format&fit=crop&w=1600&q=80')` }}
+            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80')` }}
           />
 
-          {/* Dark Overlay Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#040C07] via-[#040C07]/85 to-[#040C07]/40" />
+          {/* Dark Atmospheric Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#040C07] via-[#040C07]/85 to-[#040C07]/35" />
 
-          {/* Left Content Overlaid */}
+          {/* Left Overlaid Text Content */}
           <div className="space-y-3 max-w-xl relative z-10">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#4ADE80] bg-[#0E2015]/90 px-3 py-1 rounded-full border border-[#4ADE80]/30 backdrop-blur-md">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#4ADE80] bg-[#0E2015]/90 px-3.5 py-1 rounded-full border border-[#4ADE80]/40 backdrop-blur-md">
               <Leaf className="w-3.5 h-3.5" />
               {t.heroTag}
             </span>
@@ -270,13 +270,15 @@ export default function Journal() {
               {t.heroTitle} <span className="text-[#4ADE80]">{t.heroHighlight}</span>
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-200 font-normal leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-200 font-normal leading-relaxed drop-shadow">
               {t.heroSubtitle}
             </p>
           </div>
 
-          {/* Right Side Controls & Glowing Leaf Orb */}
-          <div className="flex items-center gap-4 relative z-10 shrink-0">
+          {/* Right Side Controls & Glowing Green Leaf Orb */}
+          <div className="flex items-center gap-5 relative z-10 shrink-0">
+            
+            {/* Zen Mode Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -290,22 +292,29 @@ export default function Journal() {
               <p className="text-[10px] text-slate-300 mt-0.5">{t.zenSubtitle}</p>
             </motion.button>
 
-            <div className="relative w-28 h-28 hidden sm:flex items-center justify-center">
+            {/* Glowing Green Energy Leaf Orb */}
+            <div className="relative w-32 h-32 hidden sm:flex items-center justify-center">
               <motion.div
-                animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.9, 0.5] }}
+                animate={{ scale: [1, 1.18, 1], opacity: [0.4, 0.9, 0.4] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute inset-0 rounded-full bg-[#4ADE80]/25 blur-xl"
+                className="absolute inset-0 rounded-full bg-[#4ADE80]/30 blur-2xl"
               />
-              <div className="w-24 h-24 rounded-full border-2 border-[#4ADE80]/60 flex items-center justify-center relative shadow-[0_0_40px_rgba(74,222,128,0.3)] backdrop-blur-xs">
+              <div className="w-28 h-28 rounded-full border-2 border-[#4ADE80]/60 flex items-center justify-center relative shadow-[0_0_50px_rgba(74,222,128,0.35)] backdrop-blur-xs">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+                  className="absolute inset-1 rounded-full border border-dashed border-[#4ADE80]/40"
+                />
                 <motion.div
                   animate={{ y: [-3, 3, -3] }}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  className="w-14 h-14 rounded-full bg-gradient-to-br from-[#2E6141] to-[#102B1B] border border-[#4ADE80] flex items-center justify-center shadow-lg text-2xl"
+                  className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2E6141] to-[#102B1B] border border-[#4ADE80] flex items-center justify-center shadow-xl text-3xl"
                 >
                   🍃
                 </motion.div>
               </div>
             </div>
+
           </div>
 
         </div>
