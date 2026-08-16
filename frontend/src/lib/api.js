@@ -233,7 +233,7 @@ function generatePulseResponse(content = '', language = 'en') {
   return `That is a great observation. Your local ecosystem is filled with subtle biodiversity rhythms. If you tell me more about your specific location or the time of day, I can give you even more targeted insights.`;
 }
 
-function getMockData(path, options = {}) {
+async function getMockData(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
   let body = {};
   try {
@@ -256,6 +256,35 @@ function getMockData(path, options = {}) {
       return { success: true };
     }
     return mockStories;
+  }
+
+  if (path.startsWith('/api/analyze')) {
+    const key = import.meta.env.VITE_GEMINI_API_KEY || '';
+    if (body.imageBase64) {
+      try {
+        const parts = [
+          { text: 'Analyze this outdoor photograph for Nature Lens. Return ONLY JSON with fields: identified (boolean), confidence ("high"|"medium"|"low"|"uncertain"), common_name (string or null), scientific_name (string or null), category ("plant"|"bird"|"insect"|"fungi"|"mammal"|"habitat"|"water"|"other"), visible_features (array of strings), description (string), why_it_matters (string), experience_suggestion (string), ecological_role (string), uncertainty_note (string or null).' },
+          { inline_data: { mime_type: body.contentType || 'image/jpeg', data: body.imageBase64 } }
+        ];
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${key}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts }],
+            generationConfig: { temperature: 0.2, responseMimeType: 'application/json' }
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const raw = data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim();
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            return { ...parsed, ai_available: true };
+          }
+        }
+      } catch (e) {}
+    }
+    return demoAnalyze(body.imageBase64);
   }
 
   if (path.startsWith('/api/pulse')) {
@@ -412,7 +441,7 @@ export async function apiFetch(path, options = {}, token = null) {
   } catch (err) {
     // Graceful fallback if backend is momentarily unreachable
   }
-  return getMockData(path, options);
+  return await getMockData(path, options);
 }
 
 export function fileToResizedBase64(file, max = 1400) {

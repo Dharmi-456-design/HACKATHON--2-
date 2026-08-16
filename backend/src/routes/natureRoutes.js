@@ -21,10 +21,16 @@ const {
   getStreak,
   getBestTime,
   getWeeklyRecap,
+  handlePulseChat,
+  handleImageAnalyze,
 } = require('../controllers/natureController');
 const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
+
+// AI Chatbot & Image Analysis
+router.post('/pulse', asyncHandler(handlePulseChat));
+router.post('/analyze', asyncHandler(handleImageAnalyze));
 
 // Profile
 router.route('/profile').get(asyncHandler(getProfile)).put(asyncHandler(updateProfile));
