@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
 
 // Multilingual UI Translations for Stories Universe
@@ -149,6 +150,7 @@ const STORIES_TRANSLATIONS = {
 
 export default function Stories() {
   const { session } = useAuth();
+  const { isDark } = useTheme();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = STORIES_TRANSLATIONS[lang] || STORIES_TRANSLATIONS.en;
 
@@ -521,7 +523,9 @@ export default function Stories() {
   });
 
   return (
-    <div className="min-h-screen bg-[#061009] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
+    <div className={`min-h-screen font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden transition-colors duration-300 ${
+      isDark ? 'bg-[#061009] text-slate-100' : 'bg-[#FAF7F0] text-[#0F2418]'
+    }`}>
       
       {/* ──────────────── IMMERSIVE STORY READER MODAL ──────────────── */}
       <AnimatePresence>
@@ -530,10 +534,14 @@ export default function Stories() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#061009]/95 backdrop-blur-2xl overflow-y-auto flex flex-col justify-between"
+            className={`fixed inset-0 z-50 backdrop-blur-2xl overflow-y-auto flex flex-col justify-between transition-colors ${
+              isDark ? 'bg-[#061009]/95 text-slate-100' : 'bg-[#FAF7F0]/98 text-[#0F2418]'
+            }`}
           >
             {/* Top Reader Navigation Bar */}
-            <div className="sticky top-0 z-20 bg-[#0A180F]/95 border-b border-[#20452F] px-4 sm:px-6 py-3.5 flex items-center justify-between backdrop-blur-xl gap-3">
+            <div className={`sticky top-0 z-20 px-4 sm:px-6 py-3.5 flex items-center justify-between backdrop-blur-xl gap-3 border-b transition-colors ${
+              isDark ? 'bg-[#0A180F]/95 border-[#20452F]' : 'bg-[#FDFBF7]/95 border-[#E3DDD1] shadow-xs'
+            }`}>
               <button
                 onClick={() => {
                   handleStopSpeech();
@@ -542,15 +550,21 @@ export default function Stories() {
                   setShowAIAssistant(false);
                   setAiResult(null);
                 }}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#13271C] border border-[#20422E] text-xs font-semibold text-slate-200 hover:text-white cursor-pointer shrink-0"
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-full border text-xs font-semibold cursor-pointer shrink-0 transition-colors ${
+                  isDark ? 'bg-[#13271C] border-[#20422E] text-slate-200 hover:text-white' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#183B28] hover:text-[#0F2418]'
+                }`}
               >
-                <ArrowLeft className="w-4 h-4 text-[#4ADE80]" />
+                <ArrowLeft className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                 <span className="hidden sm:inline">Exit Reader</span>
               </button>
 
               <div className="text-center min-w-0 flex-1 px-2">
-                <p className="text-[10px] uppercase tracking-wider text-[#4ADE80] font-semibold truncate">{readingStory.genre} · {readingStory.mood}</p>
-                <h3 className="font-display text-sm sm:text-base font-bold text-white truncate">{readingStory.title}</h3>
+                <p className={`text-[10px] uppercase tracking-wider font-semibold truncate ${
+                  isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
+                }`}>{readingStory.genre} · {readingStory.mood}</p>
+                <h3 className={`font-display text-sm sm:text-base font-bold truncate ${
+                  isDark ? 'text-white' : 'text-[#0F2418]'
+                }`}>{readingStory.title}</h3>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
@@ -558,8 +572,8 @@ export default function Stories() {
                   onClick={() => setShowAIAssistant((v) => !v)}
                   className={`px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-md transition-all ${
                     showAIAssistant 
-                      ? 'bg-[#4ADE80] text-[#07130B] font-bold' 
-                      : 'bg-[#1A3827] border border-[#4ADE80]/50 text-[#4ADE80] hover:bg-[#20452F]'
+                      ? isDark ? 'bg-[#4ADE80] text-[#07130B] font-bold' : 'bg-[#183B28] text-[#FAF7F0] font-bold'
+                      : isDark ? 'bg-[#1A3827] border border-[#4ADE80]/50 text-[#4ADE80] hover:bg-[#20452F]' : 'bg-[#E1EFE0] border border-[#C3DEC0] text-[#183B28] hover:bg-[#D4E8D2]'
                   }`}
                 >
                   <Wand2 className="w-3.5 h-3.5" />
@@ -568,10 +582,10 @@ export default function Stories() {
 
                 <button
                   onClick={() => toggleSaveStory(readingStory.id)}
-                  className={`p-2 rounded-full border cursor-pointer ${
+                  className={`p-2 rounded-full border cursor-pointer transition-colors ${
                     savedStoryIds.includes(readingStory.id)
-                      ? 'bg-[#4ADE80]/20 border-[#4ADE80] text-[#4ADE80]'
-                      : 'bg-[#13271C] border-[#20422E] text-slate-400 hover:text-white'
+                      ? isDark ? 'bg-[#4ADE80]/20 border-[#4ADE80] text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#183B28] text-[#183B28]'
+                      : isDark ? 'bg-[#13271C] border-[#20422E] text-slate-400 hover:text-white' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#3E5C48] hover:text-[#0F2418]'
                   }`}
                   title="Save Story"
                 >
@@ -581,13 +595,17 @@ export default function Stories() {
             </div>
 
             {/* ──────────────── AI VOICE TO READ AUDIO CONTROL BAR ──────────────── */}
-            <div className="bg-[#0E2015] border-b border-[#20452F] px-4 sm:px-6 py-3 sticky top-[57px] z-10 shadow-lg">
+            <div className={`border-b px-4 sm:px-6 py-3 sticky top-[57px] z-10 shadow-sm transition-colors ${
+              isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1]'
+            }`}>
               <div className="max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   {!isSpeaking ? (
                     <button
                       onClick={() => handleSpeakStory()}
-                      className="px-4 py-1.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-[#4ADE80]/20"
+                      className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-md ${
+                        isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                      }`}
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       <span>Listen to Story</span>
@@ -596,7 +614,9 @@ export default function Stories() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={handlePauseResumeSpeech}
-                        className="px-3 py-1.5 rounded-full bg-[#1A3827] border border-[#4ADE80] text-[#4ADE80] text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        className={`px-3 py-1.5 rounded-full border text-xs font-bold flex items-center gap-1 cursor-pointer ${
+                          isDark ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]' : 'bg-emerald-50 border-emerald-600 text-emerald-800'
+                        }`}
                       >
                         {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5" />}
                         <span>{isPaused ? 'Resume' : 'Pause'}</span>
@@ -604,7 +624,7 @@ export default function Stories() {
 
                       <button
                         onClick={handleStopSpeech}
-                        className="p-1.5 rounded-full bg-[#13271C] border border-red-500/40 text-red-300 hover:bg-red-900/30 text-xs cursor-pointer"
+                        className="p-1.5 rounded-full bg-red-500/10 border border-red-500/40 text-red-500 hover:bg-red-500/20 text-xs cursor-pointer"
                         title="Stop Voice"
                       >
                         <Square className="w-3.5 h-3.5 fill-current" />
@@ -615,10 +635,10 @@ export default function Stories() {
                   {/* Equalizer Animation while speaking */}
                   {isSpeaking && !isPaused && (
                     <div className="flex items-center gap-0.5 px-2">
-                      <span className="w-1 h-3 bg-[#4ADE80] animate-pulse rounded-full" style={{ animationDuration: '0.4s' }} />
-                      <span className="w-1 h-5 bg-[#4ADE80] animate-pulse rounded-full" style={{ animationDuration: '0.7s' }} />
-                      <span className="w-1 h-2 bg-[#4ADE80] animate-pulse rounded-full" style={{ animationDuration: '0.3s' }} />
-                      <span className="w-1 h-4 bg-[#4ADE80] animate-pulse rounded-full" style={{ animationDuration: '0.5s' }} />
+                      <span className={`w-1 h-3 rounded-full animate-pulse ${isDark ? 'bg-[#4ADE80]' : 'bg-[#183B28]'}`} style={{ animationDuration: '0.4s' }} />
+                      <span className={`w-1 h-5 rounded-full animate-pulse ${isDark ? 'bg-[#4ADE80]' : 'bg-[#183B28]'}`} style={{ animationDuration: '0.7s' }} />
+                      <span className={`w-1 h-2 rounded-full animate-pulse ${isDark ? 'bg-[#4ADE80]' : 'bg-[#183B28]'}`} style={{ animationDuration: '0.3s' }} />
+                      <span className={`w-1 h-4 rounded-full animate-pulse ${isDark ? 'bg-[#4ADE80]' : 'bg-[#183B28]'}`} style={{ animationDuration: '0.5s' }} />
                     </div>
                   )}
                 </div>
@@ -636,8 +656,8 @@ export default function Stories() {
                     }}
                     className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
                       ambientAudioActive
-                        ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]'
-                        : 'bg-[#13271C] border-[#20422E] text-slate-400 hover:text-white'
+                        ? isDark ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#183B28] text-[#183B28] font-bold'
+                        : isDark ? 'bg-[#13271C] border-[#20422E] text-slate-400 hover:text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#3E5C48] hover:text-[#0F2418]'
                     }`}
                     title="Toggle Soothing Forest Ambient Frequency"
                   >
@@ -646,7 +666,9 @@ export default function Stories() {
                   </button>
 
                   {/* Voice Speed Selector */}
-                  <div className="flex items-center gap-1 bg-[#13271C] border border-[#20422E] rounded-full p-0.5">
+                  <div className={`flex items-center gap-1 border rounded-full p-0.5 ${
+                    isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#FDFBF7] border-[#E3DDD1]'
+                  }`}>
                     {[0.8, 1.0, 1.25].map((rate) => (
                       <button
                         key={rate}
@@ -656,10 +678,10 @@ export default function Stories() {
                             handleSpeakStory();
                           }
                         }}
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer ${
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-colors ${
                           speechRate === rate
-                            ? 'bg-[#4ADE80] text-[#07130B]'
-                            : 'text-slate-400 hover:text-white'
+                            ? isDark ? 'bg-[#4ADE80] text-[#07130B]' : 'bg-[#183B28] text-[#FAF7F0]'
+                            : isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
                         }`}
                       >
                         {rate}x
@@ -677,7 +699,9 @@ export default function Stories() {
                           handleSpeakStory();
                         }
                       }}
-                      className="bg-[#13271C] border border-[#20422E] text-slate-300 text-[10px] rounded-full px-2 py-1 outline-none max-w-[110px] truncate"
+                      className={`border text-[10px] rounded-full px-2 py-1 outline-none max-w-[110px] truncate ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+                      }`}
                     >
                       {availableVoices.map((v, i) => (
                         <option key={i} value={i}>
@@ -697,13 +721,19 @@ export default function Stories() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="max-w-2xl mx-auto my-4 p-5 bg-[#112318] border border-[#4ADE80]/50 rounded-3xl shadow-2xl space-y-4 z-30"
+                  className={`max-w-2xl mx-auto my-4 p-5 rounded-3xl shadow-2xl space-y-4 z-30 border ${
+                    isDark ? 'bg-[#112318] border-[#4ADE80]/50 text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+                  }`}
                 >
-                  <div className="flex justify-between items-center border-b border-[#20452F] pb-2.5">
-                    <p className="text-sm font-bold text-[#4ADE80] flex items-center gap-2">
+                  <div className={`flex justify-between items-center border-b pb-2.5 ${
+                    isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+                  }`}>
+                    <p className={`text-sm font-bold flex items-center gap-2 ${
+                      isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
+                    }`}>
                       <Sparkles className="w-4 h-4" /> {t.aiAssistantTitle}
                     </p>
-                    <button onClick={() => setShowAIAssistant(false)} className="text-slate-400 hover:text-white cursor-pointer">
+                    <button onClick={() => setShowAIAssistant(false)} className={`cursor-pointer ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -713,7 +743,9 @@ export default function Stories() {
                     <button
                       disabled={aiAssistantLoading}
                       onClick={() => executeAIAssist('rewrite')}
-                      className="p-2.5 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] transition-all cursor-pointer flex items-center gap-1.5"
+                      className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80]' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:bg-[#E1EFE0] hover:border-[#183B28]'
+                      }`}
                     >
                       <Sparkles className="w-3.5 h-3.5 text-[#4ADE80]" />
                       <span>{t.rewriteSection}</span>
@@ -722,93 +754,104 @@ export default function Stories() {
                     <button
                       disabled={aiAssistantLoading}
                       onClick={() => executeAIAssist('mood')}
-                      className="p-2.5 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] transition-all cursor-pointer flex items-center gap-1.5"
+                      className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80]' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:bg-[#E1EFE0] hover:border-[#183B28]'
+                      }`}
                     >
-                      <Sliders className="w-3.5 h-3.5 text-amber-300" />
+                      <Sliders className="w-3.5 h-3.5 text-amber-500" />
                       <span>{t.changeMood}</span>
                     </button>
 
                     <button
                       disabled={aiAssistantLoading}
                       onClick={() => executeAIAssist('ending')}
-                      className="p-2.5 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] transition-all cursor-pointer flex items-center gap-1.5"
+                      className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80]' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:bg-[#E1EFE0] hover:border-[#183B28]'
+                      }`}
                     >
-                      <Brain className="w-3.5 h-3.5 text-purple-300" />
+                      <Brain className="w-3.5 h-3.5 text-purple-500" />
                       <span>{t.alternateEnding}</span>
                     </button>
 
                     <button
                       disabled={aiAssistantLoading}
                       onClick={() => executeAIAssist('continue')}
-                      className="p-2.5 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] transition-all cursor-pointer flex items-center gap-1.5"
+                      className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80]' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:bg-[#E1EFE0] hover:border-[#183B28]'
+                      }`}
                     >
-                      <ChevronRight className="w-3.5 h-3.5 text-emerald-300" />
+                      <ChevronRight className="w-3.5 h-3.5 text-emerald-600" />
                       <span>{t.continueStory}</span>
                     </button>
 
                     <button
                       disabled={aiAssistantLoading}
                       onClick={() => executeAIAssist('translate')}
-                      className="p-2.5 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] transition-all cursor-pointer flex items-center gap-1.5 col-span-2 sm:col-span-2"
+                      className={`p-2.5 rounded-2xl border transition-all cursor-pointer flex items-center gap-1.5 col-span-2 sm:col-span-2 ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80]' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:bg-[#E1EFE0] hover:border-[#183B28]'
+                      }`}
                     >
-                      <Globe className="w-3.5 h-3.5 text-blue-300" />
+                      <Globe className="w-3.5 h-3.5 text-blue-500" />
                       <span>Translate to {selectedTargetLang}</span>
                     </button>
                   </div>
 
-                  {/* Custom Command Input */}
+                  {/* Custom AI Prompt Input */}
                   <div className="flex gap-2">
                     <input
+                      type="text"
                       value={customAssistPrompt}
                       onChange={(e) => setCustomAssistPrompt(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && customAssistPrompt.trim()) {
-                          executeAIAssist('custom', customAssistPrompt);
+                        if (e.key === 'Enter') {
+                          executeAIAssist('custom');
                         }
                       }}
                       placeholder={t.customPromptPlaceholder}
-                      className="flex-1 bg-[#0E2015] border border-[#20422E] rounded-2xl px-4 py-2.5 text-xs text-white outline-none focus:border-[#4ADE80]"
+                      className={`flex-1 rounded-2xl px-3.5 py-2.5 text-xs outline-none transition-colors ${
+                        isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
+                      }`}
                     />
                     <button
                       disabled={aiAssistantLoading || !customAssistPrompt.trim()}
-                      onClick={() => executeAIAssist('custom', customAssistPrompt)}
-                      className="px-4 py-2.5 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] transition-all disabled:opacity-40 cursor-pointer"
+                      onClick={() => executeAIAssist('custom')}
+                      className={`px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-1 cursor-pointer disabled:opacity-40 transition-all ${
+                        isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                      }`}
                     >
                       <Send className="w-3.5 h-3.5" />
                     </button>
                   </div>
 
-                  {/* Loading Indicator */}
+                  {/* AI Generating Loading State */}
                   {aiAssistantLoading && (
-                    <div className="text-center py-3 text-xs text-[#4ADE80] font-semibold animate-pulse flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2 py-3 text-xs font-semibold text-[#4ADE80] animate-pulse">
                       <Sparkles className="w-4 h-4 animate-spin" />
-                      <span>AI Assistant is crafting real-time enhancement…</span>
+                      <span>AI is weaving story variations…</span>
                     </div>
                   )}
 
-                  {/* AI Error */}
-                  {storyError && (
-                    <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200 flex items-start gap-2">
-                      <span className="mt-0.5 text-red-400 font-bold">✕</span>
-                      <span>{storyError}</span>
-                    </div>
-                  )}
-
-                  {/* AI Result Card */}
+                  {/* AI Result Box */}
                   {aiResult && (
                     <motion.div
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-[#0E2015] border border-[#4ADE80]/40 rounded-2xl p-4 space-y-3"
+                      className={`border rounded-2xl p-4 space-y-3 ${
+                        isDark ? 'bg-[#0E2015] border-[#4ADE80]/40 text-white' : 'bg-[#E1EFE0]/60 border-[#C3DEC0] text-[#0F2418]'
+                      }`}
                     >
                       <div className="flex justify-between items-center">
-                        <span className="text-[11px] font-bold text-[#4ADE80] uppercase tracking-wider">
+                        <span className={`text-[11px] font-bold uppercase tracking-wider ${
+                          isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
+                        }`}>
                           ✨ AI Generated Enhancement
                         </span>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleSpeakStory(aiResult.text)}
-                            className="text-xs text-slate-300 hover:text-[#4ADE80] flex items-center gap-1 cursor-pointer"
+                            className={`text-xs flex items-center gap-1 cursor-pointer ${
+                              isDark ? 'text-slate-300 hover:text-[#4ADE80]' : 'text-[#3E5C48] hover:text-[#183B28]'
+                            }`}
                             title="Read this aloud"
                           >
                             <Volume2 className="w-3.5 h-3.5" />
@@ -820,7 +863,9 @@ export default function Stories() {
                               setCopiedNotification(true);
                               setTimeout(() => setCopiedNotification(false), 2000);
                             }}
-                            className="text-xs text-slate-300 hover:text-[#4ADE80] flex items-center gap-1 cursor-pointer"
+                            className={`text-xs flex items-center gap-1 cursor-pointer ${
+                              isDark ? 'text-slate-300 hover:text-[#4ADE80]' : 'text-[#3E5C48] hover:text-[#183B28]'
+                            }`}
                           >
                             <Copy className="w-3.5 h-3.5" />
                             <span>{copiedNotification ? 'Copied!' : 'Copy'}</span>
@@ -828,26 +873,34 @@ export default function Stories() {
                         </div>
                       </div>
 
-                      <p className="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed font-sans bg-[#13271C] p-3 rounded-xl border border-[#20422E]">
+                      <p className={`text-xs sm:text-sm whitespace-pre-line leading-relaxed font-sans p-3 rounded-xl border ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-200' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+                      }`}>
                         {aiResult.text}
                       </p>
 
                       <div className="flex flex-wrap gap-2 pt-1">
                         <button
                           onClick={() => applyAIResultToStory('append')}
-                          className="px-4 py-2 rounded-xl bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] transition-all cursor-pointer shadow-md"
+                          className={`px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-md ${
+                            isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                          }`}
                         >
                           ➕ Append to Narrative
                         </button>
                         <button
                           onClick={() => applyAIResultToStory('replace')}
-                          className="px-4 py-2 rounded-xl bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/40 font-bold text-xs hover:bg-[#20452F] transition-all cursor-pointer"
+                          className={`px-4 py-2 rounded-xl border font-bold text-xs transition-all cursor-pointer ${
+                            isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/40 hover:bg-[#20452F]' : 'bg-[#EDE6D8] text-[#183B28] border-[#D4CBB8] hover:bg-[#E3DDD1]'
+                          }`}
                         >
                           🔄 Replace Narrative
                         </button>
                         <button
                           onClick={() => setAiResult(null)}
-                          className="px-3 py-2 rounded-xl bg-[#13271C] text-slate-400 hover:text-white text-xs cursor-pointer"
+                          className={`px-3 py-2 rounded-xl text-xs cursor-pointer ${
+                            isDark ? 'bg-[#13271C] text-slate-400 hover:text-white' : 'bg-[#EDE6D8] text-[#3E5C48] hover:text-[#0F2418]'
+                          }`}
                         >
                           Dismiss
                         </button>
@@ -860,7 +913,9 @@ export default function Stories() {
                     <div className="flex justify-end pt-1">
                       <button
                         onClick={handleUndoNarrative}
-                        className="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer"
+                        className={`text-xs flex items-center gap-1 cursor-pointer ${
+                          isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
+                        }`}
                       >
                         <RotateCcw className="w-3 h-3" />
                         <span>Undo Last AI Edit</span>
@@ -874,32 +929,44 @@ export default function Stories() {
             {/* Main Reader Content */}
             <div className="max-w-2xl mx-auto px-6 py-10 space-y-8 flex-1">
               <div className="space-y-3 text-center">
-                <span className="px-3.5 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30 text-xs font-bold uppercase tracking-widest">
+                <span className={`px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-widest border ${
+                  isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+                }`}>
                   {readingStory.genre} · {readingStory.mood}
                 </span>
-                <h1 className="font-display text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                <h1 className={`font-display text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight ${
+                  isDark ? 'text-white' : 'text-[#0F2418]'
+                }`}>
                   {readingStory.title}
                 </h1>
-                <p className="text-xs text-slate-400">{readingStory.readTime}</p>
+                <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{readingStory.readTime}</p>
               </div>
 
               {readingStory.coverImage && (
                 <img
                   src={readingStory.coverImage}
                   alt={readingStory.title}
-                  className="w-full h-72 object-cover rounded-3xl border border-[#20452F] shadow-2xl"
+                  className={`w-full h-72 object-cover rounded-3xl border shadow-2xl ${
+                    isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+                  }`}
                 />
               )}
 
               {/* Story Narrative Text */}
-              <div className="prose prose-invert max-w-none text-base sm:text-lg leading-relaxed text-slate-200 font-normal whitespace-pre-line space-y-4">
+              <div className={`max-w-none text-base sm:text-lg leading-relaxed font-normal whitespace-pre-line space-y-4 ${
+                isDark ? 'text-slate-200' : 'text-[#2D4536]'
+              }`}>
                 {readingStory.narrative}
               </div>
 
               {/* Interactive Choice Branching Section */}
               {readingStory.isInteractive && readingStory.choices && (
-                <div className="bg-[#112318] border border-[#4ADE80]/40 p-6 rounded-3xl space-y-4 shadow-xl">
-                  <p className="text-sm font-bold text-[#4ADE80] uppercase tracking-wider flex items-center gap-2">
+                <div className={`p-6 rounded-3xl space-y-4 shadow-xl border ${
+                  isDark ? 'bg-[#112318] border-[#4ADE80]/40 text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+                }`}>
+                  <p className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${
+                    isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
+                  }`}>
                     <Compass className="w-4 h-4" /> {t.choicePrompt}
                   </p>
 
@@ -910,8 +977,12 @@ export default function Stories() {
                         onClick={() => setSelectedChoiceIndex(idx)}
                         className={`w-full p-4 rounded-2xl border text-left text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                           selectedChoiceIndex === idx
-                            ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-md'
-                            : 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
+                            ? isDark
+                              ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-md'
+                              : 'bg-[#E1EFE0] border-[#183B28] text-[#0F2418] font-semibold shadow-md'
+                            : isDark
+                              ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
+                              : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:bg-[#EDE6D8]'
                         }`}
                       >
                         {choice.text}
@@ -924,13 +995,17 @@ export default function Stories() {
                     <motion.div
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-[#0E2015] border border-[#20422E] p-4 rounded-2xl text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed mt-3"
+                      className={`border p-4 rounded-2xl text-xs sm:text-sm whitespace-pre-line leading-relaxed mt-3 ${
+                        isDark ? 'bg-[#0E2015] border-[#20422E] text-slate-200' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#0F2418]'
+                      }`}
                     >
                       <div className="flex justify-between items-center mb-1">
-                        <p className="font-semibold text-[#4ADE80]">🌿 Chosen Branch Outcome:</p>
+                        <p className={`font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>🌿 Chosen Branch Outcome:</p>
                         <button
                           onClick={() => handleSpeakStory(readingStory.choices[selectedChoiceIndex].nextText)}
-                          className="text-xs text-[#4ADE80] hover:underline flex items-center gap-1 cursor-pointer"
+                          className={`text-xs hover:underline flex items-center gap-1 cursor-pointer ${
+                            isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
+                          }`}
                         >
                           <Volume2 className="w-3 h-3" />
                           <span>Listen</span>
@@ -943,8 +1018,10 @@ export default function Stories() {
               )}
 
               {/* Reader Reactions Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-6 border-t border-[#20452F]">
-                <span className="text-xs text-slate-400">Reactions</span>
+              <div className={`flex flex-wrap items-center justify-between gap-3 pt-6 border-t ${
+                isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+              }`}>
+                <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>Reactions</span>
                 <div className="flex flex-wrap items-center gap-2">
                   {[
                     { key: 'magical', label: t.magical, icon: '✨' },
@@ -956,7 +1033,9 @@ export default function Stories() {
                     <button
                       key={rx.key}
                       onClick={() => handleReaction(readingStory.id, rx.key)}
-                      className="px-3 py-1.5 rounded-full bg-[#13271C] border border-[#20422E] text-xs font-medium text-slate-300 hover:text-white cursor-pointer"
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium cursor-pointer ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:bg-[#EDE6D8]'
+                      }`}
                     >
                       <span>{rx.icon}</span> <span>{readingStory.reactions?.[rx.key] || 0}</span>
                     </button>
@@ -982,22 +1061,32 @@ export default function Stories() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#112318] border border-[#4ADE80]/40 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 my-auto"
+              className={`rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 my-auto border transition-colors ${
+                isDark ? 'bg-[#112318] border-[#4ADE80]/40 text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center border-b border-[#20452F] pb-3">
-                <h2 className="font-display text-2xl font-bold text-white flex items-center gap-2">
-                  <Wand2 className="w-5 h-5 text-[#4ADE80]" />
+              <div className={`flex justify-between items-center border-b pb-3 ${
+                isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+              }`}>
+                <h2 className={`font-display text-2xl font-bold flex items-center gap-2 ${
+                  isDark ? 'text-white' : 'text-[#0F2418]'
+                }`}>
+                  <Wand2 className={`w-5 h-5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                   <span>{t.createModalTitle}</span>
                 </h2>
-                <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white cursor-pointer">
+                <button onClick={() => setShowCreateModal(false)} className={`cursor-pointer ${
+                  isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
+                }`}>
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <form onSubmit={handleCreateStory} className="space-y-4">
                 <div>
-                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
+                  <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
+                    isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                  }`}>
                     {t.promptLabel}
                   </label>
                   <textarea
@@ -1006,31 +1095,41 @@ export default function Stories() {
                     value={newPrompt}
                     onChange={(e) => setNewPrompt(e.target.value)}
                     placeholder="e.g., A girl discovers glowing spores in an ancient cedar forest that respond to birdsong..."
-                    className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl p-3.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80] resize-none"
+                    className={`w-full rounded-2xl p-3.5 text-xs sm:text-sm outline-none resize-none transition-colors ${
+                      isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
+                    }`}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
+                    <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
+                      isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                    }`}>
                       {t.titleLabel}
                     </label>
                     <input
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
                       placeholder="Story Title (Optional)"
-                      className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
+                      className={`w-full rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm outline-none transition-colors ${
+                        isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
+                      }`}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
+                    <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
+                      isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                    }`}>
                       {t.genreLabel}
                     </label>
                     <select
                       value={newGenre}
                       onChange={(e) => setNewGenre(e.target.value)}
-                      className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-3 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
+                      className={`w-full rounded-2xl px-3 py-2.5 text-xs sm:text-sm outline-none transition-colors ${
+                        isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
+                      }`}
                     >
                       <option value="✨ Fantasy">{t.genreFantasy}</option>
                       <option value="🚀 Sci-Fi">{t.genreSciFi}</option>
@@ -1045,15 +1144,17 @@ export default function Stories() {
                 <button
                   type="submit"
                   disabled={isGenerating}
-                  className="w-full py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className={`w-full py-3 rounded-full font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 ${
+                    isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                  }`}
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>{isGenerating ? t.generatingText : t.generateBtn}</span>
                 </button>
 
                 {storyError && (
-                  <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200 flex items-start gap-2">
-                    <span className="mt-0.5 text-red-400 font-bold">✕</span>
+                  <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-500 flex items-start gap-2">
+                    <span className="mt-0.5 font-bold">✕</span>
                     <span>{storyError}</span>
                   </div>
                 )}
@@ -1067,11 +1168,15 @@ export default function Stories() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
         {/* ──────────────── HERO BANNER ──────────────── */}
-        <div className="relative bg-gradient-to-r from-[#0E2316] via-[#112D1B] to-[#0A1A10] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden">
+        <div className={`relative rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden border transition-colors ${
+          isDark ? 'bg-gradient-to-r from-[#0E2316] via-[#112D1B] to-[#0A1A10] border-[#20452F] text-white' : 'bg-gradient-to-r from-[#EDE6D8] via-[#F2ECE1] to-[#FAF7F0] border-[#E3DDD1] text-[#0F2418] shadow-sm'
+        }`}>
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="space-y-2 max-w-xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30 text-xs font-bold uppercase tracking-widest">
-                <Sparkles className="w-3.5 h-3.5 text-[#4ADE80] animate-pulse" />
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border ${
+                isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+              }`}>
+                <Sparkles className={`w-3.5 h-3.5 animate-pulse ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                 {t.heroTag}
               </span>
               <motion.h1
@@ -1081,11 +1186,15 @@ export default function Stories() {
                 className="font-display text-3xl sm:text-5xl font-extrabold tracking-tight cursor-pointer select-none"
                 title="Click to flip title!"
               >
-                <span className="inline-block bg-gradient-to-r from-white via-emerald-200 to-[#4ADE80] bg-clip-text text-transparent drop-shadow-md">
+                <span className={`inline-block bg-clip-text text-transparent drop-shadow-xs ${
+                  isDark ? 'bg-gradient-to-r from-white via-emerald-200 to-[#4ADE80]' : 'bg-gradient-to-r from-[#0F2418] via-[#183B28] to-[#2D5E40]'
+                }`}>
                   {isTitleFlipped ? '✨ Neural Ecosystem Stories ✨' : t.heroTitle}
                 </span>
               </motion.h1>
-              <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
+              <p className={`text-xs sm:text-sm font-normal leading-relaxed ${
+                isDark ? 'text-slate-300/90' : 'text-[#3E5C48]'
+              }`}>
                 {t.heroSubtitle}
               </p>
             </div>
@@ -1094,7 +1203,9 @@ export default function Stories() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowCreateModal(true)}
-              className="px-6 py-3.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/25 flex items-center gap-2 cursor-pointer shrink-0"
+              className={`px-6 py-3.5 rounded-full font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center gap-2 cursor-pointer shrink-0 ${
+                isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77] shadow-[#4ADE80]/25' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+              }`}
             >
               <Plus className="w-4 h-4" />
               <span>{t.createStoryBtn}</span>
@@ -1104,7 +1215,9 @@ export default function Stories() {
 
         {/* ──────────────── FEATURED CINEMATIC SPOTLIGHT ──────────────── */}
         {featuredStory && (
-          <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl overflow-hidden shadow-2xl">
+          <div className={`rounded-3xl overflow-hidden shadow-2xl border transition-colors ${
+            isDark ? 'bg-[#0E2015] border-[#20452F] text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] shadow-sm'
+          }`}>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
               <div className="lg:col-span-7 relative h-72 lg:h-96 overflow-hidden">
                 <img
@@ -1112,23 +1225,31 @@ export default function Stories() {
                   alt={featuredStory.title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0E2015] via-transparent to-transparent lg:hidden" />
+                <div className={`absolute inset-0 lg:hidden ${
+                  isDark ? 'bg-gradient-to-t from-[#0E2015] via-transparent to-transparent' : 'bg-gradient-to-t from-[#FDFBF7] via-transparent to-transparent'
+                }`} />
               </div>
 
               <div className="lg:col-span-5 p-6 sm:p-8 flex flex-col justify-between space-y-6">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/40 text-[10px] font-bold uppercase tracking-wider">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                      isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/40' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+                    }`}>
                       ★ FEATURED CHRONICLE
                     </span>
-                    <span className="text-xs text-slate-400">{featuredStory.readTime}</span>
+                    <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{featuredStory.readTime}</span>
                   </div>
 
-                  <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+                  <h2 className={`font-display text-2xl sm:text-3xl font-extrabold leading-tight ${
+                    isDark ? 'text-white' : 'text-[#0F2418]'
+                  }`}>
                     {featuredStory.title}
                   </h2>
 
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-3">
+                  <p className={`text-xs sm:text-sm leading-relaxed line-clamp-3 ${
+                    isDark ? 'text-slate-300' : 'text-[#3E5C48]'
+                  }`}>
                     {featuredStory.summary}
                   </p>
                 </div>
@@ -1136,7 +1257,9 @@ export default function Stories() {
                 <div className="flex flex-wrap gap-3 pt-2">
                   <button
                     onClick={() => setReadingStory(featuredStory)}
-                    className="px-6 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all flex items-center gap-2 cursor-pointer shadow-lg shadow-[#4ADE80]/20"
+                    className={`px-6 py-3 rounded-full font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-lg ${
+                      isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77] shadow-[#4ADE80]/20' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                    }`}
                   >
                     <BookOpen className="w-4 h-4" />
                     <span>{t.readStory}</span>
@@ -1147,9 +1270,11 @@ export default function Stories() {
                       setReadingStory(featuredStory);
                       setTimeout(() => handleSpeakStory(`${featuredStory.title}. ${featuredStory.narrative}`), 300);
                     }}
-                    className="px-5 py-3 rounded-full bg-[#13271C] border border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80] text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer"
+                    className={`px-5 py-3 rounded-full border text-xs sm:text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                      isDark ? 'bg-[#13271C] border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80]' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]'
+                    }`}
                   >
-                    <Volume2 className="w-4 h-4 text-[#4ADE80]" />
+                    <Volume2 className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                     <span>{t.listenStory}</span>
                   </button>
                 </div>
@@ -1159,15 +1284,19 @@ export default function Stories() {
         )}
 
         {/* ──────────────── CONTROLS: SEARCH & GENRE PILLS ──────────────── */}
-        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-5 space-y-4 shadow-xl">
+        <div className={`rounded-3xl p-5 space-y-4 shadow-xl border transition-colors ${
+          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+        }`}>
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <div className="relative flex-1 w-full">
-              <Compass className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <Compass className={`w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`} />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search chronicles, topics, mycelial networks…"
-                className="w-full bg-[#13271C] border border-[#20422E] rounded-2xl pl-11 pr-4 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
+                className={`w-full rounded-2xl pl-11 pr-4 py-2.5 text-xs sm:text-sm outline-none transition-colors ${
+                  isDark ? 'bg-[#13271C] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
+                }`}
               />
             </div>
 
@@ -1183,8 +1312,12 @@ export default function Stories() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                     activeTab === tab.id
-                      ? 'bg-[#4ADE80] text-[#07130B] font-bold shadow-md'
-                      : 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white'
+                      ? isDark
+                        ? 'bg-[#4ADE80] text-[#07130B] font-bold shadow-md'
+                        : 'bg-[#183B28] text-[#FAF7F0] font-bold shadow-sm'
+                      : isDark
+                        ? 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white'
+                        : 'bg-[#EDE6D8] border border-[#D4CBB8] text-[#3E5C48] hover:bg-[#E3DDD1]'
                   }`}
                 >
                   {tab.label}
@@ -1213,8 +1346,12 @@ export default function Stories() {
                   onClick={() => setSelectedGenre(val)}
                   className={`px-3.5 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     selectedGenre === val
-                      ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80]'
-                      : 'bg-[#13271C] border-[#20422E] text-slate-300 hover:bg-[#1A3827]'
+                      ? isDark
+                        ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80]'
+                        : 'bg-[#183B28] text-[#FAF7F0] border-[#183B28]'
+                      : isDark
+                        ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:bg-[#1A3827]'
+                        : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#3E5C48] hover:bg-[#E3DDD1]'
                   }`}
                 >
                   {genreName}
@@ -1243,16 +1380,22 @@ export default function Stories() {
                     setReadingStory(story);
                   }
                 }}
-                className="bg-[#0E2015] border border-[#20452F] hover:border-[#4ADE80]/60 rounded-3xl overflow-hidden flex flex-col justify-between shadow-xl hover:shadow-2xl transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-[#4ADE80]"
+                className={`rounded-3xl overflow-hidden flex flex-col justify-between shadow-xl hover:shadow-2xl transition-all cursor-pointer group focus:outline-none focus:ring-2 border ${
+                  isDark
+                    ? 'bg-[#0E2015] border-[#20452F] hover:border-[#4ADE80]/60 focus:ring-[#4ADE80] text-white'
+                    : 'bg-[#FDFBF7] border-[#E3DDD1] hover:border-[#183B28]/60 focus:ring-[#183B28] text-[#0F2418] shadow-sm'
+                }`}
               >
                 {/* Image Banner */}
-                <div className="relative h-48 w-full overflow-hidden bg-[#13271C]">
+                <div className={`relative h-48 w-full overflow-hidden ${isDark ? 'bg-[#13271C]' : 'bg-[#EDE6D8]'}`}>
                   <img
                     src={story.coverImage}
                     alt={story.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0E2015] via-transparent to-black/30" />
+                  <div className={`absolute inset-0 ${
+                    isDark ? 'bg-gradient-to-t from-[#0E2015] via-transparent to-black/30' : 'bg-gradient-to-t from-[#FDFBF7]/90 via-transparent to-black/20'
+                  }`} />
                   
                   <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#07130B]/85 text-[#4ADE80] border border-[#4ADE80]/40 text-[10px] font-bold uppercase backdrop-blur-xs">
                     {story.genre}
@@ -1269,17 +1412,23 @@ export default function Stories() {
                 {/* Card Content */}
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                   <div className="space-y-1.5">
-                    <h3 className="font-display text-lg font-bold text-white group-hover:text-[#4ADE80] transition-colors line-clamp-1">
+                    <h3 className={`font-display text-lg font-bold transition-colors line-clamp-1 ${
+                      isDark ? 'text-white group-hover:text-[#4ADE80]' : 'text-[#0F2418] group-hover:text-[#183B28]'
+                    }`}>
                       {story.title}
                     </h3>
-                    <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                    <p className={`text-xs line-clamp-2 leading-relaxed ${
+                      isDark ? 'text-slate-300' : 'text-[#3E5C48]'
+                    }`}>
                       {story.summary}
                     </p>
                   </div>
 
                   {/* Card Footer & Action Buttons */}
-                  <div className="pt-3 border-t border-[#20422E] flex items-center justify-between">
-                    <span className="text-[11px] text-slate-400">{story.readTime}</span>
+                  <div className={`pt-3 border-t flex items-center justify-between ${
+                    isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'
+                  }`}>
+                    <span className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{story.readTime}</span>
 
                     <div className="flex items-center gap-2">
                       <button
@@ -1289,7 +1438,9 @@ export default function Stories() {
                           setReadingStory(story);
                           setTimeout(() => handleSpeakStory(`${story.title}. ${story.narrative}`), 300);
                         }}
-                        className="p-1.5 rounded-full bg-[#13271C] text-slate-300 hover:text-[#4ADE80] hover:bg-[#1A3827] border border-[#20422E] transition-colors"
+                        className={`p-1.5 rounded-full border transition-colors ${
+                          isDark ? 'bg-[#13271C] text-slate-300 hover:text-[#4ADE80] hover:bg-[#1A3827] border-[#20422E]' : 'bg-[#EDE6D8] text-[#183B28] hover:text-[#0F2418] hover:bg-[#E3DDD1] border-[#D4CBB8]'
+                        }`}
                         title="Listen to story"
                       >
                         <Volume2 className="w-3.5 h-3.5" />
@@ -1303,15 +1454,17 @@ export default function Stories() {
                         }}
                         className={`p-1.5 rounded-full border transition-all cursor-pointer ${
                           isSaved
-                            ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80]'
-                            : 'bg-[#13271C] text-slate-400 border-[#20422E] hover:text-white'
+                            ? isDark ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80]' : 'bg-[#183B28] text-[#FAF7F0] border-[#183B28]'
+                            : isDark ? 'bg-[#13271C] text-slate-400 border-[#20422E] hover:text-white' : 'bg-[#EDE6D8] text-[#3E5C48] border-[#D4CBB8] hover:bg-[#E3DDD1]'
                         }`}
                         title="Save to Library"
                       >
                         <Bookmark className="w-3.5 h-3.5" />
                       </button>
 
-                      <span className="p-1.5 rounded-full bg-[#13271C] text-slate-300 group-hover:text-[#4ADE80] group-hover:bg-[#1A3827] transition-colors">
+                      <span className={`p-1.5 rounded-full transition-colors ${
+                        isDark ? 'bg-[#13271C] text-slate-300 group-hover:text-[#4ADE80] group-hover:bg-[#1A3827]' : 'bg-[#EDE6D8] text-[#183B28] group-hover:text-[#0F2418] group-hover:bg-[#E3DDD1]'
+                      }`}>
                         <ArrowUpRight className="w-3.5 h-3.5" />
                       </span>
                     </div>

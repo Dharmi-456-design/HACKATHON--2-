@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
@@ -158,6 +159,7 @@ const COMMUNITY_TRANSLATIONS = {
 
 export default function Community() {
   const { user, session } = useAuth();
+  const { isDark } = useTheme();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = COMMUNITY_TRANSLATIONS[lang] || COMMUNITY_TRANSLATIONS.en;
   const myId = user?.id || user?._id || 'my-user-id';
@@ -469,7 +471,9 @@ export default function Community() {
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-[#07130B] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-20">
+    <div className={`min-h-screen font-sans selection:bg-[#4ADE80]/30 pb-20 transition-colors duration-300 ${
+      isDark ? 'bg-[#07130B] text-slate-100' : 'bg-[#FAF7F0] text-[#0F2418]'
+    }`}>
       
       {/* ──────────────── NOTIFICATIONS DRAWER ──────────────── */}
       <AnimatePresence>
@@ -486,16 +490,20 @@ export default function Community() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-              className="w-full max-w-sm h-full bg-[#0E1F14] border-l border-[#20452F] p-5 shadow-2xl flex flex-col justify-between"
+              className={`w-full max-w-sm h-full p-5 shadow-2xl flex flex-col justify-between border-l transition-colors ${
+                isDark ? 'bg-[#0E1F14] border-[#20452F] text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="space-y-4 flex-1 flex flex-col min-h-0">
-                <div className="flex items-center justify-between border-b border-[#20452F] pb-3">
-                  <div className="flex items-center gap-2 text-white font-semibold text-base">
-                    <Bell className="w-5 h-5 text-[#4ADE80]" />
+                <div className={`flex items-center justify-between border-b pb-3 ${
+                  isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+                }`}>
+                  <div className={`flex items-center gap-2 font-semibold text-base ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
+                    <Bell className={`w-5 h-5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                     <span>{t.notificationsTitle}</span>
                   </div>
-                  <button onClick={() => setShowNotifDrawer(false)} className="p-1 rounded-full text-slate-400 hover:text-white">
+                  <button onClick={() => setShowNotifDrawer(false)} className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -503,7 +511,7 @@ export default function Community() {
                 {unreadNotifCount > 0 && (
                   <button
                     onClick={markAllNotifsRead}
-                    className="text-xs text-[#4ADE80] hover:underline text-left cursor-pointer font-medium"
+                    className={`text-xs hover:underline text-left cursor-pointer font-medium ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28] font-bold'}`}
                   >
                     ✓ {t.markAllRead}
                   </button>
@@ -511,17 +519,19 @@ export default function Community() {
 
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-chat-scroll">
                   {!notifications.length ? (
-                    <p className="text-xs text-slate-500 py-8 text-center">{t.noNotifications}</p>
+                    <p className={`text-xs py-8 text-center ${isDark ? 'text-slate-500' : 'text-[#3E5C48]'}`}>{t.noNotifications}</p>
                   ) : (
                     notifications.map((n) => (
                       <div
                         key={n.id}
                         className={`p-3 rounded-2xl border transition-colors ${
-                          n.read ? 'bg-[#13271C]/50 border-[#20422E] text-slate-400' : 'bg-[#1A3827] border-[#4ADE80]/40 text-white shadow-xs'
+                          n.read
+                            ? isDark ? 'bg-[#13271C]/50 border-[#20422E] text-slate-400' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#3E5C48]'
+                            : isDark ? 'bg-[#1A3827] border-[#4ADE80]/40 text-white shadow-xs' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#0F2418] shadow-xs'
                         }`}
                       >
                         <p className="text-xs font-medium leading-snug">{n.text}</p>
-                        <p className="text-[10px] text-slate-500 mt-1">{n.time}</p>
+                        <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-500' : 'text-[#3E5C48]'}`}>{n.time}</p>
                       </div>
                     ))
                   )}
@@ -546,44 +556,52 @@ export default function Community() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#112318] border border-[#20452F] rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 relative overflow-hidden"
+              className={`rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-5 relative overflow-hidden border transition-colors ${
+                isDark ? 'bg-[#112318] border-[#20452F] text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-2xl bg-[#1A3827] border border-[#4ADE80]/50 flex items-center justify-center text-2xl shadow-md">
+                  <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl shadow-md ${
+                    isDark ? 'bg-[#1A3827] border-[#4ADE80]/50' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
+                  }`}>
                     {selectedProfileUser.avatar || '🌿'}
                   </div>
                   <div>
-                    <h3 className="font-display text-xl font-bold text-white">{selectedProfileUser.name}</h3>
-                    <p className="text-xs text-emerald-400 font-medium">{selectedProfileUser.city}</p>
+                    <h3 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{selectedProfileUser.name}</h3>
+                    <p className={`text-xs font-medium ${isDark ? 'text-emerald-400' : 'text-[#183B28]'}`}>{selectedProfileUser.city}</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedProfileUser(null)} className="p-1 rounded-full text-slate-400 hover:text-white">
+                <button onClick={() => setSelectedProfileUser(null)} className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <p className="text-xs sm:text-sm text-slate-300 bg-[#0E2015] border border-[#20422E] p-3 rounded-2xl leading-relaxed italic">
+              <p className={`text-xs sm:text-sm p-3 rounded-2xl leading-relaxed italic border ${
+                isDark ? 'text-slate-300 bg-[#0E2015] border-[#20422E]' : 'text-[#0F2418] bg-[#F2ECE1] border-[#E0D8C8]'
+              }`}>
                 "{selectedProfileUser.bio || 'Exploring nature observations and sharing community insights.'}"
               </p>
 
-              <div className="grid grid-cols-3 gap-2 text-center py-2 bg-[#13271C] rounded-2xl border border-[#20422E]">
+              <div className={`grid grid-cols-3 gap-2 text-center py-2 rounded-2xl border ${
+                isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#EDE6D8] border-[#D4CBB8]'
+              }`}>
                 <div>
-                  <p className="text-lg font-bold text-white">
+                  <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
                     {posts.filter((p) => p.author?.name === selectedProfileUser.name).length}
                   </p>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider">Posts</p>
+                  <p className={`text-[10px] uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>Posts</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-white">
+                  <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
                     {followedUserIds.includes(selectedProfileUser.id) ? 1 : 0}
                   </p>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider">Followers</p>
+                  <p className={`text-[10px] uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>Followers</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-[#4ADE80]">98%</p>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider">Helpful</p>
+                  <p className={`text-lg font-bold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>98%</p>
+                  <p className={`text-[10px] uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>Helpful</p>
                 </div>
               </div>
 
@@ -591,13 +609,13 @@ export default function Community() {
                 onClick={() => toggleFollowUser(selectedProfileUser.id, selectedProfileUser.name)}
                 className={`w-full py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md ${
                   followedUserIds.includes(selectedProfileUser.id)
-                    ? 'bg-[#1A3827] text-white border border-[#4ADE80]'
-                    : 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]'
+                    ? isDark ? 'bg-[#1A3827] text-white border border-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28] border border-[#C3DEC0]'
+                    : isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
                 }`}
               >
                 {followedUserIds.includes(selectedProfileUser.id) ? (
                   <>
-                    <UserCheck className="w-4 h-4 text-[#4ADE80]" />
+                    <UserCheck className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                     <span>{t.following}</span>
                   </>
                 ) : (
@@ -625,18 +643,26 @@ export default function Community() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#112318] border border-[#20452F] rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-5 relative overflow-hidden my-auto"
+              className={`rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-5 relative overflow-hidden my-auto border transition-colors ${
+                isDark ? 'bg-[#112318] border-[#20452F] text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
-                <h2 className="font-display text-2xl font-bold text-white">{t.createModalTitle}</h2>
+              <div className={`flex justify-between items-center border-b pb-4 ${
+                isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+              }`}>
+                <h2 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.createModalTitle}</h2>
                 <div className="flex items-center gap-2">
-                  <div className="flex rounded-full bg-[#13271C] p-1 border border-[#20422E]">
+                  <div className={`flex rounded-full p-1 border ${
+                    isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#EDE6D8] border-[#D4CBB8]'
+                  }`}>
                     <button
                       type="button"
                       onClick={() => setComposerMode('write')}
                       className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                        composerMode === 'write' ? 'bg-[#4ADE80] text-[#07130B]' : 'text-slate-400'
+                        composerMode === 'write'
+                          ? isDark ? 'bg-[#4ADE80] text-[#07130B]' : 'bg-[#183B28] text-[#FAF7F0] font-bold'
+                          : isDark ? 'text-slate-400' : 'text-[#3E5C48]'
                       }`}
                     >
                       Write
@@ -645,13 +671,15 @@ export default function Community() {
                       type="button"
                       onClick={() => setComposerMode('preview')}
                       className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                        composerMode === 'preview' ? 'bg-[#4ADE80] text-[#07130B]' : 'text-slate-400'
+                        composerMode === 'preview'
+                          ? isDark ? 'bg-[#4ADE80] text-[#07130B]' : 'bg-[#183B28] text-[#FAF7F0] font-bold'
+                          : isDark ? 'text-slate-400' : 'text-[#3E5C48]'
                       }`}
                     >
                       {t.preview}
                     </button>
                   </div>
-                  <button onClick={() => setShowCreateModal(false)} className="p-1 rounded-full text-slate-400 hover:text-white">
+                  <button onClick={() => setShowCreateModal(false)} className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -660,7 +688,9 @@ export default function Community() {
               {composerMode === 'write' ? (
                 <form onSubmit={handleCreatePostSubmit} className="space-y-4">
                   <div>
-                    <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
+                    <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
+                      isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                    }`}>
                       {t.postTitleLabel}
                     </label>
                     <input
@@ -668,19 +698,25 @@ export default function Community() {
                       value={postTitle}
                       onChange={(e) => setPostTitle(e.target.value)}
                       placeholder="e.g., Observing Dawn Nesting Behavior in Banyan Canopy"
-                      className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-4 py-2.5 text-sm text-white outline-none focus:border-[#4ADE80]"
+                      className={`w-full rounded-2xl px-4 py-2.5 text-sm outline-none transition-colors ${
+                        isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
+                      }`}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
+                      <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
+                        isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                      }`}>
                         {t.postCategoryLabel}
                       </label>
                       <select
                         value={postCategory}
                         onChange={(e) => setPostCategory(e.target.value)}
-                        className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-3 py-2.5 text-sm text-white outline-none focus:border-[#4ADE80]"
+                        className={`w-full rounded-2xl px-3 py-2.5 text-sm outline-none transition-colors ${
+                          isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
+                        }`}
                       >
                         <option value="Nature & Ecology">{t.catNature}</option>
                         <option value="AI & Technology">{t.catAI}</option>
@@ -693,13 +729,17 @@ export default function Community() {
 
                     <div>
                       <div className="flex justify-between items-center mb-1">
-                        <label className="text-xs uppercase tracking-wider text-slate-400 font-semibold">
+                        <label className={`text-xs uppercase tracking-wider font-semibold ${
+                          isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                        }`}>
                           {t.postTagsLabel}
                         </label>
                         <button
                           type="button"
                           onClick={handleAISuggestTags}
-                          className="text-[10px] text-[#4ADE80] hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                          className={`text-[10px] hover:underline flex items-center gap-1 cursor-pointer font-medium ${
+                            isDark ? 'text-[#4ADE80]' : 'text-[#183B28] font-bold'
+                          }`}
                         >
                           <Sparkles className="w-3 h-3" />
                           <span>{t.aiSuggestTags}</span>
@@ -709,13 +749,17 @@ export default function Community() {
                         value={postTags}
                         onChange={(e) => setPostTags(e.target.value)}
                         placeholder="birds, trees, urbanwild"
-                        className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-4 py-2.5 text-sm text-white outline-none focus:border-[#4ADE80]"
+                        className={`w-full rounded-2xl px-4 py-2.5 text-sm outline-none transition-colors ${
+                          isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
+                        }`}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
+                    <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
+                      isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                    }`}>
                       {t.postContentLabel}
                     </label>
                     <textarea
@@ -724,7 +768,9 @@ export default function Community() {
                       value={postContent}
                       onChange={(e) => setPostContent(e.target.value)}
                       placeholder="Share your detailed observations, questions, or ideas…"
-                      className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl p-4 text-sm text-white outline-none focus:border-[#4ADE80] resize-none"
+                      className={`w-full rounded-2xl p-4 text-sm outline-none resize-none transition-colors ${
+                        isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
+                      }`}
                     />
                   </div>
 
@@ -732,9 +778,11 @@ export default function Community() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#13271C] border border-[#20422E] text-xs text-slate-300 hover:text-white cursor-pointer"
+                      className={`flex items-center gap-2 px-4 py-2 rounded-2xl border text-xs cursor-pointer transition-colors ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]'
+                      }`}
                     >
-                      <ImageIcon className="w-4 h-4 text-[#4ADE80]" />
+                      <ImageIcon className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                       <span>{postImage ? 'Image Selected ✓' : 'Add Image'}</span>
                     </button>
                     <input
@@ -754,19 +802,25 @@ export default function Community() {
 
                     <button
                       type="submit"
-                      className="px-6 py-2.5 rounded-full bg-[#4ADE80] text-[#07130B] font-semibold text-sm hover:bg-[#3ECE77] transition-all shadow-md cursor-pointer"
+                      className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-all shadow-md cursor-pointer ${
+                        isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                      }`}
                     >
                       {t.publish}
                     </button>
                   </div>
                 </form>
               ) : (
-                <div className="space-y-4 bg-[#0E2015] p-5 rounded-2xl border border-[#20422E]">
-                  <span className="text-[10px] uppercase px-2.5 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] font-semibold">
+                <div className={`space-y-4 p-5 rounded-2xl border ${
+                  isDark ? 'bg-[#0E2015] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
+                }`}>
+                  <span className={`text-[10px] uppercase px-2.5 py-1 rounded-full font-semibold ${
+                    isDark ? 'bg-[#1A3827] text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28]'
+                  }`}>
                     {postCategory}
                   </span>
-                  <h3 className="font-display text-xl font-bold text-white">{postTitle || 'Untitled Post'}</h3>
-                  <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-line">
+                  <h3 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{postTitle || 'Untitled Post'}</h3>
+                  <p className={`text-sm leading-relaxed whitespace-pre-line ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>
                     {postContent || 'No content written yet.'}
                   </p>
                 </div>
@@ -780,16 +834,22 @@ export default function Community() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         
         {/* ──────────────── HEADER BAR ──────────────── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#112318]/90 border border-[#20452F] p-6 sm:p-8 rounded-3xl backdrop-blur-xl shadow-2xl relative overflow-hidden">
+        <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl backdrop-blur-xl shadow-2xl relative overflow-hidden border transition-colors ${
+          isDark ? 'bg-[#112318]/90 border-[#20452F] text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+        }`}>
           <div className="space-y-1 z-10">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#E6C176] font-semibold flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#E6C176] animate-pulse" />
+            <p className={`text-xs uppercase tracking-[0.2em] font-semibold flex items-center gap-1.5 ${
+              isDark ? 'text-[#E6C176]' : 'text-[#D4A359]'
+            }`}>
+              <Sparkles className={`w-3.5 h-3.5 animate-pulse ${isDark ? 'text-[#E6C176]' : 'text-[#D4A359]'}`} />
               Shared Field
             </p>
-            <h1 className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight">
+            <h1 className={`font-display text-3xl sm:text-4xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
               {t.title}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300/80 max-w-xl font-normal leading-relaxed pt-1">
+            <p className={`text-xs sm:text-sm max-w-xl font-normal leading-relaxed pt-1 ${
+              isDark ? 'text-slate-300/80' : 'text-[#3E5C48]'
+            }`}>
               {t.subtitle}
             </p>
           </div>
@@ -798,7 +858,9 @@ export default function Community() {
             {/* Notification Badge Toggle */}
             <button
               onClick={() => setShowNotifDrawer(true)}
-              className="relative p-3 rounded-2xl bg-[#1A3626] border border-[#2D5A3F] text-slate-200 hover:text-white cursor-pointer"
+              className={`relative p-3 rounded-2xl border cursor-pointer transition-colors ${
+                isDark ? 'bg-[#1A3626] border-[#2D5A3F] text-slate-200 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:text-[#0F2418]'
+              }`}
               title="Notifications"
             >
               <Bell className="w-5 h-5" />
@@ -814,7 +876,9 @@ export default function Community() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowCreateModal(true)}
-              className="px-5 py-3 rounded-2xl bg-[#4ADE80] text-[#07130B] font-semibold text-sm hover:bg-[#3ECE77] transition-all flex items-center gap-2 shadow-lg shadow-[#4ADE80]/20 cursor-pointer"
+              className={`px-5 py-3 rounded-2xl font-semibold text-sm transition-all flex items-center gap-2 shadow-lg cursor-pointer ${
+                isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77] shadow-[#4ADE80]/20' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+              }`}
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>{t.createPost}</span>
@@ -832,12 +896,16 @@ export default function Community() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.searchPlaceholder}
-                className="w-full bg-[#12241A] border border-[#234A33] rounded-2xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-[#4ADE80] transition-all"
+                className={`w-full rounded-2xl pl-11 pr-4 py-3 text-sm outline-none transition-all ${
+                  isDark
+                    ? 'bg-[#12241A] border border-[#234A33] text-white placeholder:text-slate-500 focus:border-[#4ADE80]'
+                    : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28] shadow-xs'
+                }`}
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -850,7 +918,11 @@ export default function Community() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-[#12241A] border border-[#234A33] text-xs font-medium text-slate-200 rounded-2xl px-4 py-3 outline-none focus:border-[#4ADE80] w-full sm:w-auto cursor-pointer"
+                className={`text-xs font-medium rounded-2xl px-4 py-3 outline-none w-full sm:w-auto cursor-pointer border ${
+                  isDark
+                    ? 'bg-[#12241A] border-[#234A33] text-slate-200 focus:border-[#4ADE80]'
+                    : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28] shadow-xs'
+                }`}
               >
                 <option value="newest">Sort: Newest</option>
                 <option value="most_reacted">Sort: Most Popular</option>
@@ -872,10 +944,14 @@ export default function Community() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer border ${
                   activeTab === tab.id
-                    ? 'bg-[#4ADE80] text-[#07130B] shadow-md shadow-[#4ADE80]/15'
-                    : 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
+                    ? isDark
+                      ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80] shadow-md shadow-[#4ADE80]/15'
+                      : 'bg-[#183B28] text-[#FAF7F0] border-[#183B28] shadow-md'
+                    : isDark
+                      ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
+                      : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#3E5C48] hover:bg-[#F2ECE1] shadow-xs'
                 }`}
               >
                 {tab.label}
@@ -903,8 +979,12 @@ export default function Community() {
                   onClick={() => setSelectedCategory(val)}
                   className={`px-3 py-1.5 rounded-full border text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
                     selectedCategory === val
-                      ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]'
-                      : 'bg-[#0E2015]/60 border-[#20422E] text-slate-400 hover:text-slate-200'
+                      ? isDark
+                        ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]'
+                        : 'bg-[#183B28] border-[#183B28] text-[#FAF7F0] font-semibold'
+                      : isDark
+                        ? 'bg-[#0E2015]/60 border-[#20422E] text-slate-400 hover:text-slate-200'
+                        : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#3E5C48] hover:bg-[#F2ECE1] shadow-xs'
                   }`}
                 >
                   {catName}
@@ -917,15 +997,17 @@ export default function Community() {
         {/* ──────────────── POSTS FEED ──────────────── */}
         <div className="space-y-5">
           {communityError && (
-            <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-200">
+            <div className="bg-red-500/15 border border-red-500/40 rounded-2xl px-4 py-3 text-xs text-red-500">
               {communityError}
             </div>
           )}
           {!filteredPosts.length ? (
-            <div className="bg-[#112318] border border-[#20452F] rounded-3xl p-12 text-center space-y-3">
-              <Sparkles className="w-10 h-10 text-slate-500 mx-auto animate-pulse" />
-              <h3 className="font-display text-xl text-white font-semibold">{t.noPostsFound}</h3>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            <div className={`rounded-3xl p-12 text-center space-y-3 border ${
+              isDark ? 'bg-[#112318] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+            }`}>
+              <Sparkles className="w-10 h-10 text-slate-400 mx-auto animate-pulse" />
+              <h3 className={`font-display text-xl font-semibold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.noPostsFound}</h3>
+              <p className={`text-xs max-w-sm mx-auto ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
                 Try searching for a different keyword or create a new discussion thread.
               </p>
             </div>
@@ -936,13 +1018,17 @@ export default function Community() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className={`bg-[#112318]/90 border rounded-3xl p-5 sm:p-7 shadow-xl space-y-4 backdrop-blur-xl relative overflow-hidden ${
-                  post.pinned ? 'border-[#4ADE80]/60 ring-1 ring-[#4ADE80]/30' : 'border-[#20452F]'
+                className={`rounded-3xl p-5 sm:p-7 shadow-xl space-y-4 backdrop-blur-xl relative overflow-hidden border transition-colors ${
+                  post.pinned
+                    ? isDark ? 'bg-[#112318]/90 border-[#4ADE80]/60 ring-1 ring-[#4ADE80]/30' : 'bg-[#FDFBF7] border-[#183B28] ring-1 ring-[#183B28]/30 shadow-md'
+                    : isDark ? 'bg-[#112318]/90 border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
                 }`}
               >
                 {/* Pinned Badge */}
                 {post.pinned && (
-                  <div className="flex items-center gap-1.5 text-[11px] text-[#4ADE80] font-semibold tracking-wider uppercase mb-1">
+                  <div className={`flex items-center gap-1.5 text-[11px] font-semibold tracking-wider uppercase mb-1 ${
+                    isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
+                  }`}>
                     <Pin className="w-3.5 h-3.5" />
                     <span>{t.pinned}</span>
                   </div>
@@ -954,14 +1040,18 @@ export default function Community() {
                     onClick={() => setSelectedProfileUser(post.author)}
                     className="flex items-center gap-3 cursor-pointer group"
                   >
-                    <div className="w-10 h-10 rounded-2xl bg-[#1A3827] border border-[#2D5A3F] flex items-center justify-center text-lg shadow-xs group-hover:border-[#4ADE80] transition-colors">
+                    <div className={`w-10 h-10 rounded-2xl border flex items-center justify-center text-lg shadow-xs transition-colors ${
+                      isDark ? 'bg-[#1A3827] border-[#2D5A3F] group-hover:border-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28] group-hover:border-[#183B28]'
+                    }`}>
                       {post.author?.avatar || '🌿'}
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-white group-hover:text-[#4ADE80] transition-colors flex items-center gap-1.5">
+                      <h4 className={`text-sm font-semibold transition-colors flex items-center gap-1.5 ${
+                        isDark ? 'text-white group-hover:text-[#4ADE80]' : 'text-[#0F2418] group-hover:text-[#183B28]'
+                      }`}>
                         {post.author?.name}
                       </h4>
-                      <p className="text-[11px] text-slate-400">
+                      <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
                         {post.author?.city} · {formatWhen(post.created_at)}
                       </p>
                     </div>
@@ -973,8 +1063,8 @@ export default function Community() {
                       onClick={() => toggleFollowUser(post.author?.id, post.author?.name)}
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                         followedUserIds.includes(post.author?.id)
-                          ? 'bg-[#1A3827] text-white border border-[#4ADE80]'
-                          : 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white'
+                          ? isDark ? 'bg-[#1A3827] text-white border border-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28] border border-[#C3DEC0]'
+                          : isDark ? 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#EDE6D8] border border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]'
                       }`}
                     >
                       {followedUserIds.includes(post.author?.id) ? t.following : `+ ${t.follow}`}
@@ -985,8 +1075,8 @@ export default function Community() {
                       onClick={() => toggleSavePost(post.id)}
                       className={`p-2 rounded-full border transition-colors cursor-pointer ${
                         savedPostIds.includes(post.id)
-                          ? 'bg-[#4ADE80]/20 border-[#4ADE80] text-[#4ADE80]'
-                          : 'bg-[#13271C] border-[#20422E] text-slate-400 hover:text-white'
+                          ? isDark ? 'bg-[#4ADE80]/20 border-[#4ADE80] text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#183B28] text-[#183B28]'
+                          : isDark ? 'bg-[#13271C] border-[#20422E] text-slate-400 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#3E5C48] hover:text-[#0F2418]'
                       }`}
                       title={savedPostIds.includes(post.id) ? t.saved : t.save}
                     >
@@ -997,7 +1087,7 @@ export default function Community() {
                     {String(post.author?.id) === String(myId) && (
                       <button
                         onClick={() => handleDeletePost(post.id)}
-                        className="p-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 cursor-pointer"
+                        className="p-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 cursor-pointer"
                         title="Delete Post"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1009,16 +1099,22 @@ export default function Community() {
                 {/* Post Main Body */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase font-semibold px-2.5 py-0.5 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30">
+                    <span className={`text-[10px] uppercase font-semibold px-2.5 py-0.5 rounded-full border ${
+                      isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+                    }`}>
                       {post.category}
                     </span>
                   </div>
 
-                  <h3 className="font-display text-xl sm:text-2xl font-bold text-white leading-snug">
+                  <h3 className={`font-display text-xl sm:text-2xl font-bold leading-snug ${
+                    isDark ? 'text-white' : 'text-[#0F2418]'
+                  }`}>
                     {post.title}
                   </h3>
 
-                  <p className="text-sm text-slate-200 leading-relaxed font-normal">
+                  <p className={`text-sm leading-relaxed font-normal ${
+                    isDark ? 'text-slate-200' : 'text-[#0F2418]'
+                  }`}>
                     {post.content}
                   </p>
 
@@ -1027,7 +1123,9 @@ export default function Community() {
                     <img
                       src={post.image_url}
                       alt="Attachment"
-                      className="w-full max-h-80 object-cover rounded-2xl border border-[#20422E] mt-3"
+                      className={`w-full max-h-80 object-cover rounded-2xl border mt-3 ${
+                        isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'
+                      }`}
                     />
                   )}
 
@@ -1035,7 +1133,9 @@ export default function Community() {
                   {post.tags?.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 pt-2">
                       {post.tags.map((tg) => (
-                        <span key={tg} className="text-[11px] text-slate-400 hover:text-[#4ADE80] cursor-pointer">
+                        <span key={tg} className={`text-[11px] cursor-pointer ${
+                          isDark ? 'text-slate-400 hover:text-[#4ADE80]' : 'text-[#3E5C48] hover:text-[#183B28] font-medium'
+                        }`}>
                           #{tg}
                         </span>
                       ))}
@@ -1044,21 +1144,31 @@ export default function Community() {
                 </div>
 
                 {/* AI Features Bar */}
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#20452F]">
+                <div className={`flex flex-wrap items-center gap-2 pt-2 border-t ${
+                  isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+                }`}>
                   <button
                     onClick={() => handleAISummarize(post.id)}
-                    className="px-3 py-1.5 rounded-xl bg-[#1A3827] hover:bg-[#234B34] border border-[#4ADE80]/40 text-xs font-semibold text-[#4ADE80] flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                      isDark
+                        ? 'bg-[#1A3827] hover:bg-[#234B34] border-[#4ADE80]/40 text-[#4ADE80]'
+                        : 'bg-[#E1EFE0] hover:bg-[#C3DEC0] border-[#C3DEC0] text-[#183B28]'
+                    }`}
                   >
-                    <Sparkles className="w-3.5 h-3.5 text-[#4ADE80]" />
+                    <Sparkles className={`w-3.5 h-3.5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                     <span>{t.summarizeAI}</span>
                   </button>
 
                   {post.category === 'Questions & Answers' && !post.aiAnswer && (
                     <button
                       onClick={() => handleAISuggestedAnswer(post.id)}
-                      className="px-3 py-1.5 rounded-xl bg-[#1A3827] hover:bg-[#234B34] border border-gold/40 text-xs font-semibold text-gold flex items-center gap-1.5 cursor-pointer"
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 cursor-pointer ${
+                        isDark
+                          ? 'bg-[#1A3827] hover:bg-[#234B34] border-amber-400/40 text-amber-300'
+                          : 'bg-[#FAF2E4] hover:bg-[#F2E5D0] border-[#D4A359] text-[#916B25]'
+                      }`}
                     >
-                      <Lightbulb className="w-3.5 h-3.5 text-gold" />
+                      <Lightbulb className={`w-3.5 h-3.5 ${isDark ? 'text-amber-300' : 'text-[#916B25]'}`} />
                       <span>{t.aiSuggestedAnswer}</span>
                     </button>
                   )}
@@ -1069,9 +1179,11 @@ export default function Community() {
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#0E2015] border border-[#4ADE80]/40 p-3.5 rounded-2xl text-xs text-slate-200 space-y-1"
+                    className={`border p-3.5 rounded-2xl text-xs space-y-1 ${
+                      isDark ? 'bg-[#0E2015] border-[#4ADE80]/40 text-slate-200' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#0F2418]'
+                    }`}
                   >
-                    <p className="font-semibold text-[#4ADE80] flex items-center gap-1">
+                    <p className={`font-semibold flex items-center gap-1 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>
                       <Sparkles className="w-3.5 h-3.5" /> AI Executive Summary
                     </p>
                     <p>{post.aiSummary}</p>
@@ -1083,9 +1195,11 @@ export default function Community() {
                   <motion.div
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#16271D] border border-gold/40 p-3.5 rounded-2xl text-xs text-slate-200 space-y-1"
+                    className={`border p-3.5 rounded-2xl text-xs space-y-1 ${
+                      isDark ? 'bg-[#16271D] border-amber-400/40 text-slate-200' : 'bg-[#FAF2E4] border-[#D4A359] text-[#0F2418]'
+                    }`}
                   >
-                    <p className="font-semibold text-gold flex items-center gap-1">
+                    <p className={`font-semibold flex items-center gap-1 ${isDark ? 'text-amber-300' : 'text-[#916B25]'}`}>
                       <Lightbulb className="w-3.5 h-3.5" /> {t.aiSuggestedAnswer}
                     </p>
                     <p>{post.aiAnswer}</p>
@@ -1093,14 +1207,16 @@ export default function Community() {
                 )}
 
                 {/* 5-Reaction Micro-Interactive Toolbar */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#20452F]/60">
+                <div className={`flex flex-wrap items-center justify-between gap-2 pt-2 border-t ${
+                  isDark ? 'border-[#20452F]/60' : 'border-[#E3DDD1]'
+                }`}>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {[
-                      { key: 'like', label: t.like, icon: ThumbsUp, color: 'text-blue-400' },
-                      { key: 'insightful', label: t.insightful, icon: Lightbulb, color: 'text-amber-400' },
-                      { key: 'ecoLove', label: t.ecoLove, icon: Heart, color: 'text-emerald-400' },
-                      { key: 'hot', label: t.hot, icon: Flame, color: 'text-orange-400' },
-                      { key: 'educational', label: t.educational, icon: Award, color: 'text-purple-400' },
+                      { key: 'like', label: t.like, icon: ThumbsUp, color: 'text-blue-500' },
+                      { key: 'insightful', label: t.insightful, icon: Lightbulb, color: 'text-amber-500' },
+                      { key: 'ecoLove', label: t.ecoLove, icon: Heart, color: 'text-emerald-500' },
+                      { key: 'hot', label: t.hot, icon: Flame, color: 'text-orange-500' },
+                      { key: 'educational', label: t.educational, icon: Award, color: 'text-purple-500' },
                     ].map((rx) => {
                       const active = post.userReactions?.[rx.key];
                       const count = post.reactions?.[rx.key] || 0;
@@ -1110,20 +1226,24 @@ export default function Community() {
                           whileHover={{ scale: 1.08 }}
                           whileTap={{ scale: 0.92 }}
                           onClick={() => handleReaction(post.id, rx.key)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer border ${
                             active
-                              ? 'bg-[#1A3827] border border-[#4ADE80] text-white shadow-xs'
-                              : 'bg-[#13271C] border border-[#20422E] text-slate-400 hover:text-slate-200'
+                              ? isDark
+                                ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-xs'
+                                : 'bg-[#E1EFE0] border-[#183B28] text-[#183B28] shadow-xs'
+                              : isDark
+                                ? 'bg-[#13271C] border-[#20422E] text-slate-400 hover:text-slate-200'
+                                : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#3E5C48] hover:bg-[#E3DDD1]'
                           }`}
                         >
-                          <rx.icon className={`w-3.5 h-3.5 ${active ? rx.color : 'text-slate-400'}`} />
+                          <rx.icon className={`w-3.5 h-3.5 ${active ? rx.color : isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`} />
                           <span>{count}</span>
                         </motion.button>
                       );
                     })}
                   </div>
 
-                  <span className="text-xs text-slate-400 font-medium">
+                  <span className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
                     {post.comments?.length || 0} {t.comments}
                   </span>
                 </div>
@@ -1132,17 +1252,21 @@ export default function Community() {
                 <div className="pt-3 space-y-3">
                   {/* Top Level Comments List */}
                   {post.comments?.map((cm) => (
-                    <div key={cm.id} className="bg-[#0E2015] border border-[#20422E] p-3.5 rounded-2xl space-y-2">
+                    <div key={cm.id} className={`p-3.5 rounded-2xl space-y-2 border ${
+                      isDark ? 'bg-[#0E2015] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
+                    }`}>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-white">{cm.author?.name} · {cm.author?.city}</span>
-                        <span className="text-[10px] text-slate-500">{formatWhen(cm.created_at)}</span>
+                        <span className={`font-semibold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{cm.author?.name} · {cm.author?.city}</span>
+                        <span className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-[#3E5C48]'}`}>{formatWhen(cm.created_at)}</span>
                       </div>
-                      <p className="text-xs sm:text-sm text-slate-200">{cm.content}</p>
+                      <p className={`text-xs sm:text-sm ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>{cm.content}</p>
 
                       {/* Reply Toggle */}
                       <button
                         onClick={() => setActiveReplyId(activeReplyId === cm.id ? null : cm.id)}
-                        className="text-[11px] text-[#4ADE80] hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                        className={`text-[11px] hover:underline flex items-center gap-1 cursor-pointer font-medium ${
+                          isDark ? 'text-[#4ADE80]' : 'text-[#183B28] font-bold'
+                        }`}
                       >
                         <CornerDownRight className="w-3 h-3" />
                         <span>{t.reply}</span>
@@ -1150,14 +1274,20 @@ export default function Community() {
 
                       {/* Nested Threaded Replies */}
                       {cm.replies?.length > 0 && (
-                        <div className="pl-4 border-l-2 border-[#20422E] space-y-2 pt-1">
+                        <div className={`pl-4 border-l-2 space-y-2 pt-1 ${
+                          isDark ? 'border-[#20422E]' : 'border-[#D4CBB8]'
+                        }`}>
                           {cm.replies.map((rp) => (
-                            <div key={rp.id} className="bg-[#13271C] p-2.5 rounded-xl text-xs space-y-1">
-                              <div className="flex justify-between text-[11px] text-slate-400">
-                                <span className="font-semibold text-slate-200">{rp.author?.name}</span>
+                            <div key={rp.id} className={`p-2.5 rounded-xl text-xs space-y-1 ${
+                              isDark ? 'bg-[#13271C]' : 'bg-[#FDFBF7] border border-[#E3DDD1] shadow-xs'
+                            }`}>
+                              <div className={`flex justify-between text-[11px] ${
+                                isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                              }`}>
+                                <span className={`font-semibold ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>{rp.author?.name}</span>
                                 <span>{formatWhen(rp.created_at)}</span>
                               </div>
-                              <p className="text-slate-300">{rp.content}</p>
+                              <p className={isDark ? 'text-slate-300' : 'text-[#0F2418]'}>{rp.content}</p>
                             </div>
                           ))}
                         </div>
@@ -1170,11 +1300,15 @@ export default function Community() {
                             value={replyInputs[cm.id] || ''}
                             onChange={(e) => setReplyInputs({ ...replyInputs, [cm.id]: e.target.value })}
                             placeholder="Write a reply…"
-                            className="flex-1 bg-[#13271C] border border-[#20422E] rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-[#4ADE80]"
+                            className={`flex-1 rounded-xl px-3 py-1.5 text-xs outline-none transition-colors ${
+                              isDark ? 'bg-[#13271C] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#FDFBF7] border border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
+                            }`}
                           />
                           <button
                             onClick={() => handleAddReply(post.id, cm.id)}
-                            className="px-3 py-1.5 rounded-xl bg-[#4ADE80] text-[#07130B] font-semibold text-xs hover:bg-[#3ECE77] cursor-pointer"
+                            className={`px-3 py-1.5 rounded-xl font-semibold text-xs cursor-pointer ${
+                              isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                            }`}
                           >
                             Reply
                           </button>
@@ -1189,11 +1323,17 @@ export default function Community() {
                       value={commentInputs[post.id] || ''}
                       onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
                       placeholder="Add a comment to this discussion…"
-                      className="flex-1 bg-[#12241A] border border-[#234A33] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder:text-slate-500 outline-none focus:border-[#4ADE80]"
+                      className={`flex-1 rounded-2xl px-4 py-2.5 text-xs sm:text-sm outline-none transition-colors ${
+                        isDark
+                          ? 'bg-[#12241A] border border-[#234A33] text-white placeholder:text-slate-500 focus:border-[#4ADE80]'
+                          : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28] shadow-xs'
+                      }`}
                     />
                     <button
                       onClick={() => handleAddComment(post.id)}
-                      className="px-4 py-2.5 rounded-2xl bg-[#4ADE80] text-[#07130B] font-semibold text-xs sm:text-sm hover:bg-[#3ECE77] cursor-pointer shrink-0"
+                      className={`px-4 py-2.5 rounded-2xl font-semibold text-xs sm:text-sm cursor-pointer shrink-0 transition-colors ${
+                        isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                      }`}
                     >
                       Comment
                     </button>

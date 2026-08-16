@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Name is required'],
+      default: 'Explorer',
       trim: true,
       maxlength: [100, 'Name cannot exceed 100 characters'],
     },
@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      minlength: [8, 'Password must be at least 8 characters'],
+      minlength: [6, 'Password must be at least 6 characters'],
       select: false,
     },
     provider: {

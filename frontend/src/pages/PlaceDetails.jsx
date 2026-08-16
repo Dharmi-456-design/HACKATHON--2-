@@ -130,17 +130,17 @@ export default function PlaceDetails() {
   // Not Found / Error State
   if (error || !place) {
     return (
-      <div className={`min-h-screen flex items-center justify-center px-4 py-16 ${isDark ? 'bg-[#040B06] text-slate-100' : 'bg-[#F8F9FA] text-slate-800'}`}>
+      <div className={`min-h-screen flex items-center justify-center px-4 py-16 ${isDark ? 'bg-[#040B06] text-slate-100' : 'bg-[#FAF7F0] text-[#0F2418]'}`}>
         <div className={`max-w-md w-full text-center border rounded-3xl p-8 shadow-2xl space-y-5 ${
-          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-white border-emerald-900/15'
+          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-xl'
         }`}>
           <div className="w-16 h-16 rounded-full bg-[#13271C] border border-[#4ADE80]/40 flex items-center justify-center mx-auto text-[#4ADE80]">
             <Compass className="w-8 h-8 animate-pulse" />
           </div>
-          <h2 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          <h2 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
             {error === 'Place not found' ? 'Place Not Found' : 'Unable to Load Place'}
           </h2>
-          <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+          <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>
             {error === 'Place not found'
               ? 'The discovery spot you are looking for does not exist or has moved.'
               : 'We could not load this discovery spot. Please verify your connection or try again.'}
@@ -168,11 +168,13 @@ export default function PlaceDetails() {
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 ${
-      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#FAF7F0] text-[#0F2418] selection:bg-emerald-200 selection:text-emerald-900'
     }`}>
       
       {/* ──────────────── TOP NAVIGATION BAR ──────────────── */}
-      <div className="border-b border-[#20452F] bg-[#0E2015]/80 backdrop-blur-md sticky top-0 z-30">
+      <div className={`border-b sticky top-0 z-30 backdrop-blur-md transition-colors ${
+        isDark ? 'border-[#20452F] bg-[#0E2015]/80' : 'border-[#E3DDD1] bg-[#FAF7F0]/80'
+      }`}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button
             onClick={() => {
@@ -182,9 +184,11 @@ export default function PlaceDetails() {
                 navigate('/app/places');
               }
             }}
-            className="flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer group"
+            className={`flex items-center gap-2 text-xs font-semibold transition-colors cursor-pointer group ${
+              isDark ? 'text-slate-300 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
+            }`}
           >
-            <ArrowLeft className="w-4 h-4 text-[#4ADE80] group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className={`w-4 h-4 group-hover:-translate-x-1 transition-transform ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
             <span>Back to Places</span>
           </button>
 
@@ -192,11 +196,13 @@ export default function PlaceDetails() {
             <button
               onClick={handleShare}
               aria-label="Share this place"
-              className="p-2.5 rounded-full bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-[#4ADE80] hover:border-[#4ADE80]/50 transition-all cursor-pointer relative"
+              className={`p-2.5 rounded-full border transition-all cursor-pointer relative ${
+                isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-[#4ADE80] hover:border-[#4ADE80]/50' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:text-[#0F2418] hover:bg-[#E3DDD1]'
+              }`}
             >
               <Share2 className="w-4 h-4" />
               {copied && (
-                <span className="absolute -bottom-8 right-0 bg-[#4ADE80] text-[#07130B] font-bold text-[10px] px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
+                <span className="absolute -bottom-8 right-0 bg-emerald-600 text-white font-bold text-[10px] px-2 py-0.5 rounded shadow-lg whitespace-nowrap">
                   Copied!
                 </span>
               )}
@@ -207,8 +213,8 @@ export default function PlaceDetails() {
               aria-label={isSaved ? 'Remove from bookmarks' : 'Bookmark this place'}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border transition-all cursor-pointer ${
                 isSaved
-                  ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80] shadow-md shadow-[#4ADE80]/20'
-                  : 'bg-[#13271C] text-slate-200 border-[#20422E] hover:border-[#4ADE80]/60'
+                  ? isDark ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80] shadow-md shadow-[#4ADE80]/20' : 'bg-[#183B28] text-[#FAF7F0] border-[#183B28]'
+                  : isDark ? 'bg-[#13271C] text-slate-200 border-[#20422E] hover:border-[#4ADE80]/60' : 'bg-[#EDE6D8] text-[#183B28] border-[#D4CBB8] hover:bg-[#E3DDD1]'
               }`}
             >
               <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-current' : ''}`} />
@@ -222,29 +228,31 @@ export default function PlaceDetails() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-8">
 
         {bookmarkError && (
-          <div className="bg-red-950/80 border border-red-500/40 text-red-200 text-xs sm:text-sm rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
+          <div className="bg-red-500/15 border border-red-500/40 text-red-500 text-xs sm:text-sm rounded-2xl px-4 py-3 flex items-center justify-between gap-3">
             <span>{bookmarkError}</span>
-            <button onClick={() => setBookmarkError(null)} className="text-red-300 hover:text-white cursor-pointer shrink-0">✕</button>
+            <button onClick={() => setBookmarkError(null)} className="text-red-500 hover:text-red-700 cursor-pointer shrink-0">✕</button>
           </div>
         )}
 
         {/* HERO IMAGE & HEADLINE BANNER */}
-        <div className="relative rounded-3xl overflow-hidden border border-[#20452F] shadow-2xl bg-[#0E2015]">
+        <div className={`relative rounded-3xl overflow-hidden border shadow-2xl transition-colors ${
+          isDark ? 'border-[#20452F] bg-[#0E2015]' : 'border-[#E3DDD1] bg-[#FDFBF7] shadow-sm'
+        }`}>
           <div className="relative h-72 sm:h-96 w-full overflow-hidden">
             <img
               src={place.image || place.image_url}
               alt={place.name}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#040B06] via-[#040B06]/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
             
             {/* Top Badges */}
             <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-              <span className="px-3 py-1.5 rounded-full bg-[#07130B]/90 backdrop-blur-md text-xs font-bold text-[#4ADE80] border border-[#4ADE80]/40 flex items-center gap-1.5 shadow-lg">
+              <span className="px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md text-xs font-bold text-[#4ADE80] border border-[#4ADE80]/40 flex items-center gap-1.5 shadow-lg">
                 <span>{place.icon || '🌿'}</span>
                 <span>{place.category || place.type || 'Nature'}</span>
               </span>
-              <span className="px-3 py-1.5 rounded-full bg-[#07130B]/90 backdrop-blur-md text-xs font-bold text-amber-300 border border-amber-400/40 flex items-center gap-1 shadow-lg">
+              <span className="px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md text-xs font-bold text-amber-300 border border-amber-400/40 flex items-center gap-1 shadow-lg">
                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                 <span>{place.rating || 4.8}</span>
                 {place.reviewsCount && <span className="text-slate-400 text-[11px]">({place.reviewsCount})</span>}
@@ -283,85 +291,113 @@ export default function PlaceDetails() {
 
         {/* ──────────────── QUICK STATS METRICS GRID ──────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-          <div className="bg-[#0E2015] border border-[#20452F] p-4 rounded-2xl space-y-1">
-            <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider flex items-center gap-1">
-              <Clock className="w-3 h-3 text-[#4ADE80]" />
+          <div className={`p-4 rounded-2xl space-y-1 border transition-colors ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+          }`}>
+            <span className={`text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 ${
+              isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+            }`}>
+              <Clock className={`w-3 h-3 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
               <span>Hours</span>
             </span>
-            <p className="text-sm font-bold text-white line-clamp-1">{place.hours || '7:00 AM - 9:00 PM'}</p>
+            <p className={`text-sm font-bold line-clamp-1 ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{place.hours || '7:00 AM - 9:00 PM'}</p>
           </div>
 
-          <div className="bg-[#0E2015] border border-[#20452F] p-4 rounded-2xl space-y-1">
-            <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider flex items-center gap-1">
-              <VolumeX className="w-3 h-3 text-[#4ADE80]" />
+          <div className={`p-4 rounded-2xl space-y-1 border transition-colors ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+          }`}>
+            <span className={`text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 ${
+              isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+            }`}>
+              <VolumeX className={`w-3 h-3 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
               <span>Quiet Score</span>
             </span>
-            <p className="text-sm font-bold text-[#4ADE80]">{place.quietScore || '94% Calm'}</p>
+            <p className={`text-sm font-bold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>{place.quietScore || '94% Calm'}</p>
           </div>
 
-          <div className="bg-[#0E2015] border border-[#20452F] p-4 rounded-2xl space-y-1">
-            <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider flex items-center gap-1">
-              <Compass className="w-3 h-3 text-[#4ADE80]" />
+          <div className={`p-4 rounded-2xl space-y-1 border transition-colors ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+          }`}>
+            <span className={`text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 ${
+              isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+            }`}>
+              <Compass className={`w-3 h-3 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
               <span>Best Time</span>
             </span>
-            <p className="text-sm font-bold text-white line-clamp-1">{place.bestTime || place.best_time || 'Morning & Sunset'}</p>
+            <p className={`text-sm font-bold line-clamp-1 ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{place.bestTime || place.best_time || 'Morning & Sunset'}</p>
           </div>
 
-          <div className="bg-[#0E2015] border border-[#20452F] p-4 rounded-2xl space-y-1">
-            <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-[#4ADE80]" />
+          <div className={`p-4 rounded-2xl space-y-1 border transition-colors ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+          }`}>
+            <span className={`text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 ${
+              isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+            }`}>
+              <Sparkles className={`w-3 h-3 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
               <span>Entry / Price</span>
             </span>
-            <p className="text-sm font-bold text-white">{place.price || 'Free Admission'}</p>
+            <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{place.price || 'Free Admission'}</p>
           </div>
         </div>
 
         {/* ──────────────── WHY AI RECOMMENDS THIS ──────────────── */}
-        <div className="bg-gradient-to-br from-[#11271A] to-[#0A1A10] border border-[#4ADE80]/40 rounded-3xl p-6 sm:p-7 space-y-3 shadow-xl relative overflow-hidden">
+        <div className={`rounded-3xl p-6 sm:p-7 space-y-3 shadow-xl relative overflow-hidden border transition-colors ${
+          isDark
+            ? 'bg-gradient-to-br from-[#11271A] to-[#0A1A10] border-[#4ADE80]/40 text-white'
+            : 'bg-gradient-to-br from-[#EDE6D8] to-[#F2ECE1] border-[#D4CBB8] text-[#0F2418]'
+        }`}>
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-[#4ADE80]/20 text-[#4ADE80]">
+            <span className={`p-1.5 rounded-lg ${isDark ? 'bg-[#4ADE80]/20 text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28]'}`}>
               <Sparkles className="w-4 h-4" />
             </span>
-            <h3 className="font-display text-sm font-bold uppercase tracking-wider text-[#4ADE80]">
+            <h3 className={`font-display text-sm font-bold uppercase tracking-wider ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>
               Why NaturePulse Recommends This
             </h3>
           </div>
-          <p className="text-sm sm:text-base text-slate-100 font-normal leading-relaxed">
+          <p className={`text-sm sm:text-base font-normal leading-relaxed ${isDark ? 'text-slate-100' : 'text-[#0F2418]'}`}>
             "{place.whyRecommend || place.why_it_matters || 'A pristine local refuge featuring excellent tree cover, micro-climate cooling, and quiet sanctuary conditions.'}"
           </p>
         </div>
 
         {/* ──────────────── ABOUT & HABITAT DESCRIPTION ──────────────── */}
-        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl">
-          <h2 className="font-display text-xl font-bold text-white">About & Atmosphere</h2>
-          <p className="text-sm text-slate-300 leading-relaxed">
+        <div className={`rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl border transition-colors ${
+          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+        }`}>
+          <h2 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>About &amp; Atmosphere</h2>
+          <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>
             {place.description || 'A serene natural setting designed for mindful observation, peaceful relaxation, and deeper connection with local flora and birds.'}
           </p>
 
           {place.habitat && (
-            <div className="pt-3 border-t border-[#20422E] flex items-start gap-2.5">
-              <Trees className="w-4 h-4 text-[#4ADE80] shrink-0 mt-0.5" />
+            <div className={`pt-3 border-t flex items-start gap-2.5 ${isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'}`}>
+              <Trees className={`w-4 h-4 shrink-0 mt-0.5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
               <div>
-                <p className="text-xs font-bold text-white">Ecosystem & Habitat Type</p>
-                <p className="text-xs text-slate-300 mt-0.5">{place.habitat}</p>
+                <p className={`text-xs font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Ecosystem &amp; Habitat Type</p>
+                <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>{place.habitat}</p>
               </div>
             </div>
           )}
         </div>
 
         {/* ──────────────── INTERACTIVE GOOGLE MAP LOCATION ──────────────── */}
-        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl overflow-hidden">
+        <div className={`rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl overflow-hidden border transition-colors ${
+          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+        }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-[#4ADE80]" />
-              <h2 className="font-display text-xl font-bold text-white">Interactive Location Map</h2>
+              <MapPin className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
+              <h2 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Interactive Location Map</h2>
             </div>
-            <span className="text-[11px] text-[#4ADE80] font-bold bg-[#13271C] px-3 py-1 rounded-full border border-[#20422E]">
+            <span className={`text-[11px] font-bold px-3 py-1 rounded-full border ${
+              isDark ? 'text-[#4ADE80] bg-[#13271C] border-[#20422E]' : 'text-[#183B28] bg-[#E1EFE0] border-[#C3DEC0]'
+            }`}>
               Google Maps Live
             </span>
           </div>
 
-          <div className="relative w-full h-72 sm:h-80 rounded-2xl overflow-hidden border border-[#20422E] shadow-inner bg-[#13271C]">
+          <div className={`relative w-full h-72 sm:h-80 rounded-2xl overflow-hidden border shadow-inner ${
+            isDark ? 'border-[#20422E] bg-[#13271C]' : 'border-[#D4CBB8] bg-[#EDE6D8]'
+          }`}>
             <iframe
               title={`Google Map for ${place.name}`}
               width="100%"
@@ -373,21 +409,27 @@ export default function PlaceDetails() {
               src={`https://maps.google.com/maps?q=${encodeURIComponent(place.name + ', ' + (place.address || place.city || 'Ahmedabad'))}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
             />
           </div>
-          <div className="flex flex-wrap items-center justify-between text-xs text-slate-300 pt-1">
+          <div className={`flex flex-wrap items-center justify-between text-xs pt-1 ${
+            isDark ? 'text-slate-300' : 'text-[#3E5C48]'
+          }`}>
             <span>📍 {place.address || place.city || 'Sabarmati Riverfront, Ahmedabad'}</span>
-            <span className="text-[#4ADE80] font-semibold">{place.distance} away</span>
+            <span className={`font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>{place.distance} away</span>
           </div>
         </div>
 
         {/* ──────────────── AMENITIES & FEATURES ──────────────── */}
         {((place.amenities && place.amenities.length > 0) || (place.features && place.features.length > 0)) && (
-          <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl">
-            <h2 className="font-display text-xl font-bold text-white">Amenities & Features</h2>
+          <div className={`rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl border transition-colors ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+          }`}>
+            <h2 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Amenities &amp; Features</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {(place.amenities || place.features || []).map((feat, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-3 rounded-2xl bg-[#13271C] border border-[#20422E]">
-                  <CheckCircle2 className="w-4 h-4 text-[#4ADE80] shrink-0" />
-                  <span className="text-xs font-medium text-slate-200">{feat}</span>
+                <div key={idx} className={`flex items-center gap-3 p-3 rounded-2xl border ${
+                  isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
+                }`}>
+                  <CheckCircle2 className={`w-4 h-4 shrink-0 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
+                  <span className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>{feat}</span>
                 </div>
               ))}
             </div>
@@ -396,12 +438,14 @@ export default function PlaceDetails() {
 
         {/* ──────────────── HIGHLIGHTS ──────────────── */}
         {place.highlights && place.highlights.length > 0 && (
-          <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl">
-            <h2 className="font-display text-xl font-bold text-white">Key Highlights</h2>
+          <div className={`rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl border transition-colors ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+          }`}>
+            <h2 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Key Highlights</h2>
             <ul className="space-y-2.5">
               {place.highlights.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-2.5 text-xs text-slate-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] mt-1.5 shrink-0" />
+                <li key={idx} className={`flex items-start gap-2.5 text-xs ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${isDark ? 'bg-[#4ADE80]' : 'bg-[#183B28]'}`} />
                   <span>{item}</span>
                 </li>
               ))}
@@ -410,10 +454,12 @@ export default function PlaceDetails() {
         )}
 
         {/* ──────────────── DIRECTIONS & ACTION BUTTONS ──────────────── */}
-        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+        <div className={`rounded-3xl p-6 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl border transition-colors ${
+          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+        }`}>
           <div className="space-y-1 text-center sm:text-left">
-            <h3 className="font-display text-lg font-bold text-white">Ready to visit {place.name}?</h3>
-            <p className="text-xs text-slate-300">Located at {place.address || place.city || 'Ahmedabad'}</p>
+            <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>Ready to visit {place.name}?</h3>
+            <p className={`text-xs ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>Located at {place.address || place.city || 'Ahmedabad'}</p>
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -421,7 +467,9 @@ export default function PlaceDetails() {
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + (place.address || place.city || ''))}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 sm:flex-initial px-6 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-[#4ADE80]/20"
+              className={`flex-1 sm:flex-initial px-6 py-3 rounded-full font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg ${
+                isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77] shadow-[#4ADE80]/20' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+              }`}
             >
               <Navigation className="w-4 h-4" />
               <span>Get Directions</span>
@@ -430,7 +478,9 @@ export default function PlaceDetails() {
             <button
               onClick={toggleBookmark}
               className={`p-3 rounded-full border transition-all cursor-pointer shrink-0 ${
-                isSaved ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80]' : 'bg-[#13271C] text-slate-300 border-[#20422E] hover:border-[#4ADE80]'
+                isSaved
+                  ? isDark ? 'bg-[#4ADE80] text-[#07130B] border-[#4ADE80]' : 'bg-[#183B28] text-[#FAF7F0] border-[#183B28]'
+                  : isDark ? 'bg-[#13271C] text-slate-300 border-[#20422E] hover:border-[#4ADE80]' : 'bg-[#EDE6D8] text-[#3E5C48] border-[#D4CBB8] hover:bg-[#E3DDD1]'
               }`}
               aria-label="Bookmark"
             >
