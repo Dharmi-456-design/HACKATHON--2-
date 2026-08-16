@@ -394,14 +394,9 @@ function getMockData(path, options = {}) {
 }
 
 export async function apiFetch(path, options = {}, token = null) {
-  const apiUrl = import.meta.env.VITE_API_URL;
-
-  // If in demo mode or no remote API backend configured, use rich local mock data
-  if (!apiUrl || isDemoMode() || sessionStorage.getItem('np_demo_login') === '1') {
-    return getMockData(path, options);
-  }
-
-  const url = apiUrl.endsWith('/') ? `${apiUrl.slice(0, -1)}${path}` : `${apiUrl}${path}`;
+  const apiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  const url = `${apiUrl}${cleanPath}`;
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
@@ -410,14 +405,14 @@ export async function apiFetch(path, options = {}, token = null) {
 
   try {
     const res = await fetch(url, { ...options, headers });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      return getMockData(path, options);
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return data;
     }
-    return data;
   } catch (err) {
-    return getMockData(path, options);
+    // Graceful fallback if backend is momentarily unreachable
   }
+  return getMockData(path, options);
 }
 
 export function fileToResizedBase64(file, max = 1400) {
