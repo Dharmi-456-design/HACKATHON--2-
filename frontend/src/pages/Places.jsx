@@ -10,13 +10,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiFetch } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
-// Multilingual UI Translations for Nearby AI Discovery Engine
+// Multilingual UI Translations for Nearby Discovery Engine
 const NEARBY_TRANSLATIONS = {
   en: {
-    heroTag: 'LIVING LOCAL DISCOVERY RADAR',
+    heroTag: 'SPATIAL DISCOVERY COMPASS',
     heroTitle: 'Discover What Is Around You',
-    heroSubtitle: 'Spatial AI discovery for quiet study spots, nature sanctuaries, local cafés, and cultural places.',
-    askNearbyPlaceholder: 'Ask Nearby AI (e.g. Find me a quiet place to study nearby…)',
+    heroSubtitle: 'Spatial discovery for quiet study spots, nature sanctuaries, local cafés, and cultural places.',
+    askNearbyPlaceholder: 'Search nearby (e.g. Find a quiet place to study nearby…)',
     searchBtn: 'Search Radar',
     radiusLabel: 'Discovery Radius:',
     openNowFilter: '🟢 Open Now Only',
@@ -25,16 +25,16 @@ const NEARBY_TRANSLATIONS = {
     tabRadar: '📡 Interactive Radar Map',
     tabCompare: '⚖️ Place Comparison',
     tabSaved: '🔖 Saved Places',
-    tabRoute: '🗺️ AI Discovery Route',
-    whyAIRecommends: 'Why AI Recommends This',
+    tabRoute: '🗺️ Discovery Route',
+    whyAIRecommends: 'Why Recommends This',
     getDirectionsBtn: 'Get Directions',
     savePlaceBtn: 'Bookmark Place',
   },
   gu: {
-    heroTag: 'લિવિંગ લોકલ ડિસ્કવરી રડાર',
+    heroTag: 'સ્પેસિયલ ડિસ્કવરી હોકાયંત્ર',
     heroTitle: 'તમારી આસપાસ શું છે તે શોધો',
-    heroSubtitle: 'શાંત અભ્યાસ સ્થળો, પ્રકૃતિ સ્થાનો, કેફે અને સાંસ્કૃતિક સ્થળો માટે એઆઈ સ્થાનિક સંશોધન.',
-    askNearbyPlaceholder: 'નજીકના એઆઈને પૂછો (દા.ત. નજીકમાં શાંત અભ્યાસ સ્થળ શોધો…)',
+    heroSubtitle: 'શાંત અભ્યાસ સ્થળો, પ્રકૃતિ સ્થાનો, કેફે અને સાંસ્કૃતિક સ્થળો માટે સ્થાનિક સંશોધન.',
+    askNearbyPlaceholder: 'નજીકમાં શોધો (દા.ત. નજીકમાં શાંત અભ્યાસ સ્થળ શોધો…)',
     searchBtn: 'રડાર શોધો',
     radiusLabel: 'શોધ ત્રિજ્યા:',
     openNowFilter: '🟢 હાલમાં ખુલ્લું',
@@ -43,16 +43,16 @@ const NEARBY_TRANSLATIONS = {
     tabRadar: '📡 ઇન્ટરેક્ટિવ રડાર મેપ',
     tabCompare: '⚖️ સરખામણી',
     tabSaved: '🔖 સેવ કરેલા સ્થળો',
-    tabRoute: '🗺️ એઆઈ રૂટ',
-    whyAIRecommends: 'એઆઈ આની ભલામણ કેમ કરે છે',
+    tabRoute: '🗺️ કસ્ટમ રૂટ',
+    whyAIRecommends: 'આની ભલામણ કેમ કરે છે',
     getDirectionsBtn: 'દિશાઓ મેળવો',
     savePlaceBtn: 'સ્થળ સેવ કરો',
   },
   hi: {
-    heroTag: 'लिविंग लोकल डिस्कवरी रडार',
+    heroTag: 'स्पेशल डिस्कवरी कम्पास',
     heroTitle: 'अपनी आसपास की चीजें खोजें',
-    heroSubtitle: 'शांत अध्ययन स्थलों, प्रकृति स्थानों, कैफे और सांस्कृतिक स्थलों की एआई खोज।',
-    askNearbyPlaceholder: 'आसपास के एआई से पूछें (जैसे, अध्ययन के लिए एक शांत जगह खोजें…)',
+    heroSubtitle: 'शांत अध्ययन स्थलों, प्रकृति स्थानों, कैफे और सांस्कृतिक स्थलों की स्थानिक खोज।',
+    askNearbyPlaceholder: 'आसपास खोजें (जैसे, अध्ययन के लिए एक शांत जगह खोजें…)',
     searchBtn: 'रडार खोजें',
     radiusLabel: 'खोज त्रिज्या:',
     openNowFilter: '🟢 अभी खुला हुआ',
@@ -61,14 +61,14 @@ const NEARBY_TRANSLATIONS = {
     tabRadar: '📡 इंटरैक्टिव रडार मैप',
     tabCompare: '⚖️ तुलना',
     tabSaved: '🔖 सहेजे गए स्थान',
-    tabRoute: '🗺️ एआई मार्ग',
-    whyAIRecommends: 'एआई इसकी सिफारिश क्यों करता है',
+    tabRoute: '🗺️ कस्टम मार्ग',
+    whyAIRecommends: 'इसकी सिफारिश क्यों की जाती है',
     getDirectionsBtn: 'दिशा-निर्देश प्राप्त करें',
     savePlaceBtn: 'स्थान सहेजें',
   },
 };
 
-// Seed Real Local Discoveries with HD Images & Radar Coordinates
+// Seed Real Local Discoveries
 const SEED_NEARBY_PLACES = [
   {
     id: 'p-1',
@@ -167,12 +167,10 @@ export default function Places() {
   // Controls
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [radiusFilter, setRadiusFilter] = useState(5); // 5km
   const [onlyOpenNow, setOnlyOpenNow] = useState(false);
-  const [activeTab, setActiveTab] = useState('radar'); // radar, compare, saved, route
+  const [activeTab, setActiveTab] = useState('radar');
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [flippedCardId, setFlippedCardId] = useState(null);
-  const [compareIds, setCompareIds] = useState(['p-1', 'p-2']);
   const [isBuildingRoute, setIsBuildingRoute] = useState(false);
   const [builtRoute, setBuiltRoute] = useState(null);
 
@@ -191,7 +189,7 @@ export default function Places() {
     );
   };
 
-  // Build AI Route
+  // Build Route
   const handleBuildRoute = () => {
     setIsBuildingRoute(true);
     setTimeout(() => {
@@ -229,33 +227,38 @@ export default function Places() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── HERO BANNER ──────────────── */}
-        <div className="relative bg-gradient-to-r from-[#0E2316] via-[#112D1B] to-[#0A1A10] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden">
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30 text-xs font-bold uppercase tracking-widest">
-                <Radio className="w-3.5 h-3.5 text-[#4ADE80] animate-pulse" />
+        {/* ──────────────── RADICAL UNIQUE HEADER 3: SPATIAL COMPASS DIAL HEADER (NO GREEN RECTANGLE) ──────────────── */}
+        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6 border-b border-[#20452F]">
+          <div className="flex items-center gap-5">
+            {/* Animated Compass Motif */}
+            <div className="w-16 h-16 rounded-full bg-[#13271C] border-2 border-[#4ADE80] flex items-center justify-center relative shrink-0 shadow-lg">
+              <Compass className="w-8 h-8 text-[#4ADE80] animate-spin" style={{ animationDuration: '20s' }} />
+              <span className="absolute top-1 text-[8px] font-bold text-[#4ADE80]">N</span>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono font-bold text-[#4ADE80] uppercase tracking-widest">
                 {t.heroTag}
               </span>
-              <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
+              <h1 className="font-display text-4xl sm:text-5xl font-extrabold text-white tracking-tight">
                 {t.heroTitle}
               </h1>
-              <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
+              <p className="text-xs text-slate-300 font-normal leading-relaxed">
                 {t.heroSubtitle}
               </p>
             </div>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleBuildRoute}
-              disabled={isBuildingRoute}
-              className="px-6 py-3.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>{isBuildingRoute ? 'Building Route…' : t.buildRouteBtn}</span>
-            </motion.button>
           </div>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleBuildRoute}
+            disabled={isBuildingRoute}
+            className="px-6 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>{isBuildingRoute ? 'Building Route…' : t.buildRouteBtn}</span>
+          </motion.button>
         </div>
 
         {/* ──────────────── SEARCH & RADIUS CONTROLS ──────────────── */}
@@ -323,25 +326,18 @@ export default function Places() {
           ))}
         </div>
 
-        {/* ──────────────── TAB 1: INTERACTIVE RADAR DISCOVERY MAP ──────────────── */}
+        {/* ──────────────── TAB 1: INTERACTIVE RADAR MAP ──────────────── */}
         {activeTab === 'radar' && (
           <div className="space-y-6">
-            
-            {/* SVG Radar Canvas */}
             <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden min-h-[460px]">
               <div className="relative w-full h-[440px]">
-                
-                {/* SVG Sonar Radar Rings */}
                 <svg viewBox="0 0 700 440" className="absolute inset-0 w-full h-full pointer-events-none">
                   <circle cx="350" cy="220" r="80" stroke="#20422E" strokeWidth="1" strokeDasharray="4" fill="none" />
                   <circle cx="350" cy="220" r="150" stroke="#20422E" strokeWidth="1" strokeDasharray="4" fill="none" />
                   <circle cx="350" cy="220" r="210" stroke="#20422E" strokeWidth="1" strokeDasharray="4" fill="none" />
-                  
-                  {/* Radar Scanning Line */}
                   <line x1="350" y1="220" x2="600" y2="100" stroke="#4ADE80" strokeWidth="1.5" opacity="0.4" />
                 </svg>
 
-                {/* Central Radar Pulse Hub */}
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -352,7 +348,6 @@ export default function Places() {
                   <span className="text-[9px] font-bold text-white tracking-widest uppercase">YOU</span>
                 </motion.div>
 
-                {/* Floating Location Markers */}
                 {filteredPlaces.map((place) => {
                   const isSelected = selectedPlace?.id === place.id;
                   return (
@@ -379,7 +374,7 @@ export default function Places() {
               </div>
             </div>
 
-            {/* 3D Flipping Location Tiles */}
+            {/* 3D Flipping Tiles */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {filteredPlaces.map((place) => {
                 const isFlipped = flippedCardId === place.id;
@@ -465,36 +460,6 @@ export default function Places() {
                   </div>
                 );
               })}
-            </div>
-
-          </div>
-        )}
-
-        {/* ──────────────── TAB 4: AI DISCOVERY ROUTE ──────────────── */}
-        {activeTab === 'route' && builtRoute && (
-          <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
-              <div>
-                <h3 className="font-display text-2xl font-bold text-white">{builtRoute.title}</h3>
-                <p className="text-xs text-[#4ADE80] font-semibold">Total Estimated Duration: {builtRoute.duration}</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {builtRoute.stops.map((stop) => (
-                <div key={stop.order} className="bg-[#13271C] border border-[#20422E] p-5 rounded-2xl flex items-start gap-4">
-                  <div className="w-9 h-9 rounded-full bg-[#1A3827] border border-[#4ADE80] flex items-center justify-center text-xs font-bold text-[#4ADE80] shrink-0">
-                    0{stop.order}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-display text-base font-bold text-white">{stop.name}</h4>
-                      <span className="text-xs text-amber-400 font-semibold">{stop.time}</span>
-                    </div>
-                    <p className="text-xs text-slate-300">{stop.note}</p>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         )}

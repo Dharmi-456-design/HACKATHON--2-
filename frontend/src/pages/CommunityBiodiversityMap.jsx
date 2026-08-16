@@ -12,7 +12,7 @@ import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 // Multilingual UI Translations for Community Bio Map
 const COMMUNITY_MAP_TRANSLATIONS = {
   en: {
-    heroTag: 'COMMUNITY BIODIVERSITY NEURAL MAP',
+    heroTag: 'COMMUNITY BIODIVERSITY NETWORK',
     heroTitle: 'Shared Ecological Constellation',
     heroSubtitle: 'Discover anonymous city-level observations, species networks, and urban nature spots across your community.',
     searchPlaceholder: 'Search species, locations, observations…',
@@ -28,7 +28,7 @@ const COMMUNITY_MAP_TRANSLATIONS = {
     close: 'Close',
   },
   gu: {
-    heroTag: 'કમ્યુનિટી બાયોડાઇવર્સિટી ન્યુરલ મેપ',
+    heroTag: 'કમ્યુનિટી બાયોડાઇવર્સિટી નેટવર્ક',
     heroTitle: 'સહિયારું ઇકોલોજીકલ નક્ષત્ર',
     heroSubtitle: 'તમારા સમુદાયના અનામી શહેર-સ્તરના અવલોકનો, પ્રજાતિ નેટવર્ક અને પ્રકૃતિના સ્થળો શોધો.',
     searchPlaceholder: 'પ્રજાતિઓ, સ્થળો, અવલોકનો શોધો…',
@@ -44,12 +44,12 @@ const COMMUNITY_MAP_TRANSLATIONS = {
     close: 'બંધ કરો',
   },
   hi: {
-    heroTag: 'कम्युनिटी बायोडायवर्सिटी न्यूरल मैप',
+    heroTag: 'कम्युनिटी बायोडायवर्सिटी नेटवर्क',
     heroTitle: 'साझा पारिस्थितिक नक्षत्र',
     heroSubtitle: 'अपने समुदाय के शहर-स्तरीय अवलोकनों, प्रजातियों के नेटवर्क और प्रकृति के स्थानों की खोज करें।',
     searchPlaceholder: 'प्रजातियां, स्थान, अवलोकन खोजें…',
     filterAll: 'सभी प्रजातियां',
-    catBirds: '🐦 पक्षी',
+    catBirds: 'किस चिड़िया',
     catTrees: '🌳 पेड़',
     catFlowers: '🌸 फूल',
     catInsects: '🦋 कीड़े',
@@ -99,25 +99,28 @@ export default function CommunityBiodiversityMap() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── HERO BANNER ──────────────── */}
-        <div className="relative bg-gradient-to-r from-[#0E2316] via-[#112D1B] to-[#0A1A10] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden">
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-xl">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30 text-xs font-bold uppercase tracking-widest">
-                <Radio className="w-3.5 h-3.5 text-[#4ADE80] animate-pulse" />
+        {/* ──────────────── RADICAL UNIQUE HEADER 1: FLOATING GLASS SPHERE HEADER (NO GREEN RECTANGLE) ──────────────── */}
+        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6 px-4 border-b border-[#4ADE80]/30">
+          <div className="space-y-2 max-w-xl">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#4ADE80] animate-ping" />
+              <span className="text-xs font-bold text-[#4ADE80] uppercase tracking-widest">
                 {t.heroTag}
               </span>
-              <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-                {t.heroTitle}
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
-                {t.heroSubtitle}
-              </p>
             </div>
 
-            <div className="flex items-center gap-2 bg-[#13271C] border border-[#20422E] px-4 py-2.5 rounded-2xl text-xs font-semibold text-[#4ADE80]">
-              <span>🛡️ {t.verifiedAnonymous}</span>
-            </div>
+            <h1 className="font-display text-4xl sm:text-6xl font-black text-white tracking-tight">
+              {t.heroTitle}
+            </h1>
+
+            <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
+              {t.heroSubtitle}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 bg-[#1A3827]/80 backdrop-blur-md border border-[#4ADE80]/40 px-4 py-2.5 rounded-full text-xs font-semibold text-[#4ADE80] shadow-lg shrink-0">
+            <Globe className="w-4 h-4 text-[#4ADE80] animate-spin" style={{ animationDuration: '12s' }} />
+            <span>{t.verifiedAnonymous}</span>
           </div>
         </div>
 
@@ -137,14 +140,14 @@ export default function CommunityBiodiversityMap() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.4))}
-                className="p-3 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white"
+                className="p-3 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white cursor-pointer"
                 title="Zoom In"
               >
                 <ZoomIn className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.7))}
-                className="p-3 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white"
+                className="p-3 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white cursor-pointer"
                 title="Zoom Out"
               >
                 <ZoomOut className="w-4 h-4" />
@@ -255,7 +258,7 @@ export default function CommunityBiodiversityMap() {
                 </div>
               </div>
 
-              <button onClick={() => setSelectedPin(null)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setSelectedPin(null)} className="text-slate-400 hover:text-white cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
