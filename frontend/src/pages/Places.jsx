@@ -9,7 +9,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch } from '../lib/api';
-import { SEED_NEARBY_PLACES } from './PlaceDetails';
 
 // Multilingual UI Translations for Nearby Discovery Engine
 const NEARBY_TRANSLATIONS = {
