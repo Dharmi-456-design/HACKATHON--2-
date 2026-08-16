@@ -1,327 +1,150 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { 
-  Sparkles, User, Brain, Target, Compass, Plus, Trash2, Edit3, X, 
-  HelpCircle, Eye, EyeOff, Search, ZoomIn, ZoomOut, RotateCcw, Check, 
-  Globe, Shield, BookOpen, Layers, ArrowRight, Lightbulb, Zap, Info
+  Sparkles, Award, Compass, MapPin, Globe, BookOpen, Layers, Search, 
+  ChevronRight, ChevronLeft, Lock, CheckCircle2, Shield, User, Download, 
+  Share2, Eye, EyeOff, Plus, Trash2, Wand2, Star, Zap, Flame, RotateCcw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, formatWhen } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
-// Multilingual UI Translations for Bio Map
-const BIOMAP_TRANSLATIONS = {
+// Multilingual UI Translations for Digital Journey Passport
+const PASSPORT_TRANSLATIONS = {
   en: {
-    heroTag: 'INTERACTIVE NEURAL BIO MAP',
-    heroTitle: 'Your Living Knowledge Universe',
-    heroSubtitle: 'A spatial constellation of your interests, skills, learning topics, and AI conversation context.',
-    searchPlaceholder: 'Search map nodes, skills, topics…',
-    addNodeBtn: '+ Add Topic',
-    filterAll: 'All Categories',
-    catInterests: '💡 Interests',
-    catSkills: '🎓 Skills',
-    catLearning: '📖 Learning',
-    catGoals: '🎯 Goals',
-    catProjects: '💻 Projects',
-    catPreferences: '⚙️ Preferences',
-    aiUnderstandTitle: 'What AI Understands About Your Interests',
-    aiUnderstandDesc: 'Observed from your recent chat history and field observations.',
-    whyIsThisHere: 'Why is this here?',
-    memoryControlTitle: 'AI Memory Control',
-    allowPersonalization: 'Allowed for AI Personalization',
-    exploreTopic: 'Explore Related Chats',
-    deleteNode: 'Remove Node',
-    createNodeTitle: 'Add Topic to Bio Map',
-    nodeNameLabel: 'Topic / Interest Name',
-    categoryLabel: 'Category',
-    reasonLabel: 'Reason or Note',
-    saveNodeBtn: 'Add to Neural Map',
+    heroTag: 'FUTURISTIC DIGITAL JOURNEY PASSPORT',
+    heroTitle: 'My AI Knowledge Passport',
+    heroSubtitle: 'Flip through your digital passport of achievements, completed missions, interactive stories, and learning milestones.',
+    passportLevel: 'Level 4 Knowledge Seeker',
+    issueDate: 'ISSUED: AUG 2026',
+    passportStatus: 'STATUS: ACTIVE EXPLORER',
+    tabCover: '📘 Passport Cover',
+    tabOverview: '📊 Overview',
+    tabStamps: '🎖️ Digital Stamps',
+    tabTimeline: '🗺️ Journey Trail',
+    tabGuide: '🔮 Passport Guide',
+    searchPlaceholder: 'Search passport stamps, milestones, stories…',
+    exportPassport: 'Export Digital Passport',
+    privacyTitle: 'Passport Privacy Controls',
+    allowShare: 'Publicly Shareable Achievement',
+    nextDestination: 'Choose Next Destination',
+    startExploration: 'Start Journey',
+    aiGuidePrompt: 'Ask AI Passport Guide about your progress…',
   },
   gu: {
-    heroTag: 'ઇન્ટરેક્ટિવ ન્યુરલ બાયો મેપ',
-    heroTitle: 'તમારું જીવંત જ્ઞાન બ્રહ્માંડ',
-    heroSubtitle: 'તમારા રસ, કૌશલ્યો, શીખવાના વિષયો અને એઆઈ વાતચીતના સંદર્ભનું અવકાશી નક્ષત્ર.',
-    searchPlaceholder: 'મેપ નોડ્સ, કૌશલ્યો, વિષયો શોધો…',
-    addNodeBtn: '+ વિષય ઉમેરો',
-    filterAll: 'બધી કેટેગરીઝ',
-    catInterests: '💡 રસ',
-    catSkills: '🎓 કૌશલ્ય',
-    catLearning: '📖 શિક્ષણ',
-    catGoals: '🎯 લક્ષ્યો',
-    catProjects: '💻 પ્રોજેક્ટ્સ',
-    catPreferences: '⚙️ પસંદગીઓ',
-    aiUnderstandTitle: 'એઆઈ તમારા રસ વિશે શું સમજે છે',
-    aiUnderstandDesc: 'તમારી તાજેતરની ચેટ હિસ્ટ્રી પરથી અવલોકન કરાયેલ.',
-    whyIsThisHere: 'આ અહીં કેમ છે?',
-    memoryControlTitle: 'એઆઈ મેમરી નિયંત્રણ',
-    allowPersonalization: 'એઆઈ પર્સનલાઇઝેશન માટે મંજૂર',
-    exploreTopic: 'સંબંધિત ચેટ્સ શોધો',
-    deleteNode: 'નોડ દૂર કરો',
-    createNodeTitle: 'બાયો મેપમાં વિષય ઉમેરો',
-    nodeNameLabel: 'વિષય / રસનું નામ',
-    categoryLabel: 'કેટેગરી',
-    reasonLabel: 'કારણ અથવા નોંધ',
-    saveNodeBtn: 'મેપમાં ઉમેરો',
+    heroTag: 'ફ્યુચ્યુરિસ્ટિક ડિજિટલ જર્ની પાસપોર્ટ',
+    heroTitle: 'મારો એઆઈ નોલેજ પાસપોર્ટ',
+    heroSubtitle: 'તમારી સિદ્ધિઓ, પૂર્ણ કરેલા મિશનો, ઇન્ટરેક્ટિવ વાર્તાઓ અને શીખવાના તબક્કાનો ડિજિટલ પાસપોર્ટ.',
+    passportLevel: 'લેવલ 4 જ્ઞાન શોધક',
+    issueDate: 'ઇશ્યુ તારીખ: ઓગસ્ટ 2026',
+    passportStatus: 'સ્થિતિ: સક્રિય સંશોધક',
+    tabCover: '📘 પાસપોર્ટ કવર',
+    tabOverview: '📊 વિહંગાવલોકન',
+    tabStamps: '🎖️ ડિજિટલ સ્ટેમ્પ્સ',
+    tabTimeline: '🗺️ યાત્રા પાથ',
+    tabGuide: '🔮 પાસપોર્ટ ગાઇડ',
+    searchPlaceholder: 'પાસપોર્ટ સ્ટેમ્પ્સ, સિદ્ધિઓ શોધો…',
+    exportPassport: 'પાસપોર્ટ નિકાસ કરો',
+    privacyTitle: 'ગોપનીયતા નિયંત્રણો',
+    allowShare: 'જાહેર રીતે શેર કરી શકાય તેવું',
+    nextDestination: 'આગળનું સ્થળ પસંદ કરો',
+    startExploration: 'યાત્રા શરૂ કરો',
+    aiGuidePrompt: 'તમારી પ્રગતિ વિશે એઆઈ ગાઇડને પૂછો…',
   },
   hi: {
-    heroTag: 'इंटरैक्टिव न्यूरल बायो मैप',
-    heroTitle: 'आपका जीवित ज्ञान ब्रह्मांड',
-    heroSubtitle: 'आपकी रुचियों, कौशलों, सीखने के विषयों और एआई बातचीत के संदर्भ का आकाशीय नक्षत्र।',
-    searchPlaceholder: 'मैप नोड्स, कौशल, विषय खोजें…',
-    addNodeBtn: '+ विषय जोड़ें',
-    filterAll: 'सभी श्रेणियां',
-    catInterests: '💡 रुचियां',
-    catSkills: '🎓 कौशल',
-    catLearning: '📖 सीखना',
-    catGoals: '🎯 लक्ष्य',
-    catProjects: '💻 प्रोजेक्ट्स',
-    catPreferences: '⚙️ प्राथमिकताएं',
-    aiUnderstandTitle: 'एआई आपकी रुचियों के बारे में क्या समझता है',
-    aiUnderstandDesc: 'आपकी हालिया चैट हिस्ट्री से देखा गया।',
-    whyIsThisHere: 'यह यहां क्यों है?',
-    memoryControlTitle: 'एआई मेमोरी नियंत्रण',
-    allowPersonalization: 'एआई वैयक्तिकरण के लिए स्वीकृत',
-    exploreTopic: 'संबंधित चैट खोजें',
-    deleteNode: 'नोड हटाएं',
-    createNodeTitle: 'बायो मैप में विषय जोड़ें',
-    nodeNameLabel: 'विषय / रुचि का नाम',
-    categoryLabel: 'श्रेणी',
-    reasonLabel: 'कारण या नोट',
-    saveNodeBtn: 'मैप में जोड़ें',
+    heroTag: 'फ्यूचरिस्टिक डिजिटल यात्रा पासपोर्ट',
+    heroTitle: 'मेरा एआई ज्ञान पासपोर्ट',
+    heroSubtitle: 'अपनी उपलब्धियों, पूरे किए गए मिशनों, इंटरैक्टिव कहानियों और सीखने के मील के पत्थरों का डिजिटल पासपोर्ट।',
+    passportLevel: 'लेवल 4 ज्ञान साधक',
+    issueDate: 'जारी: अगस्त 2026',
+    passportStatus: 'स्थिति: सक्रिय अन्वेषक',
+    tabCover: '📘 पासपोर्ट कवर',
+    tabOverview: '📊 अवलोकन',
+    tabStamps: '🎖️ डिजिटल स्टैम्प',
+    tabTimeline: '🗺️ यात्रा पथ',
+    tabGuide: '🔮 पासपोर्ट गाइड',
+    searchPlaceholder: 'पासपोर्ट स्टैम्प, मील के पत्थर खोजें…',
+    exportPassport: 'पासपोर्ट निर्यात करें',
+    privacyTitle: 'गोपनीयता नियंत्रण',
+    allowShare: 'सार्वजनिक रूप से साझा करने योग्य',
+    nextDestination: 'अगला गंतव्य चुनें',
+    startExploration: 'यात्रा शुरू करें',
+    aiGuidePrompt: 'अपनी प्रगति के बारे में एआई गाइड से पूछें…',
   },
 };
 
-// Seed Neural Nodes
-const SEED_NODES = [
-  { id: 'node-1', name: 'Photosynthesis', category: 'Interests', size: 54, x: 280, y: 140, chatsCount: 14, origin: 'Generated from chat on Wednesday about tree canopy cooling effect.', isMemoryAllowed: true },
-  { id: 'node-2', name: 'Species Identification', category: 'Skills', size: 48, x: 420, y: 100, chatsCount: 9, origin: 'Observed from Nature Lens species uploads.', isMemoryAllowed: true },
-  { id: 'node-3', name: 'Micro-climates', category: 'Learning', size: 44, x: 160, y: 220, chatsCount: 6, origin: 'Added during Vadodara micro-climate discussion.', isMemoryAllowed: true },
-  { id: 'node-4', name: 'Document 10 Species', category: 'Goals', size: 42, x: 460, y: 260, chatsCount: 8, origin: 'Created during Weekly Goal setting.', isMemoryAllowed: true },
-  { id: 'node-5', name: 'Urban Canopy Mapping', category: 'Projects', size: 50, x: 320, y: 340, chatsCount: 11, origin: 'Project thread created in Community field notes.', isMemoryAllowed: true },
-  { id: 'node-6', name: 'Gujarati & English Primary', category: 'Preferences', size: 40, x: 180, y: 340, chatsCount: 15, origin: 'Language selection setting.', isMemoryAllowed: true },
-  { id: 'node-7', name: 'Bird Migration Times', category: 'Interests', size: 38, x: 500, y: 180, chatsCount: 5, origin: 'Generated from Lake Kingfisher inquiry.', isMemoryAllowed: true },
+// Digital Stamps Seed
+const SEED_STAMPS = [
+  { id: 'st-1', title: 'FIRST AI CHAT 💬', date: 'Aug 10, 2026', category: 'Milestones', xp: 100, desc: 'Initiated first AI conversation on Urban Peepal Canopy.', icon: '💬', unlocked: true },
+  { id: 'st-2', title: 'MISSION MASTER ⚡', date: 'Aug 12, 2026', category: 'Missions', xp: 250, desc: 'Completed Peepal dawn listening challenge.', icon: '⚡', unlocked: true },
+  { id: 'st-3', title: 'STORY TRAVELER 📚', date: 'Aug 14, 2026', category: 'Stories', xp: 200, desc: 'Explored 3D decision story in Ancient Cedar Forest.', icon: '📚', unlocked: true },
+  { id: 'st-4', title: '7-DAY EXPLORER STREAK 🔥', date: 'Aug 15, 2026', category: 'Streaks', xp: 300, desc: 'Active every single day this week across Nature Lens and Pulse.', icon: '🔥', unlocked: true },
+  { id: 'st-5', title: 'MULTILINGUAL EXPERT 🌐', date: 'Aug 16, 2026', category: 'Language', xp: 150, desc: 'Switched fluently between English, Gujarati and Hindi.', icon: '🌐', unlocked: true },
+  { id: 'st-6', title: 'ECO DISCOVERY SPHERE 🌿', date: 'Aug 16, 2026', category: 'Discoveries', xp: 220, desc: 'Saved 5 micro-climate observations to Bio Map.', icon: '🌿', unlocked: true },
 ];
 
 export default function BiodiversityPassport() {
-  const { user } = useAuth();
+  const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
-  const t = BIOMAP_TRANSLATIONS[lang] || BIOMAP_TRANSLATIONS.en;
+  const t = PASSPORT_TRANSLATIONS[lang] || PASSPORT_TRANSLATIONS.en;
 
-  // Persistent Nodes State
-  const [nodes, setNodes] = useState(() => {
+  // Passport Pages State (0: Cover, 1: Overview, 2: Digital Stamps, 3: Journey Trail, 4: AI Guide)
+  const [currentPage, setCurrentPage] = useState(0);
+  const [stamps, setStamps] = useState(() => {
     try {
-      const saved = localStorage.getItem('pulse_biomap_v1');
-      return saved ? JSON.parse(saved) : SEED_NODES;
+      const saved = localStorage.getItem('pulse_passport_stamps_v1');
+      return saved ? JSON.parse(saved) : SEED_STAMPS;
     } catch {
-      return SEED_NODES;
+      return SEED_STAMPS;
     }
   });
 
-  // Filter & Selected Node States
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [flippedStampId, setFlippedStampId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [showWhyModal, setShowWhyModal] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [flippedCardId, setFlippedCardId] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
-  // New Node Form State
-  const [newNodeName, setNewNodeName] = useState('');
-  const [newNodeCategory, setNewNodeCategory] = useState('Interests');
-  const [newNodeReason, setNewNodeReason] = useState('');
+  // AI Guide Chat State
+  const [guideInput, setGuideInput] = useState('');
+  const [guideMessages, setGuideMessages] = useState([
+    { id: 1, sender: 'ai', text: 'Welcome to your Digital AI Passport! You have unlocked 6 stamps and reached Level 4 Knowledge Seeker.' },
+  ]);
 
   useEffect(() => {
-    localStorage.setItem('pulse_biomap_v1', JSON.stringify(nodes));
-  }, [nodes]);
+    localStorage.setItem('pulse_passport_stamps_v1', JSON.stringify(stamps));
+  }, [stamps]);
 
-  // Add Node Submit
-  const handleAddNode = (e) => {
+  // Handle Page Turn
+  const nextPage = () => setCurrentPage((p) => Math.min(p + 1, 4));
+  const prevPage = () => setCurrentPage((p) => Math.max(p - 1, 0));
+
+  // Export Passport
+  const handleExportPassport = () => {
+    setIsExporting(true);
+    setTimeout(() => {
+      alert('Digital Journey Passport exported successfully as summary card!');
+      setIsExporting(false);
+    }, 1000);
+  };
+
+  // AI Guide Send Message
+  const handleSendGuideMsg = (e) => {
     e.preventDefault();
-    if (!newNodeName.trim()) return;
+    if (!guideInput.trim()) return;
 
-    const newNode = {
-      id: `node-${Date.now()}`,
-      name: newNodeName.trim(),
-      category: newNodeCategory,
-      size: 46,
-      x: 250 + Math.random() * 200,
-      y: 150 + Math.random() * 150,
-      chatsCount: 1,
-      origin: newNodeReason.trim() || 'Manually added by user to Bio Map.',
-      isMemoryAllowed: true,
-    };
+    const userMsg = { id: Date.now(), sender: 'user', text: guideInput.trim() };
+    setGuideMessages((prev) => [...prev, userMsg]);
+    const inputVal = guideInput.trim();
+    setGuideInput('');
 
-    setNodes([...nodes, newNode]);
-    setNewNodeName('');
-    setNewNodeReason('');
-    setShowAddModal(false);
-    setSelectedNode(newNode);
+    setTimeout(() => {
+      const reply = `Based on your Passport history: You completed 4 missions, 3 interactive stories, and maintain a 7-Day active streak in Gujarati & English. Next recommended destination: "Micro-climate Root Research".`;
+      setGuideMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'ai', text: reply }]);
+    }, 1000);
   };
-
-  // Delete Node
-  const handleDeleteNode = (nodeId) => {
-    setNodes((prev) => prev.filter((n) => n.id !== nodeId));
-    if (selectedNode?.id === nodeId) setSelectedNode(null);
-  };
-
-  // Toggle Memory Allowance
-  const toggleMemoryAllowed = (nodeId) => {
-    setNodes((prev) =>
-      prev.map((n) => (n.id === nodeId ? { ...n, isMemoryAllowed: !n.isMemoryAllowed } : n))
-    );
-    if (selectedNode?.id === nodeId) {
-      setSelectedNode((prev) => ({ ...prev, isMemoryAllowed: !prev.isMemoryAllowed }));
-    }
-  };
-
-  // Filtered Nodes
-  const filteredNodes = nodes.filter((n) => {
-    if (selectedCategory !== 'All' && n.category !== selectedCategory) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchName = n.name.toLowerCase().includes(q);
-      const matchCat = n.category.toLowerCase().includes(q);
-      if (!matchName && !matchCat) return false;
-    }
-    return true;
-  });
 
   return (
     <div className="min-h-screen bg-[#040B06] text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white pb-24 relative overflow-hidden">
       
-      {/* ──────────────── WHY IS THIS HERE MODAL ──────────────── */}
-      <AnimatePresence>
-        {showWhyModal && selectedNode && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-            onClick={() => setShowWhyModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#112318] border border-[#4ADE80]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center border-b border-[#20452F] pb-3">
-                <h3 className="font-display text-lg font-bold text-white flex items-center gap-2">
-                  <HelpCircle className="w-5 h-5 text-[#4ADE80]" />
-                  <span>{t.whyIsThisHere}</span>
-                </h3>
-                <button onClick={() => setShowWhyModal(false)} className="text-slate-400 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                <span className="px-3 py-1 rounded-full bg-[#1A3827] text-xs font-bold text-[#4ADE80]">
-                  {selectedNode.category} · {selectedNode.name}
-                </span>
-                <p className="text-xs sm:text-sm text-slate-200 bg-[#0E2015] border border-[#20422E] p-4 rounded-2xl leading-relaxed italic">
-                  "{selectedNode.origin}"
-                </p>
-              </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  onClick={() => setShowWhyModal(false)}
-                  className="px-5 py-2 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs cursor-pointer"
-                >
-                  Got it
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ──────────────── ADD NODE MODAL ──────────────── */}
-      <AnimatePresence>
-        {showAddModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-            onClick={() => setShowAddModal(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-[#112318] border border-[#4ADE80]/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center border-b border-[#20452F] pb-3">
-                <h3 className="font-display text-xl font-bold text-white flex items-center gap-2">
-                  <Brain className="w-5 h-5 text-[#4ADE80]" />
-                  <span>{t.createNodeTitle}</span>
-                </h3>
-                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleAddNode} className="space-y-4">
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
-                    {t.nodeNameLabel}
-                  </label>
-                  <input
-                    required
-                    value={newNodeName}
-                    onChange={(e) => setNewNodeName(e.target.value)}
-                    placeholder="e.g., Urban Butterfly Habitats"
-                    className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
-                    {t.categoryLabel}
-                  </label>
-                  <select
-                    value={newNodeCategory}
-                    onChange={(e) => setNewNodeCategory(e.target.value)}
-                    className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-3 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
-                  >
-                    <option value="Interests">💡 Interests</option>
-                    <option value="Skills">🎓 Skills</option>
-                    <option value="Learning">📖 Learning</option>
-                    <option value="Goals">🎯 Goals</option>
-                    <option value="Projects">💻 Projects</option>
-                    <option value="Preferences">⚙️ Preferences</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-slate-400 mb-1 font-semibold">
-                    {t.reasonLabel}
-                  </label>
-                  <input
-                    value={newNodeReason}
-                    onChange={(e) => setNewNodeReason(e.target.value)}
-                    placeholder="Why are you adding this topic?"
-                    className="w-full bg-[#0E2015] border border-[#20422E] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] cursor-pointer shadow-lg"
-                >
-                  {t.saveNodeBtn}
-                </button>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
@@ -344,199 +167,286 @@ export default function BiodiversityPassport() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowAddModal(true)}
+              onClick={handleExportPassport}
+              disabled={isExporting}
               className="px-6 py-3.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
             >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>{t.addNodeBtn}</span>
+              <Download className="w-4 h-4" />
+              <span>{isExporting ? 'Exporting…' : t.exportPassport}</span>
             </motion.button>
           </div>
         </div>
 
-        {/* ──────────────── SEARCH & FILTER BAR ──────────────── */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="relative flex-1 w-full">
-              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t.searchPlaceholder}
-                className="w-full bg-[#12241A] border border-[#234A33] rounded-2xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-[#4ADE80]"
-              />
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.4))}
-                className="p-3 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white"
-                title="Zoom In"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.7))}
-                className="p-3 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white"
-                title="Zoom Out"
-              >
-                <ZoomOut className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Category Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-            {[
-              t.filterAll,
-              t.catInterests,
-              t.catSkills,
-              t.catLearning,
-              t.catGoals,
-              t.catProjects,
-              t.catPreferences,
-            ].map((catLabel, idx) => {
-              const val = idx === 0 ? 'All' : ['Interests', 'Skills', 'Learning', 'Goals', 'Projects', 'Preferences'][idx - 1];
-              return (
-                <button
-                  key={catLabel}
-                  onClick={() => setSelectedCategory(val)}
-                  className={`px-3.5 py-1.5 rounded-full border text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
-                    selectedCategory === val
-                      ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]'
-                      : 'bg-[#0E2015]/60 border-[#20422E] text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  {catLabel}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ──────────────── INTERACTIVE NEURAL MAP SVG CANVAS ──────────────── */}
-        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden min-h-[480px]">
-          <div
-            className="relative w-full h-[460px] transition-transform duration-300 origin-center"
-            style={{ transform: `scale(${zoomLevel})` }}
-          >
-            {/* SVG Connecting Light Beams */}
-            <svg viewBox="0 0 700 460" className="absolute inset-0 w-full h-full pointer-events-none">
-              {filteredNodes.map((n) => (
-                <g key={n.id}>
-                  <line
-                    x1={350}
-                    y1={230}
-                    x2={n.x}
-                    y2={n.y}
-                    stroke={selectedNode?.id === n.id ? '#4ADE80' : '#20422E'}
-                    strokeWidth={selectedNode?.id === n.id ? '2.5' : '1.2'}
-                    strokeDasharray={selectedNode?.id === n.id ? 'none' : '4'}
-                  />
-                </g>
-              ))}
-            </svg>
-
-            {/* Central YOU Node */}
-            <motion.div
-              animate={{ scale: [1, 1.08, 1] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#2E6141] via-[#1A3827] to-[#040B06] border-2 border-[#4ADE80] flex flex-col items-center justify-center text-center shadow-2xl z-20 cursor-pointer"
-              onClick={() => setSelectedNode(null)}
+        {/* ──────────────── 3D FLIPPING PASSPORT BOOKLET ──────────────── */}
+        <div className="relative max-w-4xl mx-auto">
+          
+          {/* Passport Page Controls Bar */}
+          <div className="flex items-center justify-between bg-[#112318] border border-[#20452F] rounded-2xl px-5 py-3 mb-4 text-xs font-semibold text-slate-300">
+            <button
+              onClick={prevPage}
+              disabled={currentPage === 0}
+              className="flex items-center gap-1 hover:text-[#4ADE80] disabled:opacity-30 cursor-pointer"
             >
-              <User className="w-6 h-6 text-[#4ADE80]" />
-              <span className="text-[10px] font-bold text-white tracking-wider uppercase">YOU</span>
-            </motion.div>
+              <ChevronLeft className="w-4 h-4" />
+              <span>Previous Page</span>
+            </button>
 
-            {/* Floating Neural Nodes */}
-            {filteredNodes.map((n) => {
-              const isSelected = selectedNode?.id === n.id;
-              return (
-                <motion.div
-                  key={n.id}
-                  whileHover={{ scale: 1.15 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedNode(n)}
-                  style={{ left: n.x, top: n.y }}
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 px-3 py-2 rounded-2xl border transition-all cursor-pointer shadow-lg z-20 flex items-center gap-2 ${
-                    isSelected
-                      ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-[#4ADE80]/30 scale-110'
-                      : 'bg-[#13271C]/90 border-[#20422E] text-slate-200 hover:border-[#4ADE80]/50'
-                  }`}
-                >
-                  <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse" />
-                  <span className="text-xs font-bold whitespace-nowrap">{n.name}</span>
-                </motion.div>
-              );
-            })}
+            <span className="text-[#4ADE80] font-bold">
+              Page {currentPage + 1} of 5
+            </span>
+
+            <button
+              onClick={nextPage}
+              disabled={currentPage === 4}
+              className="flex items-center gap-1 hover:text-[#4ADE80] disabled:opacity-30 cursor-pointer"
+            >
+              <span>Next Page</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
+
+          <AnimatePresence mode="wait">
+            
+            {/* 📘 PAGE 0: HOLOGRAPHIC PASSPORT COVER */}
+            {currentPage === 0 && (
+              <motion.div
+                key="p0"
+                initial={{ rotateY: -90, opacity: 0 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: 90, opacity: 0 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="bg-gradient-to-br from-[#0B1E13] via-[#112D1B] to-[#061209] border-2 border-[#4ADE80]/60 rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden space-y-8"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <span className="text-[11px] font-extrabold text-[#4ADE80] uppercase tracking-widest">
+                      {t.passportStatus}
+                    </span>
+                    <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-white">
+                      DIGITAL EXPLORER PASSPORT
+                    </h2>
+                  </div>
+
+                  <div className="w-16 h-16 rounded-2xl bg-[#1A3827] border-2 border-[#4ADE80] flex items-center justify-center text-2xl shadow-xl">
+                    🛡️
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-[#06140B] border border-[#20422E] p-6 rounded-2xl">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full bg-[#1A3827] border border-[#4ADE80] flex items-center justify-center text-xl font-bold text-white">
+                      👤
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Passport Holder</p>
+                      <h4 className="font-display text-lg font-bold text-white">Nature Pulse Explorer</h4>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 text-xs">
+                    <p className="text-slate-400">{t.passportLevel}</p>
+                    <p className="text-slate-400">{t.issueDate}</p>
+                    <p className="text-[#4ADE80] font-bold">6 Unlocked Digital Stamps</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={nextPage}
+                    className="px-8 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] cursor-pointer shadow-xl flex items-center gap-2"
+                  >
+                    <span>Open Passport Pages</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* 📊 PAGE 1: JOURNEY OVERVIEW */}
+            {currentPage === 1 && (
+              <motion.div
+                key="p1"
+                initial={{ rotateY: -90, opacity: 0 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: 90, opacity: 0 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6"
+              >
+                <h3 className="font-display text-2xl font-bold text-white border-b border-[#20452F] pb-3">
+                  Page 1 — Journey Milestone Overview
+                </h3>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Total XP', val: '1,250 XP', icon: '🏆' },
+                    { label: 'Active Streak', val: '7 Days 🔥', icon: '🔥' },
+                    { label: 'Completed Missions', val: '4 Finished', icon: '🎯' },
+                    { label: 'Interactive Stories', val: '3 Read', icon: '📚' },
+                  ].map((stat, i) => (
+                    <div key={i} className="bg-[#13271C] border border-[#20422E] p-4 rounded-2xl text-center space-y-1">
+                      <span className="text-xl">{stat.icon}</span>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider">{stat.label}</p>
+                      <h4 className="font-display text-base font-bold text-white">{stat.val}</h4>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="bg-[#13271C] border border-[#4ADE80]/30 p-5 rounded-2xl space-y-2">
+                  <h4 className="font-display text-sm font-bold text-[#4ADE80]">Overall Passport Progress</h4>
+                  <div className="w-full bg-[#0E2015] h-3 rounded-full overflow-hidden">
+                    <div className="bg-[#4ADE80] h-full rounded-full" style={{ width: '68%' }} />
+                  </div>
+                  <p className="text-xs text-slate-400 text-right">68% Journey Documented</p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* 🎖️ PAGE 2: DIGITAL STAMPS & FLIP CARDS */}
+            {currentPage === 2 && (
+              <motion.div
+                key="p2"
+                initial={{ rotateY: -90, opacity: 0 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: 90, opacity: 0 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6"
+              >
+                <h3 className="font-display text-2xl font-bold text-white border-b border-[#20452F] pb-3">
+                  Page 2 — Unlocked Digital Journey Stamps
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {stamps.map((st) => {
+                    const isFlipped = flippedStampId === st.id;
+                    return (
+                      <div
+                        key={st.id}
+                        className="perspective-1000 h-40 cursor-pointer"
+                        onMouseEnter={() => setFlippedStampId(st.id)}
+                        onMouseLeave={() => setFlippedStampId(null)}
+                      >
+                        <motion.div
+                          className="w-full h-full relative transition-transform duration-500 transform-style-3d shadow-xl rounded-2xl"
+                          animate={{ rotateY: isFlipped ? 180 : 0 }}
+                        >
+                          {/* FRONT STAMP */}
+                          <div className="absolute inset-0 backface-hidden bg-[#13271C] border border-[#4ADE80]/40 rounded-2xl p-4 flex flex-col justify-between">
+                            <div className="flex justify-between items-start">
+                              <span className="text-2xl">{st.icon}</span>
+                              <span className="text-[10px] font-bold text-amber-400">+{st.xp} XP</span>
+                            </div>
+                            <div>
+                              <h4 className="font-display text-sm font-bold text-white">{st.title}</h4>
+                              <p className="text-[10px] text-slate-400 mt-0.5">{st.date}</p>
+                            </div>
+                          </div>
+
+                          {/* BACK STAMP */}
+                          <div className="absolute inset-0 backface-hidden rotate-y-180 bg-[#1A3827] border border-[#4ADE80] rounded-2xl p-4 flex flex-col justify-between text-slate-200">
+                            <div>
+                              <h5 className="font-display text-xs font-bold text-[#4ADE80]">{st.category}</h5>
+                              <p className="text-xs text-slate-300 mt-1 leading-snug">{st.desc}</p>
+                            </div>
+                            <span className="text-[10px] text-[#4ADE80] font-bold">Verified Achievement</span>
+                          </div>
+                        </motion.div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* 🗺️ PAGE 3: JOURNEY TRAIL */}
+            {currentPage === 3 && (
+              <motion.div
+                key="p3"
+                initial={{ rotateY: -90, opacity: 0 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: 90, opacity: 0 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6"
+              >
+                <h3 className="font-display text-2xl font-bold text-white border-b border-[#20452F] pb-3">
+                  Page 3 — Interactive Journey Trail
+                </h3>
+
+                <div className="space-y-4">
+                  {[
+                    { title: 'First Conversation', desc: 'Discussed Peepal canopy cooling effect on Monday.', date: 'Aug 10' },
+                    { title: 'Completed First Mission', desc: 'Finished dawn listening challenge (+100 XP).', date: 'Aug 12' },
+                    { title: 'Read Interactive Story', desc: 'Explored 3D choice paths in Cedar Forest.', date: 'Aug 14' },
+                    { title: 'Bio Map Unlocked', desc: 'Saved 6 micro-climate observation nodes.', date: 'Aug 16' },
+                  ].map((tr, i) => (
+                    <div key={i} className="flex items-center gap-4 bg-[#13271C] border border-[#20422E] p-4 rounded-2xl">
+                      <div className="w-10 h-10 rounded-full bg-[#1A3827] border border-[#4ADE80] flex items-center justify-center text-xs font-bold text-[#4ADE80]">
+                        0{i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-display text-sm font-bold text-white">{tr.title}</h4>
+                        <p className="text-xs text-slate-300 truncate">{tr.desc}</p>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-semibold">{tr.date}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* 🔮 PAGE 4: AI PASSPORT GUIDE */}
+            {currentPage === 4 && (
+              <motion.div
+                key="p4"
+                initial={{ rotateY: -90, opacity: 0 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: 90, opacity: 0 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+                className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl space-y-6"
+              >
+                <h3 className="font-display text-2xl font-bold text-white border-b border-[#20452F] pb-3 flex items-center gap-2">
+                  <Wand2 className="w-5 h-5 text-[#4ADE80]" />
+                  <span>Page 4 — AI Passport Guide Assistant</span>
+                </h3>
+
+                <div className="bg-[#13271C] border border-[#20422E] p-4 rounded-2xl space-y-3 h-60 overflow-y-auto custom-chat-scroll">
+                  {guideMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-md p-3 rounded-2xl text-xs sm:text-sm ${
+                          msg.sender === 'user'
+                            ? 'bg-[#4ADE80] text-[#07130B] font-semibold'
+                            : 'bg-[#0E2015] border border-[#20422E] text-slate-200'
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <form onSubmit={handleSendGuideMsg} className="flex items-center gap-2">
+                  <input
+                    value={guideInput}
+                    onChange={(e) => setGuideInput(e.target.value)}
+                    placeholder={t.aiGuidePrompt}
+                    className="flex-1 bg-[#13271C] border border-[#20422E] rounded-2xl px-4 py-3 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
+                  />
+                  <button
+                    type="submit"
+                    className="px-6 py-3 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-xs cursor-pointer shrink-0"
+                  >
+                    Ask Guide
+                  </button>
+                </form>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+
         </div>
-
-        {/* ──────────────── SELECTED NODE DETAIL DRAWER ──────────────── */}
-        {selectedNode && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-[#112318] border border-[#4ADE80]/40 rounded-3xl p-6 shadow-2xl space-y-4"
-          >
-            <div className="flex justify-between items-start border-b border-[#20452F] pb-3">
-              <div className="space-y-1">
-                <span className="px-3 py-1 rounded-full bg-[#1A3827] text-xs font-bold text-[#4ADE80]">
-                  {selectedNode.category}
-                </span>
-                <h3 className="font-display text-2xl font-bold text-white">{selectedNode.name}</h3>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowWhyModal(true)}
-                  className="px-3 py-1.5 rounded-full bg-[#13271C] border border-[#20422E] text-xs text-[#4ADE80] font-semibold flex items-center gap-1 cursor-pointer"
-                >
-                  <HelpCircle className="w-3.5 h-3.5" />
-                  <span>{t.whyIsThisHere}</span>
-                </button>
-
-                <button
-                  onClick={() => handleDeleteNode(selectedNode.id)}
-                  className="p-2 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 cursor-pointer"
-                  title="Remove Node"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-
-                <button onClick={() => setSelectedNode(null)} className="text-slate-400 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-normal">
-              "{selectedNode.origin}"
-            </p>
-
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#20422E]">
-              {/* Memory Allowance Control Toggle */}
-              <button
-                onClick={() => toggleMemoryAllowed(selectedNode.id)}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-                  selectedNode.isMemoryAllowed
-                    ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]'
-                    : 'bg-[#13271C] border-[#20422E] text-slate-400'
-                }`}
-              >
-                {selectedNode.isMemoryAllowed ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                <span>{t.allowPersonalization}</span>
-              </button>
-
-              <button
-                onClick={() => alert(`Exploring chats related to ${selectedNode.name}`)}
-                className="px-4 py-1.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] cursor-pointer flex items-center gap-1.5"
-              >
-                <span>{t.exploreTopic}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </motion.div>
-        )}
 
       </div>
     </div>
