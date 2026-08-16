@@ -3,7 +3,6 @@ import { Send, RotateCcw, Copy, Check, Sparkles, Sun, Bell, User, Image as Image
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { chatWithPulse } from '../lib/openrouter';
 import { apiFetch, fileToResizedBase64 } from '../lib/api';
 import { ErrorBanner } from '../components/ui';
 
@@ -284,27 +283,56 @@ export default function PulseChat() {
     setLoading(false);
   }, []);
 
-  const saveActiveThreadMessages = (updatedMsgs) => {
+  const saveActiveThreadMessages = (updatedMsgs, targetId = activeThreadId) => {
     // Chat images are transient by design: strip them before persisting so
     // localStorage threads never balloon with base64 payloads.
-    const persistable = updatedMsgs.map(({ image, ...rest }) => rest);
+    const persistable = updatedMsgs.map(({ image, imageBase64, ...rest }) => rest);
+    const currId = targetId || activeThreadId || `thread-${Date.now()}`;
+
     setThreads((prevThreads) => {
-      const nextThreads = prevThreads.map((th) => {
-        if (th.id === activeThreadId) {
-          const autoTitle =
-            th.title && th.title !== 'Ecological Inquiry' && th.title !== 'New Conversation'
-              ? th.title
-              : persistable.find((m) => m.role === 'user')?.content.slice(0, 28) || 'Ecological Inquiry';
-          return {
-            ...th,
-            title: autoTitle,
-            updated_at: new Date().toISOString(),
-            messages: persistable,
-          };
-        }
-        return th;
-      });
-      localStorage.setItem('pulse_saved_threads', JSON.stringify(nextThreads));
+      const exists = prevThreads.some((th) => th.id === currId);
+      const firstUserMsg = persistable.find((m) => m.role === 'user')?.content?.trim();
+      const autoTitle = firstUserMsg
+        ? (firstUserMsg.length > 30 ? firstUserMsg.slice(0, 30) + '…' : firstUserMsg)
+        : 'Nature Conversation';
+
+      let nextThreads;
+      if (!exists) {
+        const newTh = {
+          id: currId,
+          title: autoTitle,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          messages: persistable,
+        };
+        nextThreads = [newTh, ...prevThreads];
+      } else {
+        nextThreads = prevThreads.map((th) => {
+          if (th.id === currId) {
+            const hasCustomTitle =
+              th.title &&
+              th.title !== 'Ecological Inquiry' &&
+              th.title !== 'New Conversation' &&
+              th.title !== 'Nature Conversation';
+            return {
+              ...th,
+              title: hasCustomTitle ? th.title : autoTitle,
+              updated_at: new Date().toISOString(),
+              messages: persistable,
+            };
+          }
+          return th;
+        });
+      }
+
+      // Sort with newest on top
+      nextThreads.sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+
+      try {
+        localStorage.setItem('pulse_saved_threads', JSON.stringify(nextThreads));
+      } catch (err) {
+        console.error('Failed to save threads:', err);
+      }
       return nextThreads;
     });
   };
@@ -336,12 +364,17 @@ export default function PulseChat() {
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      setError('Only jpeg, png, gif or webp images are supported.');
+      setError('Only JPG, PNG, WebP, and GIF images are supported.');
       e.target.value = '';
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError('Images must be 5 MB or smaller.');
+      setError('Image must be smaller than 5 MB.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size === 0) {
+      setError('That file appears to be empty. Please select a valid image.');
       e.target.value = '';
       return;
     }
@@ -350,8 +383,9 @@ export default function PulseChat() {
       const payload = await fileToResizedBase64(file, 1200);
       setAttachedPayload(payload);
       setAttachedImage(`data:${payload.mime};base64,${payload.base64}`);
+      setError('');
     } catch {
-      setError('That file could not be read as an image.');
+      setError('That file could not be read as an image. Please try another one.');
     }
     e.target.value = '';
   };
@@ -413,19 +447,32 @@ export default function PulseChat() {
   };
 
   const startNewChat = () => {
+    const newThreadId = `thread-${Date.now()}`;
     const newThread = {
-      id: `thread-${Date.now()}`,
+      id: newThreadId,
       title: 'New Conversation',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       messages: [],
     };
-    const nextThreads = [newThread, ...threads];
-    setThreads(nextThreads);
-    setActiveThreadId(newThread.id);
+    setThreads((prev) => {
+      // Keep only threads that have messages, plus this fresh new thread
+      const filtered = prev.filter((t) => t.messages && t.messages.length > 0);
+      const nextThreads = [newThread, ...filtered];
+      try {
+        localStorage.setItem('pulse_saved_threads', JSON.stringify(nextThreads));
+      } catch {}
+      return nextThreads;
+    });
+    setActiveThreadId(newThreadId);
     setMessages([]);
-    localStorage.setItem('pulse_saved_threads', JSON.stringify(nextThreads));
-    localStorage.setItem('pulse_active_thread_id', newThread.id);
+    setText('');
+    setError('');
+    setAttachedImage(null);
+    setAttachedPayload(null);
+    try {
+      localStorage.setItem('pulse_active_thread_id', newThreadId);
+    } catch {}
     setShowHistoryDrawer(false);
   };
 
@@ -434,7 +481,12 @@ export default function PulseChat() {
     if (!th) return;
     setActiveThreadId(th.id);
     setMessages(th.messages || []);
-    localStorage.setItem('pulse_active_thread_id', th.id);
+    setError('');
+    setAttachedImage(null);
+    setAttachedPayload(null);
+    try {
+      localStorage.setItem('pulse_active_thread_id', th.id);
+    } catch {}
     setShowHistoryDrawer(false);
   };
 
@@ -442,16 +494,45 @@ export default function PulseChat() {
     e.stopPropagation();
     const nextThreads = threads.filter((t) => t.id !== threadId);
     setThreads(nextThreads);
-    localStorage.setItem('pulse_saved_threads', JSON.stringify(nextThreads));
+    try {
+      localStorage.setItem('pulse_saved_threads', JSON.stringify(nextThreads));
+    } catch {}
 
     if (activeThreadId === threadId) {
       if (nextThreads.length > 0) {
         setActiveThreadId(nextThreads[0].id);
         setMessages(nextThreads[0].messages || []);
-        localStorage.setItem('pulse_active_thread_id', nextThreads[0].id);
+        try {
+          localStorage.setItem('pulse_active_thread_id', nextThreads[0].id);
+        } catch {}
       } else {
         startNewChat();
       }
+    }
+  };
+
+  const clearAllHistory = () => {
+    if (window.confirm('Are you sure you want to clear all conversation history?')) {
+      const freshId = `thread-${Date.now()}`;
+      const freshThread = {
+        id: freshId,
+        title: 'New Conversation',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        messages: [],
+      };
+      setThreads([freshThread]);
+      setActiveThreadId(freshId);
+      setMessages([]);
+      setText('');
+      setError('');
+      setAttachedImage(null);
+      setAttachedPayload(null);
+      try {
+        localStorage.setItem('pulse_saved_threads', JSON.stringify([freshThread]));
+        localStorage.setItem('pulse_active_thread_id', freshId);
+      } catch {}
+      setShowHistoryDrawer(false);
     }
   };
 
@@ -473,6 +554,7 @@ export default function PulseChat() {
 
   const send = async (e) => {
     e.preventDefault();
+    if (busy) return;
     const content = text.trim();
     if (!content && !attachedImage) return;
 
@@ -501,29 +583,28 @@ export default function PulseChat() {
     saveActiveThreadMessages(newMsgs);
 
     try {
-      let replyContent;
-      if (attachedPayload) {
-        // Images go through the serverless Gemini proxy (key stays server-side).
-        const data = await apiFetch(
-          '/api/pulse',
-          {
-            method: 'POST',
-            body: JSON.stringify({
-              content,
-              imageBase64: attachedPayload.base64,
-              contentType: attachedPayload.mime,
-              language: lang,
-            }),
-          },
-          token
-        );
-        replyContent = data?.content || data?.text || 'Pulse could not read that image. Try again.';
-      } else {
-        const history = newMsgs
-          .filter((m) => m.role === 'user' || m.role === 'assistant')
-          .map((m) => ({ role: m.role, content: m.content }));
-        replyContent = await chatWithPulse(history);
-      }
+      // All Pulse replies (text and image) go through the serverless /api/pulse
+      // route, which keeps the Gemini key server-side and carries conversation
+      // context from the user's saved history.
+      const data = await apiFetch(
+        '/api/pulse',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            content,
+            imageBase64: attachedPayload ? attachedPayload.base64 : '',
+            contentType: attachedPayload ? attachedPayload.mime : '',
+            language: lang,
+          }),
+        },
+        token
+      );
+      const replyContent =
+        data?.content ||
+        data?.text ||
+        (attachedPayload
+          ? 'I observed the natural textures and colors in your photo. Try touching the surface and noticing its subtle features.'
+          : 'I am thinking about what you shared — try asking me about a plant, bird, or place nearby.');
 
       const reply = {
         id: Date.now() + 1,
@@ -535,7 +616,13 @@ export default function PulseChat() {
       setMessages(finalMsgs);
       saveActiveThreadMessages(finalMsgs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Pulse is quiet right now. Try again.');
+      setError(
+        err instanceof Error
+          ? err.message === 'Your session expired. Please sign in again.'
+            ? 'Your session expired. Please sign in again and resend your message.'
+            : err.message
+          : 'NaturePulse could not analyze this right now. Please try again.'
+      );
     } finally {
       setBusy(false);
       inputRef.current?.focus();
@@ -825,6 +912,21 @@ export default function PulseChat() {
                     ))
                   )}
                 </div>
+
+                {threads.some((th) => th.messages && th.messages.length > 0) && (
+                  <div className="pt-3 border-t border-[#20452F] flex items-center justify-between">
+                    <span className="text-[11px] text-slate-400">
+                      {threads.filter((th) => th.messages && th.messages.length > 0).length} conversations
+                    </span>
+                    <button
+                      onClick={clearAllHistory}
+                      className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Clear All</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -835,12 +937,26 @@ export default function PulseChat() {
       <div className="shrink-0 relative bg-[#112318]/90 border border-[#20452F] rounded-3xl p-7 sm:p-9 min-h-[175px] shadow-2xl overflow-hidden backdrop-blur-xl">
         <div className="absolute top-5 right-5 flex items-center gap-2.5 z-20">
           <button
+            onClick={startNewChat}
+            className="px-3.5 py-1.5 rounded-full bg-[#4ADE80] hover:bg-[#3ECE77] text-[#07130B] flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+            title="Start New Chat"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>{t.newChat || 'New Chat'}</span>
+          </button>
+
+          <button
             onClick={() => setShowHistoryDrawer(true)}
             className="px-3 py-1.5 rounded-full bg-[#1A3626] hover:bg-[#254B35] border border-[#2D5A3F] flex items-center gap-1.5 text-xs sm:text-sm text-slate-100 font-medium transition-colors cursor-pointer"
             title="Chat History"
           >
             <History className="w-4 h-4 text-[#4ADE80]" />
             <span className="hidden sm:inline">{t.historyTitle}</span>
+            {threads.filter((th) => th.messages?.length > 0).length > 0 && (
+              <span className="ml-0.5 px-1.5 py-0.2 bg-[#4ADE80]/20 text-[#4ADE80] text-[10px] rounded-full font-bold">
+                {threads.filter((th) => th.messages?.length > 0).length}
+              </span>
+            )}
           </button>
 
           <div className="relative">
@@ -993,11 +1109,17 @@ export default function PulseChat() {
                   }`}
                 >
                   {m.image && (
-                    <img
-                      src={m.image}
-                      alt="Attached observation"
-                      className="rounded-xl mb-2 max-h-48 w-auto object-cover border border-[#4ADE80]/40"
-                    />
+                    <div className="mb-2">
+                      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-[#4ADE80] mb-1.5 font-semibold">
+                        <ImageIcon className="w-3 h-3" />
+                        Image attached
+                      </span>
+                      <img
+                        src={m.image}
+                        alt="Attached observation"
+                        className="rounded-xl max-h-48 w-auto object-cover border border-[#4ADE80]/40"
+                      />
+                    </div>
                   )}
                   <div className={m.role !== 'user' ? 'pr-6' : ''}>{m.content}</div>
 
@@ -1052,13 +1174,24 @@ export default function PulseChat() {
       <form onSubmit={send} className="shrink-0 pt-2 pb-1 space-y-1.5">
         {/* Thumbnail Preview for Image Attachment */}
         {attachedImage && (
-          <div className="flex items-center gap-2 px-4 py-1.5 bg-[#12241A] border border-[#234A33] rounded-2xl w-fit">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#12241A] border border-[#234A33] rounded-2xl w-fit">
             <img src={attachedImage} alt="Attachment" className="w-8 h-8 rounded object-cover border border-[#4ADE80]/40" />
-            <span className="text-xs text-slate-300">Image attached</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-xs text-slate-200 truncate max-w-[160px]">
+                {attachedPayload?.name || 'Image attached'}
+              </span>
+              <span className="text-[10px] text-slate-400">Ready to send</span>
+            </div>
             <button
               type="button"
-              onClick={() => setAttachedImage(null)}
-              className="p-1 text-slate-400 hover:text-red-400"
+              onClick={() => {
+                setAttachedImage(null);
+                setAttachedPayload(null);
+                setError('');
+              }}
+              className="p-1 text-slate-400 hover:text-red-400 cursor-pointer"
+              title="Remove image"
+              aria-label="Remove attached image"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -1080,6 +1213,7 @@ export default function PulseChat() {
               onClick={handleImageClick}
               className="p-2 rounded-full text-slate-400 hover:text-white hover:bg-[#1C3A29] transition-colors cursor-pointer"
               title="Attach Image / Observation"
+              aria-label="Attach an image"
             >
               <ImageIcon className="w-4 h-4" />
             </button>

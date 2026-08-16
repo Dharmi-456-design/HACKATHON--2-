@@ -135,11 +135,10 @@ export function ChatPanel({ initialScroll = 'top', animateMessagesIn = true }) {
           const isUser = m.role === 'user';
           const content = (
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                isUser
+              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${isUser
                   ? 'ml-auto bg-white/15 text-white/90 text-right'
                   : 'bg-white/5 text-white/70 border border-white/5 text-left'
-              }`}
+                }`}
             >
               {m.text}
             </div>
