@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Eye, Compass, BookOpen, HandHeart, RotateCcw, Sparkles, ChevronDown } from 'lucide-react';
 import { PulseOrb } from '../components/ui';
 import ThemeToggle from '../components/ThemeToggle';
-import LithosHero from '../components/LithosHero';
+import MeasuredHero from '../components/MeasuredHero';
 import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
 import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 import AnimatedStatCard from '../components/AnimatedStatCard';
@@ -205,35 +205,9 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-[#0A1610] text-white">
-      {/* Fixed Navbar Header */}
-      <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-[#0A1610]/85 border-b border-white/10 transition-colors">
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src="/logo.png" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shadow-sm" />
-            <span className="font-display text-xl tracking-tight text-white font-semibold">NaturePulse</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-8 text-sm text-white/80 font-medium">
-            <a href="#hero" className="hover:text-white transition-colors">3D Experience</a>
-            <a href="#journey" className="hover:text-white transition-colors">The journey</a>
-            <a href="#pulse" className="hover:text-white transition-colors">Pulse AI</a>
-            <a href="#reviews" className="hover:text-white transition-colors">Community</a>
-            <button onClick={handleDashboardClick} className="hover:text-white transition-colors cursor-pointer font-semibold text-[#97CDAB]">
-              Dashboard
-            </button>
-          </nav>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Link to="/login" className="hidden sm:inline-flex text-sm px-3 py-2 text-white/80 hover:text-white transition-colors font-medium">Sign in</Link>
-            <button onClick={handleDashboardClick} className="inline-flex items-center gap-1.5 rounded-full bg-[#97CDAB] text-[#0A1610] font-semibold text-sm px-4 py-2 hover:bg-white transition-colors cursor-pointer shadow-xs">
-              Begin <ArrowRight size={14} />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ────────────────────── 1. LITHOS CURSOR-FOLLOWING SPOTLIGHT HERO SECTION ────────────────────── */}
+      {/* ────────────────────── 1. MEASURED CURSOR-FOLLOWING SPOTLIGHT VIDEO HERO ────────────────────── */}
       <section id="hero">
-        <LithosHero />
+        <MeasuredHero />
       </section>
 
       {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER ────────────────────── */}
