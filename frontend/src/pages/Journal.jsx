@@ -186,7 +186,7 @@ export default function Journal() {
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
-      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#FAF7F0] text-[#0F2418] selection:bg-emerald-200 selection:text-emerald-900'
     }`}>
       
       {/* ──────────────── ZEN DISTRACTION-FREE WRITING CANVAS ──────────────── */}
@@ -196,17 +196,25 @@ export default function Journal() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-50 bg-[#061209] p-6 sm:p-12 overflow-y-auto flex flex-col justify-between"
+            className={`fixed inset-0 z-50 p-6 sm:p-12 overflow-y-auto flex flex-col justify-between transition-colors ${
+              isDark ? 'bg-[#061209] text-white' : 'bg-[#FAF7F0] text-[#0F2418]'
+            }`}
           >
-            <div className="flex justify-between items-center border-b border-[#20452F] pb-4">
-              <span className="text-xs font-bold text-[#4ADE80] flex items-center gap-2">
+            <div className={`flex justify-between items-center border-b pb-4 ${
+              isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+            }`}>
+              <span className={`text-xs font-bold flex items-center gap-2 ${
+                isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
+              }`}>
                 <Sparkles className="w-4 h-4 animate-pulse" />
                 <span>ZEN DISTRACTION-FREE THINKING CANVAS</span>
               </span>
 
               <button
                 onClick={() => setIsZenMode(false)}
-                className="px-4 py-2 rounded-full bg-[#13271C] border border-[#20422E] text-xs font-bold text-slate-200 hover:text-white cursor-pointer"
+                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all cursor-pointer ${
+                  isDark ? 'bg-[#13271C] border-[#20422E] text-slate-200 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]'
+                }`}
               >
                 Exit Zen Mode
               </button>
@@ -217,7 +225,9 @@ export default function Journal() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder={t.titlePlaceholder}
-                className="w-full bg-transparent font-display text-3xl sm:text-5xl font-extrabold text-white outline-none placeholder:text-slate-600"
+                className={`w-full bg-transparent font-display text-3xl sm:text-5xl font-extrabold outline-none ${
+                  isDark ? 'text-white placeholder:text-slate-600' : 'text-[#0F2418] placeholder:text-[#3E5C48]'
+                }`}
               />
 
               <textarea
@@ -226,15 +236,21 @@ export default function Journal() {
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder={t.bodyPlaceholder}
-                className="w-full bg-transparent text-lg sm:text-xl text-slate-200 leading-relaxed outline-none placeholder:text-slate-600 resize-none"
+                className={`w-full bg-transparent text-lg sm:text-xl leading-relaxed outline-none resize-none ${
+                  isDark ? 'text-slate-200 placeholder:text-slate-600' : 'text-[#0F2418] placeholder:text-[#3E5C48]'
+                }`}
               />
             </div>
 
-            <div className="flex justify-between items-center border-t border-[#20452F] pt-4">
-              <span className="text-xs text-[#4ADE80] font-mono">{autoSaveStatus}</span>
+            <div className={`flex justify-between items-center border-t pt-4 ${
+              isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+            }`}>
+              <span className={`text-xs font-mono ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>{autoSaveStatus}</span>
               <button
                 onClick={handleSaveNote}
-                className="px-8 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm cursor-pointer shadow-xl"
+                className={`px-8 py-3 rounded-full font-bold text-sm cursor-pointer shadow-xl transition-all ${
+                  isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                }`}
               >
                 {t.saveBtn}
               </button>
@@ -246,7 +262,7 @@ export default function Journal() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 relative z-10">
         
-        {/* ──────────────── ATMOSPHERIC DARK FOREST LANDSCAPE HERO BANNER (NO ROUND CIRCLE ICON) ──────────────── */}
+        {/* ──────────────── HERO BANNER ──────────────── */}
         <div className="relative border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden min-h-[240px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 group">
           
           {/* High-Definition Dark Misty Forest Background Image */}
@@ -280,13 +296,15 @@ export default function Journal() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsZenMode(true)}
-              className="px-5 py-3 rounded-2xl bg-[#0E2517]/90 border border-[#4ADE80]/40 text-left hover:border-[#4ADE80] transition-all shadow-xl cursor-pointer backdrop-blur-md"
+              className={`px-5 py-3 rounded-2xl border text-left transition-all shadow-xl cursor-pointer backdrop-blur-md ${
+                isDark ? 'bg-[#0E2517]/90 border-[#4ADE80]/40 hover:border-[#4ADE80]' : 'bg-[#FDFBF7]/90 border-[#E3DDD1] hover:border-[#183B28] shadow-md'
+              }`}
             >
-              <div className="flex items-center gap-2 text-[#4ADE80] font-bold text-xs">
+              <div className={`flex items-center gap-2 font-bold text-xs ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>
                 <Sparkles className="w-4 h-4" />
                 <span>{t.zenModeBtn}</span>
               </div>
-              <p className="text-[10px] text-slate-300 mt-0.5">{t.zenSubtitle}</p>
+              <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>{t.zenSubtitle}</p>
             </motion.button>
           </div>
 
@@ -298,16 +316,22 @@ export default function Journal() {
             onClick={() => setActiveTab('journal')}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 shadow-lg ${
               activeTab === 'journal'
-                ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
-                : 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+                ? isDark
+                  ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
+                  : 'bg-[#E1EFE0] border-[#183B28] ring-1 ring-[#183B28] shadow-md'
+                : isDark
+                  ? 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+                  : 'bg-[#FDFBF7] border-[#E3DDD1] hover:border-[#183B28] shadow-xs'
             }`}
           >
-            <div className="w-10 h-10 rounded-xl bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg shrink-0">
+            <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-lg shrink-0 ${
+              isDark ? 'bg-[#1A3827] border-[#4ADE80]/40' : 'bg-[#E1EFE0] border-[#C3DEC0]'
+            }`}>
               📖
             </div>
             <div>
-              <h4 className="font-display text-sm font-bold text-white">{t.tabJournalTitle}</h4>
-              <p className="text-[11px] text-slate-400">{t.tabJournalSub}</p>
+              <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.tabJournalTitle}</h4>
+              <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.tabJournalSub}</p>
             </div>
           </div>
 
@@ -315,90 +339,134 @@ export default function Journal() {
             onClick={() => setActiveTab('idea')}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between shadow-lg ${
               activeTab === 'idea'
-                ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
-                : 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+                ? isDark
+                  ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
+                  : 'bg-[#E1EFE0] border-[#183B28] ring-1 ring-[#183B28] shadow-md'
+                : isDark
+                  ? 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+                  : 'bg-[#FDFBF7] border-[#E3DDD1] hover:border-[#183B28] shadow-xs'
             }`}
           >
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg shrink-0">
+              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-lg shrink-0 ${
+                isDark ? 'bg-[#1A3827] border-[#4ADE80]/40' : 'bg-[#E1EFE0] border-[#C3DEC0]'
+              }`}>
                 🌱
               </div>
               <div>
-                <h4 className="font-display text-sm font-bold text-white">{t.tabIdeaTitle}</h4>
-                <p className="text-[11px] text-slate-400">{t.tabIdeaSub}</p>
+                <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.tabIdeaTitle}</h4>
+                <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.tabIdeaSub}</p>
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded-full bg-[#1A3827] text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/30">12</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+              isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+            }`}>12</span>
           </div>
 
           <div
             onClick={() => setActiveTab('memory')}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between shadow-lg ${
               activeTab === 'memory'
-                ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
-                : 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+                ? isDark
+                  ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
+                  : 'bg-[#E1EFE0] border-[#183B28] ring-1 ring-[#183B28] shadow-md'
+                : isDark
+                  ? 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+                  : 'bg-[#FDFBF7] border-[#E3DDD1] hover:border-[#183B28] shadow-xs'
             }`}
           >
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg shrink-0">
+              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-lg shrink-0 ${
+                isDark ? 'bg-[#1A3827] border-[#4ADE80]/40' : 'bg-[#E1EFE0] border-[#C3DEC0]'
+              }`}>
                 🫙
               </div>
               <div>
-                <h4 className="font-display text-sm font-bold text-white">{t.tabMemoryTitle}</h4>
-                <p className="text-[11px] text-slate-400">{t.tabMemorySub}</p>
+                <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.tabMemoryTitle}</h4>
+                <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.tabMemorySub}</p>
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded-full bg-[#1A3827] text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/30">8</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+              isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+            }`}>8</span>
           </div>
 
           <div
             onClick={() => setActiveTab('ask')}
             className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between shadow-lg ${
               activeTab === 'ask'
-                ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
-                : 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+                ? isDark
+                  ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
+                  : 'bg-[#E1EFE0] border-[#183B28] ring-1 ring-[#183B28] shadow-md'
+                : isDark
+                  ? 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+                  : 'bg-[#FDFBF7] border-[#E3DDD1] hover:border-[#183B28] shadow-xs'
             }`}
           >
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg shrink-0">
+              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-lg shrink-0 ${
+                isDark ? 'bg-[#1A3827] border-[#4ADE80]/40' : 'bg-[#E1EFE0] border-[#C3DEC0]'
+              }`}>
                 💬
               </div>
               <div>
-                <h4 className="font-display text-sm font-bold text-white">{t.tabAskTitle}</h4>
-                <p className="text-[11px] text-slate-400">{t.tabAskSub}</p>
+                <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.tabAskTitle}</h4>
+                <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.tabAskSub}</p>
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded-full bg-[#1A3827] text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/30">3</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+              isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+            }`}>3</span>
           </div>
         </div>
 
         {/* ──────────────── CAPTURE A NEW FIELD REFLECTION FORM ──────────────── */}
-        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden">
-          <div className="flex items-center gap-3 border-b border-[#20452F] pb-4">
-            <div className="w-10 h-10 rounded-full bg-[#1A3827] border border-[#4ADE80]/50 flex items-center justify-center text-[#4ADE80] text-lg">
+        <div className={`rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden border transition-colors ${
+          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+        }`}>
+          <div className={`flex items-center gap-3 border-b pb-4 ${
+            isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+          }`}>
+            <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-lg ${
+              isDark ? 'bg-[#1A3827] border-[#4ADE80]/50 text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
+            }`}>
               🍃
             </div>
             <div>
-              <h3 className="font-display text-xl font-bold text-white">{t.newReflectionTitle}</h3>
-              <p className="text-xs text-slate-400">{t.newReflectionSub}</p>
+              <h3 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.newReflectionTitle}</h3>
+              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.newReflectionSub}</p>
             </div>
           </div>
 
           <form onSubmit={handleSaveNote} className="space-y-4">
-            <div className="relative flex items-center bg-[#07150C] border border-[#20422E] rounded-2xl overflow-hidden focus-within:border-[#4ADE80] transition-all">
-              <div className="px-4 py-3.5 border-r border-[#20422E] bg-[#0E2015] text-[#4ADE80]">
+            <div className={`relative flex items-center border rounded-2xl overflow-hidden transition-all ${
+              isDark
+                ? 'bg-[#07150C] border-[#20422E] focus-within:border-[#4ADE80]'
+                : 'bg-[#F2ECE1] border-[#E0D8C8] focus-within:border-[#183B28]'
+            }`}>
+              <div className={`px-4 py-3.5 border-r ${
+                isDark ? 'border-[#20422E] bg-[#0E2015] text-[#4ADE80]' : 'border-[#E0D8C8] bg-[#EDE6D8] text-[#183B28]'
+              }`}>
                 🍃
               </div>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder={t.titlePlaceholder}
-                className="w-full bg-transparent px-4 py-3.5 text-xs sm:text-sm text-white outline-none placeholder:text-slate-500"
+                className={`w-full bg-transparent px-4 py-3.5 text-xs sm:text-sm outline-none ${
+                  isDark ? 'text-white placeholder:text-slate-500' : 'text-[#0F2418] placeholder:text-[#3E5C48]'
+                }`}
               />
             </div>
 
-            <div className="relative flex items-start bg-[#07150C] border border-[#20422E] rounded-2xl overflow-hidden focus-within:border-[#4ADE80] transition-all">
-              <div className="px-4 py-4 border-r border-[#20422E] bg-[#0E2015] text-[#4ADE80] self-stretch flex items-start">
+            <div className={`relative flex items-start border rounded-2xl overflow-hidden transition-all ${
+              isDark
+                ? 'bg-[#07150C] border-[#20422E] focus-within:border-[#4ADE80]'
+                : 'bg-[#F2ECE1] border-[#E0D8C8] focus-within:border-[#183B28]'
+            }`}>
+              <div className={`px-4 py-4 border-r self-stretch flex items-start ${
+                isDark ? 'border-[#20422E] bg-[#0E2015] text-[#4ADE80]' : 'border-[#E0D8C8] bg-[#EDE6D8] text-[#183B28]'
+              }`}>
                 “
               </div>
               <textarea
@@ -406,15 +474,19 @@ export default function Journal() {
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder={t.bodyPlaceholder}
-                className="w-full bg-transparent p-4 text-xs sm:text-sm text-white outline-none placeholder:text-slate-500 resize-none"
+                className={`w-full bg-transparent p-4 text-xs sm:text-sm outline-none resize-none ${
+                  isDark ? 'text-white placeholder:text-slate-500' : 'text-[#0F2418] placeholder:text-[#3E5C48]'
+                }`}
               />
             </div>
 
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-4 border-t border-[#20452F]">
+            <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-4 border-t ${
+              isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+            }`}>
               <div className="space-y-2">
                 <div>
-                  <p className="text-xs font-bold text-slate-200">{t.moodLabel}</p>
-                  <p className="text-[10px] text-slate-400">{t.moodSub}</p>
+                  <p className={`text-xs font-bold ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>{t.moodLabel}</p>
+                  <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.moodSub}</p>
                 </div>
 
                 <div className="flex items-center gap-3 overflow-x-auto pb-1">
@@ -429,12 +501,18 @@ export default function Journal() {
                       >
                         <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
                           isSelected
-                            ? 'bg-[#1A3827] border-2 border-[#4ADE80] shadow-lg shadow-[#4ADE80]/20 scale-105'
-                            : 'bg-[#07150C] border border-[#20422E] group-hover:border-[#4ADE80]/50'
+                            ? isDark
+                              ? 'bg-[#1A3827] border-2 border-[#4ADE80] shadow-lg shadow-[#4ADE80]/20 scale-105'
+                              : 'bg-[#E1EFE0] border-2 border-[#183B28] shadow-sm scale-105'
+                            : isDark
+                              ? 'bg-[#07150C] border border-[#20422E] group-hover:border-[#4ADE80]/50'
+                              : 'bg-[#EDE6D8] border border-[#D4CBB8] group-hover:border-[#183B28]'
                         }`}>
                           {m.icon}
                         </div>
-                        <span className={`text-[10px] font-semibold ${isSelected ? 'text-[#4ADE80]' : 'text-slate-400'}`}>
+                        <span className={`text-[10px] font-semibold ${
+                          isSelected ? (isDark ? 'text-[#4ADE80]' : 'text-[#183B28] font-bold') : (isDark ? 'text-slate-400' : 'text-[#3E5C48]')
+                        }`}>
                           {m.label}
                         </span>
                       </button>
@@ -445,9 +523,11 @@ export default function Journal() {
 
               <button
                 type="submit"
-                className="w-full md:w-auto px-8 py-4 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center justify-center gap-3 cursor-pointer shrink-0"
+                className={`w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center justify-center gap-3 cursor-pointer shrink-0 ${
+                  isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77] shadow-[#4ADE80]/20' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                }`}
               >
-                <div className="w-7 h-7 rounded-full bg-[#07130B]/20 flex items-center justify-center text-xs">
+                <div className="w-7 h-7 rounded-full bg-black/15 flex items-center justify-center text-xs">
                   🍃
                 </div>
                 <div className="text-left">
@@ -461,14 +541,18 @@ export default function Journal() {
         </div>
 
         {/* ──────────────── GARY SNYDER QUOTE STRIP ──────────────── */}
-        <div className="bg-gradient-to-r from-[#06140B] via-[#0E2517] to-[#040C07] border border-[#20452F] rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg">
+        <div className={`rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg border transition-colors ${
+          isDark
+            ? 'bg-gradient-to-r from-[#06140B] via-[#0E2517] to-[#040C07] border-[#20452F]'
+            : 'bg-gradient-to-r from-[#EDE6D8] via-[#FDFBF7] to-[#F2ECE1] border-[#E3DDD1] text-[#0F2418]'
+        }`}>
           <div className="flex items-center gap-3">
-            <span className="text-2xl text-[#4ADE80]">“</span>
-            <p className="text-xs sm:text-sm font-medium text-slate-200">
-              "{t.quoteText}" <span className="text-[#4ADE80] font-bold ml-2">{t.quoteAuthor}</span>
+            <span className={`text-2xl ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>“</span>
+            <p className={`text-xs sm:text-sm font-medium ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>
+              "{t.quoteText}" <span className={`font-bold ml-2 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>{t.quoteAuthor}</span>
             </p>
           </div>
-          <Trees className="w-5 h-5 text-[#4ADE80]/40 hidden sm:block" />
+          <Trees className={`w-5 h-5 hidden sm:block ${isDark ? 'text-[#4ADE80]/40' : 'text-[#183B28]/40'}`} />
         </div>
 
       </div>

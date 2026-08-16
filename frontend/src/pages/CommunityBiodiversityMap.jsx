@@ -125,33 +125,41 @@ export default function CommunityBiodiversityMap() {
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-300 pb-24 relative overflow-hidden ${
-      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#F8F9FA] text-slate-800 selection:bg-emerald-200 selection:text-emerald-900'
+      isDark ? 'bg-[#040B06] text-slate-100 selection:bg-[#4ADE80]/30 selection:text-white' : 'bg-[#FAF7F0] text-[#0F2418] selection:bg-emerald-200 selection:text-emerald-900'
     }`}>
       
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── RADICAL UNIQUE HEADER 1: FLOATING GLASS SPHERE HEADER (NO GREEN RECTANGLE) ──────────────── */}
-        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6 px-4 border-b border-[#4ADE80]/30">
+        {/* ──────────────── FLOATING GLASS SPHERE HEADER ──────────────── */}
+        <div className={`relative flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6 px-4 border-b transition-colors ${
+          isDark ? 'border-[#4ADE80]/30' : 'border-[#E3DDD1]'
+        }`}>
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#4ADE80] animate-ping" />
-              <span className="text-xs font-bold text-[#4ADE80] uppercase tracking-widest">
+              <span className={`w-2.5 h-2.5 rounded-full animate-ping ${isDark ? 'bg-[#4ADE80]' : 'bg-[#183B28]'}`} />
+              <span className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>
                 {t.heroTag}
               </span>
             </div>
 
-            <h1 className="font-display text-4xl sm:text-6xl font-black text-white tracking-tight">
+            <h1 className={`font-display text-4xl sm:text-6xl font-black tracking-tight ${
+              isDark ? 'text-white' : 'text-[#0F2418]'
+            }`}>
               {t.heroTitle}
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
+            <p className={`text-xs sm:text-sm font-normal leading-relaxed ${
+              isDark ? 'text-slate-300/90' : 'text-[#3E5C48]'
+            }`}>
               {t.heroSubtitle}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 bg-[#1A3827]/80 backdrop-blur-md border border-[#4ADE80]/40 px-4 py-2.5 rounded-full text-xs font-semibold text-[#4ADE80] shadow-lg shrink-0">
-            <Globe className="w-4 h-4 text-[#4ADE80] animate-spin" style={{ animationDuration: '12s' }} />
+          <div className={`flex items-center gap-2 backdrop-blur-md px-4 py-2.5 rounded-full text-xs font-semibold shadow-lg shrink-0 border ${
+            isDark ? 'bg-[#1A3827]/80 border-[#4ADE80]/40 text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
+          }`}>
+            <Globe className={`w-4 h-4 animate-spin ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} style={{ animationDuration: '12s' }} />
             <span>{t.verifiedAnonymous}</span>
           </div>
         </div>
@@ -160,26 +168,34 @@ export default function CommunityBiodiversityMap() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <div className="relative flex-1 w-full">
-              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+              <Search className={`w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`} />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.searchPlaceholder}
-                className="w-full bg-[#12241A] border border-[#234A33] rounded-2xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-slate-500 outline-none focus:border-[#4ADE80]"
+                className={`w-full rounded-2xl pl-11 pr-4 py-3 text-sm outline-none transition-colors border ${
+                  isDark
+                    ? 'bg-[#12241A] border-[#234A33] text-white placeholder:text-slate-500 focus:border-[#4ADE80]'
+                    : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28] shadow-sm'
+                }`}
               />
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.4))}
-                className="p-3 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white cursor-pointer"
+                className={`p-3 rounded-2xl border cursor-pointer transition-colors ${
+                  isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:text-[#0F2418] hover:bg-[#E3DDD1] shadow-xs'
+                }`}
                 title="Zoom In"
               >
                 <ZoomIn className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.7))}
-                className="p-3 rounded-2xl bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white cursor-pointer"
+                className={`p-3 rounded-2xl border cursor-pointer transition-colors ${
+                  isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:text-[#0F2418] hover:bg-[#E3DDD1] shadow-xs'
+                }`}
                 title="Zoom Out"
               >
                 <ZoomOut className="w-4 h-4" />
@@ -205,8 +221,12 @@ export default function CommunityBiodiversityMap() {
                   onClick={() => setSelectedCategory(val)}
                   className={`px-3.5 py-1.5 rounded-full border text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
                     selectedCategory === val
-                      ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]'
-                      : 'bg-[#0E2015]/60 border-[#20422E] text-slate-400 hover:text-slate-200'
+                      ? isDark
+                        ? 'bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]'
+                        : 'bg-[#183B28] border-[#183B28] text-[#FAF7F0] font-semibold shadow-xs'
+                      : isDark
+                        ? 'bg-[#0E2015]/60 border-[#20422E] text-slate-400 hover:text-slate-200'
+                        : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#3E5C48] hover:bg-[#F2ECE1] shadow-2xs'
                   }`}
                 >
                   {catLabel}
@@ -217,23 +237,29 @@ export default function CommunityBiodiversityMap() {
         </div>
 
         {/* ──────────────── INTERACTIVE COMMUNITY MAP CANVAS / GOOGLE MAPS ──────────────── */}
-        <div className="bg-[#0E2015] border border-[#20452F] rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden min-h-[480px]">
+        <div className={`rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden min-h-[480px] border transition-colors ${
+          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
+        }`}>
           {/* View Mode Toggle Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-[#20422E] mb-3">
+          <div className={`flex items-center justify-between pb-3 border-b mb-3 ${
+            isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'
+          }`}>
             <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-[#4ADE80]" />
-              <span className="text-xs font-bold text-white uppercase tracking-wider">
+              <Globe className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
+              <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
                 {mapViewMode === 'constellation' ? 'Species Constellation Network' : 'Live Google Biodiversity Map'}
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-[#07150C] border border-[#20422E] p-1 rounded-full text-xs">
+            <div className={`flex items-center gap-1.5 border p-1 rounded-full text-xs ${
+              isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#EDE6D8] border-[#D4CBB8]'
+            }`}>
               <button
                 onClick={() => setMapViewMode('constellation')}
                 className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
                   mapViewMode === 'constellation'
-                    ? 'bg-[#4ADE80] text-[#07130B]'
-                    : 'text-slate-400 hover:text-white'
+                    ? isDark ? 'bg-[#4ADE80] text-[#07130B]' : 'bg-[#183B28] text-[#FAF7F0] shadow-xs'
+                    : isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
                 }`}
               >
                 ✨ Constellation
@@ -242,8 +268,8 @@ export default function CommunityBiodiversityMap() {
                 onClick={() => setMapViewMode('google_maps')}
                 className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
                   mapViewMode === 'google_maps'
-                    ? 'bg-[#4ADE80] text-[#07130B]'
-                    : 'text-slate-400 hover:text-white'
+                    ? isDark ? 'bg-[#4ADE80] text-[#07130B]' : 'bg-[#183B28] text-[#FAF7F0] shadow-xs'
+                    : isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
                 }`}
               >
                 🗺️ Google Maps
@@ -252,7 +278,9 @@ export default function CommunityBiodiversityMap() {
           </div>
 
           {mapViewMode === 'google_maps' ? (
-            <div className="relative w-full h-[440px] rounded-2xl overflow-hidden border border-[#20422E] shadow-inner bg-[#13271C]">
+            <div className={`relative w-full h-[440px] rounded-2xl overflow-hidden border shadow-inner ${
+              isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#EDE6D8] border-[#D4CBB8]'
+            }`}>
               <iframe
                 title="Google Maps Biodiversity Observations"
                 width="100%"
@@ -278,7 +306,7 @@ export default function CommunityBiodiversityMap() {
                       y1={230}
                       x2={p.x}
                       y2={p.y}
-                      stroke={selectedPin?.id === p.id ? '#4ADE80' : '#20422E'}
+                      stroke={selectedPin?.id === p.id ? (isDark ? '#4ADE80' : '#183B28') : (isDark ? '#20422E' : '#D4CBB8')}
                       strokeWidth={selectedPin?.id === p.id ? '2.5' : '1.2'}
                       strokeDasharray={selectedPin?.id === p.id ? 'none' : '4'}
                     />
@@ -290,10 +318,14 @@ export default function CommunityBiodiversityMap() {
               <motion.div
                 animate={{ scale: [1, 1.08, 1] }}
                 transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#2E6141] via-[#1A3827] to-[#040B06] border-2 border-[#4ADE80] flex flex-col items-center justify-center text-center shadow-2xl z-20 cursor-pointer"
+                className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full border-2 flex flex-col items-center justify-center text-center shadow-2xl z-20 cursor-pointer ${
+                  isDark
+                    ? 'bg-gradient-to-br from-[#2E6141] via-[#1A3827] to-[#040B06] border-[#4ADE80]'
+                    : 'bg-gradient-to-br from-[#183B28] to-[#0F2418] border-[#0F2418] shadow-xl'
+                }`}
                 onClick={() => setSelectedPin(null)}
               >
-                <Globe className="w-6 h-6 text-[#4ADE80]" />
+                <Globe className={`w-6 h-6 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-100'}`} />
                 <span className="text-[10px] font-bold text-white tracking-wider uppercase">HUB</span>
               </motion.div>
 
@@ -309,8 +341,12 @@ export default function CommunityBiodiversityMap() {
                     style={{ left: p.x, top: p.y }}
                     className={`absolute -translate-x-1/2 -translate-y-1/2 px-3 py-2 rounded-2xl border transition-all cursor-pointer shadow-lg z-20 flex items-center gap-2 ${
                       isSelected
-                        ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-[#4ADE80]/30 scale-110'
-                        : 'bg-[#13271C]/90 border-[#20422E] text-slate-200 hover:border-[#4ADE80]/50'
+                        ? isDark
+                          ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-[#4ADE80]/30 scale-110'
+                          : 'bg-[#183B28] border-[#0F2418] text-[#FAF7F0] shadow-md ring-1 ring-[#183B28] scale-110'
+                        : isDark
+                          ? 'bg-[#13271C]/90 border-[#20422E] text-slate-200 hover:border-[#4ADE80]/50'
+                          : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] hover:border-[#183B28] shadow-md'
                     }`}
                   >
                     <span className="text-base">{p.emoji}</span>
@@ -320,7 +356,9 @@ export default function CommunityBiodiversityMap() {
               })}
               {filteredPins.length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <div className="bg-[#0E2015]/90 border border-dashed border-[#4ADE80]/30 rounded-2xl px-6 py-4 text-xs text-slate-300 max-w-sm text-center">
+                  <div className={`border border-dashed rounded-2xl px-6 py-4 text-xs max-w-sm text-center ${
+                    isDark ? 'bg-[#0E2015]/90 border-[#4ADE80]/30 text-slate-300' : 'bg-[#F2ECE1] border-[#D4CBB8] text-[#3E5C48]'
+                  }`}>
                     No observations on the map yet. When community members log sightings, they appear here as constellation nodes.
                   </div>
                 </div>
@@ -334,23 +372,31 @@ export default function CommunityBiodiversityMap() {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[#112318] border border-[#4ADE80]/40 rounded-3xl p-6 shadow-2xl space-y-4"
+            className={`rounded-3xl p-6 shadow-2xl space-y-4 border transition-colors ${
+              isDark ? 'bg-[#112318] border-[#4ADE80]/40 text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] shadow-sm'
+            }`}
           >
-            <div className="flex justify-between items-start border-b border-[#20452F] pb-3">
+            <div className={`flex justify-between items-start border-b pb-3 ${
+              isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+            }`}>
               <div className="flex items-center gap-3">
                 <span className="text-3xl">{selectedPin.emoji}</span>
                 <div>
-                  <h3 className="font-display text-xl font-bold text-white">{selectedPin.name}</h3>
-                  <p className="text-xs text-[#4ADE80] font-semibold">{selectedPin.city} · {selectedPin.confidence}</p>
+                  <h3 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{selectedPin.name}</h3>
+                  <p className={`text-xs font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>{selectedPin.city} · {selectedPin.confidence}</p>
                 </div>
               </div>
 
-              <button onClick={() => setSelectedPin(null)} className="text-slate-400 hover:text-white cursor-pointer">
+              <button onClick={() => setSelectedPin(null)} className={`cursor-pointer ${
+                isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
+              }`}>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-normal">
+            <p className={`text-xs sm:text-sm leading-relaxed font-normal ${
+              isDark ? 'text-slate-200' : 'text-[#0F2418]'
+            }`}>
               "{selectedPin.note}"
             </p>
           </motion.div>

@@ -27,12 +27,13 @@ const checkValidation = (req) => {
 
 const register = asyncHandler(async (req, res, next) => {
   checkValidation(req);
-  const { name, email, password } = req.body;
+  let { name, email, password } = req.body;
+  name = (name && typeof name === 'string' && name.trim()) || (email ? email.split('@')[0] : 'Explorer');
 
   const existing = await User.findOne({ email });
   if (existing) {
     res.status(400);
-    throw new Error('Registration failed. Please check your details and try again.');
+    throw new Error('An account with this email address already exists. Please sign in instead.');
   }
 
   const user = await User.create({ name, email, password });

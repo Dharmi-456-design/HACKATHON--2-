@@ -205,7 +205,9 @@ export default function HorizontalReviewsTicker() {
 
           {/* Linear Wave Scrubber Bar (Dynamic Green Peak following scroll progress) */}
           <div className="relative max-w-7xl w-full mx-auto my-2 sm:my-4 z-20 shrink-0">
-            <div className="flex items-center justify-between gap-1 h-12 px-3 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+            <div className={`flex items-center justify-between gap-1 h-12 px-3 rounded-2xl backdrop-blur-md border ${
+              isDark ? 'bg-white/5 border-white/10' : 'bg-slate-900/5 border-slate-900/10'
+            }`}>
               {Array.from({ length: NUM_TICKS }).map((_, i) => {
                 const tickProgress = i / (NUM_TICKS - 1);
                 const distance = Math.abs(tickProgress - scrollPos);
@@ -225,8 +227,8 @@ export default function HorizontalReviewsTicker() {
                     }}
                     className={`w-1 rounded-full transition-all duration-100 ${
                       isWaveActive
-                        ? 'bg-[#96CD7B] shadow-[0_0_10px_#96CD7B]'
-                        : 'bg-white/35'
+                        ? isDark ? 'bg-[#96CD7B] shadow-[0_0_10px_#96CD7B]' : 'bg-emerald-700 shadow-[0_0_10px_rgba(4,120,87,0.5)]'
+                        : isDark ? 'bg-white/35' : 'bg-slate-900/25'
                     }`}
                   />
                 );
@@ -234,9 +236,11 @@ export default function HorizontalReviewsTicker() {
             </div>
             
             {/* Scrubber Label */}
-            <div className="flex items-center justify-between text-[11px] font-mono text-white/50 px-3 mt-1.5 uppercase tracking-widest">
+            <div className={`flex items-center justify-between text-[11px] font-mono px-3 mt-1.5 uppercase tracking-widest ${
+              isDark ? 'text-white/50' : 'text-slate-600'
+            }`}>
               <span>01 / START</span>
-              <span className="text-[#96CD7B]">
+              <span className={isDark ? 'text-[#96CD7B]' : 'text-emerald-700 font-bold'}>
                 {scrollPos >= 0.98 ? '✓ ALL 10 CARDS COMPLETED' : 'SCROLL LEFT → RIGHT (10 CARDS)'}
               </span>
               <span>10 / END</span>
@@ -308,7 +312,9 @@ export default function HorizontalReviewsTicker() {
           </motion.div>
 
           {/* Bottom Hint */}
-          <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/40 z-20 pb-2 shrink-0">
+          <div className={`max-w-7xl w-full mx-auto flex items-center justify-between text-xs z-20 pb-2 shrink-0 ${
+            isDark ? 'text-white/40' : 'text-slate-500'
+          }`}>
             <span>Scroll vertically to complete all 10 cards horizontally (LEFT → RIGHT)</span>
             <span>10 Verified Explorer Reports</span>
           </div>

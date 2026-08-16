@@ -177,7 +177,7 @@ const STARTERS = [
 ];
 
 export default function PulseChat() {
-  const { toggleTheme } = useTheme();
+  const { toggleTheme, isDark } = useTheme();
   const { session } = useAuth();
   const token = session?.access_token || null;
 
@@ -207,6 +207,17 @@ export default function PulseChat() {
   const endRef = useRef(null);
 
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+
+  const todayDateString = new Date().toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+
+  const formatTime = (isoString) => {
+    const d = isoString ? new Date(isoString) : new Date();
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const localThreadId = () => `local-${Date.now()}`;
 
@@ -558,6 +569,17 @@ export default function PulseChat() {
     setShowHistoryDrawer(false);
   };
 
+  const clear = () => {
+    setMessages([]);
+    setText('');
+    setAttachedImage(null);
+    setAttachedPayload(null);
+    setError('');
+    if (activeThreadId) {
+      saveActiveThreadMessages([], activeThreadId);
+    }
+  };
+
   const handleRenameThread = (e, threadId) => {
     e.stopPropagation();
     if (!editTitleText.trim()) return;
@@ -609,79 +631,66 @@ export default function PulseChat() {
     try {
       // All Pulse replies (text and image) go through the serverless /api/pulse
       // route, which keeps the Gemini key server-side and carries conversation
-      // context from the user's saved history.
-      const data = await apiFetch(
-        '/api/pulse',
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            content,
-            imageBase64: attachedPayload ? attachedPayload.base64 : '',
-            contentType: attachedPayload ? attachedPayload.mime : '',
-            language: lang,
-          }),
-        },
-        token
-      );
-      const replyContent =
-        data?.content ||
-        data?.text ||
-        (attachedPayload
-          ? 'I observed the natural textures and colors in your photo. Try touching the surface and noticing its subtle features.'
-          : 'I am thinking about what you shared — try asking me about a plant, bird, or place nearby.');
+      // context from the user
+      let replyData;
+      if (attachedPayload) {
+        replyData = await apiFetch(
+          '/api/pulse',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              message: content,
+              imageBase64: attachedPayload.base64,
+              contentType: attachedPayload.mime,
+              lang,
+              thread_id: activeThreadId,
+            }),
+          },
+          token
+        );
+      } else {
+        replyData = await apiFetch(
+          '/api/pulse',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              message: content,
+              lang,
+              thread_id: activeThreadId,
+            }),
+          },
+          token
+        );
+      }
 
-      const reply = {
+      const botReply = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: replyContent,
+        content: replyData?.reply || replyData?.message || 'I observed your request. How else can I help you explore?',
         created_at: new Date().toISOString(),
       };
-      const finalMsgs = [...newMsgs, reply];
+
+      const finalMsgs = [...newMsgs, botReply];
       setMessages(finalMsgs);
       saveActiveThreadMessages(finalMsgs);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message === 'Your session expired. Please sign in again.'
-            ? 'Your session expired. Please sign in again and resend your message.'
-            : err.message
-          : 'NaturePulse could not analyze this right now. Please try again.'
-      );
+      setError(err instanceof Error ? err.message : 'Could not send message. Please try again.');
+      const fallbackReply = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: 'I could not connect to Pulse Intelligence server. Please check your internet connection and try again.',
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, fallbackReply]);
     } finally {
       setBusy(false);
-      inputRef.current?.focus();
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    send(text);
-  };
-
-  const clear = () => {
-    setMessages([]);
-    saveActiveThreadMessages([]);
-  };
-
-  const copyMessage = (id, content) => {
-    navigator.clipboard.writeText(content);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 1500);
-  };
-
-  const formatTime = (isoString) => {
-    const d = isoString ? new Date(isoString) : new Date();
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const todayDateString = new Date().toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
   return (
-    <div className="h-[calc(100vh-2rem)] md:h-screen w-full max-w-4xl mx-auto px-3 sm:px-6 py-3 flex flex-col overflow-hidden text-slate-100 font-sans selection:bg-[#4ADE80]/30 selection:text-white relative gpu-layer">
+    <div className={`h-[calc(100vh-2rem)] md:h-screen w-full max-w-4xl mx-auto px-3 sm:px-6 py-3 flex flex-col overflow-hidden font-sans selection:bg-[#4ADE80]/30 selection:text-white relative gpu-layer transition-colors duration-300 ${
+      isDark ? 'text-slate-100' : 'text-slate-900'
+    }`}>
       {/* Hidden File Input for Image Selection */}
       <input
         type="file"
@@ -714,13 +723,15 @@ export default function PulseChat() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#07130B]/90 backdrop-blur-xl flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xl flex items-center justify-center p-4"
           >
             <motion.div
               initial={{ scale: 0.88, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.88, y: 20 }}
-              className="bg-[#112318] border border-[#4ADE80]/40 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl text-center space-y-6 relative overflow-hidden"
+              className={`border rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl text-center space-y-6 relative overflow-hidden transition-colors ${
+                isDark ? 'bg-[#112318] border-[#4ADE80]/40 text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+              }`}
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#4ADE80]/20 via-transparent to-transparent pointer-events-none rounded-full blur-3xl" />
 
@@ -731,23 +742,31 @@ export default function PulseChat() {
                     transition={{ duration: 1.2, repeat: Infinity }}
                     className="absolute inset-0 rounded-full bg-[#4ADE80]/30 blur-md"
                   />
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#2E6141] to-[#0A180F] border-2 border-[#4ADE80] flex items-center justify-center shadow-lg relative z-10">
-                    <Mic className="w-9 h-9 text-[#4ADE80] animate-bounce" />
+                  <div className={`w-20 h-20 rounded-full border-2 flex items-center justify-center shadow-lg relative z-10 ${
+                    isDark ? 'bg-gradient-to-br from-[#2E6141] to-[#0A180F] border-[#4ADE80]' : 'bg-[#E1EFE0] border-[#183B28]'
+                  }`}>
+                    <Mic className={`w-9 h-9 animate-bounce ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`} />
                   </div>
                 </div>
 
-                <h3 className="font-display text-2xl font-bold text-white tracking-tight pt-2">
+                <h3 className={`font-display text-2xl font-bold tracking-tight pt-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   {t.listeningTitle}
                 </h3>
-                <p className="text-xs text-slate-400">{t.listeningHint}</p>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A3827] text-xs font-semibold text-[#4ADE80] border border-[#4ADE80]/30">
+                <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.listeningHint}</p>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                  isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                }`}>
                   🌐 {t.langName} Mode ({lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : 'en-US'})
                 </span>
               </div>
 
               {/* Live Transcribed Speech Preview Box */}
-              <div className="bg-[#0E2015] border border-[#20422E] rounded-2xl p-4 min-h-[90px] flex items-center justify-center text-center">
-                <p className="text-sm sm:text-base font-normal text-slate-200 leading-relaxed italic">
+              <div className={`border rounded-2xl p-4 min-h-[90px] flex items-center justify-center text-center ${
+                isDark ? 'bg-[#0E2015] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
+              }`}>
+                <p className={`text-sm sm:text-base font-normal leading-relaxed italic ${
+                  isDark ? 'text-slate-200' : 'text-slate-700'
+                }`}>
                   {text ? `"${text}"` : t.listening}
                 </p>
               </div>
@@ -767,7 +786,9 @@ export default function PulseChat() {
               <div className="flex justify-center pt-2">
                 <button
                   onClick={toggleListening}
-                  className="px-6 py-2.5 rounded-full bg-[#4ADE80] text-[#07130B] font-semibold text-sm hover:bg-[#3ECE77] transition-all shadow-md cursor-pointer flex items-center gap-2"
+                  className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-all shadow-md cursor-pointer flex items-center gap-2 ${
+                    isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                  }`}
                 >
                   <MicOff className="w-4 h-4" />
                   <span>{t.doneListening}</span>
@@ -785,17 +806,21 @@ export default function PulseChat() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#07130B]/85 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4"
           >
-            <div className="bg-[#112318] border border-[#20452F] rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6 relative overflow-hidden">
+            <div className={`border rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-6 relative overflow-hidden transition-colors ${
+              isDark ? 'bg-[#112318] border-[#20452F] text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
+            }`}>
               <div className="text-center space-y-2">
-                <div className="mx-auto w-12 h-12 rounded-full bg-[#1A3827] border border-[#2D5A3F] flex items-center justify-center text-xl">
+                <div className={`mx-auto w-12 h-12 rounded-full border flex items-center justify-center text-xl ${
+                  isDark ? 'bg-[#1A3827] border-[#2D5A3F]' : 'bg-[#E1EFE0] border-[#C3DEC0]'
+                }`}>
                   🌐
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-white tracking-tight">
+                <h2 className={`font-display text-2xl font-semibold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   {t.modalTitle}
                 </h2>
-                <p className="text-xs text-slate-400 font-normal">
+                <p className={`text-xs font-normal ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                   {t.modalSubtitle}
                 </p>
               </div>
@@ -807,19 +832,25 @@ export default function PulseChat() {
                     onClick={() => selectLanguage(l.code)}
                     className={`flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all cursor-pointer ${
                       lang === l.code
-                        ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-md'
-                        : 'bg-[#13271C]/70 border-[#20422E] text-slate-300 hover:text-white'
+                        ? isDark
+                          ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-md'
+                          : 'bg-emerald-50 border-emerald-600 text-emerald-950 font-bold shadow-xs'
+                        : isDark
+                          ? 'bg-[#13271C]/70 border-[#20422E] text-slate-300 hover:text-white'
+                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-xl">{l.flag}</span>
                       <div className="text-left">
                         <p className="font-medium text-sm leading-snug">{l.native}</p>
-                        <p className="text-[11px] text-slate-400">{l.name}</p>
+                        <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{l.name}</p>
                       </div>
                     </div>
                     {lang === l.code && (
-                      <span className="w-5 h-5 rounded-full bg-[#4ADE80] text-[#07130B] flex items-center justify-center text-xs font-bold">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                        isDark ? 'bg-[#4ADE80] text-[#07130B]' : 'bg-[#183B28] text-white'
+                      }`}>
                         ✓
                       </span>
                     )}
@@ -846,18 +877,22 @@ export default function PulseChat() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-              className="w-full max-w-sm h-full bg-[#0E1F14] border-l border-[#20452F] p-5 shadow-2xl flex flex-col justify-between"
+              className={`w-full max-w-sm h-full border-l p-5 shadow-2xl flex flex-col justify-between transition-colors ${
+                isDark ? 'bg-[#0E1F14] border-[#20452F] text-white' : 'bg-[#FAF7F0] border-[#E3DDD1] text-[#0F2418]'
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="space-y-4 flex-1 flex flex-col min-h-0">
-                <div className="flex items-center justify-between border-b border-[#20452F] pb-3">
-                  <div className="flex items-center gap-2 text-white font-semibold text-base">
-                    <History className="w-5 h-5 text-[#4ADE80]" />
+                <div className={`flex items-center justify-between border-b pb-3 ${
+                  isDark ? 'border-[#20452F]' : 'border-slate-200'
+                }`}>
+                  <div className={`flex items-center gap-2 font-semibold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    <History className={`w-5 h-5 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`} />
                     <span>{t.historyTitle}</span>
                   </div>
                   <button
                     onClick={() => setShowHistoryDrawer(false)}
-                    className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-[#1A3827]"
+                    className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white hover:bg-[#1A3827]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#EDE6D8]'}`}
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -865,7 +900,9 @@ export default function PulseChat() {
 
                 <button
                   onClick={startNewChat}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl bg-[#4ADE80] text-[#07130B] font-medium text-sm hover:bg-[#3ECE77] transition-all cursor-pointer shadow-md"
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-2xl font-medium text-sm transition-all cursor-pointer shadow-md ${
+                    isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#1C3727] text-white hover:bg-[#2A4E38]'
+                  }`}
                 >
                   <Plus className="w-4 h-4" />
                   <span>{t.newChat}</span>
@@ -873,7 +910,7 @@ export default function PulseChat() {
 
                 <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-chat-scroll">
                   {!threads.length ? (
-                    <p className="text-xs text-slate-500 py-8 text-center">{t.noHistory}</p>
+                    <p className={`text-xs py-8 text-center ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{t.noHistory}</p>
                   ) : (
                     threads.map((th) => (
                       <div
@@ -881,13 +918,17 @@ export default function PulseChat() {
                         onClick={() => loadThread(th.id)}
                         className={`group relative p-3 rounded-2xl border transition-all cursor-pointer ${
                           activeThreadId === th.id
-                            ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-md'
-                            : 'bg-[#13271C]/60 border-[#20422E] text-slate-300 hover:bg-[#173022]'
+                            ? isDark
+                              ? 'bg-[#1A3827] border-[#4ADE80] text-white shadow-md'
+                              : 'bg-emerald-50 border-emerald-600 text-emerald-950 font-bold shadow-xs'
+                            : isDark
+                              ? 'bg-[#13271C]/60 border-[#20422E] text-slate-300 hover:bg-[#173022]'
+                              : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <MessageSquare className="w-4 h-4 shrink-0 text-[#4ADE80]" />
+                            <MessageSquare className={`w-4 h-4 shrink-0 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`} />
                             {editingThreadId === th.id ? (
                               <input
                                 autoFocus
@@ -898,7 +939,9 @@ export default function PulseChat() {
                                 }}
                                 onBlur={(e) => handleRenameThread(e, th.id)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="bg-[#0E2015] border border-[#4ADE80] px-2 py-0.5 rounded text-xs text-white outline-none w-full"
+                                className={`border px-2 py-0.5 rounded text-xs outline-none w-full ${
+                                  isDark ? 'bg-[#0E2015] border-[#4ADE80] text-white' : 'bg-[#FDFBF7] border-[#183B28] text-[#0F2418]'
+                                }`}
                               />
                             ) : (
                               <p className="text-xs font-semibold truncate leading-snug">{th.title}</p>
@@ -912,14 +955,14 @@ export default function PulseChat() {
                                 setEditingThreadId(th.id);
                                 setEditTitleText(th.title);
                               }}
-                              className="p-1 rounded text-slate-400 hover:text-white hover:bg-[#254B35]"
+                              className={`p-1 rounded ${isDark ? 'text-slate-400 hover:text-white hover:bg-[#254B35]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#EDE6D8]'}`}
                               title="Rename"
                             >
                               <Edit2 className="w-3 h-3" />
                             </button>
                             <button
                               onClick={(e) => deleteThread(e, th.id)}
-                              className="p-1 rounded text-slate-400 hover:text-red-400 hover:bg-[#254B35]"
+                              className={`p-1 rounded hover:text-red-500 ${isDark ? 'text-slate-400 hover:bg-[#254B35]' : 'text-[#3E5C48] hover:bg-[#EDE6D8]'}`}
                               title="Delete"
                             >
                               <Trash2 className="w-3 h-3" />
@@ -927,7 +970,7 @@ export default function PulseChat() {
                           </div>
                         </div>
 
-                        <p className="text-[10px] text-slate-400 mt-1 truncate">
+                        <p className={`text-[10px] mt-1 truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                           {th.messages?.length
                             ? th.messages[th.messages.length - 1].content
                             : 'No messages yet'}
@@ -938,13 +981,15 @@ export default function PulseChat() {
                 </div>
 
                 {threads.some((th) => th.messages && th.messages.length > 0) && (
-                  <div className="pt-3 border-t border-[#20452F] flex items-center justify-between">
-                    <span className="text-[11px] text-slate-400">
+                  <div className={`pt-3 border-t flex items-center justify-between ${
+                    isDark ? 'border-[#20452F]' : 'border-slate-200'
+                  }`}>
+                    <span className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                       {threads.filter((th) => th.messages && th.messages.length > 0).length} conversations
                     </span>
                     <button
                       onClick={clearAllHistory}
-                      className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors cursor-pointer"
+                      className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1 transition-colors cursor-pointer font-medium"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Clear All</span>
@@ -957,12 +1002,16 @@ export default function PulseChat() {
         )}
       </AnimatePresence>
 
-      {/* ──────────────── TOP HERO BANNER CARD (Increased Height & Larger Fonts) ──────────────── */}
-      <div className="shrink-0 relative bg-[#112318]/90 border border-[#20452F] rounded-3xl p-7 sm:p-9 min-h-[175px] shadow-2xl overflow-hidden backdrop-blur-xl">
+      {/* ──────────────── TOP HERO BANNER CARD ──────────────── */}
+      <div className={`shrink-0 relative rounded-3xl p-7 sm:p-9 min-h-[175px] shadow-2xl overflow-hidden backdrop-blur-xl border transition-colors ${
+        isDark ? 'bg-[#112318]/90 border-[#20452F] text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] shadow-md'
+      }`}>
         <div className="absolute top-5 right-5 flex items-center gap-2.5 z-20">
           <button
             onClick={startNewChat}
-            className="px-3.5 py-1.5 rounded-full bg-[#4ADE80] hover:bg-[#3ECE77] text-[#07130B] flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95"
+            className={`px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95 ${
+              isDark ? 'bg-[#4ADE80] hover:bg-[#3ECE77] text-[#07130B]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+            }`}
             title="Start New Chat"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -971,13 +1020,17 @@ export default function PulseChat() {
 
           <button
             onClick={() => setShowHistoryDrawer(true)}
-            className="px-3 py-1.5 rounded-full bg-[#1A3626] hover:bg-[#254B35] border border-[#2D5A3F] flex items-center gap-1.5 text-xs sm:text-sm text-slate-100 font-medium transition-colors cursor-pointer"
+            className={`px-3.5 py-1.5 rounded-full border flex items-center gap-1.5 text-xs sm:text-sm font-medium transition-colors cursor-pointer ${
+              isDark ? 'bg-[#1A3626] hover:bg-[#254B35] border-[#2D5A3F] text-slate-100' : 'bg-[#F2ECE1] hover:bg-[#EDE6D8] border-[#E0D8C8] text-[#183B28]'
+            }`}
             title="Chat History"
           >
-            <History className="w-4 h-4 text-[#4ADE80]" />
+            <History className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`} />
             <span className="hidden sm:inline">{t.historyTitle}</span>
             {threads.filter((th) => th.messages?.length > 0).length > 0 && (
-              <span className="ml-0.5 px-1.5 py-0.2 bg-[#4ADE80]/20 text-[#4ADE80] text-[10px] rounded-full font-bold">
+              <span className={`ml-0.5 px-1.5 py-0.2 text-[10px] rounded-full font-bold ${
+                isDark ? 'bg-[#4ADE80]/20 text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28]'
+              }`}>
                 {threads.filter((th) => th.messages?.length > 0).length}
               </span>
             )}
@@ -986,10 +1039,12 @@ export default function PulseChat() {
           <div className="relative">
             <button
               onClick={() => setShowLangDropdown((v) => !v)}
-              className="px-3.5 py-1.5 rounded-full bg-[#1A3626] hover:bg-[#254B35] border border-[#2D5A3F] flex items-center gap-1.5 text-xs sm:text-sm text-slate-100 font-medium transition-colors cursor-pointer"
+              className={`px-3.5 py-1.5 rounded-full border flex items-center gap-1.5 text-xs sm:text-sm font-medium transition-colors cursor-pointer ${
+                isDark ? 'bg-[#1A3626] hover:bg-[#254B35] border-[#2D5A3F] text-slate-100' : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+              }`}
               title="Change Language"
             >
-              <Globe className="w-4 h-4 text-[#4ADE80]" />
+              <Globe className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`} />
               <span>{t.langName}</span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
@@ -1000,14 +1055,18 @@ export default function PulseChat() {
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 6 }}
-                  className="absolute right-0 mt-2 w-40 bg-[#13271C] border border-[#20422E] rounded-2xl p-1.5 shadow-2xl z-30 space-y-1"
+                  className={`absolute right-0 mt-2 w-40 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 border ${
+                    isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#FDFBF7] border-[#E3DDD1]'
+                  }`}
                 >
                   {LANGUAGES.map((l) => (
                     <button
                       key={l.code}
                       onClick={() => selectLanguage(l.code)}
                       className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-left transition-colors cursor-pointer ${
-                        lang === l.code ? 'bg-[#1A3827] text-[#4ADE80]' : 'text-slate-300 hover:bg-[#1A3827]/60 hover:text-white'
+                        lang === l.code
+                          ? isDark ? 'bg-[#1A3827] text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28] font-bold'
+                          : isDark ? 'text-slate-300 hover:bg-[#1A3827]/60 hover:text-white' : 'text-[#3E5C48] hover:bg-[#F2ECE1]'
                       }`}
                     >
                       <span>{l.flag}</span>
@@ -1022,28 +1081,38 @@ export default function PulseChat() {
           <button
             onClick={toggleTheme}
             title="Toggle Theme"
-            className="w-9 h-9 rounded-full bg-[#1A3626] hover:bg-[#254B35] border border-[#2D5A3F] flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
+            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${
+              isDark ? 'bg-[#1A3626] hover:bg-[#254B35] border-[#2D5A3F] text-slate-300 hover:text-white' : 'bg-[#F2ECE1] hover:bg-[#EDE6D8] border-[#E0D8C8] text-[#183B28]'
+            }`}
           >
             <Sun className="w-4 h-4" />
           </button>
           
           <button
             title="Notifications"
-            className="w-9 h-9 rounded-full bg-[#1A3626] hover:bg-[#254B35] border border-[#2D5A3F] flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer relative"
+            className={`w-9 h-9 rounded-full border flex items-center justify-center transition-colors cursor-pointer relative ${
+              isDark ? 'bg-[#1A3626] hover:bg-[#254B35] border-[#2D5A3F] text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
+            }`}
           >
             <Bell className="w-4 h-4" />
           </button>
           
           <div className="relative">
-            <div className="w-9 h-9 rounded-full bg-[#1A3626] border border-[#2D5A3F] flex items-center justify-center text-slate-200">
+            <div className={`w-9 h-9 rounded-full border flex items-center justify-center ${
+              isDark ? 'bg-[#1A3626] border-[#2D5A3F] text-slate-200' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#183B28]'
+            }`}>
               <User className="w-4 h-4" />
             </div>
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#4ADE80] border-2 border-[#112318]" />
+            <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 ${
+              isDark ? 'bg-[#4ADE80] border-[#112318]' : 'bg-emerald-600 border-white'
+            }`} />
           </div>
 
           <button
             onClick={clear}
-            className="ml-1 text-xs text-emerald-400/80 hover:text-emerald-400 flex items-center gap-1 transition-colors cursor-pointer"
+            className={`ml-1 text-xs flex items-center gap-1 transition-colors cursor-pointer ${
+              isDark ? 'text-emerald-400/80 hover:text-emerald-400' : 'text-[#183B28] hover:text-[#0F2418] font-semibold'
+            }`}
             title="Clear Thread"
           >
             <RotateCcw className="w-4 h-4" />
@@ -1056,22 +1125,22 @@ export default function PulseChat() {
           <EkgPulseOrb size={84} active={busy} />
 
           <div className="space-y-1">
-            <p className="text-xs sm:text-sm text-slate-300 font-medium tracking-wide">{t.welcome}</p>
-            <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-white flex items-center gap-2">
+            <p className={`text-xs sm:text-sm font-medium tracking-wide ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>{t.welcome}</p>
+            <h1 className={`font-display text-4xl sm:text-5xl font-bold tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {t.title} <span className="text-2xl sm:text-3xl">🍃</span>
             </h1>
 
-            <div className="text-sm sm:text-base text-slate-200/90 leading-relaxed font-normal pt-0.5">
+            <div className={`text-sm sm:text-base leading-relaxed font-normal pt-0.5 ${isDark ? 'text-slate-200/90' : 'text-slate-600'}`}>
               <p>{t.tagline1}</p>
               <p>{t.tagline2}</p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs sm:text-sm text-slate-200 font-medium">
+            <div className={`flex flex-wrap items-center gap-3 pt-2 text-xs sm:text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-600'}`}>
               <div className="flex items-center gap-1.5">
                 <span>🍃</span>
                 <span>{t.badge1}</span>
               </div>
-              <span className="text-slate-600">|</span>
+              <span className={isDark ? 'text-slate-600' : 'text-slate-300'}>|</span>
               <div className="flex items-center gap-1.5">
                 <span>🛡️</span>
                 <span>{t.badge2}</span>
@@ -1083,7 +1152,9 @@ export default function PulseChat() {
 
       {/* ──────────────── DATE DIVIDER ──────────────── */}
       <div className="shrink-0 flex justify-center my-3">
-        <span className="px-4 py-1 rounded-full bg-[#122519] border border-[#20452F] text-xs text-slate-400 tracking-wider">
+        <span className={`px-4 py-1 rounded-full text-xs tracking-wider border ${
+          isDark ? 'bg-[#122519] border-[#20452F] text-slate-400' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#3E5C48] shadow-xs'
+        }`}>
           {todayDateString}
         </span>
       </div>
@@ -1091,7 +1162,7 @@ export default function PulseChat() {
       {/* ──────────────── CHAT MESSAGES THREAD ──────────────── */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-4 pr-1.5 custom-chat-scroll">
         {busy && (
-          <div className="flex items-center justify-center py-10 gap-3 text-sm text-emerald-400/80">
+          <div className={`flex items-center justify-center py-10 gap-3 text-sm ${isDark ? 'text-emerald-400/80' : 'text-emerald-700'}`}>
             <EkgPulseOrb size={34} active={true} />
             <span className="animate-pulse">{t.notebookLoading}</span>
           </div>
@@ -1100,14 +1171,18 @@ export default function PulseChat() {
         {!busy && !messages.length && (
           <div className="flex items-start gap-3.5 justify-start max-w-full">
             <EkgPulseOrb size={40} />
-            <div className="max-w-lg bg-[#13271C] border border-[#20422E] border-l-4 border-l-[#4ADE80] text-slate-100 rounded-2xl rounded-tl-xs p-4.5 shadow-md space-y-2 relative">
+            <div className={`max-w-lg border-l-4 rounded-2xl rounded-tl-xs p-4.5 shadow-md space-y-2 relative border ${
+              isDark
+                ? 'bg-[#13271C] border-[#20422E] border-l-[#4ADE80] text-slate-100'
+                : 'bg-[#FDFBF7] border-[#E3DDD1] border-l-[#183B28] text-[#0F2418]'
+            }`}>
               <p className="text-base font-medium leading-relaxed pr-4">
                 {t.welcomeBotMsg1}
               </p>
-              <p className="text-sm sm:text-base text-slate-200 leading-relaxed">
+              <p className={`text-sm sm:text-base leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-600'}`}>
                 {t.welcomeBotMsg2}
               </p>
-              <p className="text-xs text-slate-400 text-right pt-1">{formatTime()}</p>
+              <p className={`text-xs text-right pt-1 ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>{formatTime()}</p>
             </div>
           </div>
         )}
@@ -1128,13 +1203,19 @@ export default function PulseChat() {
                 <div
                   className={`relative w-full px-5 py-3.5 text-sm sm:text-base leading-relaxed shadow-md ${
                     m.role === 'user'
-                      ? 'bg-[#1A3827] border border-[#2D5A3F] text-white rounded-2xl rounded-tr-xs'
-                      : 'bg-[#13271C] border border-[#20422E] border-l-4 border-l-[#4ADE80] text-slate-100 rounded-2xl rounded-tl-xs'
+                      ? isDark
+                        ? 'bg-[#1A3827] border border-[#2D5A3F] text-white rounded-2xl rounded-tr-xs'
+                        : 'bg-[#183B28] border border-[#183B28] text-[#FAF7F0] rounded-2xl rounded-tr-xs'
+                      : isDark
+                        ? 'bg-[#13271C] border border-[#20422E] border-l-4 border-l-[#4ADE80] text-slate-100 rounded-2xl rounded-tl-xs'
+                        : 'bg-[#FDFBF7] border border-[#E3DDD1] border-l-4 border-l-[#183B28] text-[#0F2418] rounded-2xl rounded-tl-xs'
                   }`}
                 >
                   {m.image && (
                     <div className="mb-2">
-                      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide text-[#4ADE80] mb-1.5 font-semibold">
+                      <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-wide mb-1.5 font-semibold ${
+                        isDark ? 'text-[#4ADE80]' : 'text-emerald-700'
+                      }`}>
                         <ImageIcon className="w-3 h-3" />
                         Image attached
                       </span>
@@ -1150,17 +1231,19 @@ export default function PulseChat() {
                   {m.role !== 'user' && (
                     <button
                       onClick={() => copyMessage(m.id, m.content)}
-                      className="absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate-400 hover:text-white rounded-md hover:bg-[#1A3827]"
+                      className={`absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md ${
+                        isDark ? 'text-slate-400 hover:text-white hover:bg-[#1A3827]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#F2ECE1]'
+                      }`}
                       title="Copy message"
                     >
-                      {copiedId === m.id ? <Check className="w-4 h-4 text-[#4ADE80]" /> : <Copy className="w-4 h-4" />}
+                      {copiedId === m.id ? <Check className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-600'}`} /> : <Copy className="w-4 h-4" />}
                     </button>
                   )}
                 </div>
 
                 <div className="flex items-center gap-1 text-xs text-slate-400 mt-1 px-1">
                   <span>{formatTime(m.created_at)}</span>
-                  {m.role === 'user' && <CheckCheck className="w-4 h-4 text-[#4ADE80]" />}
+                  {m.role === 'user' && <CheckCheck className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-600'}`} />}
                 </div>
               </div>
             </div>
@@ -1170,12 +1253,12 @@ export default function PulseChat() {
         {/* Thinking State */}
         {busy && (
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-[#4ADE80] pl-1 font-medium">
+            <div className={`flex items-center gap-2 text-xs sm:text-sm pl-1 font-medium ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`}>
               <svg viewBox="0 0 100 100" className="w-4 h-4">
-                <path d="M 10 50 L 35 50 L 45 25 L 55 75 L 65 40 L 75 55 L 90 50" fill="none" stroke="#4ADE80" strokeWidth="6" strokeLinecap="round" />
+                <path d="M 10 50 L 35 50 L 45 25 L 55 75 L 65 40 L 75 55 L 90 50" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
               </svg>
               <span>{t.thinking}</span>
-              <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-ping" />
+              <span className={`w-2 h-2 rounded-full animate-ping ${isDark ? 'bg-[#4ADE80]' : 'bg-emerald-600'}`} />
             </div>
 
             <div className="flex items-center gap-3 justify-start">
@@ -1198,13 +1281,15 @@ export default function PulseChat() {
       <form onSubmit={send} className="shrink-0 pt-2 pb-1 space-y-1.5">
         {/* Thumbnail Preview for Image Attachment */}
         {attachedImage && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#12241A] border border-[#234A33] rounded-2xl w-fit">
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl w-fit border ${
+            isDark ? 'bg-[#12241A] border-[#234A33]' : 'bg-[#F2ECE1] border-[#E0D8C8] shadow-xs'
+          }`}>
             <img src={attachedImage} alt="Attachment" className="w-8 h-8 rounded object-cover border border-[#4ADE80]/40" />
             <div className="flex flex-col min-w-0">
-              <span className="text-xs text-slate-200 truncate max-w-[160px]">
+              <span className={`text-xs truncate max-w-[160px] ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
                 {attachedPayload?.name || 'Image attached'}
               </span>
-              <span className="text-[10px] text-slate-400">Ready to send</span>
+              <span className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Ready to send</span>
             </div>
             <button
               type="button"
@@ -1213,7 +1298,7 @@ export default function PulseChat() {
                 setAttachedPayload(null);
                 setError('');
               }}
-              className="p-1 text-slate-400 hover:text-red-400 cursor-pointer"
+              className="p-1 text-slate-400 hover:text-red-500 cursor-pointer"
               title="Remove image"
               aria-label="Remove attached image"
             >
@@ -1222,12 +1307,18 @@ export default function PulseChat() {
           </div>
         )}
 
-        <div className="relative bg-[#12241A]/95 border border-[#234A33] rounded-full p-2 pl-5 sm:pl-6 shadow-2xl flex items-center gap-3 backdrop-blur-xl transition-all focus-within:border-[#4ADE80]/70 focus-within:ring-2 focus-within:ring-[#4ADE80]/20">
+        <div className={`relative rounded-full p-2 pl-5 sm:pl-6 shadow-2xl flex items-center gap-3 backdrop-blur-xl transition-all border ${
+          isDark
+            ? 'bg-[#12241A]/95 border-[#234A33] focus-within:border-[#4ADE80]/70 focus-within:ring-2 focus-within:ring-[#4ADE80]/20'
+            : 'bg-[#FDFBF7] border-[#E0D8C8] focus-within:border-[#183B28] focus-within:ring-2 focus-within:ring-[#183B28]/20 shadow-lg'
+        }`}>
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={t.inputPlaceholder}
-            className="flex-1 bg-transparent text-sm sm:text-base outline-none text-white placeholder:text-slate-500 font-normal"
+            className={`flex-1 bg-transparent text-sm sm:text-base outline-none font-normal ${
+              isDark ? 'text-white placeholder:text-slate-500' : 'text-[#0F2418] placeholder:text-[#4F6856]'
+            }`}
           />
 
           <div className="flex items-center gap-1.5 shrink-0">
@@ -1235,7 +1326,9 @@ export default function PulseChat() {
             <button
               type="button"
               onClick={handleImageClick}
-              className="p-2 rounded-full text-slate-400 hover:text-white hover:bg-[#1C3A29] transition-colors cursor-pointer"
+              className={`p-2 rounded-full transition-colors cursor-pointer ${
+                isDark ? 'text-slate-400 hover:text-white hover:bg-[#1C3A29]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#F2ECE1]'
+              }`}
               title="Attach Image / Observation"
               aria-label="Attach an image"
             >
@@ -1247,17 +1340,21 @@ export default function PulseChat() {
               type="button"
               onClick={toggleListening}
               className={`p-2.5 rounded-full transition-colors cursor-pointer ${
-                isListening ? 'bg-red-500/20 text-red-400 animate-pulse' : 'text-slate-400 hover:text-white hover:bg-[#1C3A29]'
+                isListening
+                  ? 'bg-red-500/20 text-red-500 animate-pulse'
+                  : isDark ? 'text-slate-400 hover:text-white hover:bg-[#1C3A29]' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
               }`}
               title={isListening ? 'Stop Listening' : 'Voice Input (Speech-to-Text)'}
             >
-              {isListening ? <MicOff className="w-4 h-4 text-red-400" /> : <Mic className="w-4 h-4" />}
+              {isListening ? <MicOff className="w-4 h-4 text-red-500" /> : <Mic className="w-4 h-4" />}
             </button>
 
             <button
               type="submit"
               disabled={busy || (!text.trim() && !attachedImage)}
-              className="w-10 h-10 rounded-full bg-[#4ADE80] hover:bg-[#3ECE77] text-[#07130B] flex items-center justify-center transition-all disabled:opacity-40 disabled:hover:bg-[#4ADE80] shadow-md shadow-[#4ADE80]/20 cursor-pointer"
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all disabled:opacity-40 shadow-md cursor-pointer ${
+                isDark ? 'bg-[#4ADE80] hover:bg-[#3ECE77] text-[#07130B] shadow-[#4ADE80]/20' : 'bg-[#183B28] hover:bg-[#255239] text-[#FAF7F0]'
+              }`}
               aria-label="Send"
             >
               <Send className="w-4 h-4 ml-0.5" />
@@ -1265,7 +1362,7 @@ export default function PulseChat() {
           </div>
         </div>
 
-        <p className="text-xs text-slate-500 text-center font-normal">
+        <p className={`text-xs text-center font-normal ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
           {t.disclaimer}
         </p>
       </form>
