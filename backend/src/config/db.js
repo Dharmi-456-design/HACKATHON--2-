@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const Db = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default Db;
-  const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const connectDB = async () => {
   const conn = await mongoose.connect(process.env.MONGO_URI);

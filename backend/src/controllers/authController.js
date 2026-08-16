@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const AuthController = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default AuthController;
-  const { validationResult } = require('express-validator');
+const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
 const asyncHandler = require('../utils/asyncHandler');

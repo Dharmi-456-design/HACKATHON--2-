@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const IssueController = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default IssueController;
-  const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
 const Issue = require('../models/Issue');
 const User = require('../models/User');

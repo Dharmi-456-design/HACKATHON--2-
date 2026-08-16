@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const GenerateToken = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default GenerateToken;
-  const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 
 const generateToken = (user) => {
   return jwt.sign(

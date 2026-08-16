@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const AuthValidators = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default AuthValidators;
-  const { body } = require('express-validator');
+const { body } = require('express-validator');
 
 const validateRegister = [
   body('name')

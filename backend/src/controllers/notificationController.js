@@ -1,15 +1,4 @@
-import React from 'react';
-  
-  const NotificationController = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default NotificationController;
-  
-  const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const Notification = require('../models/Notification');
 const asyncHandler = require('../utils/asyncHandler');
 

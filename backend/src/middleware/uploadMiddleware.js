@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const UploadMiddleware = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default UploadMiddleware;
-  const multer = require('multer');
+const multer = require('multer');
 
 const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;

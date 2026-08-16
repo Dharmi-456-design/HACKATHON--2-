@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const Comment = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default Comment;
-  const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const commentSchema = new mongoose.Schema(
   {
