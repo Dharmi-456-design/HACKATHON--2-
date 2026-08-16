@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Eye, Compass, BookOpen, HandHeart, RotateCcw, Sparkles } from 'lucide-react';
 import { PulseOrb } from '../components/ui';
 import ThemeToggle from '../components/ThemeToggle';
+import InteractiveHeroSphere from '../components/InteractiveHeroSphere';
+import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
+import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 
 const JOURNEY = [
   { icon: Eye, title: 'Observe', body: 'Notice what is already beside you — bark, birdsong, a wet seam of moss.' },
@@ -15,81 +18,42 @@ const JOURNEY = [
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-cream text-ink">
-      <header className="fixed top-0 inset-x-0 z-30 backdrop-blur-md bg-cream/80 border-b border-ink/5 transition-colors">
+    <div className="min-h-screen bg-[#0A1610] text-ink">
+      <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-md bg-[#0A1610]/80 border-b border-white/10 transition-colors">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.png" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shadow-sm" />
-            <span className="font-display text-xl tracking-tight">NaturePulse</span>
+            <span className="font-display text-xl tracking-tight text-white font-semibold">NaturePulse</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-8 text-sm text-forest/80">
-            <a href="#journey" className="hover:text-ink transition-colors">The journey</a>
-            <a href="#pulse" className="hover:text-ink transition-colors">Pulse</a>
-            <a href="#trust" className="hover:text-ink transition-colors">Trust</a>
+          <nav className="hidden md:flex items-center gap-8 text-sm text-white/80">
+            <a href="#hero" className="hover:text-white transition-colors">3D Experience</a>
+            <a href="#journey" className="hover:text-white transition-colors">The journey</a>
+            <a href="#pulse" className="hover:text-white transition-colors">Pulse AI</a>
+            <a href="#reviews" className="hover:text-white transition-colors">Community</a>
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link to="/login" className="hidden sm:inline-flex text-sm px-3 py-2 text-forest hover:text-ink transition-colors">Sign in</Link>
-            <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full bg-forest text-cream text-sm px-4 py-2 hover:bg-ink transition-colors">
+            <Link to="/login" className="hidden sm:inline-flex text-sm px-3 py-2 text-white/80 hover:text-white transition-colors">Sign in</Link>
+            <Link to="/login" className="inline-flex items-center gap-1.5 rounded-full bg-[#97CDAB] text-[#0A1610] font-semibold text-sm px-4 py-2 hover:bg-white transition-colors">
               Begin <ArrowRight size={14} />
             </Link>
           </div>
         </div>
       </header>
 
-      <section className="relative pt-28 pb-20 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-24 -right-16 w-[480px] h-[480px] rounded-full bg-mist/60 blur-3xl" />
-          <div className="absolute bottom-0 -left-24 w-[360px] h-[360px] rounded-full bg-gold/10 blur-3xl" />
-        </div>
-        <div className="max-w-6xl mx-auto px-5 grid lg:grid-cols-2 gap-14 items-center relative">
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-gold mb-4">AI-powered Nature Relationship Platform</p>
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-[68px] leading-[0.95] text-ink">
-              Reconnect with the living world already around you.
-            </h1>
-            <p className="mt-6 text-lg text-forest/75 leading-relaxed max-w-lg">
-              NaturePulse turns everyday surroundings into a quiet layer of discovery.
-              Observe. Understand. Experience. Act. Measure. Return.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/login" className="inline-flex items-center gap-2 rounded-full bg-forest text-cream px-6 py-3 text-sm hover:bg-ink transition-colors">
-                Open the field notebook <ArrowRight size={16} />
-              </Link>
-              <a href="#journey" className="inline-flex items-center gap-2 rounded-full border border-forest/20 text-forest px-6 py-3 text-sm hover:bg-mist/40 transition-colors">
-                How it works
-              </a>
-            </div>
-            <p className="mt-6 text-xs text-forest/50 max-w-md">
-              We never invent a species name. We never expose your exact location. City and habitat are enough.
-            </p>
-          </motion.div>
+      {/* ────────────────────── 1. 3D INTERACTIVE HERO SPHERE ────────────────────── */}
+      <section id="hero" className="pt-16">
+        <InteractiveHeroSphere />
+      </section>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="relative"
-          >
-            <div className="rounded-[32px] overflow-hidden shadow-lift border border-ink/5 bg-paper">
-              <img
-                src="/forest_pond.jpg"
-                alt="NaturePulse — a still forest pond at first light"
-                className="w-full h-[420px] object-cover"
-              />
-              <div className="p-5 flex items-center justify-between">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-forest/45">Today’s mission</p>
-                  <p className="font-display text-xl mt-0.5">Stand still under one tree</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-forest/45">Connection</p>
-                  <p className="font-display text-2xl">78<span className="text-sm text-forest/40">/100</span></p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+      {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER ────────────────────── */}
+      <section id="reviews">
+        <HorizontalReviewsTicker />
+      </section>
+
+      {/* ────────────────────── 3. SCROLL TYPOGRAPHY HIGHLIGHT ────────────────────── */}
+      <section>
+        <ScrollTypographyHighlight />
       </section>
 
       <section id="journey" className="py-20 border-t border-ink/5">
