@@ -148,6 +148,8 @@ export default function GreenWatch() {
               { key: 'report', label: 'Report an issue' },
               { key: 'feed', label: 'Community feed' },
               { key: 'mine', label: 'My reports' },
+              { key: 'leaderboard', label: 'Leaderboard' },
+              ...(isAdmin ? [{ key: 'admin', label: 'Admin Dashboard' }] : []),
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -210,6 +212,8 @@ export default function GreenWatch() {
             )}
 
             {view === 'mine' && <MyIssues token={token} onOpen={(id) => openIssue(id)} key="mine" />}
+            {view === 'leaderboard' && <LeaderboardView key="leaderboard" />}
+            {view === 'admin' && <AdminStatsView token={token} key="admin" />}
           </AnimatePresence>
         </div>
       )}
@@ -623,6 +627,141 @@ function MyIssues({ token, onOpen }) {
       {list.map((issue) => (
         <IssueCard key={issue._id} issue={issue} onOpen={() => onOpen(issue._id)} />
       ))}
+    </div>
+  );
+}
+
+// ─── Leaderboard ─────────────────────────────────────────────────────────────
+function LeaderboardView() {
+  const [board, setBoard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await gwFetch('/api/admin/leaderboard');
+        setBoard(data?.leaderboard || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading) return <div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-20" /><Skeleton className="h-20" /></div>;
+  if (error) return <ErrorBanner message={error} />;
+
+  return (
+    <Card className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="font-display text-2xl">Community Impact Leaderboard</h3>
+          <p className="text-sm text-forest/65 mt-1">Neighbourhood champions reporting and resolving environmental issues.</p>
+        </div>
+        <Badge tone="gold">Top Reporters</Badge>
+      </div>
+
+      <div className="space-y-3">
+        {board.map((u, idx) => (
+          <div key={u._id || idx} className="flex items-center justify-between p-4 rounded-2xl bg-cream/70 border border-forest/10">
+            <div className="flex items-center gap-3">
+              <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx === 0 ? 'bg-amber-400 text-ink' : idx === 1 ? 'bg-slate-300 text-ink' : idx === 2 ? 'bg-amber-700 text-cream' : 'bg-forest/10 text-forest'}`}>
+                {idx + 1}
+              </span>
+              <div>
+                <p className="font-medium text-forest text-sm">{u.name}</p>
+                <p className="text-xs text-forest/55">{u.role === 'admin' ? 'Community Admin' : 'Active Citizen'}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="font-display text-lg font-bold text-forest">{u.points ?? 0}</span>
+              <span className="text-xs text-forest/60 ml-1">pts</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+// ─── Admin Dashboard ─────────────────────────────────────────────────────────
+function AdminStatsView({ token }) {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await gwFetch('/api/admin/stats', {}, token);
+        setStats(data?.stats || null);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [token]);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/export`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `greenwatch-issues-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      alert('Export failed: ' + e.message);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  if (loading) return <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><Skeleton className="h-32" /><Skeleton className="h-32" /><Skeleton className="h-32" /><Skeleton className="h-32" /></div>;
+  if (error) return <ErrorBanner message={error} />;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-5">
+          <p className="text-xs text-forest/60 uppercase tracking-wider font-semibold">Total Issues</p>
+          <p className="font-display text-4xl mt-2 text-forest">{stats?.totalIssues ?? 0}</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs text-forest/60 uppercase tracking-wider font-semibold">Resolved</p>
+          <p className="font-display text-4xl mt-2 text-emerald-600">{stats?.byStatus?.resolved ?? 0}</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs text-forest/60 uppercase tracking-wider font-semibold">In Progress</p>
+          <p className="font-display text-4xl mt-2 text-amber-600">{stats?.byStatus?.in_progress ?? 0}</p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-xs text-forest/60 uppercase tracking-wider font-semibold">Resolution Rate</p>
+          <p className="font-display text-4xl mt-2 text-forest">{stats?.resolutionRate ?? '0%'}</p>
+        </Card>
+      </div>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h4 className="font-display text-xl">Issue Management & Data Export</h4>
+            <p className="text-sm text-forest/65 mt-1">Download complete environmental issues history in CSV format for municipal reporting.</p>
+          </div>
+          <PrimaryButton onClick={handleExport} disabled={exporting}>
+            {exporting ? 'Exporting…' : 'Export CSV'}
+          </PrimaryButton>
+        </div>
+      </Card>
     </div>
   );
 }

@@ -8,20 +8,63 @@ const BG_IMAGE_2 = "https://images.higgs.ai/?default=1&output=webp&url=https%3A%
 const SPOTLIGHT_R = 260;
 
 function RevealLayer({ image, cursorX, cursorY }) {
-  const active = cursorX !== -999 && cursorY !== -999;
-  const maskStyle = active
-    ? `radial-gradient(circle ${SPOTLIGHT_R}px at ${cursorX}px ${cursorY}px, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 40%, rgba(0,0,0,0.75) 60%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0.12) 88%, rgba(0,0,0,0) 100%)`
-    : 'none';
+  const canvasRef = useRef(null);
+  const [maskUrl, setMaskUrl] = useState('');
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const updateSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    updateSize();
+    window.addEventListener('resize', updateSize);
+
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || cursorX === -999 || cursorY === -999) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const grad = ctx.createRadialGradient(cursorX, cursorY, 0, cursorX, cursorY, SPOTLIGHT_R);
+    grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    grad.addColorStop(0.4, 'rgba(255, 255, 255, 1)');
+    grad.addColorStop(0.6, 'rgba(255, 255, 255, 0.75)');
+    grad.addColorStop(0.75, 'rgba(255, 255, 255, 0.4)');
+    grad.addColorStop(0.88, 'rgba(255, 255, 255, 0.12)');
+    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cursorX, cursorY, SPOTLIGHT_R, 0, Math.PI * 2);
+    ctx.fill();
+
+    setMaskUrl(canvas.toDataURL());
+  }, [cursorX, cursorY]);
 
   return (
-    <div
-      className="absolute inset-0 bg-center bg-cover bg-no-repeat z-30 pointer-events-none"
-      style={{
-        backgroundImage: `url(${image})`,
-        maskImage: maskStyle,
-        WebkitMaskImage: maskStyle,
-      }}
-    />
+    <>
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" style={{ display: 'none' }} />
+      <div
+        className="absolute inset-0 bg-center bg-cover bg-no-repeat z-30 pointer-events-none"
+        style={{
+          backgroundImage: `url(${image})`,
+          maskImage: maskUrl ? `url(${maskUrl})` : 'none',
+          WebkitMaskImage: maskUrl ? `url(${maskUrl})` : 'none',
+          maskSize: '100% 100%',
+          WebkitMaskSize: '100% 100%',
+        }}
+      />
+    </>
   );
 }
 
@@ -50,18 +93,13 @@ export default function LithosHero() {
 
     const loop = () => {
       if (mouseRef.current.x !== -999) {
-        const prev = smoothRef.current;
-        const next =
-          prev.x === -999
-            ? { ...mouseRef.current }
-            : {
-                x: prev.x + (mouseRef.current.x - prev.x) * 0.1,
-                y: prev.y + (mouseRef.current.y - prev.y) * 0.1,
-              };
-        smoothRef.current = next;
-        if (prev.x === -999 || Math.abs(next.x - prev.x) > 0.5 || Math.abs(next.y - prev.y) > 0.5) {
-          setCursorPos({ x: next.x, y: next.y });
+        if (smoothRef.current.x === -999) {
+          smoothRef.current = { ...mouseRef.current };
+        } else {
+          smoothRef.current.x += (mouseRef.current.x - smoothRef.current.x) * 0.1;
+          smoothRef.current.y += (mouseRef.current.y - smoothRef.current.y) * 0.1;
         }
+        setCursorPos({ x: smoothRef.current.x, y: smoothRef.current.y });
       }
       rafRef.current = requestAnimationFrame(loop);
     };
@@ -90,7 +128,7 @@ export default function LithosHero() {
         {/* Layer 3: Main Heading (z-50) */}
         <div className="absolute top-[20%] sm:top-[16%] left-0 right-0 flex flex-col items-center text-center px-5 pointer-events-none z-50">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs uppercase tracking-[0.2em] font-semibold mb-4 pointer-events-auto shadow-md backdrop-blur-xs">
-            <Sparkles size={13} /> AI-POWERED NATURE EXPLORATION
+            <Sparkles size={13} /> AI NATURE RELATIONSHIP PLATFORM
           </div>
 
           <h1 className="text-white leading-[0.95]">
@@ -98,40 +136,40 @@ export default function LithosHero() {
               className="block font-playfair italic font-normal text-5xl sm:text-7xl md:text-8xl hero-anim hero-reveal"
               style={{ letterSpacing: '-0.05em', animationDelay: '0.25s' }}
             >
-              Layers hold
+              Observe, understand,
             </span>
             <span
               className="block font-normal text-5xl sm:text-7xl md:text-8xl -mt-1 hero-anim hero-reveal"
               style={{ letterSpacing: '-0.08em', animationDelay: '0.42s' }}
             >
-              tales of time
+              experience nature
             </span>
           </h1>
         </div>
 
         {/* Layer 4: Bottom-Left Paragraph (z-50) */}
         <div
-          className="hidden sm:block absolute bottom-14 left-10 md:left-14 max-w-[280px] z-50 hero-anim hero-fade"
+          className="hidden sm:block absolute bottom-14 left-10 md:left-14 max-w-[300px] z-50 hero-anim hero-fade"
           style={{ animationDelay: '0.7s' }}
         >
           <p className="text-sm text-white/80 leading-relaxed font-light">
-            Every observation records a living chapter of our planet — connecting bark textures, birdsong, and moss seams into deep ecological discovery.
+            NaturePulse connects everyday surroundings into deep ecological discovery — tracking species observations, Nature Lens AI telemetry, and 5-dimensional connection scores.
           </p>
         </div>
 
-        {/* Layer 5: Bottom-Right Block & NaturePulse CTA Button (z-50) - Cleaned as requested */}
+        {/* Layer 5: Bottom-Right Block & NaturePulse CTA Button (z-50) */}
         <div
-          className="absolute bottom-10 sm:bottom-20 left-5 right-5 sm:left-auto sm:right-10 md:right-14 max-w-full sm:max-w-[280px] flex flex-col items-start gap-4 sm:gap-5 z-50 hero-anim hero-fade"
+          className="absolute bottom-10 sm:bottom-20 left-5 right-5 sm:left-auto sm:right-10 md:right-14 max-w-full sm:max-w-[300px] flex flex-col items-start gap-4 sm:gap-5 z-50 hero-anim hero-fade"
           style={{ animationDelay: '0.85s' }}
         >
           <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-light">
-            Our AI-powered field maps let you observe urban ecology, track species telemetry, and discover living biodiversity across 450+ cities around you.
+            Log daily field notes, discover nearby green sanctuaries, and join a thriving community of urban observers mapping living biodiversity around you.
           </p>
           <button
             onClick={handleAction}
             className="inline-flex items-center gap-2 bg-[#96CD7B] hover:bg-white text-[#0A1610] text-sm font-semibold px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 shadow-lg shadow-[#96CD7B]/25 cursor-pointer"
           >
-            Explore Field Notebook <ArrowRight size={15} />
+            Explore Nature Pulse <ArrowRight size={15} />
           </button>
         </div>
       </section>

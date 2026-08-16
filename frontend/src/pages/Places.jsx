@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Sparkles, Compass, MapPin, Search, Clock, Star, Navigation, 
   ChevronRight, Filter, Plus, Trash2, CheckCircle2, Shield, User, 
@@ -8,7 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch } from '../lib/api';
-import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
+import { SEED_NEARBY_PLACES } from './PlaceDetails';
 
 // Multilingual UI Translations for Nearby Discovery Engine
 const NEARBY_TRANSLATIONS = {
@@ -222,6 +223,7 @@ const SEED_NEARBY_PLACES = [
 ];
 
 export default function Places() {
+  const navigate = useNavigate();
   const { session } = useAuth();
   const lang = localStorage.getItem('pulse_chat_lang') || 'en';
   const t = NEARBY_TRANSLATIONS[lang] || NEARBY_TRANSLATIONS.en;
@@ -256,6 +258,31 @@ export default function Places() {
   const [isBuildingRoute, setIsBuildingRoute] = useState(false);
   const [builtRoute, setBuiltRoute] = useState(null);
 
+  // Sync places with API if available
+  useEffect(() => {
+    let mounted = true;
+    apiFetch('/api/places')
+      .then((data) => {
+        if (mounted && Array.isArray(data) && data.length > 0) {
+          // Merge API data with seed attributes
+          const merged = data.map((apiItem, idx) => {
+            const seedMatch = SEED_NEARBY_PLACES.find((s) => s.id === apiItem.id || s.id === apiItem._id) || SEED_NEARBY_PLACES[idx % SEED_NEARBY_PLACES.length];
+            return {
+              ...seedMatch,
+              ...apiItem,
+              id: apiItem.id || apiItem._id || seedMatch.id,
+              image: apiItem.image || apiItem.image_url || seedMatch.image,
+            };
+          });
+          setPlaces(merged);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('pulse_nearby_places_v1', JSON.stringify(places));
   }, [places]);
@@ -265,7 +292,8 @@ export default function Places() {
   }, [savedPlaceIds]);
 
   // Toggle Save Bookmark
-  const toggleSavePlace = (id) => {
+  const toggleSavePlace = (id, e) => {
+    if (e) e.stopPropagation();
     setSavedPlaceIds((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
@@ -278,6 +306,7 @@ export default function Places() {
       setBuiltRoute({
         title: '2-Hour Afternoon Eco-Discovery Route',
         duration: '2 Hours 15 Mins',
+        totalDistance: '2.8 km walking',
         stops: [
           { order: 1, name: 'Peepal Canopy Study Sanctuary', time: '1:00 PM - 1:45 PM', note: 'Start with quiet study under Peepal shade.' },
           { order: 2, name: 'Sunset Hill Café', time: '1:50 PM - 2:30 PM', note: 'Coffee break & organic herbal tea.' },
@@ -286,7 +315,7 @@ export default function Places() {
       });
       setIsBuildingRoute(false);
       setActiveTab('route');
-    }, 1200);
+    }, 1000);
   };
 
   // Filtered Places
