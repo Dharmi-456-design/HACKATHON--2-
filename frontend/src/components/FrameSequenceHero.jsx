@@ -235,7 +235,7 @@ export default function FrameSequenceHero() {
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-white">Launch faster & grow</p>
-                  <p className="text-[10px] text-white/60">12,000+ Active Habitats</p>
+                  <p className="text-[10px] text-white/60">Active Habitats</p>
                 </div>
               </div>
             </motion.div>

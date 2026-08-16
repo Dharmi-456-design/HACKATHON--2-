@@ -594,6 +594,40 @@ const deleteCommunityPost = async (req, res) => {
   res.json({ success: true });
 };
 
+// Public testimonials sourced from real community field reports
+const getTestimonials = async (req, res) => {
+  const posts = await CommunityPost.find({})
+    .populate('user', 'name')
+    .sort({ createdAt: -1 })
+    .limit(50);
+  const list = posts
+    .filter((p) => String(p.note || '').trim().length >= 10)
+    .map((p) => ({
+      _id: p._id,
+      author_name: (p.user && p.user.name) || 'Nature Explorer',
+      category: p.category || 'Field Observation',
+      city: p.city || '',
+      note: p.note,
+      common_name: p.common_name,
+      scientific_name: p.scientific_name,
+      image_url: p.image_url,
+      upvotes: p.upvotes || 0,
+      createdAt: p.createdAt,
+    }));
+  res.json(list);
+};
+
+// Public aggregate stats for the marketing pages (no fabricated numbers)
+const getPublicStats = async (req, res) => {
+  const [users, observations, habitats, reports] = await Promise.all([
+    Profile.countDocuments({}),
+    Discovery.countDocuments({}),
+    Place.countDocuments({}),
+    CommunityPost.countDocuments({}),
+  ]);
+  res.json({ users, observations, habitats, reports });
+};
+
 // Actions
 const getActions = async (req, res) => {
   const actions = await Action.find({ user: req.user._id }).sort({ createdAt: -1 }).limit(200);
@@ -1069,6 +1103,8 @@ module.exports = {
   assistAIStory,
   getCommunityPosts,
   createCommunityPost,
+  getTestimonials,
+  getPublicStats,
   getActions,
   createAction,
   updateAction,

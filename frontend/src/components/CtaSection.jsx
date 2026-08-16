@@ -1,23 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { Leaf, ThumbsUp, MapPin } from 'lucide-react';
+import { apiFetch } from '../lib/api';
+import { toTestimonial, DEFAULT_TESTIMONIALS } from '../lib/testimonials';
+import { usePublicStats } from '../hooks/usePublicStats';
 
-// Material Symbols Outlined helper component
-export function MIcon({ name, size = 20, fill = 0, weight = 400, grade = 0, opticalSize = 24, className = '' }) {
-  return (
-    <span
-      className={`material-symbols-outlined select-none inline-block ${className}`}
-      style={{
-        fontSize: `${size}px`,
-        fontVariationSettings: `'FILL' ${fill}, 'wght' ${weight}, 'GRAD' ${grade}, 'opsz' ${opticalSize}`,
-      }}
-    >
-      {name}
-    </span>
-  );
-}
-
-// FadeUp Framer Motion helper component
-export function FadeUp({ children, delay = 0, y = 24, className = '' }) {
+function FadeUp({ children, delay = 0, y = 24, className = '' }) {
   return (
     <motion.div
       initial={{ opacity: 0, y }}
@@ -31,220 +20,92 @@ export function FadeUp({ children, delay = 0, y = 24, className = '' }) {
   );
 }
 
-// Polymorphic PrimaryButton with text slide animation on hover
-export function PrimaryButton({ children, as = 'a', href = '#', onClick, className = '', size = 'lg' }) {
-  const [isHovered, setIsHovered] = useState(false);
-
-  const Component = as === 'button' ? 'button' : 'a';
-
-  return (
-    <Component
-      href={as === 'a' ? href : undefined}
-      onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`relative inline-flex items-center justify-center rounded-full bg-white/80 hover:bg-white text-black leading-none transition-colors overflow-hidden h-12 px-9 text-sm font-medium cursor-pointer ${className}`}
-    >
-      <div className="relative overflow-hidden flex flex-col items-center">
-        <motion.span
-          animate={{ y: isHovered ? '-100%' : '0%' }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="block"
-        >
-          {children}
-        </motion.span>
-        <motion.span
-          animate={{ y: isHovered ? '0%' : '100%' }}
-          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute inset-0 block text-black flex items-center justify-center"
-        >
-          {children}
-        </motion.span>
-      </div>
-    </Component>
-  );
-}
-
-// ChatPanel (Left Side of Dashboard Mock)
-export function ChatPanel({ initialScroll = 'top', animateMessagesIn = true }) {
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      text: "Welcome to the Vibe Design course! I'll guide you through building stunning websites with AI. What would you like to learn first?",
-    },
-    {
-      role: 'user',
-      text: 'I want to learn how to build a hero section with a cinematic video background using AI.',
-    },
-    {
-      role: 'assistant',
-      text: "Great choice! In this course, you'll learn how to create full-screen looping videos, liquid glass nav bars, email signups, and manifesto buttons — all with AI assistance. Let's dive in!",
-    },
-  ]);
-  const [inputVal, setInputVal] = useState('');
-  const scrollRef = useRef(null);
+// Live preview panel: newest real community field report + real aggregate stats
+function LivePreviewPanel() {
+  const [report, setReport] = useState(() => DEFAULT_TESTIMONIALS[0]);
+  const stats = usePublicStats();
 
   useEffect(() => {
-    if (scrollRef.current) {
-      if (initialScroll === 'top') {
-        scrollRef.current.scrollTop = 0;
-      } else {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
-    }
-  }, [initialScroll]);
-
-  const handleSend = () => {
-    if (!inputVal.trim()) return;
-    const userMsg = inputVal;
-    setInputVal('');
-
-    setMessages((prev) => [
-      ...prev,
-      { role: 'user', text: userMsg },
-      {
-        role: 'assistant',
-        text: 'Analyzing prompt... NaturePulse AI is crafting your customized liquid glass UI components now.',
-      },
-    ]);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+    apiFetch('/api/testimonials', {}, null)
+      .then((list) => {
+        if (Array.isArray(list) && list.length) {
+          setReport(toTestimonial(list[0]));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
-    <div className="flex flex-col h-full rounded-2xl border border-white/10 bg-[#08080A]/60 backdrop-blur-xl p-3 sm:p-4 overflow-hidden">
-      {/* Header Row */}
-      <div className="flex items-center gap-3 pb-3 border-b border-white/10 shrink-0">
-        <div className="w-7 h-7 rounded-full bg-white/5 flex items-center justify-center text-white">
-          <MIcon name="auto_awesome" size={14} />
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-white leading-tight">Vibe Design course</span>
-          <span className="text-[11px] text-white/40 leading-tight">Learn how to build website with AI</span>
-        </div>
-      </div>
-
-      {/* Messages Scroll Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto py-4 space-y-4 scrollbar-hide">
-        {messages.map((m, i) => {
-          const isUser = m.role === 'user';
-          const content = (
-            <div
-              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${isUser
-                  ? 'ml-auto bg-white/15 text-white/90 text-right'
-                  : 'bg-white/5 text-white/70 border border-white/5 text-left'
-                }`}
-            >
-              {m.text}
-            </div>
-          );
-
-          return animateMessagesIn ? (
-            <FadeUp key={i} delay={i * 0.12} y={16}>
-              {content}
-            </FadeUp>
-          ) : (
-            <div key={i}>{content}</div>
-          );
-        })}
-      </div>
-
-      {/* Input Row */}
-      <div className="liquid-glass rounded-2xl p-1.5 flex items-center gap-2 mt-2 shrink-0">
-        <textarea
-          rows={1}
-          value={inputVal}
-          onChange={(e) => setInputVal(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask about the course..."
-          className="flex-1 bg-transparent border-0 text-xs text-white placeholder-white/40 focus:outline-none resize-none px-3 py-2 scrollbar-hide"
-        />
-        <button
-          onClick={handleSend}
-          className="bg-white text-black rounded-xl p-2 hover:bg-white/90 transition-colors cursor-pointer shrink-0"
-        >
-          <MIcon name="arrow_upward" size={16} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// VelorahHeroPreview (Right Side of Dashboard Mock)
-export function VelorahHeroPreview() {
-  const VIDEO_SRC =
-    'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4';
-
-  return (
-    <div
-      className="relative w-full h-full overflow-hidden rounded-2xl flex flex-col justify-between"
-      style={{ backgroundColor: 'hsl(201 100% 13%)' }}
-    >
-      {/* Background Looping Video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="auto"
-        className="absolute inset-0 w-full h-full object-cover z-0"
-      >
-        <source src={VIDEO_SRC} type="video/mp4" />
-      </video>
-
-      {/* Nav Row */}
-      <div className="relative z-10 flex items-center justify-between px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 select-none">
-        <div className="text-white text-sm sm:text-base md:text-lg font-instrument italic tracking-tight">
-          Velorah<sup className="text-[0.5em] not-italic">®</sup>
-        </div>
-
-        <div className="hidden md:flex items-center gap-4 text-[9px] lg:text-[10px] text-white/60">
-          <span className="text-white font-medium">Home</span>
-          <span className="hover:text-white cursor-pointer transition-colors">Studio</span>
-          <span className="hover:text-white cursor-pointer transition-colors">About</span>
-          <span className="hover:text-white cursor-pointer transition-colors">Journal</span>
-          <span className="hover:text-white cursor-pointer transition-colors">Reach Us</span>
-        </div>
-
-        <div className="liquid-glass rounded-full px-2.5 sm:px-3 py-1 text-[9px] sm:text-[10px] text-white font-medium">
-          Begin Journey
-        </div>
-      </div>
-
-      {/* Hero Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-3 sm:px-4 pt-3 sm:pt-5 md:pt-7 pb-6 select-none my-auto">
-        <h1 className="font-instrument font-normal leading-[0.95] tracking-[-0.03em] text-lg sm:text-2xl md:text-3xl lg:text-4xl max-w-[90%] text-white animate-fade-rise">
-          Where <em className="not-italic text-white/55">dreams</em> rise{' '}
-          <em className="not-italic text-white/55">through the silence.</em>
-        </h1>
-
-        <p className="animate-fade-rise-delay text-white/60 text-[9px] sm:text-[11px] md:text-xs leading-relaxed max-w-[80%] sm:max-w-sm md:max-w-md mt-2 sm:mt-3 md:mt-4 font-light">
-          We're designing tools for deep thinkers, bold creators, and quiet rebels. Amid the chaos, we build digital spaces for sharp focus and inspired work.
-        </p>
-
-        <button className="animate-fade-rise-delay-2 liquid-glass rounded-full px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 md:py-2.5 text-[9px] sm:text-[10px] text-white font-medium mt-3 sm:mt-4 md:mt-5 hover:bg-white/20 transition-colors cursor-pointer">
-          Begin Journey
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// CtaDashboardMock Container
-export function CtaDashboardMock() {
-  return (
-    <div className="liquid-glass w-full max-w-[1100px] aspect-[3/4] sm:aspect-[16/10] lg:aspect-[16/9] rounded-2xl mx-auto overflow-hidden p-2 sm:p-3 shadow-2xl">
+    <div className="liquid-glass w-full max-w-[1100px] rounded-2xl mx-auto overflow-hidden p-2 sm:p-3 shadow-2xl">
       <div className="grid h-full grid-cols-1 sm:grid-cols-[minmax(220px,320px)_1fr] gap-2 sm:gap-3">
-        <div className="min-h-0 hidden sm:block">
-          <ChatPanel initialScroll="top" animateMessagesIn />
+        {/* Live stats column */}
+        <div className="min-h-0 hidden sm:flex flex-col justify-between gap-3 rounded-2xl border border-white/10 bg-[#08080A]/60 backdrop-blur-xl p-4">
+          <div className="flex items-center gap-3 pb-3 border-b border-white/10">
+            <div className="w-8 h-8 rounded-full bg-[#96CD7B]/15 flex items-center justify-center text-[#96CD7B]">
+              <Leaf size={16} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-white leading-tight">NaturePulse</span>
+              <span className="text-[11px] text-white/40 leading-tight">Live community data</span>
+            </div>
+          </div>
+
+          {[
+            { label: 'Species observations', value: stats && typeof stats.observations === 'number' ? stats.observations.toLocaleString() : '—' },
+            { label: 'Community field reports', value: stats && typeof stats.reports === 'number' ? stats.reports.toLocaleString() : '—' },
+            { label: 'Urban explorers', value: stats && typeof stats.users === 'number' ? stats.users.toLocaleString() : '—' },
+          ].map((row) => (
+            <div key={row.label} className="flex items-center justify-between gap-2">
+              <span className="text-[11px] text-white/50">{row.label}</span>
+              <span className="text-sm font-semibold text-white font-mono">{row.value}</span>
+            </div>
+          ))}
+
+          <div className="text-[10px] text-white/35 leading-relaxed">
+            Counts update live from the NaturePulse database.
+          </div>
         </div>
-        <div className="min-h-0">
-          <VelorahHeroPreview />
+
+        {/* Latest real field report */}
+        <div className="min-h-0 rounded-2xl border border-white/10 bg-[#0E1E15]/80 backdrop-blur-xl p-4 flex flex-col justify-between">
+          {report ? (
+            <>
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#96CD7B]/20 text-[#96CD7B]">
+                    {report.species || 'Field Report'}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-[#96CD7B] text-xs font-mono">
+                    <ThumbsUp size={13} /> {report.upvotes}
+                  </div>
+                </div>
+                <p className="text-sm text-white/85 leading-relaxed italic line-clamp-4">
+                  "{report.quote}"
+                </p>
+              </div>
+              <div className="flex items-center gap-3 pt-3 mt-3 border-t border-white/10">
+                {report.avatar ? (
+                  <img src={report.avatar} alt={report.species} className="w-9 h-9 rounded-full object-cover border border-white/20" />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 flex items-center justify-center">🌿</div>
+                )}
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-white truncate">{report.name}</span>
+                  <span className="text-[11px] text-white/50 flex items-center gap-1 truncate">
+                    <MapPin size={10} /> {report.city}
+                  </span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-center py-10 flex-1">
+              <span className="text-3xl mb-3">🌿</span>
+              <h3 className="text-sm font-semibold text-white mb-1">No field reports yet</h3>
+              <p className="text-[11px] text-white/50 max-w-[220px]">
+                Share the first observation from the Community feed and it will show here.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -283,37 +144,42 @@ export default function CtaSection() {
           {/* Left Column */}
           <div className="relative z-20 max-w-[400px]">
             <FadeUp delay={0.1}>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-wider mb-4">
+                <Leaf size={14} /> REAL OBSERVATIONS, STORED FOR YOU
+              </div>
               <h2 className="text-3xl sm:text-4xl font-normal tracking-[-0.02em] leading-[1.05] text-white font-sans">
-                Learn how can one go from 0 to $11.5k with AI in 60 days.
+                Reconnect with the living world outside.
               </h2>
             </FadeUp>
             <FadeUp delay={0.2}>
               <p className="mt-6 text-white/80 text-base sm:text-lg leading-[1.5] max-w-[380px] font-light">
-                Learn to turn your ideas into stunning websites with AI — the same skills agencies charge $5,000 for. Join the UI Rocket training and start building like a pro today.
+                Identify species with the Nature Lens, complete daily field missions, and build your Biodiversity Passport — every observation is real and yours to keep.
               </p>
             </FadeUp>
             <FadeUp delay={0.3} className="mt-10">
-              <PrimaryButton as="button">Start for free</PrimaryButton>
+              <Link
+                to="/register"
+                className="inline-flex items-center gap-2 rounded-full bg-[#96CD7B] px-6 py-3 text-sm font-semibold text-[#0A1610] transition-all hover:scale-[1.03] hover:bg-[#A8DD90] shadow-lg cursor-pointer"
+              >
+                Start for free
+              </Link>
             </FadeUp>
           </div>
         </div>
       </div>
 
-      {/* Dashboard pinned to right edge, behind grass, parallax Y */}
+      {/* Live dashboard preview pinned to right edge, parallax Y */}
       <motion.div
         style={{ y: dashboardY }}
         className="absolute top-[440px] sm:top-[460px] md:top-[500px] lg:top-20 left-4 right-4 sm:left-auto sm:-right-[8%] md:-right-[10%] lg:-right-[12%] z-10 sm:w-[85%] md:w-[80%] lg:w-[68%]"
       >
-        <CtaDashboardMock />
+        <LivePreviewPanel />
       </motion.div>
 
-      {/* Foreground grass — in front of dashboard, parallax Y */}
-      <motion.img
-        src="https://res.cloudinary.com/dy5er7kv5/image/upload/q_auto/f_auto/v1780586778/cta-bg_mlwy5s.png"
-        alt=""
-        aria-hidden
-        style={{ y: grassY }}
-        className="pointer-events-none select-none absolute left-0 right-0 bottom-[-40px] sm:bottom-[-80px] lg:bottom-[-140px] w-full z-30 object-cover"
+      {/* Bottom ambient backdrop glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute left-0 right-0 bottom-0 h-24 bg-gradient-to-t from-[#060E09] to-transparent z-30"
       />
     </section>
   );

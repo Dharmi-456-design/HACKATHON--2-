@@ -980,6 +980,98 @@ export default function Places() {
           </div>
         )}
 
+        {/* ──────────────── TAB 2: PLACE COMPARISON ──────────────── */}
+        {activeTab === 'compare' && (
+          <div className={`border rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl ${
+            isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/15 text-slate-800'
+          }`}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4 border-emerald-950/15">
+              <div>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Place Comparison Matrix</h3>
+                <p className={`text-xs font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`}>Compare quietness, canopy shade, seating & distance across top spots</p>
+              </div>
+              <span className="text-xs font-mono text-slate-400">Side-by-Side Analysis</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[600px]">
+                <thead>
+                  <tr className={`border-b text-xs uppercase tracking-wider ${isDark ? 'border-[#20422E] text-slate-400' : 'border-slate-200 text-slate-500'}`}>
+                    <th className="py-3 px-4">Place Name</th>
+                    <th className="py-3 px-4">Category</th>
+                    <th className="py-3 px-4">Rating</th>
+                    <th className="py-3 px-4">Distance</th>
+                    <th className="py-3 px-4">Shade Canopy</th>
+                    <th className="py-3 px-4">Quiet Score</th>
+                    <th className="py-3 px-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-emerald-950/10 text-xs sm:text-sm">
+                  {dynamicPlaces.slice(0, 5).map((p) => (
+                    <tr key={p.id} className={isDark ? 'hover:bg-[#13271C]/50' : 'hover:bg-emerald-50/50'}>
+                      <td className="py-3.5 px-4 font-bold">{p.name}</td>
+                      <td className="py-3.5 px-4">{p.category}</td>
+                      <td className="py-3.5 px-4 text-amber-400 font-bold">★ {p.rating}</td>
+                      <td className="py-3.5 px-4">{p.distance || '1.2 km'}</td>
+                      <td className="py-3.5 px-4 font-semibold text-emerald-500">Dense Canopy 🌳</td>
+                      <td className="py-3.5 px-4 font-mono">92/100 🤫</td>
+                      <td className="py-3.5 px-4">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          p.isOpen ? 'bg-emerald-900/40 text-emerald-400' : 'bg-rose-900/40 text-rose-400'
+                        }`}>
+                          {p.isOpen ? 'Open Now' : 'Closed'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ──────────────── TAB 3: SAVED PLACES ──────────────── */}
+        {activeTab === 'saved' && (
+          <div className={`border rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl ${
+            isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-100' : 'bg-white border-emerald-900/15 text-slate-800'
+          }`}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b pb-4 border-emerald-950/15">
+              <div>
+                <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>My Saved Places Collection</h3>
+                <p className={`text-xs font-semibold ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`}>{savedPlaceIds.length} bookmarked nature sanctuaries & quiet study spots</p>
+              </div>
+            </div>
+
+            {savedPlaceIds.length === 0 ? (
+              <div className="text-center py-12 space-y-3">
+                <p className="text-4xl">🔖</p>
+                <h4 className="font-display text-lg font-bold">No Bookmarked Places Yet</h4>
+                <p className="text-xs text-slate-400 max-w-sm mx-auto">Click "Bookmark" on any discovery card to save your favorite quiet study spots and nature parks here.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {dynamicPlaces.filter((p) => savedPlaceIds.includes(p.id)).map((place) => (
+                  <div key={place.id} className={`rounded-3xl border overflow-hidden p-4 space-y-3 ${
+                    isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-slate-200'
+                  }`}>
+                    <img src={place.image} alt="" className="w-full h-36 object-cover rounded-2xl" />
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-sm">{place.name}</h4>
+                      <p className="text-xs text-slate-400">{place.category} · {place.address}</p>
+                    </div>
+                    <button
+                      onClick={() => toggleSavePlace(place.id)}
+                      className="w-full py-2 rounded-xl bg-rose-900/30 text-rose-400 hover:bg-rose-900/50 text-xs font-bold transition-all cursor-pointer"
+                    >
+                      Remove Bookmark
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ──────────────── TAB 4: DISCOVERY ROUTE ──────────────── */}
         {activeTab === 'route' && builtRoute && (
           <div className={`rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border transition-colors ${

@@ -128,7 +128,7 @@ export default function NatureMissions() {
     const status = m.status || 'not_started';
     const xpReward = type === 'learn' ? 250 : type === 'explore' ? 180 : type === 'act' ? 200 : 100;
     const categoryMap = { observe: 'Exploration', explore: 'Learning', learn: 'Challenges', act: 'Personal Goals' };
-    const difficulty = !m.duration_minutes ? '🟡 Medium' : m.duration_minutes <= 10 ? '🟢 Easy' : m.duration_minutes <= 20 ? '🟡 Medium' : '🔴 Hard';
+    const difficulty = !m.duration_minutes ? 'Medium' : m.duration_minutes <= 10 ? 'Easy' : m.duration_minutes <= 20 ? 'Medium' : 'Hard';
     const steps = Array.isArray(m.steps) && m.steps.length
       ? m.steps
       : [
@@ -165,7 +165,7 @@ export default function NatureMissions() {
   // Custom Mission Creator State
   const [customTitle, setCustomTitle] = useState('');
   const [customCategory, setCustomCategory] = useState('Exploration');
-  const [customDifficulty, setCustomDifficulty] = useState('🟢 Easy');
+  const [customDifficulty, setCustomDifficulty] = useState('Easy');
 
   useEffect(() => {
     if (!token) return;
@@ -507,10 +507,9 @@ export default function NatureMissions() {
           ))}
         </div>
 
-        {/* ──────────────── TAB 1: CHECKPOINT MISSION PATH ──────────────── */}
-        {activeTab === 'path' && (
+        {/* ──────────────── TABS 1, 2, 3: PATH, ACTIVE & COMPLETED ──────────────── */}
+        {(activeTab === 'path' || activeTab === 'active' || activeTab === 'completed') && (
           <div className="space-y-8">
-            
             {/* Missions Grid */}
             <div className={`rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl relative overflow-hidden border transition-colors ${
               isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
@@ -542,9 +541,12 @@ export default function NatureMissions() {
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {missions.map((mission) => {
+                {(activeTab === 'active'
+                  ? missions.filter((m) => m.status !== 'completed')
+                  : activeTab === 'completed'
+                  ? missions.filter((m) => m.status === 'completed')
+                  : missions).map((mission) => {
                   const isSelected = selectedMission?.id === mission.id;
-                  const isDone = mission.status === 'completed';
                   const completedStepsCount = mission.steps.filter((s) => s.done).length;
                   const progressPct = Math.round((completedStepsCount / mission.steps.length) * 100);
 
@@ -693,7 +695,6 @@ export default function NatureMissions() {
                 ))}
               </div>
             </div>
-
           </div>
         )}
 
@@ -761,9 +762,9 @@ export default function NatureMissions() {
                         : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
                     }`}
                   >
-                    <option value="🟢 Easy">🟢 Easy (100 XP)</option>
-                    <option value="🟡 Medium">🟡 Medium (180 XP)</option>
-                    <option value="🔴 Hard">🔴 Hard (250 XP)</option>
+                    <option value="Easy">Easy (100 XP)</option>
+                    <option value="Medium">Medium (180 XP)</option>
+                    <option value="Hard">Hard (250 XP)</option>
                   </select>
                 </div>
               </div>

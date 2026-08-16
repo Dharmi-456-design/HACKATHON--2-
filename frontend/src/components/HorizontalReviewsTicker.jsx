@@ -1,120 +1,23 @@
 import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion';
-import { Star, ShieldCheck, ChevronRight } from 'lucide-react';
+import { ShieldCheck, ChevronRight, ThumbsUp } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { apiFetch } from '../lib/api';
+import { toTestimonial, DEFAULT_TESTIMONIALS } from '../lib/testimonials';
+import { usePublicStats } from '../hooks/usePublicStats';
 import ReviewsModal from './ReviewsModal';
 
-const REVIEWS = [
-  {
-    id: 1,
-    name: 'Dallas Ty',
-    handle: '@dallasty',
-    role: 'Verified Nature Observer',
-    quote: 'Great experience observing together. The team was attentive at every stage and brought strong telemetry, turning our observations into real impact.',
-    rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-    stat: '42 Observations',
-    yOffset: '-translate-y-6',
-  },
-  {
-    id: 2,
-    name: 'Alex Marshall',
-    handle: '@alexmarshall',
-    role: 'Verified Nature Explorer',
-    quote: 'Proactive and sweet approach to our observations. They captured our vision connecting everyday green spaces into impactful brand stories.',
-    rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
-    stat: '14-Day Streak',
-    yOffset: 'translate-y-8',
-  },
-  {
-    id: 3,
-    name: 'Favio D\'Agostino',
-    handle: '@faviodagostino',
-    role: 'Acoustic Researcher',
-    quote: 'Honestly, we were given a lot better than we expected. Fast performance, precise field logging, and great attention to detail.',
-    rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
-    stat: '5D Score: 94/100',
-    yOffset: '-translate-y-4',
-  },
-  {
-    id: 4,
-    name: 'Arianna Armelli',
-    handle: '@arianna_a',
-    role: 'Urban Habitat Lead',
-    quote: 'Alex has been amazing. Only a month in but NaturePulse has impact in our community already on local species, UX, and habitat care.',
-    rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
-    stat: '8 Habitats Mapped',
-    yOffset: 'translate-y-10',
-  },
-  {
-    id: 5,
-    name: 'Fawaz Buqammaz',
-    handle: '@fawaz_b',
-    role: 'Avian Telemetry Lead',
-    quote: 'Acoustic telemetry at 5:30 AM revealed 14 migratory bird calls I never noticed before in my local park. Standard-setting design.',
-    rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80',
-    stat: '14 Avian Logs',
-    yOffset: '-translate-y-8',
-  },
-  {
-    id: 6,
-    name: 'Elena Rostova',
-    handle: '@elena_rostova',
-    role: 'Community Pioneer',
-    quote: 'Extremely elegant UI. It makes citizen science feel like a high-end luxury relationship with the living earth.',
-    rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=120&q=80',
-    stat: 'Verified Explorer',
-    yOffset: 'translate-y-6',
-  },
-  {
-    id: 7,
-    name: 'Devin Sterling',
-    handle: '@devin_sterling',
-    role: 'Field Journaler',
-    quote: 'Returning to the same moss seam every rain cycle has given me a deep sense of calm and biological grounding.',
-    rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&q=80',
-    stat: '28 Field Visits',
-    yOffset: '-translate-y-10',
-  },
-  {
-    id: 8,
-    name: 'Marcus Vance',
-    handle: '@marcus_vance',
-    role: 'Micro-Habitat Analyst',
-    quote: 'The soil micro-habitats tracking tool is unmatched. Every urban naturalist needs NaturePulse.',
-    rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=120&q=80',
-    stat: 'Micro-Habitat Badge',
-    yOffset: 'translate-y-8',
-  },
-  {
-    id: 9,
-    name: 'Maya Lin-Chao',
-    handle: '@mayalinchao',
-    role: 'Environmental Reporter',
-    quote: 'NaturePulse turns raw field observations into stunning ecological stories with zero clutter.',
-    rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80',
-    stat: 'Field Journalist',
-    yOffset: '-translate-y-6',
-  },
-  {
-    id: 10,
-    name: 'Sophia Chen',
-    handle: '@sophiachen',
-    role: 'Canopy Specialist',
-    quote: 'Tracking urban tree canopy health across 4 neighborhood zones was effortless and inspiring.',
-    rating: 5,
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80',
-    stat: 'Canopy Specialist',
-    yOffset: 'translate-y-9',
-  },
+const OFFSETS = [
+  '-translate-y-6',
+  'translate-y-8',
+  '-translate-y-4',
+  'translate-y-10',
+  '-translate-y-8',
+  'translate-y-6',
+  '-translate-y-10',
+  'translate-y-8',
+  '-translate-y-6',
+  'translate-y-9',
 ];
 
 const NUM_TICKS = 120;
@@ -126,6 +29,20 @@ export default function HorizontalReviewsTicker() {
   const [modalOpen, setModalOpen] = useState(false);
   const [scrollPos, setScrollPos] = useState(0);
   const [maxScrollDistance, setMaxScrollDistance] = useState(0);
+  const [reports, setReports] = useState(DEFAULT_TESTIMONIALS);
+  const [loadError, setLoadError] = useState(false);
+  const stats = usePublicStats();
+
+  // Load real community field reports that power the ticker
+  useEffect(() => {
+    apiFetch('/api/testimonials', {}, null)
+      .then((list) => {
+        if (Array.isArray(list) && list.length) {
+          setReports(list.map(toTestimonial));
+        }
+      })
+      .catch(() => setLoadError(false));
+  }, []);
 
   // Calculate dynamic horizontal distance based on actual track width vs viewport width
   const updateScrollDistance = () => {
@@ -143,6 +60,11 @@ export default function HorizontalReviewsTicker() {
     window.addEventListener('resize', updateScrollDistance);
     return () => window.removeEventListener('resize', updateScrollDistance);
   }, []);
+
+  // Recompute travel distance once real reports arrive
+  useEffect(() => {
+    updateScrollDistance();
+  }, [reports.length]);
 
   // Framer Motion useScroll hook bound to targetRef
   const { scrollYProgress } = useScroll({
@@ -167,16 +89,17 @@ export default function HorizontalReviewsTicker() {
 
   // Initial Card Entrance: Cards start slightly below and move UPWARD into position as section enters viewport
   const cardsY = useTransform(smoothProgress, [0, 0.15], [35, 0]);
-  const cardsOpacity = useTransform(smoothProgress, [0, 0.1], [0.3, 1]);
+  const cardsOpacity = 1;
 
   const { isDark } = useTheme();
+  const userCount = stats && typeof stats.users === 'number' ? stats.users.toLocaleString() : null;
 
   return (
     <>
       {/* Outer Section - Pinning duration tuned to 120vh to guarantee zero empty space between sections */}
       <div ref={targetRef} className={`relative h-[120vh] transition-colors duration-300 ${isDark ? 'bg-[#0E1E15] text-white' : 'bg-[#F4F7F4] text-slate-900'}`}>
         
-        {/* Sticky Viewport Container - Pins section while user completes Card 1 -> Card 10 */}
+        {/* Sticky Viewport Container - Pins section while user completes the horizontal travel */}
         <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-6 px-6 sm:px-12 select-none">
           
           {/* Header Bar */}
@@ -185,21 +108,21 @@ export default function HorizontalReviewsTicker() {
               <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-wider mb-2 ${
                 isDark ? 'bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B]' : 'bg-emerald-800/15 border border-emerald-800/30 text-emerald-800'
               }`}>
-                <ShieldCheck size={14} /> VERIFIED COMMUNITY IMPACT
+                <ShieldCheck size={14} /> REAL COMMUNITY FIELD REPORTS
               </div>
               <h2 className={`font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Loved by 12,000+ urban explorers
+                {userCount ? `Loved by ${userCount} urban explorers` : 'Loved by urban explorers'}
               </h2>
             </div>
 
-            {/* Read All Reviews Button */}
+            {/* Read All Reports Button */}
             <button
               onClick={() => setModalOpen(true)}
               className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border transition-all cursor-pointer shadow-lg hover:scale-[1.03] shrink-0 ${
                 isDark ? 'bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] border-white/20' : 'bg-slate-900/10 hover:bg-[#1C3727] text-slate-900 hover:text-white border-slate-900/20'
               }`}
             >
-              Read all reviews <ChevronRight size={16} />
+              Read all field reports <ChevronRight size={16} />
             </button>
           </div>
 
@@ -240,10 +163,19 @@ export default function HorizontalReviewsTicker() {
               isDark ? 'text-white/50' : 'text-slate-600'
             }`}>
               <span>01 / START</span>
+<<<<<<< HEAD
               <span className={isDark ? 'text-[#96CD7B]' : 'text-emerald-700 font-bold'}>
                 {scrollPos >= 0.98 ? '✓ ALL 10 CARDS COMPLETED' : 'SCROLL LEFT → RIGHT (10 CARDS)'}
+=======
+              <span className="text-[#96CD7B]">
+                {reports.length === 0
+                  ? 'NO REPORTS YET'
+                  : scrollPos >= 0.98
+                    ? `✓ ALL ${reports.length} CARDS COMPLETED`
+                    : `SCROLL LEFT → RIGHT (${reports.length} CARDS)`}
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
               </span>
-              <span>10 / END</span>
+              <span>{Math.max(10, reports.length)} / END</span>
             </div>
           </div>
 
@@ -257,73 +189,104 @@ export default function HorizontalReviewsTicker() {
               style={{ x }}
               className="flex gap-6 sm:gap-8 items-center pl-4 sm:pl-8 pr-16 w-max"
             >
-              {REVIEWS.map((r) => {
-                const isHovered = hoveredId === r.id;
-                const isAnyHovered = hoveredId !== null;
-                const isBlur = isAnyHovered && !isHovered;
+              {reports.length === 0 ? (
+                <motion.div
+                  className="w-[320px] sm:w-[360px] h-[280px] shrink-0 bg-[#E8E6E1] text-[#1A1A1A] rounded-2xl p-6 shadow-2xl flex flex-col justify-center items-center text-center border border-black/10"
+                >
+                  <span className="text-4xl mb-4">🌿</span>
+                  <h3 className="font-display text-lg font-semibold mb-2">
+                    {loadError ? 'Could not load reports' : 'No field reports yet'}
+                  </h3>
+                  <p className="text-sm text-black/60 max-w-[240px] leading-relaxed">
+                    {loadError
+                      ? 'Check your connection and try again.'
+                      : 'Share your first species observation from the Community feed and it will appear here.'}
+                  </p>
+                </motion.div>
+              ) : (
+                reports.map((r, i) => {
+                  const isHovered = hoveredId === r.id;
+                  const isAnyHovered = hoveredId !== null;
+                  const isBlur = isAnyHovered && !isHovered;
 
-                return (
-                  <motion.div
-                    key={r.id}
-                    onMouseEnter={() => setHoveredId(r.id)}
-                    onMouseLeave={() => setHoveredId(null)}
-                    style={{
-                      filter: isBlur ? 'blur(3px)' : 'blur(0px)',
-                      opacity: isBlur ? 0.22 : 1,
-                      scale: isHovered ? 1.05 : 1,
-                    }}
-                    className={`w-[320px] sm:w-[360px] h-[280px] shrink-0 bg-[#E8E6E1] text-[#1A1A1A] rounded-2xl p-6 shadow-2xl flex flex-col justify-between transition-all duration-300 ${r.yOffset} ${
-                      isHovered ? 'bg-[#FAF9F6] shadow-[0_20px_50px_rgba(0,0,0,0.5)] border-2 border-[#96CD7B]' : 'border border-black/10'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center gap-3.5 mb-5 pb-4 border-b border-black/10">
-                        <img
-                          src={r.avatar}
-                          alt={r.name}
-                          className="w-11 h-11 rounded-full object-cover border border-black/20 shadow-sm"
-                        />
-                        <div className="flex flex-col">
-                          <h4 className="text-base font-bold text-black font-sans leading-tight">{r.name}</h4>
-                          <p className="text-xs text-black/60 font-medium">{r.role}</p>
+                  return (
+                    <motion.div
+                      key={r.id}
+                      onMouseEnter={() => setHoveredId(r.id)}
+                      onMouseLeave={() => setHoveredId(null)}
+                      style={{
+                        filter: isBlur ? 'blur(2px)' : 'blur(0px)',
+                        opacity: isBlur ? 0.65 : 1,
+                        scale: isHovered ? 1.05 : 1,
+                      }}
+                      className={`w-[320px] sm:w-[360px] h-[280px] shrink-0 bg-[#162C20] text-white rounded-2xl p-6 shadow-2xl flex flex-col justify-between transition-all duration-300 ${OFFSETS[i % OFFSETS.length]} ${
+                        isHovered ? 'bg-[#1D3A2A] shadow-[0_20px_50px_rgba(150,205,123,0.3)] border-2 border-[#96CD7B]' : 'border border-white/15'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center gap-3.5 mb-5 pb-4 border-b border-white/10">
+                          {r.avatar ? (
+                            <img
+                              src={r.avatar}
+                              alt={r.species || r.name}
+                              loading="lazy"
+                              decoding="async"
+                              width="44"
+                              height="44"
+                              className="w-11 h-11 rounded-full object-cover border border-white/20 shadow-sm"
+                            />
+                          ) : (
+                            <div className="w-11 h-11 rounded-full bg-[#96CD7B]/20 border border-[#96CD7B]/40 flex items-center justify-center text-xl text-[#96CD7B]">
+                              🌿
+                            </div>
+                          )}
+                          <div className="flex flex-col">
+                            <h3 className="text-base font-bold text-white font-sans leading-tight">{r.name}</h3>
+                            <p className="text-xs text-[#96CD7B] font-medium">{r.role}</p>
+                          </div>
                         </div>
+
+                        <p className="text-xs sm:text-sm text-white/90 leading-relaxed font-normal line-clamp-4">
+                          "{r.quote}"
+                        </p>
                       </div>
 
-                      <p className="text-xs sm:text-sm text-[#2A2A2A] leading-relaxed font-normal">
-                        "{r.quote}"
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-black/10">
-                      <div className="flex items-center gap-1 text-amber-500">
-                        {[...Array(r.rating)].map((_, i) => (
-                          <Star key={i} size={13} fill="currentColor" />
-                        ))}
+                      <div className="flex items-center justify-between pt-3 border-t border-white/10">
+                        <div className="flex items-center gap-1 text-[#E6C176] text-xs font-mono font-semibold">
+                          <ThumbsUp size={13} aria-hidden="true" />
+                          {r.upvotes} upvote{r.upvotes === 1 ? '' : 's'}
+                        </div>
+                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#96CD7B]/20 text-[#96CD7B] border border-[#96CD7B]/30">
+                          {r.species || r.tag}
+                        </span>
                       </div>
-                      <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/10 text-black/80">
-                        {r.stat}
-                      </span>
-                    </div>
 
-                  </motion.div>
-                );
-              })}
+                    </motion.div>
+                  );
+                })
+              )}
             </motion.div>
           </motion.div>
 
           {/* Bottom Hint */}
+<<<<<<< HEAD
           <div className={`max-w-7xl w-full mx-auto flex items-center justify-between text-xs z-20 pb-2 shrink-0 ${
             isDark ? 'text-white/40' : 'text-slate-500'
           }`}>
             <span>Scroll vertically to complete all 10 cards horizontally (LEFT → RIGHT)</span>
             <span>10 Verified Explorer Reports</span>
+=======
+          <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/75 z-20 pb-2 shrink-0">
+            <span>Scroll vertically to complete all cards horizontally (LEFT → RIGHT)</span>
+            <span>{reports.length} Real Community Field Reports</span>
+>>>>>>> f074206a79e5d5964495dfb7ae7c772cc365acf5
           </div>
 
         </div>
       </div>
 
       {/* Reviews Modal */}
-      <ReviewsModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      <ReviewsModal isOpen={modalOpen} onClose={() => setModalOpen(false)} reports={reports} />
     </>
   );
 }
