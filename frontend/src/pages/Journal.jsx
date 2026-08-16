@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, BookOpen, PenTool, Pin, Trash2, Edit3, Heart, Save, 
   Search, Calendar, Filter, Mic, Lock, Eye, ArrowRight, X, Lightbulb, 
-  Smile, CloudRain, Sun, Leaf, Flame, HelpCircle, Archive, Compass, Check
+  Smile, CloudRain, Sun, Leaf, Flame, HelpCircle, Archive, Compass, Check, BookMarked
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,14 +12,14 @@ import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 // Multilingual UI Translations for Living Botanical Parchment Journal
 const JOURNAL_TRANSLATIONS = {
   en: {
-    heroTag: 'LIVING BOTANICAL PARCHMENT CANVASES',
+    heroTag: 'FIELD NOTES ARCHIVE',
     heroTitle: 'Private Nature Thinking Canvas',
     heroSubtitle: 'A quiet, distraction-free space for your personal thoughts, field reflections, and eco-discoveries.',
     newNoteTitle: 'Capture a New Field Reflection',
     titlePlaceholder: 'e.g., Peepal Leaf Droplets After Dawn Rain…',
     bodyPlaceholder: 'What changed. What stayed. What you almost missed in nature today…',
     saveNoteBtn: 'Save to Private Vault',
-    zenModeBtn: '✨ Zen Distraction-Free Mode',
+    zenModeBtn: '✨ Zen Writing Mode',
     exitZenBtn: 'Exit Zen Mode',
     tabJournal: '📖 Journal Canvas',
     tabIdeaVault: '💡 Idea Vault',
@@ -28,11 +28,11 @@ const JOURNAL_TRANSLATIONS = {
     moodLabel: 'Botanical Atmosphere Mood',
     searchPlaceholder: 'Search field notes, moods, tags…',
     autoSaveStatus: 'Saved to Private Vault ✓',
-    askJournalPrompt: 'Ask AI about your saved journal reflections…',
-    aiReflectBtn: '✨ AI Reflection',
+    askJournalPrompt: 'Ask about your saved journal reflections…',
+    aiReflectBtn: '✨ Reflection',
   },
   gu: {
-    heroTag: 'લિવિંગ બોટનિકલ પાર્ચમેન્ટ કેનવાસ',
+    heroTag: 'ફીલ્ડ નોટ્સ આર્કાઇવ',
     heroTitle: 'ખાનગી પ્રકૃતિ વિચાર કેનવાસ',
     heroSubtitle: 'તમારા વ્યક્તિગત વિચારો અને પ્રકૃતિના અવલોકનો માટે એક શાંત, વિક્ષેપ મુક્ત જગ્યા.',
     newNoteTitle: 'નવું અવલોકન લખો',
@@ -48,11 +48,11 @@ const JOURNAL_TRANSLATIONS = {
     moodLabel: 'મૂડ અને વાતાવરણ',
     searchPlaceholder: 'નોંધો, મૂડ, ટેગ્સ શોધો…',
     autoSaveStatus: 'વોલ્ટમાં સેવ થયું ✓',
-    askJournalPrompt: 'તમારી નોંધો વિશે એઆઈને પૂછો…',
-    aiReflectBtn: '✨ એઆઈ રિફ્લેક્શન',
+    askJournalPrompt: 'તમારી નોંધો વિશે પૂછો…',
+    aiReflectBtn: '✨ રિફ્લેક્શન',
   },
   hi: {
-    heroTag: 'लिविंग बॉटनिकल पार्चमेंट कैनवास',
+    heroTag: 'फील्ड नोट्स आर्काइव',
     heroTitle: 'निजी प्रकृति विचार कैनवास',
     heroSubtitle: 'आपके व्यक्तिगत विचारों और प्रकृति के अवलोकनों के लिए एक शांत, व्याकुलता-मुक्त स्थान।',
     newNoteTitle: 'नया अवलोकन लिखें',
@@ -68,8 +68,8 @@ const JOURNAL_TRANSLATIONS = {
     moodLabel: 'मूड़ और वातावरण',
     searchPlaceholder: 'नोट्स, मूड, टैग खोजें…',
     autoSaveStatus: 'वॉल्ट में सहेजा गया ✓',
-    askJournalPrompt: 'अपने नोट्स के बारे में एआई से पूछें…',
-    aiReflectBtn: '✨ एआई रिफ्लेक्शन',
+    askJournalPrompt: 'अपने नोट्स के बारे में पूछें…',
+    aiReflectBtn: '✨ रिफ्लेक्शन',
   },
 };
 
@@ -115,7 +115,7 @@ export default function Journal() {
   });
 
   // Active States
-  const [activeTab, setActiveTab] = useState('journal'); // journal, ideaVault, memoryCapsules, askJournal
+  const [activeTab, setActiveTab] = useState('journal');
   const [isZenMode, setIsZenMode] = useState(false);
   const [flippedCardId, setFlippedCardId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -130,7 +130,7 @@ export default function Journal() {
   // Ask Journal State
   const [askInput, setAskInput] = useState('');
   const [askMessages, setAskMessages] = useState([
-    { id: 1, sender: 'ai', text: 'Welcome to "Ask My Journal". I can analyze your private field notes and answer questions about your observations.' },
+    { id: 1, sender: 'ai', text: 'Welcome to "Ask My Journal". You can analyze your private field notes and answer questions about your observations.' },
   ]);
 
   useEffect(() => {
@@ -189,7 +189,6 @@ export default function Journal() {
 
     const userMsg = { id: Date.now(), sender: 'user', text: askInput.trim() };
     setAskMessages((prev) => [...prev, userMsg]);
-    const inputQuery = askInput.trim();
     setAskInput('');
 
     setTimeout(() => {
@@ -270,26 +269,30 @@ export default function Journal() {
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8 relative z-10">
         
-        {/* ──────────────── RADICAL NEW CONCEPT: BOTANICAL PARCHMENT CANVAS HEADER ──────────────── */}
-        <div className="relative bg-[#0E2015] border border-[#20452F] rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-xl">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30 text-xs font-bold uppercase tracking-widest">
-              <PenTool className="w-3.5 h-3.5 text-[#4ADE80]" />
-              {t.heroTag}
-            </span>
-            <h1 className="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight">
-              {t.heroTitle}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300/90 font-normal leading-relaxed">
-              {t.heroSubtitle}
-            </p>
+        {/* ──────────────── RADICAL UNIQUE HEADER 4: PARCHMENT SCROLL STRIP (NO GREEN RECTANGLE) ──────────────── */}
+        <div className="relative py-6 px-4 border-b border-[#20452F] flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#13271C] border border-[#4ADE80]/40 flex items-center justify-center text-[#4ADE80] text-2xl font-mono shadow-md shrink-0">
+              ✒️
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono font-bold text-[#4ADE80] uppercase tracking-widest">
+                {t.heroTag}
+              </span>
+              <h1 className="font-display text-4xl sm:text-5xl font-black text-white tracking-tight">
+                {t.heroTitle}
+              </h1>
+              <p className="text-xs text-slate-300 font-normal leading-relaxed">
+                {t.heroSubtitle}
+              </p>
+            </div>
           </div>
 
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsZenMode(true)}
-            className="px-6 py-3.5 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
+            className="px-6 py-3 rounded-full bg-[#4ADE80] text-[#07130B] font-bold text-xs sm:text-sm hover:bg-[#3ECE77] transition-all shadow-xl shadow-[#4ADE80]/20 flex items-center gap-2 cursor-pointer shrink-0"
           >
             <Sparkles className="w-4 h-4" />
             <span>{t.zenModeBtn}</span>
@@ -419,7 +422,7 @@ export default function Journal() {
                                     e.stopPropagation();
                                     deleteEntry(entry.id);
                                   }}
-                                  className="text-slate-500 hover:text-red-400"
+                                  className="text-slate-500 hover:text-red-400 cursor-pointer"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -439,7 +442,7 @@ export default function Journal() {
                         {/* BACK REFLECTION CARD */}
                         <div className="absolute inset-0 backface-hidden rotate-y-180 bg-[#0E2015] border border-[#4ADE80]/50 rounded-3xl p-6 flex flex-col justify-between text-slate-200">
                           <div>
-                            <h5 className="font-display text-sm font-bold text-[#4ADE80]">AI Reflection Synthesis</h5>
+                            <h5 className="font-display text-sm font-bold text-[#4ADE80]">Reflection Synthesis</h5>
                             <p className="text-xs text-slate-300 mt-2 leading-relaxed italic">
                               "{entry.aiReflection}"
                             </p>
@@ -456,50 +459,6 @@ export default function Journal() {
               </div>
             </div>
 
-          </div>
-        )}
-
-        {/* ──────────────── TAB 4: ASK MY JOURNAL COMPANION ──────────────── */}
-        {activeTab === 'askJournal' && (
-          <div className="bg-[#112318] border border-[#20452F] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-            <h3 className="font-display text-2xl font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#4ADE80]" />
-              <span>Ask My Journal Assistant</span>
-            </h3>
-
-            <div className="bg-[#0E2015] border border-[#20422E] p-4 rounded-2xl space-y-3 h-64 overflow-y-auto custom-chat-scroll">
-              {askMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-md p-3.5 rounded-2xl text-xs sm:text-sm ${
-                      msg.sender === 'user'
-                        ? 'bg-[#4ADE80] text-[#07130B] font-semibold'
-                        : 'bg-[#13271C] border border-[#20422E] text-slate-200'
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <form onSubmit={handleAskJournal} className="flex items-center gap-2">
-              <input
-                value={askInput}
-                onChange={(e) => setAskInput(e.target.value)}
-                placeholder={t.askJournalPrompt}
-                className="flex-1 bg-[#0E2015] border border-[#20422E] rounded-2xl px-4 py-3 text-xs sm:text-sm text-white outline-none focus:border-[#4ADE80]"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 rounded-2xl bg-[#4ADE80] text-[#07130B] font-bold text-xs cursor-pointer shrink-0"
-              >
-                Ask Journal
-              </button>
-            </form>
           </div>
         )}
 
