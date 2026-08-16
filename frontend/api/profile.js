@@ -1,5 +1,6 @@
 import supabase from './db-client.js';
 import { cors, requireUser } from './lib/gemini.js';
+import { sanitizeObject } from './lib/sanitize.js';
 
 export default async function handler(req, res) {
   cors(res);
@@ -30,14 +31,15 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PUT' || req.method === 'POST') {
-      const body = req.body || {};
+      const body = sanitizeObject(req.body || {});
+      const minutes = Math.min(480, Math.max(1, Number(body.available_minutes) || 20));
       const payload = {
         user_id: user.id,
         display_name: body.display_name || user.email?.split('@')[0] || 'Friend',
         city: body.city || '',
         region: body.region || '',
-        interests: Array.isArray(body.interests) ? body.interests : [],
-        available_minutes: Number(body.available_minutes) || 20,
+        interests: Array.isArray(body.interests) ? body.interests.slice(0, 20) : [],
+        available_minutes: minutes,
         bio: body.bio || '',
         onboarding_complete: body.onboarding_complete !== false,
         updated_at: new Date().toISOString(),

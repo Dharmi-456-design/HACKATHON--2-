@@ -1,5 +1,6 @@
 import supabase from './db-client.js';
 import { cors, requireUser } from './lib/gemini.js';
+import { sanitizeObject } from './lib/sanitize.js';
 
 export default async function handler(req, res) {
   cors(res);
@@ -20,7 +21,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const b = req.body || {};
+      const b = sanitizeObject(req.body || {});
       if (!b.common_name && !b.description) {
         return res.status(400).json({ error: 'Add a name or a short description of what you noticed.' });
       }
@@ -50,7 +51,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PUT') {
-      const b = req.body || {};
+      const b = sanitizeObject(req.body || {});
       if (!b.id) return res.status(400).json({ error: 'Discovery id required' });
       const patch = {};
       ['notes', 'is_public', 'place_name', 'common_name', 'description'].forEach((k) => {

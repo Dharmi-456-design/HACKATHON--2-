@@ -1,5 +1,6 @@
 import supabase from './db-client.js';
 import { cors, requireUser } from './lib/gemini.js';
+import { sanitizeObject } from './lib/sanitize.js';
 
 export default async function handler(req, res) {
   cors(res);
@@ -20,16 +21,20 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const b = req.body || {};
+      const b = sanitizeObject(req.body || {});
       if (!b.body || !String(b.body).trim()) {
         return res.status(400).json({ error: 'Write a few sentences about what you noticed.' });
+      }
+      const body = String(b.body).trim();
+      if (body.length > 10000) {
+        return res.status(400).json({ error: 'Keep your field note under 10,000 characters.' });
       }
       const { data, error } = await supabase
         .from('np_journal')
         .insert({
           user_id: user.id,
           title: b.title || 'Field note',
-          body: b.body.trim(),
+          body,
           mood: b.mood || '',
           weather: b.weather || '',
           created_at: new Date().toISOString(),
@@ -41,7 +46,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PUT') {
-      const b = req.body || {};
+      const b = sanitizeObject(req.body || {});
       if (!b.id) return res.status(400).json({ error: 'Entry id required' });
       const { data, error } = await supabase
         .from('np_journal')

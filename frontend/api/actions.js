@@ -1,5 +1,6 @@
 import supabase from './db-client.js';
 import { cors, requireUser, geminiGenerate, PULSE_SYSTEM } from './lib/gemini.js';
+import { sanitizeObject } from './lib/sanitize.js';
 
 const FALLBACK_ACTIONS = [
   { title: 'Pick up ten pieces of trail litter', description: 'Walk a familiar green edge and collect what does not belong. Leave soil and living material undisturbed.', category: 'habitat', minutes: 10, impact_note: 'Keeps plastics and metals out of soil and water that birds and insects already use.' },
@@ -31,10 +32,10 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const body = req.body || {};
+      const body = sanitizeObject(req.body || {});
 
       if (body.generate) {
-        const minutes = Number(body.minutes) || 15;
+        const minutes = Math.min(480, Math.max(5, Number(body.minutes) || 15));
         const [{ data: profile }, { data: discoveries }] = await Promise.all([
           supabase.from('np_profiles').select('*').eq('user_id', user.id).maybeSingle(),
           supabase.from('np_discoveries').select('common_name, category, city').eq('user_id', user.id).limit(6),

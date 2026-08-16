@@ -1,5 +1,6 @@
 import supabase from './db-client.js';
 import { cors, requireUser, geminiGenerate, PULSE_SYSTEM } from './lib/gemini.js';
+import { sanitizeObject } from './lib/sanitize.js';
 
 const FALLBACK_MISSIONS = [
   {
@@ -72,7 +73,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const body = req.body || {};
+      const body = sanitizeObject(req.body || {});
 
       if (body.generate) {
         const [{ data: profile }, { data: discoveries }, { data: places }, { data: existing }] = await Promise.all([
@@ -87,7 +88,7 @@ export default async function handler(req, res) {
           return res.status(200).json(all || []);
         }
 
-        const minutes = Number(body.minutes || profile?.available_minutes || 20);
+        const minutes = Math.min(480, Math.max(5, Number(body.minutes || profile?.available_minutes || 20)));
         const city = profile?.city || 'Portland';
         const interests = profile?.interests || [];
         let generated = [];

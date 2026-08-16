@@ -1,5 +1,6 @@
 import supabase from './db-client.js';
 import { cors, requireUser, geminiGenerate, PULSE_SYSTEM } from './lib/gemini.js';
+import { sanitizeText } from './lib/sanitize.js';
 
 function fallbackReply(content, ctx) {
   const c = (content || '').toLowerCase();
@@ -35,7 +36,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const content = String(req.body?.content || '').trim();
+      const content = sanitizeText(String(req.body?.content || '').trim(), 2000);
       if (!content) return res.status(400).json({ error: 'Say something to Pulse.' });
       if (content.length > 2000) return res.status(400).json({ error: 'Keep it under 2000 characters.' });
 

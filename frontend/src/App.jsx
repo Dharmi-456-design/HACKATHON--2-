@@ -6,6 +6,7 @@ import AppShell from './components/AppShell';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import Lens from './pages/Lens';
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="/lithos" element={<LithosHero />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/onboarding"
               element={

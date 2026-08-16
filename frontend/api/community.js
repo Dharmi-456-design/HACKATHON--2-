@@ -1,5 +1,6 @@
 import supabase from './db-client.js';
 import { cors } from './lib/gemini.js';
+import { sanitizeObject } from './lib/sanitize.js';
 
 export default async function handler(req, res) {
   cors(res);
@@ -22,7 +23,7 @@ export default async function handler(req, res) {
       const { data: auth } = await supabase.auth.getUser(token);
       if (!auth?.user) return res.status(401).json({ error: 'Invalid session' });
 
-      const b = req.body || {};
+      const b = sanitizeObject(req.body || {});
       if (!b.common_name) return res.status(400).json({ error: 'What did you notice?' });
       const { data: profile } = await supabase
         .from('np_profiles')
