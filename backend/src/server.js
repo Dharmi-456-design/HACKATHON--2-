@@ -47,8 +47,17 @@ const start = async () => {
   try {
     await connectDB();
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    const server = app.listen(PORT, () => {
+      console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    });
+
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`\n❌ Port ${PORT} is already in use.\n👉 Please stop the existing process running on port ${PORT} or configure a different PORT.\n`);
+      } else {
+        console.error(`\n❌ Server error: ${err.message}\n`);
+      }
+      process.exit(1);
     });
   } catch (err) {
     console.error(`Failed to start server: ${err.message}`);
