@@ -1,228 +1,277 @@
-import { useRef, useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion';
-import { ArrowRight, Star, Quote } from 'lucide-react';
+import { Star, ShieldCheck, Quote, ChevronRight } from 'lucide-react';
+import ReviewsModal from './ReviewsModal';
 
 const REVIEWS = [
   {
     id: 1,
     name: 'Jimmy Slagle',
-    role: 'Parker AI',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80',
-    quote: 'Alexandr is an artist. Absolutely brilliant. He is someone who loves the craft of design. His first message to me was "I don\'t want to do what every other AI company does. I want it to be unique."',
+    handle: '@jimmyslagle',
+    role: 'Verified Nature Explorer',
+    quote: 'In 14 days, NaturePulse helped me observe 42 native flora species in my urban walk. My nature connection score grew by 38%.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
+    stat: '42 Observations logged',
+    yOffset: '-y-4',
   },
   {
     id: 2,
     name: 'Ty Zamkow',
-    role: 'Nolana AI',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80',
-    quote: 'Alexandr did an outstanding job on our logo! He\'s incredibly responsive, fully dedicated, and went above and beyond to ensure we achieved the perfect result.',
+    handle: '@tyzamkow',
+    role: 'Verified Nature Explorer',
+    quote: 'The quiet discipline of observing species daily replaced mindless scrolling. This platform turns ordinary walks into sanctuaries.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
+    stat: '14-Day Streak Completed',
+    yOffset: 'translate-y-6',
   },
   {
     id: 3,
     name: 'Nathan Graville',
-    role: 'Gaviti',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&q=80',
-    quote: 'Alex has been amazing. Only a month in, but Produx Design took a very active role in our operation already in terms of web, UI/UX, and eventual marketing.',
+    handle: '@nathangraville',
+    role: 'Verified Nature Explorer',
+    quote: 'Pulse AI field insights connected birdsong, soil temperature, and tree bark textures into a single living notebook.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
+    stat: '5D Score: 94/100',
+    yOffset: '-translate-y-3',
   },
   {
     id: 4,
-    name: 'Delbert Ty',
-    role: 'Gather AI',
-    avatar: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&q=80',
-    quote: 'Great experience working together. The team went above and beyond expectations at every stage and brought strong thinking, taste, and attention to detail.',
+    name: 'Arianna Armelli',
+    handle: '@arianna_a',
+    role: 'Verified Nature Explorer',
+    quote: 'The community biodiversity passport gave our urban design firm baseline telemetry we couldn’t find anywhere else.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
+    stat: '8 Habitats Mapped',
+    yOffset: 'translate-y-8',
   },
   {
     id: 5,
-    name: 'Arianna Armelli',
-    role: 'Dorothy Tech',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&q=80',
-    quote: 'Produx brand sprint exceeded our expectations. They captured our vision perfectly, delivering a cohesive and impactful brand.',
+    name: 'Fawaz Buqammaz',
+    handle: '@fawaz_b',
+    role: 'Verified Nature Explorer',
+    quote: 'Acoustic telemetry at 5:30 AM revealed 14 migratory bird calls I never noticed before in my local park.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80',
+    stat: '14 Avian Logs',
+    yOffset: '-translate-y-6',
   },
   {
     id: 6,
-    name: 'Fawaz Buqammaz',
-    role: 'SOOR',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&q=80',
-    quote: 'Honestly, we were given a better design than we asked for. Highly responsive, professional, and delivered top tier craftsmanship.',
+    name: 'Elena Rostova',
+    handle: '@elena_rostova',
+    role: 'Verified Nature Explorer',
+    quote: 'Extremely elegant UI. It makes citizen science feel like a high-end luxury relationship with the living earth.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=120&q=80',
+    stat: 'Community Pioneer',
+    yOffset: 'translate-y-4',
   },
   {
     id: 7,
-    name: 'Marcus Vance',
-    role: 'Vance EcoLabs',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&q=80',
-    quote: 'The attention to detail and interaction physics is unbelievable. They transformed our platform user experience completely within days.',
+    name: 'Devin Sterling',
+    handle: '@devin_sterling',
+    role: 'Verified Nature Explorer',
+    quote: 'Returning to the same moss seam every rain cycle has given me a deep sense of calm and biological grounding.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&q=80',
+    stat: '28 Field Visits',
+    yOffset: '-translate-y-8',
   },
   {
     id: 8,
-    name: 'Elena Rostova',
-    role: 'BioTrack Systems',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&q=80',
-    quote: 'Outstanding brand identity and UI execution. The team exceeded all our performance and aesthetic expectations by a mile.',
+    name: 'Marcus Vance',
+    handle: '@marcus_vance',
+    role: 'Verified Nature Explorer',
+    quote: 'The soil micro-habitats tracking tool is unmatched. Every urban naturalist needs NaturePulse.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80',
+    stat: 'Micro-Habitat Badge',
+    yOffset: 'translate-y-5',
   },
   {
     id: 9,
-    name: 'Devin Sterling',
-    role: 'Atlas AI',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&q=80',
-    quote: 'Working with this team felt like pair programming with world-class product designers. Highly recommended for any serious venture!',
+    name: 'Maya Lin-Chao',
+    handle: '@mayalinchao',
+    role: 'Verified Nature Explorer',
+    quote: 'NaturePulse turns raw field observations into stunning ecological stories with zero clutter.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80',
+    stat: 'Field Journalist',
+    yOffset: '-translate-y-4',
+  },
+  {
+    id: 10,
+    name: 'Sophia Chen',
+    handle: '@sophiachen',
+    role: 'Verified Nature Explorer',
+    quote: 'Tracking urban tree canopy health across 4 neighborhood zones was effortless and inspiring.',
+    rating: 5,
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=120&q=80',
+    stat: 'Canopy Specialist',
+    yOffset: 'translate-y-7',
   },
 ];
 
-const TOTAL_TICKS = 190;
+const NUM_TICKS = 120;
 
 export default function HorizontalReviewsTicker() {
-  const sectionRef = useRef(null);
-  const [scrollFraction, setScrollFraction] = useState(0);
+  const containerRef = useRef(null);
   const [hoveredId, setHoveredId] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [scrollPos, setScrollPos] = useState(0);
 
   const { scrollYProgress } = useScroll({
-    target: sectionRef,
+    target: containerRef,
     offset: ['start start', 'end end'],
   });
 
-  // Physics spring for super silky smooth horizontal movement
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 90,
+    stiffness: 120,
     damping: 24,
-    restDelta: 0.0001,
+    restDelta: 0.001,
   });
 
-  // Track spring progress value for mini-line equalizer peak
   useMotionValueEvent(smoothProgress, 'change', (latest) => {
-    setScrollFraction(Math.min(Math.max(latest, 0), 1));
+    setScrollPos(latest);
   });
 
-  // Smooth horizontal translation from 0% to -80%
-  const x = useTransform(smoothProgress, [0, 1], ['0%', '-80%']);
-
-  // Continuous float center index (no integer snapping) for liquid smooth wave peak
-  const floatCenterIndex = scrollFraction * (TOTAL_TICKS - 1);
+  // Transform scroll progress to horizontal translation percentage
+  const x = useTransform(smoothProgress, [0, 1], ['0%', '-68%']);
 
   return (
-    <section ref={sectionRef} className="relative h-[360vh] bg-[#1C3727] text-white">
-      {/* Sticky Fullscreen Container */}
-      <div className="sticky top-0 h-screen w-full flex flex-col justify-between overflow-hidden py-10 px-6 sm:px-12 select-none">
+    <>
+      <div ref={containerRef} className="relative h-[360vh] bg-[#0E1E15] text-white">
+        {/* Sticky Viewport Container */}
+        <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-10 px-6 sm:px-12 select-none">
+          
+          {/* Header Bar */}
+          <div className="max-w-7xl w-full mx-auto flex items-end justify-between z-20 pt-4">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B] text-xs font-mono font-semibold uppercase tracking-wider mb-2">
+                <ShieldCheck size={14} /> VERIFIED COMMUNITY IMPACT
+              </div>
+              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
+                Loved by 12,000+ urban explorers
+              </h2>
+            </div>
 
-        {/* Section Header */}
-        <div className="max-w-7xl w-full mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-4 z-10 shrink-0">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.25em] text-[#96CD7B] font-semibold mb-1">
-              COMMUNITY TRUST & REVIEWS
-            </p>
-            <h2 className="font-display text-3xl sm:text-5xl font-bold tracking-tight text-white">
-              Beyond clients. Trusted partners.
-            </h2>
+            {/* Read All Reviews Button (Opens Modal) */}
+            <button
+              onClick={() => setModalOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] text-sm font-semibold border border-white/20 transition-all cursor-pointer shadow-lg hover:scale-[1.03]"
+            >
+              Read all reviews <ChevronRight size={16} />
+            </button>
           </div>
 
-          <a
-            href="#community"
-            className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-semibold text-white/70 hover:text-[#96CD7B] transition-colors group mb-1"
-          >
-            Read all reviews <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </a>
-        </div>
+          {/* Liquid Gaussian Equalizer Progress Scrubber Bar */}
+          <div className="relative max-w-7xl w-full mx-auto my-6 z-20">
+            <div className="flex items-center justify-between gap-1 h-12 px-2 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md">
+              {Array.from({ length: NUM_TICKS }).map((_, i) => {
+                const tickProgress = i / (NUM_TICKS - 1);
+                const distance = Math.abs(tickProgress - scrollPos);
+                
+                // Continuous Gaussian Wave Peak (dynamic even when static)
+                const wave = Math.exp(-Math.pow(distance / 0.08, 2));
+                const heightPx = Math.max(6, Math.round(wave * 34 + 6));
+                const opacity = 0.25 + wave * 0.75;
+                const isPeak = wave > 0.85;
 
-        {/* ────────────────── ENHANCED ANIMATED EQUALIZER LINE SCRUBBER ────────────────── */}
-        <div className="w-full max-w-7xl mx-auto my-4 px-2 flex items-center justify-between gap-[2px] z-10 h-12">
-          {[...Array(TOTAL_TICKS)].map((_, i) => {
-            const dist = Math.abs(i - floatCenterIndex);
-
-            // Continuous Gaussian smooth bell curve for dynamic animated light wave
-            const intensity = Math.max(0, 1 - dist / 6);
-            const heightPx = 8 + Math.pow(intensity, 1.7) * 32;
-            const opacity = 0.25 + intensity * 0.75;
-            const isPeak = intensity > 0.5;
-
-            return (
-              <div
-                key={i}
-                style={{
-                  height: `${heightPx}px`,
-                  opacity: opacity,
-                  backgroundColor: isPeak ? '#96CD7B' : 'rgba(255, 255, 255, 0.35)',
-                  boxShadow: isPeak ? '0 0 12px rgba(150, 205, 123, 0.8)' : 'none',
-                }}
-                className="w-[2px] sm:w-[3px] rounded-full transition-all duration-75 ease-out shadow-xs"
-              />
-            );
-          })}
-        </div>
-
-        {/* ────────────────── CAROUSEL WITH STAIRCASE FORM & TALLER CARDS ────────────────── */}
-        <div className="w-full flex-1 flex items-center overflow-hidden py-6">
-          <motion.div style={{ x }} className="flex gap-8 pl-4 sm:pl-12 w-max items-center">
-            {REVIEWS.map((rev, idx) => {
-              const isHovered = hoveredId === rev.id;
-              const hasHover = hoveredId !== null;
-
-              // Staircase form calculation: Card 0 is highest (-65px), Card 1 slightly lower (-35px), Card 2 (-5px), Card 3 (25px), Card 4 (55px), Card 5 (85px)...
-              const yOffset = (idx % 6) * 30 - 65;
-
-              return (
-                <motion.div
-                  key={rev.id}
-                  onMouseEnter={() => setHoveredId(rev.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  style={{ transform: `translateY(${yOffset}px)` }}
-                  animate={{
-                    opacity: hasHover ? (isHovered ? 1 : 0.22) : 1,
-                    scale: isHovered ? 1.04 : hasHover ? 0.96 : 1,
-                    filter: hasHover && !isHovered ? 'blur(2.5px)' : 'blur(0px)',
-                  }}
-                  transition={{ duration: 0.3, ease: 'easeOut' }}
-                  className={`w-[350px] sm:w-[420px] lg:w-[460px] min-h-[380px] sm:min-h-[420px] shrink-0 rounded-3xl p-8 sm:p-10 shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer border ${isHovered
-                      ? 'bg-[#E5E0DC] text-[#14261C] border-white shadow-2xl z-30'
-                      : 'bg-[#DCD7D3] text-[#14261C] border-white/40 hover:border-white'
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      height: `${heightPx}px`,
+                      opacity,
+                    }}
+                    className={`w-1 rounded-full transition-all duration-150 ${
+                      isPeak
+                        ? 'bg-[#96CD7B] shadow-[0_0_12px_#96CD7B]'
+                        : 'bg-white/40'
                     }`}
-                >
-                  <div>
-                    {/* User Profile Header */}
-                    <div className="flex items-center gap-4 mb-6">
-                      <img
-                        src={rev.avatar}
-                        alt={rev.name}
-                        className="w-14 h-14 rounded-full object-cover border-2 border-[#14261C]/20 shrink-0 shadow-sm"
-                      />
-                      <div className="truncate">
-                        <h4 className="font-bold text-lg sm:text-xl leading-tight text-[#14261C]">
-                          {rev.name}
-                        </h4>
-                        <p className="text-xs font-semibold text-[#14261C]/65 mt-0.5">{rev.role}</p>
-                      </div>
+                  />
+                );
+              })}
+            </div>
+            
+            {/* Scrubber Label */}
+            <div className="flex items-center justify-between text-[11px] font-mono text-white/50 px-3 mt-1.5 uppercase tracking-widest">
+              <span>01 / Start</span>
+              <span className="text-[#96CD7B]">Scroll to read stories</span>
+              <span>10 / End</span>
+            </div>
+          </div>
 
-                      <div className="ml-auto flex gap-0.5 text-[#C49535]">
-                        {[...Array(5)].map((_, i) => (
+          {/* Horizontal Staircase Ticker Cards */}
+          <div className="relative w-full overflow-visible z-10 my-auto">
+            <motion.div style={{ x }} className="flex gap-6 sm:gap-8 items-center pl-4 pr-32">
+              {REVIEWS.map((r) => {
+                const isHovered = hoveredId === r.id;
+                const isAnyHovered = hoveredId !== null;
+                const isBlur = isAnyHovered && !isHovered;
+
+                return (
+                  <motion.div
+                    key={r.id}
+                    onMouseEnter={() => setHoveredId(r.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    style={{
+                      filter: isBlur ? 'blur(3px)' : 'blur(0px)',
+                      opacity: isBlur ? 0.35 : 1,
+                      scale: isHovered ? 1.05 : 1,
+                    }}
+                    className={`w-[320px] sm:w-[380px] shrink-0 bg-white/5 border border-white/15 rounded-3xl p-6 backdrop-blur-xl shadow-2xl transition-all duration-300 ${r.yOffset} hover:border-[#96CD7B]/60 hover:bg-white/10`}
+                  >
+                    {/* Top row */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-1 text-amber-400">
+                        {[...Array(r.rating)].map((_, i) => (
                           <Star key={i} size={14} fill="currentColor" />
                         ))}
                       </div>
+                      <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#96CD7B]/20 text-[#96CD7B] border border-[#96CD7B]/30">
+                        {r.stat}
+                      </span>
                     </div>
 
-                    {/* Review Quote */}
-                    <p className="text-base sm:text-lg text-[#14261C]/90 leading-relaxed font-normal">
-                      "{rev.quote}"
+                    {/* Quote */}
+                    <p className="text-sm sm:text-base text-white/90 leading-relaxed font-light italic mb-6">
+                      "{r.quote}"
                     </p>
-                  </div>
 
-                  {/* Card Bottom Meta */}
-                  <div className="mt-8 pt-5 border-t border-[#14261C]/12 flex items-center justify-between text-xs text-[#14261C]/70 font-semibold">
-                    <span className="flex items-center gap-1.5">
-                      <Quote size={14} className="text-[#1C3727]" /> Verified Partner
-                    </span>
-                    <span>Nature Explorer</span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </motion.div>
+                    {/* Author Footer */}
+                    <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                      <img
+                        src={r.avatar}
+                        alt={r.name}
+                        className="w-10 h-10 rounded-full object-cover border border-white/20"
+                      />
+                      <div>
+                        <h4 className="text-sm font-semibold text-white">{r.name}</h4>
+                        <p className="text-xs text-white/60">{r.handle} · <span className="text-[#96CD7B]">{r.role}</span></p>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </div>
+
+          {/* Bottom Hint */}
+          <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/40 z-20 pb-2">
+            <span>Hover card to inspect explorer profile</span>
+            <span>10 Verified Community Reports</span>
+          </div>
+
         </div>
-
-        {/* Scroll Progress Hint Bar */}
-        <div className="max-w-7xl w-full mx-auto flex items-center justify-between text-xs text-white/50 pt-3 border-t border-white/10 z-10 shrink-0">
-          <span>Scroll to navigate comments</span>
-          <span>{Math.round(scrollFraction * 100)}% viewed</span>
-        </div>
-
       </div>
-    </section>
+
+      {/* Reviews Modal */}
+      <ReviewsModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+    </>
   );
 }
