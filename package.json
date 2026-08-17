@@ -1,0 +1,21 @@
+{
+  "name": "naturepulse",
+  "version": "1.0.0",
+  "description": "NaturePulse AI Ecological Relationship Platform",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "server": "cd backend && npm start",
+    "client": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": [
+    "nature",
+    "ai",
+    "ecology",
+    "leaflet"
+  ],
+  "author": "NaturePulse Team",
+  "license": "ISC"
+}
