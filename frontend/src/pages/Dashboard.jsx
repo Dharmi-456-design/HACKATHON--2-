@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Check, RefreshCw, MapPin, Clock, Leaf, Sun, Compass, Sparkles, Trophy, Flame } from 'lucide-react';
+import { ArrowRight, Check, RefreshCw, MapPin, Clock, Leaf, Sun, Compass, Sparkles, Trophy, Flame, ShieldCheck, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
@@ -188,6 +188,43 @@ export default function Dashboard() {
         {/* Best time to explore widget */}
         <div className="relative z-10">
           <BestTimeToExplore />
+        </div>
+
+        {/* ── MEMBERSHIP & PAYMENT QUICK ACTIONS BANNER ── */}
+        <div className={`p-5 rounded-3xl border shadow-xl flex flex-wrap items-center justify-between gap-4 relative z-10 ${
+          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1]'
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-[#96CD7B]/20 text-[#96CD7B]">
+              <ShieldCheck size={24} />
+            </div>
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#96CD7B]">
+                Active Membership Plan: {profile?.activePlan ? profile.activePlan.toUpperCase() : 'EXPLORER TIER'}
+              </span>
+              <h3 className="font-display text-base font-bold">Dynamic Pricing &amp; Billing Portal</h3>
+              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
+                Manage subscriptions, generate dynamic payment QRs, and download tax receipts.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/app/payment-history"
+              className={`px-4 py-2 rounded-2xl text-xs font-bold border transition-colors flex items-center gap-1.5 ${
+                isDark ? 'bg-white/5 border-white/10 text-slate-200 hover:bg-white/10' : 'bg-white border-[#E3DDD1] text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <CreditCard size={14} /> Payment History
+            </Link>
+            <Link
+              to="/app/payment?plan=pro"
+              className="px-4 py-2 rounded-2xl text-xs font-bold bg-[#96CD7B] hover:bg-[#85be69] text-[#0A1610] shadow-md transition-all flex items-center gap-1"
+            >
+              <Sparkles size={14} /> Upgrade Plan →
+            </Link>
+          </div>
         </div>
 
         {/* ──────────────── MAIN DASHBOARD GRID ──────────────── */}

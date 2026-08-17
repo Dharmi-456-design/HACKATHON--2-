@@ -53,4 +53,32 @@ const protect = asyncHandler(async (req, res, next) => {
   next();
 });
 
-module.exports = { protect };
+const optionalProtect = asyncHandler(async (req, res, next) => {
+  let token;
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  }
+
+  if (token && JWT_SECRET) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const user = await User.findById(decoded.id).select('-password');
+      if (user) {
+        req.user = user;
+        return next();
+      }
+    } catch {}
+  }
+
+  // Fallback guest user for payment sessions
+  req.user = {
+    _id: 'guest-explorer-id',
+    name: 'Explorer Guest',
+    email: 'guest@naturepulse.app',
+    role: 'citizen',
+  };
+  next();
+});
+
+module.exports = { protect, optionalProtect };

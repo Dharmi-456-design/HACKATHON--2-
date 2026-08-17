@@ -46,6 +46,14 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    paymentPin: {
+      type: String,
+      select: false,
+    },
+    activePlan: {
+      type: String,
+      default: 'free',
+    },
   },
   { timestamps: true }
 );
@@ -60,6 +68,11 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.matchPassword = function (enteredPassword) {
   if (!this.password) return false;
   return bcrypt.compare(enteredPassword, this.password);
+};
+
+userSchema.methods.matchPin = function (enteredPin) {
+  if (!this.paymentPin) return false;
+  return bcrypt.compare(enteredPin, this.paymentPin);
 };
 
 userSchema.methods.isLocked = function () {
