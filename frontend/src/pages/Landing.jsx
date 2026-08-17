@@ -286,11 +286,7 @@ export default function Landing() {
         <LithosHero />
       </section>
 
-      {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER & STAIRCASE CARDS ────────────────────── */}
-      <section id="reviews" className="relative">
-        <HorizontalReviewsTicker />
-      </section>
-      {/* ────────────────────── 3. SCROLL TYPOGRAPHY HIGHLIGHT ────────────────────── */}
+      {/* ────────────────────── 2. SCROLL TYPOGRAPHY HIGHLIGHT ────────────────────── */}
       <section>
         <ScrollTypographyHighlight />
       </section>
@@ -646,94 +642,9 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ────────────────────── 10. COMMUNITY TESTIMONIALS (CSS BORDER FIX) ────────────────────── */}
-      <section className={`py-24 border-t transition-colors duration-300 select-none ${
-        isDark ? 'bg-[#14281C] text-white border-white/10' : 'bg-[#FAF7F0] text-[#0F2418] border-[#E3DDD1]'
-      }`}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-6">
-          <p className={`text-xs font-mono uppercase tracking-[0.24em] text-center font-semibold mb-2 ${
-            isDark ? 'text-[#E6C176]' : 'text-[#C89B48]'
-          }`}>
-            COMMUNITY TESTIMONIALS
-          </p>
-
-          <h2 className={`font-display text-4xl sm:text-6xl text-center mb-16 font-bold flex justify-center flex-wrap gap-x-3 sm:gap-x-4 select-none [perspective:800px] ${
-            isDark ? 'text-white' : 'text-[#0F2418]'
-          }`}>
-            {"Stories from the field.".split(" ").map((word, wIdx) => (
-              <span key={wIdx} className="inline-block whitespace-nowrap">
-                {word.split("").map((char, cIdx) => (
-                  <motion.span
-                    key={cIdx}
-                    whileHover={{ rotateY: 360, y: -8, scale: 1.25, color: isDark ? '#96CD7B' : '#1C3727' }}
-                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                    style={{ transformStyle: 'preserve-3d', display: 'inline-block' }}
-                    className="inline-block transition-colors cursor-pointer font-bold"
-                  >
-                    {char}
-                  </motion.span>
-                ))}
-              </span>
-            ))}
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
-            {[
-              { text: "It completely changed how I walk to work. I notice the moss on the brick walls now.", name: "Sarah L.", loc: "Urban Ecologist", role: "Verified Observer" },
-              { text: "The missions are perfectly sized. 10 minutes is actually 10 minutes. It respects my time.", name: "Marcus T.", loc: "Software Engineer", role: "Habitat Explorer" },
-              { text: "I love that it doesn't force me to pretend I know the exact Latin name of every bird.", name: "Elena R.", loc: "Amateur Birdwatcher", role: "Field Journaler" }
-            ].map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -10, scale: 1.02 }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                className={`group relative p-8 rounded-3xl shadow-2xl transition-all cursor-pointer overflow-hidden box-border border ${
-                  isDark
-                    ? 'bg-white/5 border-white/15 hover:border-[#96CD7B] text-white'
-                    : 'bg-[#FDFBF7] border-[#E3DDD1] hover:border-[#183B28] text-[#0F2418] shadow-sm'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex gap-1 text-amber-500">
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <span key={s} className="text-sm">★</span>
-                    ))}
-                  </div>
-                  <span className={`text-[10px] uppercase font-mono tracking-wider px-3 py-1 rounded-full border ${
-                    isDark ? 'bg-[#96CD7B]/20 text-[#96CD7B] border-[#96CD7B]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
-                  }`}>
-                    {t.role}
-                  </span>
-                </div>
-
-                <p className={`italic mb-6 leading-relaxed text-sm sm:text-base font-light ${
-                  isDark ? 'text-white/90' : 'text-[#2D4536]'
-                }`}>
-                  "{t.text}"
-                </p>
-
-                <div className={`pt-4 border-t flex items-center justify-between ${
-                  isDark ? 'border-white/10' : 'border-[#E3DDD1]'
-                }`}>
-                  <div>
-                    <p className={`font-display font-bold text-base transition-colors ${
-                      isDark ? 'text-white group-hover:text-[#96CD7B]' : 'text-[#0F2418] group-hover:text-[#183B28]'
-                    }`}>{t.name}</p>
-                    <p className={`text-xs ${isDark ? 'text-white/60' : 'text-[#3E5C48]'}`}>{t.loc}</p>
-                  </div>
-                  <div className={`w-8 h-8 rounded-full border flex items-center justify-center ${
-                    isDark ? 'bg-white/10 border-white/20 text-[#96CD7B]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
-                  }`}>
-                    <Sparkles size={15} />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+      {/* ────────────────────── 10. HORIZONTAL REVIEWS TICKER & FIELD REPORTS ────────────────────── */}
+      <section id="reviews" className="relative">
+        <HorizontalReviewsTicker />
       </section>
 
       {/* ────────────────────── 11. HACKATHON PRICING SECTION ────────────────────── */}
