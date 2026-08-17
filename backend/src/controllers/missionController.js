@@ -10,23 +10,30 @@ const missionDefaults = [
   {
     title: 'Listen to tree canopy at dawn',
     description: 'Stand under the largest tree in your neighborhood for 5 minutes without looking at your phone.',
-    mission_type: 'observe', duration_minutes: 10,
+    mission_type: 'observe', duration_minutes: 8,
     location_hint: 'Any nearby tree',
     why_it_matters: 'Slowing down helps tune your sensory system to ambient nature sounds.',
   },
   {
-    title: 'Find 3 distinct moss textures',
-    description: 'Touch 3 different patches of moss on trees, walls, or ground. Notice moisture and thickness differences.',
-    mission_type: 'explore', duration_minutes: 15,
-    location_hint: 'Shaded wall or tree base',
-    why_it_matters: 'Mosses act as micro-ecosystem sponges, filtering urban rainwater.',
+    title: 'Discover 3 native urban flora species',
+    description: 'Walk through a neighborhood park and locate 3 different leaf or flower structures. Photograph each structure for Nature Lens.',
+    mission_type: 'explore', duration_minutes: 18,
+    location_hint: 'Local park or garden bed',
+    why_it_matters: 'Identifying native urban flora aids local pollinator habitat tracking.',
   },
   {
-    title: 'Identify a night moth visitor',
-    description: 'Check a light source near outdoor plants after dusk.',
-    mission_type: 'learn', duration_minutes: 20,
-    location_hint: 'Porch light or park lamp',
-    why_it_matters: 'Moths are essential nocturnal pollinators often overlooked.',
+    title: 'Map a nocturnal canopy corridor',
+    description: 'Identify light pollution hotspots and locate dark canopy corridors where birds and moths shelter overnight.',
+    mission_type: 'learn', duration_minutes: 35,
+    location_hint: 'Canopy trail or river bank',
+    why_it_matters: 'Dark sky corridors are vital for migratory avian telemetry.',
+  },
+  {
+    title: 'Acoustic bird call recording challenge',
+    description: 'Record 60 seconds of dawn chorus audio near water bodies or high branches and ask Pulse AI to identify species.',
+    mission_type: 'act', duration_minutes: 25,
+    location_hint: 'Water edge or dense canopy',
+    why_it_matters: 'Bio-acoustic tracking measures avian species density over time.',
   },
 ];
 
@@ -40,11 +47,12 @@ const createMission = async (req, res) => {
   if (raw.generate) {
     const count = Math.min(Number(raw.count) || 1, 6);
     const minutes = Number(raw.minutes) || null;
-    const chosen = missionDefaults.slice(0, count);
+    const chosen = missionDefaults.slice(0, count > 1 ? count : 3);
     const created = await Mission.insertMany(
-      chosen.map((m) => ({
-        ...m, user: req.user._id,
-        duration_minutes: minutes || m.duration_minutes,
+      chosen.map((m, idx) => ({
+        ...m,
+        user: req.user._id,
+        duration_minutes: m.duration_minutes,
         scheduled_date: new Date().toISOString().slice(0, 10),
       }))
     );

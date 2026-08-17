@@ -64,16 +64,16 @@ export default function AppShell() {
   };
 
   const signOut = async (e) => {
-    if (e) {
+    if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
       e.stopPropagation();
     }
     try {
-      logout();
+      await logout();
     } catch (err) {
       console.error('Sign out error:', err);
     } finally {
-      nav('/', { replace: true });
+      nav('/login', { replace: true });
     }
   };
 
