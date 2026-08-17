@@ -6,7 +6,6 @@ import { PulseOrb } from '../components/ui';
 import SplashIntro from '../components/SplashIntro';
 import Navbar from '../components/Navbar';
 import LithosHero from '../components/LithosHero';
-import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
 import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 import AnimatedStatCard from '../components/AnimatedStatCard';
 import PricingSection from '../components/PricingSection';
@@ -284,11 +283,6 @@ export default function Landing() {
         {/* ────────────────────── 1. LITHOS CURSOR-FOLLOWING SPOTLIGHT HERO ────────────────────── */}
         <section id="hero">
         <LithosHero />
-      </section>
-
-      {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER & STAIRCASE CARDS ────────────────────── */}
-      <section id="reviews">
-        <HorizontalReviewsTicker />
       </section>
 
       {/* ────────────────────── 3. SCROLL TYPOGRAPHY HIGHLIGHT ────────────────────── */}
@@ -759,8 +753,8 @@ export default function Landing() {
         </div>
       </section>
 
-        {/* ────────────────────── 13. FINAL CTA SECTION WITH VELORAH VIDEO MOCK ────────────────────── */}
-        <CtaSection />
+      {/* ────────────────────── 13. FINAL CTA SECTION WITH VELORAH VIDEO MOCK ────────────────────── */}
+      <CtaSection />
       </main>
 
       {/* ────────────────────── 14. 3D INTERACTIVE ECOSYSTEM FOOTER ────────────────────── */}

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   ArrowLeft, MapPin, Clock, Star, Navigation, Compass, Share2, 
   Bookmark, Sparkles, CheckCircle2, ExternalLink, Shield, Info, 
-  Calendar, Wifi, Trees, Coffee, VolumeX, Heart, Layers, Eye
+  Calendar, Wifi, Trees, Coffee, VolumeX, Heart, Layers, Eye, Leaf
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -249,7 +249,7 @@ export default function PlaceDetails() {
             {/* Top Badges */}
             <div className="absolute top-4 left-4 flex flex-wrap gap-2">
               <span className="px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md text-xs font-bold text-[#4ADE80] border border-[#4ADE80]/40 flex items-center gap-1.5 shadow-lg">
-                <span>{place.icon || '🌿'}</span>
+                <Leaf className="w-3.5 h-3.5 text-[#4ADE80] shrink-0" />
                 <span>{place.category || place.type || 'Nature'}</span>
               </span>
               <span className="px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md text-xs font-bold text-amber-300 border border-amber-400/40 flex items-center gap-1 shadow-lg">

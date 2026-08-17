@@ -29,6 +29,3 @@ dist-ssr
 .env
 .env.local
 .env.*.local
-
-# Audit reports
-lighthouse-*.json
