@@ -25,17 +25,23 @@ const allowedOrigins = [
 if (process.env.CLIENT_URL) {
   allowedOrigins.push(process.env.CLIENT_URL);
 }
+if (process.env.CORS_ORIGIN) {
+  allowedOrigins.push(process.env.CORS_ORIGIN);
+}
 app.use(
   cors({
     origin(origin, callback) {
       if (
         !origin ||
         allowedOrigins.includes(origin) ||
-        (process.env.NODE_ENV !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1):\d{4}$/.test(origin))
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.netlify.app') ||
+        origin.endsWith('.onrender.com') ||
+        /^http:\/\/(localhost|127\.0\.0\.1):\d{4}$/.test(origin)
       ) {
         return callback(null, true);
       }
-      callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     },
     credentials: true,
   })

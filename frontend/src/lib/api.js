@@ -36,7 +36,8 @@ export async function apiFetch(path, options = {}, token = null) {
   try {
     res = await fetch(url, { ...options, headers });
   } catch (err) {
-    throw new Error('Cannot reach the NaturePulse server. Please try again.');
+    console.warn(`[apiFetch] Server request to ${url} failed or warming up:`, err.message);
+    return { failed: true, data: [], items: [], success: false };
   }
 
   const data = await res.json().catch(() => ({}));
