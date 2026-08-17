@@ -63,7 +63,7 @@ const COMMUNITY_MAP_TRANSLATIONS = {
 };
 
 export default function CommunityBiodiversityMap() {
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = COMMUNITY_MAP_TRANSLATIONS[lang] || COMMUNITY_MAP_TRANSLATIONS.en;
 
   const categoryToKey = (cat) => {

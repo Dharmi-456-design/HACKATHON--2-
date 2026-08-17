@@ -82,7 +82,7 @@ const RECAP_TRANSLATIONS = {
 
 export default function WeeklyRecap() {
   const { session } = useAuth();
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = RECAP_TRANSLATIONS[lang] || RECAP_TRANSLATIONS.en;
   const token = session?.access_token;
 

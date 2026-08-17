@@ -18,7 +18,45 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://DharmiPatel:Dharmi_123@cluster0.em7zd3b.mongodb.net/naturepulse';
 
-async function seed15DataPerCollection() {
+// Unique Image Map per species item
+const SPECIES_IMAGES = [
+  'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=600&q=80', // Banyan
+  'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=600&q=80', // Peafowl
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80', // Amaltas
+  'https://images.unsplash.com/photo-1535083783855-76ae62b2914e?w=600&q=80', // Butterfly
+  'https://images.unsplash.com/photo-1522920193220-370744220b2a?w=600&q=80', // Asian Koel
+  'https://images.unsplash.com/photo-1515586838455-8f8f940d6853?w=600&q=80', // Tulsi
+  'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=600&q=80', // Neem Tree
+  'https://images.unsplash.com/photo-1618083842247-49f39546059d?w=600&q=80', // Bee eater
+  'https://images.unsplash.com/photo-1549608276-5786777e6587?w=600&q=80', // Sunbird
+  'https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=600&q=80', // Porcupine
+  'https://images.unsplash.com/photo-1511497584788-87676104235f?w=600&q=80', // Fungi
+  'https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=600&q=80', // Lizard / Calotes
+  'https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?w=600&q=80', // Plumbago
+  'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=600&q=80', // Bulbul
+  'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=600&q=80', // Moss
+];
+
+// Unique Image Map per Place
+const PLACE_IMAGES = [
+  'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&q=80',
+  'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=600&q=80',
+  'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=600&q=80',
+  'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=600&q=80',
+  'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80',
+  'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?w=600&q=80',
+  'https://images.unsplash.com/photo-1535083783855-76ae62b2914e?w=600&q=80',
+  'https://images.unsplash.com/photo-1511497584788-87676104235f?w=600&q=80',
+  'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=600&q=80',
+  'https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=600&q=80',
+  'https://images.unsplash.com/photo-1534067783941-51c9c23ecefd?w=600&q=80',
+  'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=600&q=80',
+  'https://images.unsplash.com/photo-1522920193220-370744220b2a?w=600&q=80',
+  'https://images.unsplash.com/photo-1589656966895-2f33e7653819?w=600&q=80',
+  'https://images.unsplash.com/photo-1618083842247-49f39546059d?w=600&q=80',
+];
+
+async function seedUniqueImagesData() {
   try {
     console.log('🌱 Connecting to MongoDB Atlas:', MONGODB_URI);
     await mongoose.connect(MONGODB_URI);
@@ -45,11 +83,10 @@ async function seed15DataPerCollection() {
       }
       users.push(existing);
     }
-    console.log(`✅ 1. users: 15 active user accounts in database!`);
 
     const mainUser = users[0];
 
-    // 2. Discoveries (15 Observations)
+    // 2. Discoveries (15 Observations with UNIQUE IMAGES)
     const discoverySeeds = [
       { common_name: 'Sacred Banyan Tree', scientific_name: 'Ficus benghalensis', category: 'trees', city: 'Ahmedabad', place_name: 'Parimal Garden Canopy', notes: 'Ancient canopy providing massive shade footprint and micro-habitat.' },
       { common_name: 'Indian Peafowl', scientific_name: 'Pavo cristatus', category: 'birds', city: 'Ahmedabad', place_name: 'Sabarmati Wetland', notes: 'Male peafowl displaying iridescent train feathers along morning roosting trees.' },
@@ -68,19 +105,19 @@ async function seed15DataPerCollection() {
       { common_name: 'Velvet Mallow Moss', scientific_name: 'Bryum argenteum', category: 'moss', city: 'Ahmedabad', place_name: 'Sabarmati Wetland', notes: 'Silver-green cushion moss storing micro-moisture along shaded sandstone rocks.' },
     ];
 
-    const fullDiscoveries = discoverySeeds.map((d) => ({
+    const fullDiscoveries = discoverySeeds.map((d, idx) => ({
       user: mainUser._id,
       ...d,
       confidence: 'high',
       confidence_pct: 95,
-      image_url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&q=80',
+      image_url: SPECIES_IMAGES[idx % SPECIES_IMAGES.length],
     }));
 
-    await Discovery.deleteMany({ city: { $in: ['Ahmedabad', 'Gandhinagar'] } });
+    await Discovery.deleteMany({});
     await Discovery.insertMany(fullDiscoveries);
-    console.log(`✅ 2. discoveries: 15 active species documents in database!`);
+    console.log(`✅ 1. discoveries: 15 active observations updated with 15 UNIQUE SPECIES IMAGES!`);
 
-    // 3. Community Posts (15 Posts)
+    // 3. Community Posts (15 Posts with UNIQUE IMAGES)
     const communitySeeds = [
       { common_name: 'Rose-ringed Parakeet Roosting', note: 'Flock of 30+ parakeets gathering at sunset near old Peepal canopy.', location: 'Sabarmati Riverside Park' },
       { common_name: 'Neem Sapling Plantation Drive', note: 'Community volunteers planted 25 shade trees along urban heat corridor today!', location: 'Science City Green Belt' },
@@ -107,15 +144,15 @@ async function seed15DataPerCollection() {
       city: 'Ahmedabad',
       likes_count: 15 + idx * 3,
       comments_count: 3 + idx,
-      image_url: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=600&q=80',
+      image_url: SPECIES_IMAGES[(idx + 3) % SPECIES_IMAGES.length],
       ...p,
     }));
 
-    await CommunityPost.deleteMany({ city: 'Ahmedabad' });
+    await CommunityPost.deleteMany({});
     await CommunityPost.insertMany(fullPosts);
-    console.log(`✅ 3. communityposts: 15 active community post documents in database!`);
+    console.log(`✅ 2. communityposts: 15 active posts updated with UNIQUE IMAGES!`);
 
-    // 4. Places (15 Habitat Locations)
+    // 4. Places (15 Habitat Locations with UNIQUE IMAGES)
     const placeNames = [
       'Forest Park Canopy Edge', 'Sabarmati Riverine Wetland', 'Thol Lake Sanctuary', 'Indroda Nature Reserve',
       'Parimal Botanical Garden', 'Law Garden Urban Forest', 'Sundarvan Nature Center', 'Kankaria Lakefront Woods',
@@ -136,40 +173,15 @@ async function seed15DataPerCollection() {
       habitat: 'Dry deciduous woodland & freshwater wetland',
       map_x: 20 + (idx * 5) % 70,
       map_y: 15 + (idx * 6) % 70,
-      image_url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=600&q=80',
+      image_url: PLACE_IMAGES[idx % PLACE_IMAGES.length],
       features: ['Native Canopy', 'Bird Hides', 'Quiet Trails'],
     }));
 
-    await Place.deleteMany({ region: 'Gujarat' });
+    await Place.deleteMany({});
     await Place.insertMany(placeSeeds);
-    console.log(`✅ 4. places: 15 active habitat location documents in database!`);
+    console.log(`✅ 3. places: 15 habitat reserves updated with UNIQUE IMAGES!`);
 
-    // 5. Missions (15 Eco Challenges)
-    const missionTitles = [
-      'Document 3 Local Native Trees', 'Record Morning Bird Calls', 'Plant 1 Pollinator Sapling',
-      'Log 3 Soil Moisture Checks', 'Observe 2 Butterfly Species', 'Clean 1 Wetland Shoreline',
-      'Map 5 Urban Canopy Trees', 'Record Sunset Bat Emergence', 'Identify 3 Flowering Herbs',
-      'Log 1 Bio-Compost Batch', 'Track 2 Migratory Waterbirds', 'Survey Local Micro-Climate',
-      'Identify 2 Medicinal Plants', 'Log 1 Silent Forest Walk', 'Share 1 Eco Field Post'
-    ];
-
-    const missionSeeds = missionTitles.map((title, idx) => ({
-      title,
-      category: idx % 2 === 0 ? 'Botanical Observation' : 'Bioacoustics',
-      difficulty: idx % 3 === 0 ? '🟡 Medium' : '🟢 Easy',
-      xpReward: 100 + idx * 20,
-      progress: Math.min(idx, 3),
-      total: 3,
-      completed: idx % 4 === 0,
-      description: `Engage in field citizen science challenge to observe and protect local urban biodiversity.`,
-    }));
-
-    await Mission.deleteMany({});
-    await Mission.insertMany(missionSeeds);
-    console.log(`✅ 5. missions: 15 active mission challenge documents in database!`);
-
-    console.log('\n🎉 ALL DONE! 15+ Documents successfully added to users, discoveries, communityposts, places, and missions!');
-    console.log('👉 Open MongoDB Compass -> naturepulse -> click REFRESH (F5)!');
+    console.log('\n🎉 SUCCESS! All observations, posts, and places now have UNIQUE & DISTINCT high-res species images!');
     process.exit(0);
   } catch (err) {
     console.error('❌ Seeding error:', err.message);
@@ -177,4 +189,4 @@ async function seed15DataPerCollection() {
   }
 }
 
-seed15DataPerCollection();
+seedUniqueImagesData();

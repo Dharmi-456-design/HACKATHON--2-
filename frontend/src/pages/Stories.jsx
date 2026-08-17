@@ -158,7 +158,7 @@ const STORIES_TRANSLATIONS = {
 export default function Stories() {
   const { session } = useAuth();
   const { isDark } = useTheme();
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = STORIES_TRANSLATIONS[lang] || STORIES_TRANSLATIONS.en;
 
   // Persistent Stories State

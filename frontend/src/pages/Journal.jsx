@@ -95,7 +95,7 @@ const JOURNAL_TRANSLATIONS = {
 
 export default function Journal() {
   const { session } = useAuth();
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = JOURNAL_TRANSLATIONS[lang] || JOURNAL_TRANSLATIONS.en;
   const token = session?.access_token;
 

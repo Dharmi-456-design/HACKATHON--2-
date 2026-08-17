@@ -66,7 +66,7 @@ const ACT_TRANSLATIONS = {
 
 export default function Act() {
   const { session } = useAuth();
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = ACT_TRANSLATIONS[lang] || ACT_TRANSLATIONS.en;
   const token = session?.access_token;
 

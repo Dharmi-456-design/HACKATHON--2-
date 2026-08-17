@@ -105,7 +105,7 @@ export default function Places() {
   const navigate = useNavigate();
   const { session } = useAuth();
   const token = session?.access_token;
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = NEARBY_TRANSLATIONS[lang] || NEARBY_TRANSLATIONS.en;
 
   // Real-Time Live Geolocation Hook with watchPosition
