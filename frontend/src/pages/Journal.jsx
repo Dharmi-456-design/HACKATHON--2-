@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { apiFetch, formatWhen } from '../lib/api';
+import { apiFetch, formatWhen, uploadImage, fileToResizedBase64 } from '../lib/api';
 import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 
 // Multilingual UI Translations for Living Botanical Parchment Journal
@@ -119,6 +119,27 @@ export default function Journal() {
   const [body, setBody] = useState('');
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
 
+  // Photo Upload State
+  const [photoFile, setPhotoFile] = useState(null);       // raw File object
+  const [photoPreview, setPhotoPreview] = useState('');   // local data URI for preview
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  const handlePhotoSelect = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const payload = await fileToResizedBase64(file, 1200);
+      setPhotoFile(payload);
+      setPhotoPreview(`data:${payload.mime};base64,${payload.base64}`);
+    } catch {
+      setPhotoPreview('');
+      setPhotoFile(null);
+    }
+  };
+
+  const clearPhoto = () => { setPhotoFile(null); setPhotoPreview(''); };
+
   useEffect(() => {
     const localSaved = JSON.parse(localStorage.getItem('np_journal_entries') || '[]');
     if (token) {
@@ -151,6 +172,22 @@ export default function Journal() {
     e.preventDefault();
     if (!body.trim()) return;
 
+    setAutoSaveStatus('Saving…');
+
+    // 1. Upload photo to Cloudinary if attached
+    let image_url = '';
+    if (photoFile) {
+      setPhotoUploading(true);
+      try {
+        const upRes = await uploadImage({ base64: photoFile.base64, mime: photoFile.mime, fileName: 'journal-photo.jpg', token });
+        image_url = upRes?.url || photoPreview;
+      } catch {
+        image_url = photoPreview; // fallback to local data URI
+      } finally {
+        setPhotoUploading(false);
+      }
+    }
+
     const localEntry = {
       id: `j-${Date.now()}`,
       title: title.trim() || 'Untitled Reflection',
@@ -162,6 +199,7 @@ export default function Journal() {
       pinned: false,
       wordCount: body.trim().split(/\s+/).length,
       aiReflection: `Key Theme: ${title.trim() || 'Nature reflection'}`,
+      image_url,
     };
 
     const updatedList = [localEntry, ...entries.filter((x) => x.id !== localEntry.id)];
@@ -170,17 +208,17 @@ export default function Journal() {
 
     setTitle('');
     setBody('');
-    setAutoSaveStatus('Saving…');
+    clearPhoto();
     if (isZenMode) setIsZenMode(false);
 
     if (token) {
       try {
         const created = await apiFetch(
           '/api/journal',
-          { method: 'POST', body: JSON.stringify({ title: localEntry.title, body: localEntry.body, mood: selectedMood }) },
+          { method: 'POST', body: JSON.stringify({ title: localEntry.title, body: localEntry.body, mood: selectedMood, image_url }) },
           token
         );
-        const syncedList = [{ ...created, id: created._id || created.id }, ...updatedList.filter((x) => x.id !== localEntry.id)];
+        const syncedList = [{ ...created, id: created._id || created.id, image_url }, ...updatedList.filter((x) => x.id !== localEntry.id)];
         setEntries(syncedList);
         localStorage.setItem('np_journal_entries', JSON.stringify(syncedList));
         setAutoSaveStatus('Saved to Private Vault ✓');
@@ -511,9 +549,42 @@ export default function Journal() {
                 />
               </div>
 
+              {/* ──────────── PHOTO ATTACHMENT ──────────── */}
+              <div>
+                {photoPreview ? (
+                  <div className="relative rounded-2xl overflow-hidden max-h-52 bg-black">
+                    <img src={photoPreview} alt="Attached field photo" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={clearPhoto}
+                      className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80 transition-colors cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <div className={`absolute bottom-2 left-2 text-[10px] px-2 py-0.5 rounded-full font-semibold ${isDark ? 'bg-black/60 text-[#4ADE80]' : 'bg-black/50 text-white'}`}>
+                      📷 Field Photo
+                    </div>
+                  </div>
+                ) : (
+                  <label className={`flex items-center gap-2.5 cursor-pointer px-4 py-3 rounded-2xl border border-dashed transition-colors w-fit text-xs font-medium ${
+                    isDark ? 'border-[#20452F] text-slate-400 hover:border-[#4ADE80] hover:text-[#4ADE80]' : 'border-[#D4CBB8] text-[#3E5C48] hover:border-[#183B28] hover:text-[#183B28]'
+                  }`}>
+                    <Eye className="w-4 h-4" />
+                    <span>Attach Field Photo (optional)</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={handlePhotoSelect}
+                    />
+                  </label>
+                )}
+              </div>
+
               <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-4 border-t ${
                 isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
               }`}>
+
                 <div className="space-y-2">
                   <div>
                     <p className={`text-xs font-bold ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>{t.moodLabel}</p>
