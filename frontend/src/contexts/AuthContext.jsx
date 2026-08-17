@@ -31,7 +31,10 @@ export function AuthProvider({ children }) {
       });
       if (data?.token && data?.user) return data;
     } catch (err) {
-      console.warn('[AuthContext] Supabase session backend exchange failed:', err);
+      // Exchange failed — likely Google OAuth not configured on the backend.
+      // Clear the stale Supabase session so it stops retrying on every mount.
+      try { await supabase.auth.signOut(); } catch {}
+      clearToken();
     }
     return null;
   }, []);
@@ -39,30 +42,32 @@ export function AuthProvider({ children }) {
   // On mount: restore session from Supabase OAuth or local JWT
   useEffect(() => {
     let mounted = true;
+    let exchanging = false; // prevent duplicate exchanges
 
     // Check Supabase session for Google Auth
     const checkSupabaseAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted || !session?.user) return false;
+
+        exchanging = true;
+        const exchanged = await exchangeSupabaseSession(session);
+        exchanging = false;
         if (!mounted) return false;
 
-        if (session && session.user) {
-          const exchanged = await exchangeSupabaseSession(session);
-          if (!mounted) return false;
-          if (exchanged) {
-            setUser(exchanged.user);
-            setAuthToken(exchanged.token);
-            setToken(exchanged.token);
-          } else {
-            setUser(null);
-            setAuthToken(null);
-            clearToken();
-          }
-          setLoading(false);
-          return true;
+        if (exchanged) {
+          setUser(exchanged.user);
+          setAuthToken(exchanged.token);
+          setToken(exchanged.token);
+        } else {
+          setUser(null);
+          setAuthToken(null);
+          clearToken();
         }
-      } catch (err) {
-        console.warn('[AuthContext] Supabase session check skipped:', err);
+        setLoading(false);
+        return true;
+      } catch {
+        exchanging = false;
       }
       return false;
     };
@@ -102,14 +107,19 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
+      // Skip INITIAL_SESSION if checkSupabaseAuth already handled it
+      if (event === 'INITIAL_SESSION' && exchanging) return;
+
       if (session && session.user) {
+        exchanging = true;
         const exchanged = await exchangeSupabaseSession(session);
+        exchanging = false;
         if (!mounted) return;
         if (exchanged) {
           setUser(exchanged.user);
           setAuthToken(exchanged.token);
           setToken(exchanged.token);
-        } else if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        } else if (event === 'SIGNED_IN') {
           setUser(null);
           setAuthToken(null);
           clearToken();
