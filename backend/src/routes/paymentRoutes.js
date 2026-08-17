@@ -1,4 +1,14 @@
-const express = require('express');
+import React from 'react';
+  
+  const PaymentRoutes = () =>  {
+	return (
+	  <div>
+	  </div>
+	);
+  }
+  
+  export default PaymentRoutes;
+  const express = require('express');
 const router = express.Router();
 const { protect, optionalProtect } = require('../middleware/authMiddleware');
 const {

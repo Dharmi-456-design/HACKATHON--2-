@@ -1,4 +1,14 @@
-const QRCode = require('qrcode');
+import React from 'react';
+  
+  const PaymentController = () =>  {
+	return (
+	  <div>
+	  </div>
+	);
+  }
+  
+  export default PaymentController;
+  const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const Razorpay = require('razorpay');

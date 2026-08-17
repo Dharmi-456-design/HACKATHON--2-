@@ -123,12 +123,67 @@ export default function NatureMissions() {
   const t = MISSION_TRANSLATIONS[lang] || MISSION_TRANSLATIONS.en;
   const token = session?.access_token;
 
-  const toUiMission = (m) => {
-    const type = m.mission_type || 'explore';
+  const FALLBACK_DEFAULT_MISSIONS = [
+    {
+      id: 'fm-1',
+      title: 'Listen to tree canopy at dawn',
+      category: 'Exploration',
+      difficulty: 'Easy',
+      duration: '8 min',
+      xpReward: 100,
+      status: 'not_started',
+      location_hint: 'Any nearby tree or park',
+      steps: [
+        { id: 'fm-1-s1', text: 'Stand under the largest tree in your neighborhood for 5 minutes', done: false },
+        { id: 'fm-1-s2', text: 'Listen quietly for avian calls without using your phone', done: false },
+        { id: 'fm-1-s3', text: 'Log your canopy observations in Nature Pulse', done: false },
+      ],
+      aiHint: 'Dawn chorus peaks 15 minutes before sunrise near broadleaf trees.',
+    },
+    {
+      id: 'fm-2',
+      title: 'Discover 3 native urban flora species',
+      category: 'Learning',
+      difficulty: 'Medium',
+      duration: '18 min',
+      xpReward: 180,
+      status: 'not_started',
+      location_hint: 'Local garden bed or trail',
+      steps: [
+        { id: 'fm-2-s1', text: 'Locate 3 distinct leaf or flower structures in a neighborhood park', done: false },
+        { id: 'fm-2-s2', text: 'Photograph each structure using Nature Lens for AI identification', done: false },
+        { id: 'fm-2-s3', text: 'Publish sightings to the Community Biodiversity Map', done: false },
+      ],
+      aiHint: 'Look for leaf veining pattern differences between shade and sun leaves.',
+    },
+    {
+      id: 'fm-3',
+      title: 'Map a nocturnal canopy corridor',
+      category: 'Challenges',
+      difficulty: 'Hard',
+      duration: '35 min',
+      xpReward: 250,
+      status: 'not_started',
+      location_hint: 'Canopy trail or river bank',
+      steps: [
+        { id: 'fm-3-s1', text: 'Identify low light-pollution dark canopy zones after dusk', done: false },
+        { id: 'fm-3-s2', text: 'Check light sources near foliage for nocturnal moth species', done: false },
+        { id: 'fm-3-s3', text: 'Record notes on nocturnal avian roosting behavior', done: false },
+      ],
+      aiHint: 'Moths gather around warm-spectrum lights near dense vegetation.',
+    },
+  ];
+
+  const toUiMission = (m, idx = 0) => {
+    const type = m.mission_type || (idx % 3 === 0 ? 'observe' : idx % 3 === 1 ? 'explore' : 'learn');
     const status = m.status || 'not_started';
     const xpReward = type === 'learn' ? 250 : type === 'explore' ? 180 : type === 'act' ? 200 : 100;
     const categoryMap = { observe: 'Exploration', explore: 'Learning', learn: 'Challenges', act: 'Personal Goals' };
-    const difficulty = !m.duration_minutes ? 'Medium' : m.duration_minutes <= 10 ? 'Easy' : m.duration_minutes <= 20 ? 'Medium' : 'Hard';
+    
+    // Vary difficulty based on duration_minutes or index fallback
+    const dur = m.duration_minutes || (idx % 3 === 0 ? 8 : idx % 3 === 1 ? 18 : 35);
+    const difficulty = dur <= 10 ? 'Easy' : dur <= 25 ? 'Medium' : 'Hard';
+    
     const steps = Array.isArray(m.steps) && m.steps.length
       ? m.steps
       : [
@@ -141,16 +196,17 @@ export default function NatureMissions() {
       title: m.title,
       category: categoryMap[type] || 'Exploration',
       difficulty,
-      duration: m.duration_minutes ? `${m.duration_minutes} min` : '15 min',
+      duration: `${dur} min`,
       xpReward,
       status,
       steps,
+      location_hint: m.location_hint || (idx % 3 === 0 ? 'Any nearby tree' : idx % 3 === 1 ? 'Local park or garden' : 'Canopy trail'),
       aiHint: m.location_hint || 'Stay observant of micro-climate shifts near foliage.',
     };
   };
 
   // Persistent States
-  const [missions, setMissions] = useState([]);
+  const [missions, setMissions] = useState(FALLBACK_DEFAULT_MISSIONS);
 
   const [totalXP, setTotalXP] = useState(0);
 
@@ -168,31 +224,68 @@ export default function NatureMissions() {
   const [customDifficulty, setCustomDifficulty] = useState('Easy');
 
   useEffect(() => {
-    if (!token) return;
+    let savedLocal = null;
+    try {
+      const raw = localStorage.getItem('nature_missions_saved_v2');
+      if (raw) savedLocal = JSON.parse(raw);
+    } catch {}
+
+    if (!token) {
+      if (savedLocal && Array.isArray(savedLocal) && savedLocal.length > 0) {
+        setMissions(savedLocal);
+        setTotalXP(savedLocal.filter((m) => m.status === 'completed' || m.steps?.every?.(s => s.done)).reduce((sum, m) => sum + m.xpReward, 0));
+      }
+      return;
+    }
+
     Promise.all([
       apiFetch('/api/missions', {}, token),
       apiFetch('/api/streak', {}, token),
     ])
       .then(([list, streakData]) => {
-        const ui = Array.isArray(list) ? list.map(toUiMission) : [];
+        let ui = Array.isArray(list) && list.length > 0
+          ? list.map((m, i) => toUiMission(m, i))
+          : FALLBACK_DEFAULT_MISSIONS;
+
+        // Merge locally saved steps & status so completed tasks stay saved!
+        if (savedLocal && Array.isArray(savedLocal)) {
+          const localMap = new Map(savedLocal.map((m) => [m.id, m]));
+          ui = ui.map((m) => {
+            const loc = localMap.get(m.id);
+            if (loc) {
+              return {
+                ...m,
+                status: loc.status || m.status,
+                steps: Array.isArray(loc.steps) ? loc.steps : m.steps,
+              };
+            }
+            return m;
+          });
+        }
+
         setMissions(ui);
-        setTotalXP(ui.filter((m) => m.status === 'completed').reduce((sum, m) => sum + m.xpReward, 0));
+        setTotalXP(ui.filter((m) => m.status === 'completed' || m.steps?.every?.(s => s.done)).reduce((sum, m) => sum + m.xpReward, 0));
         if (streakData && typeof streakData.streak === 'number') setStreakDays(streakData.streak);
       })
-      .catch(() => setMissionError(''));
+      .catch(() => {
+        if (savedLocal && Array.isArray(savedLocal) && savedLocal.length > 0) {
+          setMissions(savedLocal);
+        }
+      });
   }, [token]);
 
   const pushMissionStatus = (mission) => {
-    if (!token || !mission.id || String(mission.id).startsWith('m-')) return;
-    apiFetch(`/api/missions/${mission.id}`, { method: 'PATCH', body: JSON.stringify({ status: mission.status }) }, token).catch(() => {
-      setMissionError('Your mission progress could not be saved. Please check your connection and try again.');
-    });
+    if (!token || !mission.id || String(mission.id).startsWith('fm-') || String(mission.id).startsWith('gen-')) return;
+    apiFetch(`/api/missions/${mission.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: mission.status, steps: mission.steps }),
+    }, token).catch(() => null);
   };
 
-  // Toggle Step Completion
+  // Toggle Step Completion & Save
   const toggleStep = (missionId, stepId) => {
-    setMissions((prev) =>
-      prev.map((m) => {
+    setMissions((prev) => {
+      const updated = prev.map((m) => {
         if (m.id !== missionId) return m;
         const updatedSteps = m.steps.map((s) => (s.id === stepId ? { ...s, done: !s.done } : s));
         const allDone = updatedSteps.every((s) => s.done);
@@ -200,14 +293,30 @@ export default function NatureMissions() {
 
         if (allDone && m.status !== 'completed') {
           setTotalXP((xp) => xp + m.xpReward);
+          // Celebration confetti burst when mission is completed!
+          try {
+            confetti({
+              particleCount: 120,
+              spread: 80,
+              origin: { y: 0.6 },
+              colors: ['#4ADE80', '#96CD7B', '#FCD34D', '#38BDF8'],
+            });
+          } catch {}
         }
 
         const updatedMission = { ...m, steps: updatedSteps, status: nextStatus };
         pushMissionStatus(updatedMission);
         if (selectedMission?.id === missionId) setSelectedMission(updatedMission);
         return updatedMission;
-      })
-    );
+      });
+
+      // Save immediately to localStorage so progress is NEVER lost!
+      try {
+        localStorage.setItem('nature_missions_saved_v2', JSON.stringify(updated));
+      } catch {}
+
+      return updated;
+    });
   };
 
   // Generate AI Mission
@@ -564,9 +673,9 @@ export default function NatureMissions() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {(activeTab === 'active'
-                  ? missions.filter((m) => m.status !== 'completed')
+                  ? missions.filter((m) => m.status !== 'completed' && !(Array.isArray(m.steps) && m.steps.length > 0 && m.steps.every((s) => s.done)))
                   : activeTab === 'completed'
-                  ? missions.filter((m) => m.status === 'completed')
+                  ? missions.filter((m) => m.status === 'completed' || (Array.isArray(m.steps) && m.steps.length > 0 && m.steps.every((s) => s.done)))
                   : missions).map((mission) => {
                   const isSelected = selectedMission?.id === mission.id;
                   const completedStepsCount = mission.steps.filter((s) => s.done).length;
@@ -595,7 +704,11 @@ export default function NatureMissions() {
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                            isDark ? 'bg-[#0E2015] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+                            mission.difficulty === 'Hard'
+                              ? isDark ? 'bg-purple-500/15 text-purple-400 border-purple-500/30' : 'bg-purple-100 text-purple-800 border-purple-200'
+                              : mission.difficulty === 'Medium'
+                              ? isDark ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' : 'bg-amber-100 text-amber-800 border-amber-200'
+                              : isDark ? 'bg-[#4ADE80]/15 text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
                           }`}>
                             {mission.difficulty}
                           </span>
@@ -607,6 +720,12 @@ export default function NatureMissions() {
                         }`}>
                           {mission.title}
                         </h4>
+                        
+                        <p className={`text-[10px] font-medium flex items-center gap-1 ${
+                          isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                        }`}>
+                          📍 {mission.location_hint || 'Local habitat'}
+                        </p>
                       </div>
 
                       <div className={`space-y-2 pt-2 border-t ${

@@ -1,4 +1,14 @@
-const { Discovery, JournalEntry, Mission, Action, Profile, ChatThread, WeeklyRecapSnapshot } = require('../models/Nature');
+import React from 'react';
+  
+  const RecapController = () =>  {
+	return (
+	  <div>
+	  </div>
+	);
+  }
+  
+  export default RecapController;
+  const { Discovery, JournalEntry, Mission, Action, Profile, ChatThread, WeeklyRecapSnapshot } = require('../models/Nature');
 const { isValidId } = require('../utils/natureUtils');
 
 // Helper to format ISO date to YYYY-MM-DD
