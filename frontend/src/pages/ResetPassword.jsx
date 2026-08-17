@@ -5,7 +5,7 @@ export default function ResetPassword() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-cream px-6 text-ink">
       <div className="w-full max-w-[400px]">
         <Link to="/" className="inline-flex items-center gap-2.5 mb-8">
-          <img src="/logo.png" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shadow-lg" />
+          <img src="/logo.webp" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shadow-lg" />
           <span style={{ fontFamily: 'Georgia, serif' }} className="text-xl font-semibold text-ink tracking-tight">
             NaturePulse
           </span>

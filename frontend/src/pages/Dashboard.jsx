@@ -4,7 +4,7 @@ import { ArrowRight, Check, RefreshCw, MapPin, Clock, Leaf, Sun, Compass, Sparkl
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { Badge, Card, ConnectionRing, DimBars, GhostButton, PrimaryButton, Skeleton, TYPE_LABEL } from '../components/ui';
+import { Badge, Card, ConnectionRing, DimBars, FallbackImg, GhostButton, PrimaryButton, Skeleton, TYPE_LABEL } from '../components/ui';
 import BestTimeToExplore from '../components/BestTimeToExplore';
 
 const SUNLIT_FOREST_IMG = 'https://plus.unsplash.com/premium_photo-1667076649924-d784d205cbba?auto=format&fit=crop&w=1600&q=80';
@@ -325,7 +325,7 @@ export default function Dashboard() {
             <div className="space-y-3">
               {places.slice(0, 3).map((p) => (
                 <div key={p.id} className={`flex items-center gap-3 border p-2.5 rounded-2xl ${subCardBg}`}>
-                  <img src={p.image_url || SUNLIT_FOREST_IMG} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0" />
+                  <FallbackImg src={p.image_url || SUNLIT_FOREST_IMG} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0" />
                   <div className="min-w-0">
                     <p className={`text-xs font-bold truncate ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{p.name}</p>
                     <p className={`text-[10px] font-semibold ${accentText}`}>{p.type} · {p.walk_minutes || 10} min walk</p>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch, getToken, setToken, clearToken } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { signInWithGoogle as performGoogleSignIn } from '../lib/googleAuth';
@@ -20,61 +20,124 @@ export function AuthProvider({ children }) {
   const [token, setAuthToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Exchange a Supabase OAuth session for a NaturePulse backend JWT, so the
-  // token we store matches what the backend `protect` middleware verifies.
+  // Refs for deduplication — shared across async calls and listeners
+  const lastExchangedTokenRef = useRef(null);
+  const initDoneRef = useRef(false);
+
+  // Exchange a Supabase OAuth session for a NaturePulse backend JWT.
+  // Deduplicates by access_token to prevent the same session from triggering
+  // multiple POST /api/auth/google calls.
   const exchangeSupabaseSession = useCallback(async (session) => {
-    if (!session?.access_token) return null;
+    if (!session?.user?.email) return null;
+
+    // Skip if we already exchanged this exact token
+    const accessToken = session.access_token;
+    if (accessToken === lastExchangedTokenRef.current) return null;
+    // Lock immediately to block concurrent calls with the same token
+    lastExchangedTokenRef.current = accessToken;
+
     try {
       const data = await apiFetch('/api/auth/google', {
         method: 'POST',
-        body: JSON.stringify({ access_token: session.access_token }),
+        body: JSON.stringify({
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0],
+        }),
       });
       if (data?.token && data?.user) return data;
     } catch (err) {
-      console.warn('[AuthContext] Supabase session backend exchange fallback:', err);
-    }
-    // Resilient fallback: build session from verified Supabase user object
-    if (session.user) {
-      const fallbackUser = {
-        id: session.user.id,
-        name:
-          session.user.user_metadata?.full_name ||
-          session.user.user_metadata?.name ||
-          session.user.email?.split('@')[0] ||
-          'Explorer',
-        email: session.user.email,
-        city: 'Ahmedabad',
-        avatar: session.user.user_metadata?.avatar_url || '🌳',
-      };
-      const fallbackToken = `demo-google-${session.user.id}`;
-      return { user: fallbackUser, token: fallbackToken };
+      // Exchange failed — unlock so a retry is possible if the user retries
+      lastExchangedTokenRef.current = null;
+      // Silently clear the stale Supabase session from localStorage
+      try {
+        const key = Object.keys(localStorage).find(
+          (k) => k.startsWith('sb-') && k.endsWith('-auth-token')
+        );
+        if (key) localStorage.removeItem(key);
+      } catch {}
     }
     return null;
   }, []);
 
-  // On mount: restore session from Supabase OAuth or local JWT
+  // Clean OAuth callback hash/query params from the URL without triggering navigation
+  const cleanOAuthUrl = useCallback(() => {
+    try {
+      const url = new URL(window.location.href);
+      if (url.hash && (url.hash.includes('access_token') || url.hash.includes('error_description'))) {
+        window.history.replaceState(null, '', url.pathname + url.search);
+      }
+    } catch {}
+  }, []);
+
+  // On mount: restore session from backend JWT or Supabase OAuth
   useEffect(() => {
     let mounted = true;
 
-    // Check Supabase session for Google Auth
-    const checkSupabaseAuth = async () => {
+    const initAuth = async () => {
+      // 1. Try backend JWT first (fast path — no external call needed if token is valid)
+      const storedToken = getToken();
+      if (storedToken) {
+        try {
+          const data = await apiFetch('/api/auth/me', {}, storedToken);
+          if (mounted && data?.user) {
+            setUser(data.user);
+            setAuthToken(storedToken);
+            setLoading(false);
+            initDoneRef.current = true;
+            return;
+          }
+        } catch {
+          clearToken();
+        }
+      }
+
+      // 2. No valid backend JWT — try Supabase session (e.g. after OAuth redirect)
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!mounted) return false;
+        if (!mounted) return;
 
-        if (session && session.user) {
+        if (session?.user) {
           const exchanged = await exchangeSupabaseSession(session);
-          if (!mounted) return false;
+          if (!mounted) return;
+
           if (exchanged) {
             setUser(exchanged.user);
             setAuthToken(exchanged.token);
             setToken(exchanged.token);
+            cleanOAuthUrl();
+          }
+        }
+      } catch {}
+
+      if (mounted) {
+        setLoading(false);
+        initDoneRef.current = true;
+      }
+    };
+
+    initAuth();
+
+    // Listen to Supabase Auth State Changes (OAuth redirect callback)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
+
+        // INITIAL_SESSION: session restored from storage — already handled by initAuth
+        if (event === 'INITIAL_SESSION') return;
+
+        if (event === 'SIGNED_IN' && session?.user) {
+          const exchanged = await exchangeSupabaseSession(session);
+          if (!mounted) return;
+          if (exchanged) {
+            setUser(exchanged.user);
+            setAuthToken(exchanged.token);
+            setToken(exchanged.token);
+            cleanOAuthUrl();
           } else {
+            // Exchange failed — clear state
             setUser(null);
             setAuthToken(null);
-            clearToken();
-          }
-          setLoading(false);
+            setLoading(false);
           return true;
         }
       } catch (err) {
@@ -146,7 +209,7 @@ export function AuthProvider({ children }) {
           setUser(exchanged.user);
           setAuthToken(exchanged.token);
           setToken(exchanged.token);
-        } else if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        } else {
           setUser(null);
           setAuthToken(null);
           clearToken();
@@ -164,94 +227,41 @@ export function AuthProvider({ children }) {
       clearTimeout(safetyTimeout);
       subscription?.unsubscribe();
     };
-  }, []);
+  }, [exchangeSupabaseSession, cleanOAuthUrl]);
 
   const demoLogin = useCallback(() => {
-    const mockUser = {
-      id: 'user-demo-instant',
-      name: 'Nature Explorer',
-      email: 'explorer@naturepulse.org',
-      city: 'Ahmedabad',
-      avatar: '🌳',
-      created_at: new Date().toISOString(),
-    };
-    const mockToken = 'demo-jwt-token-instant';
-    setToken(mockToken);
-    setAuthToken(mockToken);
-    setUser(mockUser);
-    return { user: mockUser, token: mockToken };
+    console.warn('[AuthContext] Demo login is disabled. Use a real account.');
+    return null;
   }, []);
 
   const login = useCallback(async (email, password) => {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const data = await apiFetch('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await apiFetch('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-        signal: controller.signal,
-      }).finally(() => clearTimeout(timeoutId));
-
-      if (data?.token && data?.user) {
-        setToken(data.token);
-        setAuthToken(data.token);
-        setUser(data.user);
-        return data;
-      }
-    } catch {
-      console.warn('[AuthContext] Fast login fallback activated');
+    if (data?.token && data?.user) {
+      setToken(data.token);
+      setAuthToken(data.token);
+      setUser(data.user);
+      return data;
     }
-    // Instant fallback login
-    const mockUser = {
-      id: `user-${Date.now()}`,
-      name: email?.split('@')[0] || 'Nature Explorer',
-      email: email || 'explorer@naturepulse.org',
-      city: 'Ahmedabad',
-      avatar: '🌳',
-      created_at: new Date().toISOString(),
-    };
-    const mockToken = `demo-token-${Date.now()}`;
-    setToken(mockToken);
-    setAuthToken(mockToken);
-    setUser(mockUser);
-    return { user: mockUser, token: mockToken };
+    throw new Error('Login failed');
   }, []);
 
   const register = useCallback(async ({ name, email, password }) => {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const data = await apiFetch('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    });
 
-      const data = await apiFetch('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, password }),
-        signal: controller.signal,
-      }).finally(() => clearTimeout(timeoutId));
-
-      if (data?.token && data?.user) {
-        setToken(data.token);
-        setAuthToken(data.token);
-        setUser(data.user);
-        return data;
-      }
-    } catch {
-      console.warn('[AuthContext] Fast register fallback activated');
+    if (data?.token && data?.user) {
+      setToken(data.token);
+      setAuthToken(data.token);
+      setUser(data.user);
+      return data;
     }
-    // Instant fallback registration
-    const mockUser = {
-      id: `user-${Date.now()}`,
-      name: name || email?.split('@')[0] || 'Nature Explorer',
-      email: email || 'explorer@naturepulse.org',
-      city: 'Ahmedabad',
-      avatar: '🌳',
-      created_at: new Date().toISOString(),
-    };
-    const mockToken = `demo-token-${Date.now()}`;
-    setToken(mockToken);
-    setAuthToken(mockToken);
-    setUser(mockUser);
-    return { user: mockUser, token: mockToken };
+    throw new Error('Registration failed');
   }, []);
 
   const signInWithGoogle = useCallback(async (redirectTo) => {
@@ -259,6 +269,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    lastExchangedTokenRef.current = null;
     try {
       await supabase.auth.signOut();
     } catch {}

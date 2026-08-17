@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Eye, Compass, BookOpen, HandHeart, RotateCcw, Sparkles, ChevronDown, Check, ShieldCheck } from 'lucide-react';
@@ -10,7 +10,7 @@ import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 import AnimatedStatCard from '../components/AnimatedStatCard';
 import PricingSection from '../components/PricingSection';
 import CtaSection from '../components/CtaSection';
-import Interactive3DFooter from '../components/Interactive3DFooter';
+const Interactive3DFooter = lazy(() => import('../components/Interactive3DFooter'));
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -758,7 +758,9 @@ export default function Landing() {
       </main>
 
       {/* ────────────────────── 14. 3D INTERACTIVE ECOSYSTEM FOOTER ────────────────────── */}
-      <Interactive3DFooter />
+      <Suspense fallback={<div className="h-64" />}>
+        <Interactive3DFooter />
+      </Suspense>
     </div>
   );
 }

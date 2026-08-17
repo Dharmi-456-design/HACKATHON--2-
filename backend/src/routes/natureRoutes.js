@@ -1,49 +1,26 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const {
-  getProfile,
-  updateProfile,
-  getDiscoveries,
-  createDiscovery,
-  deleteDiscovery,
-  getJournal,
-  createJournalEntry,
-  deleteJournalEntry,
-  getMissions,
-  createMission,
-  updateMission,
-  deleteMission,
-  getPlaces,
-  getPlaceById,
-  getStories,
-  createStory,
-  deleteStory,
-  generateAIStory,
-  assistAIStory,
-  getCommunityPosts,
-  createCommunityPost,
-  deleteCommunityPost,
-  getTestimonials,
-  getPublicStats,
-  getActions,
-  createAction,
-  updateAction,
-  deleteAction,
-  getStreak,
-  getBestTime,
-  getWeeklyRecap,
-  getConnection,
-  handlePulseChat,
-  handleImageAnalyze,
-  getPulseThreads,
-  createPulseThread,
-  renamePulseThread,
-  deletePulseThread,
-  clearPulseThreads,
-  updatePulseThreadMessages,
-} = require('../controllers/natureController');
+const { getProfile, updateProfile } = require('../controllers/profileController');
+const { getDiscoveries, createDiscovery, deleteDiscovery } = require('../controllers/discoveryController');
+const { getJournal, createJournalEntry, deleteJournalEntry } = require('../controllers/journalController');
+const { getMissions, createMission, updateMission, deleteMission } = require('../controllers/missionController');
+const { getPlaces, getPlaceById } = require('../controllers/placeController');
+const { getStories, createStory, deleteStory, generateAIStory, assistAIStory } = require('../controllers/storyController');
+const { getCommunityPosts, createCommunityPost, deleteCommunityPost, getTestimonials, getPublicStats } = require('../controllers/communityController');
+const { getActions, createAction, updateAction, deleteAction, getStreak, getBestTime, getWeeklyRecap, getConnection } = require('../controllers/actionController');
+const { handlePulseChat, handleImageAnalyze, getPulseThreads, createPulseThread, renamePulseThread, deletePulseThread, clearPulseThreads, updatePulseThreadMessages } = require('../controllers/aiController');
 const asyncHandler = require('../utils/asyncHandler');
 const { protect } = require('../middleware/authMiddleware');
+const { validationResult } = require('express-validator');
+const { validatePulseChat, validateImageAnalyze, validateStoryGenerate, validateStoryAssist } = require('../validators/natureValidators');
+
+const checkValidation = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: 'Validation failed', details: errors.array().map((e) => e.msg) });
+  }
+  next();
+};
 
 const router = express.Router();
 
@@ -56,10 +33,10 @@ const aiLimiter = rateLimit({
 });
 
 // AI Chatbot & Image Analysis (public but rate-limited; keys stay server-side)
-router.post('/pulse', aiLimiter, asyncHandler(handlePulseChat));
-router.post('/analyze', aiLimiter, asyncHandler(handleImageAnalyze));
-router.post('/stories/generate', aiLimiter, asyncHandler(generateAIStory));
-router.post('/stories/assist', aiLimiter, asyncHandler(assistAIStory));
+router.post('/pulse', aiLimiter, validatePulseChat, checkValidation, asyncHandler(handlePulseChat));
+router.post('/analyze', aiLimiter, validateImageAnalyze, checkValidation, asyncHandler(handleImageAnalyze));
+router.post('/stories/generate', aiLimiter, validateStoryGenerate, checkValidation, asyncHandler(generateAIStory));
+router.post('/stories/assist', aiLimiter, validateStoryAssist, checkValidation, asyncHandler(assistAIStory));
 
 // Pulse chat threads (private, user-owned)
 router

@@ -42,7 +42,7 @@ export default function SplashIntro({ onComplete }) {
         >
           <div className="flex flex-col items-center text-center z-10">
             <img
-              src="/logo.png"
+              src="/logo.webp"
               alt="NaturePulse Logo"
               width="64"
               height="64"

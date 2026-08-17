@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 
 export function PulseOrb({ size = 56, className = '', active = false }) {
@@ -196,3 +197,18 @@ export const TYPE_LABEL = {
   act: 'Act',
   return: 'Return',
 };
+
+const PLACEHOLDER_SVG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"%3E%3Crect fill="%23E3DDD1" width="80" height="80"/%3E%3Ctext x="50%25" y="52%25" dominant-baseline="middle" text-anchor="middle" font-size="28"%3E%F0%9F%8C%BF%3C/text%3E%3C/svg%3E';
+
+export function FallbackImg({ src, alt = '', className = '', fallback = PLACEHOLDER_SVG, ...props }) {
+  const [imgSrc, setImgSrc] = useState(src || fallback);
+  return (
+    <img
+      src={imgSrc}
+      alt={alt}
+      className={className}
+      onError={() => { if (imgSrc !== fallback) setImgSrc(fallback); }}
+      {...props}
+    />
+  );
+}
