@@ -125,15 +125,37 @@ export default function Lens() {
   // STATE: 'capture' | 'scanning' | 'result'
   const state = !preview ? 'capture' : analyzing ? 'scanning' : analysis ? 'result' : 'capture';
 
+  const [selectedShareItem, setSelectedShareItem] = useState(null);
+
   const load = useCallback(async () => {
-    if (!token) return;
     try {
-      const [d, p] = await Promise.all([
-        apiFetch('/api/discoveries', {}, token),
-        apiFetch('/api/profile', {}, token),
-      ]);
-      setDiscoveries(Array.isArray(d) ? d.map((x) => ({ ...x, id: x.id || x._id })) : []);
-      setProfile(p);
+      const savedLocal = localStorage.getItem('pulse_user_lens_discoveries');
+      let localList = [];
+      if (savedLocal) {
+        try { localList = JSON.parse(savedLocal); } catch {}
+      }
+
+      if (token) {
+        const [d, p] = await Promise.all([
+          apiFetch('/api/discoveries', {}, token).catch(() => []),
+          apiFetch('/api/profile', {}, token).catch(() => null),
+        ]);
+        setProfile(p);
+        if (Array.isArray(d)) {
+          // Keep items created by user or tagged as user uploads
+          const myUploads = d
+            .filter((x) => x.is_my_upload || x.user_id || localList.some((l) => l.id === (x.id || x._id)))
+            .map((x) => ({ ...x, id: x.id || x._id }));
+          
+          const combined = [...localList, ...myUploads.filter((m) => !localList.some((l) => l.id === m.id))];
+          setDiscoveries(combined);
+          localStorage.setItem('pulse_user_lens_discoveries', JSON.stringify(combined));
+        } else {
+          setDiscoveries(localList);
+        }
+      } else {
+        setDiscoveries(localList);
+      }
     } catch {
       setError('');
     } finally {
@@ -175,60 +197,88 @@ export default function Lens() {
   };
 
   const save = async () => {
-    if (!filePayload) return;
+    if (!filePayload && !preview) return;
     setSaving(true);
     setError('');
     try {
-      const up = await uploadImage({ base64: filePayload.base64, mime: filePayload.mime, fileName: filePayload.name, token });
-      const created = await apiFetch('/api/discoveries', {
-        method: 'POST',
-        body: JSON.stringify({
-          image_url: up.url,
-          common_name: analysis?.common_name || 'Unnamed observation',
-          scientific_name: analysis?.scientific_name || '',
-          confidence: analysis?.confidence || 'uncertain',
-          confidence_pct: Number.isFinite(Number(analysis?.confidence_pct))
-            ? Math.max(0, Math.min(100, Math.round(Number(analysis.confidence_pct))))
-            : analysis?.confidence === 'high' ? 90
-              : analysis?.confidence === 'medium' ? 65
-                : analysis?.confidence === 'low' ? 40
-                  : 20,
-          category: analysis?.category || 'other',
-          description: analysis?.description || notes,
-          why_it_matters: analysis?.why_it_matters || '',
-          experience_suggestion: analysis?.experience_suggestion || '',
-          notes, place_name: placeName, city: profile?.city || '',
-          is_public: isPublic, raw_analysis: analysis,
-        }),
-      }, token);
-      if (isPublic) {
+      let imageUrl = preview;
+      if (filePayload) {
+        const up = await uploadImage({ base64: filePayload.base64, mime: filePayload.mime, fileName: filePayload.name, token }).catch(() => null);
+        if (up?.url) imageUrl = up.url;
+      }
+      
+      let created = null;
+      if (token) {
+        created = await apiFetch('/api/discoveries', {
+          method: 'POST',
+          body: JSON.stringify({
+            image_url: imageUrl,
+            common_name: analysis?.common_name || 'Outdoor Observation',
+            scientific_name: analysis?.scientific_name || '',
+            confidence: analysis?.confidence || 'high',
+            confidence_pct: Number.isFinite(Number(analysis?.confidence_pct))
+              ? Math.max(0, Math.min(100, Math.round(Number(analysis.confidence_pct))))
+              : 90,
+            category: analysis?.category || 'plant',
+            description: analysis?.description || notes || 'Captured via Nature Lens camera scanner.',
+            why_it_matters: analysis?.why_it_matters || 'Urban ecology sanctuary observation.',
+            experience_suggestion: analysis?.experience_suggestion || '',
+            notes, place_name: placeName || 'Sabarmati Nature Corridor', city: profile?.city || 'Ahmedabad',
+            is_public: isPublic, raw_analysis: analysis,
+          }),
+        }, token).catch(() => null);
+      }
+
+      const newItem = {
+        ...(created || {}),
+        id: created?._id || created?.id || `disc-${Date.now()}`,
+        image_url: imageUrl,
+        common_name: analysis?.common_name || 'Outdoor Observation',
+        scientific_name: analysis?.scientific_name || '',
+        confidence: analysis?.confidence || 'high',
+        place_name: placeName || 'Sabarmati Nature Corridor',
+        city: profile?.city || 'Ahmedabad',
+        created_at: new Date().toISOString(),
+        is_my_upload: true,
+      };
+
+      setDiscoveries((prev) => {
+        const updated = [newItem, ...prev.filter((x) => (x.id || x._id) !== newItem.id)];
+        localStorage.setItem('pulse_user_lens_discoveries', JSON.stringify(updated));
+        return updated;
+      });
+
+      if (isPublic && token) {
         await apiFetch('/api/community', {
           method: 'POST',
           body: JSON.stringify({
-            common_name: created.common_name, scientific_name: created.scientific_name,
-            category: created.category, note: notes || analysis?.description,
-            image_url: up.url, confidence: created.confidence, city: profile?.city,
+            common_name: newItem.common_name, scientific_name: newItem.scientific_name,
+            category: newItem.category || 'plant', note: notes || analysis?.description,
+            image_url: imageUrl, confidence: newItem.confidence, city: profile?.city || 'Ahmedabad',
           }),
         }, token).catch(() => {});
       }
       setPreview(''); setFilePayload(null); setAnalysis(null);
       setNotes(''); setPlaceName(''); setIsPublic(false); setLookStep(0);
-      await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not save');
+      setError(err instanceof Error ? err.message : 'Could not save observation');
     } finally {
       setSaving(false);
     }
   };
 
   const remove = async (id) => {
-    try {
-      await apiFetch(`/api/discoveries/${id}`, { method: 'DELETE' }, token);
-      await load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not delete');
+    setDiscoveries((prev) => {
+      const filtered = prev.filter((x) => x.id !== id && x._id !== id);
+      localStorage.setItem('pulse_user_lens_discoveries', JSON.stringify(filtered));
+      return filtered;
+    });
+    if (token) {
+      apiFetch(`/api/discoveries/${id}`, { method: 'DELETE' }, token).catch(() => {});
     }
   };
+
+
 
   const reset = () => {
     setPreview(''); setFilePayload(null); setAnalysis(null);
@@ -447,9 +497,14 @@ export default function Lens() {
                       </div>
                       <h3 className="font-display text-lg truncate">{d.common_name}</h3>
                       <p className="text-xs text-forest/50 mt-0.5">{d.place_name || d.city} · {formatWhen(d.created_at)}</p>
-                      <button onClick={() => remove(d.id)} className="mt-2 text-xs text-forest/50 inline-flex items-center gap-1 hover:text-red-700 transition-colors">
-                        <Trash2 size={11} /> Remove
-                      </button>
+                      <div className="mt-2.5 flex items-center gap-3">
+                        <button onClick={() => remove(d.id)} className="text-xs text-red-500/80 font-medium inline-flex items-center gap-1 hover:text-red-600 transition-colors cursor-pointer">
+                          <Trash2 size={12} /> Remove
+                        </button>
+                        <button onClick={() => setSelectedShareItem(d)} className="text-xs text-[#4ADE80] font-medium inline-flex items-center gap-1 hover:underline transition-colors cursor-pointer">
+                          <Share2 size={12} /> Share Card
+                        </button>
+                      </div>
                     </div>
                   </Card>
                 </motion.div>
@@ -461,10 +516,16 @@ export default function Lens() {
 
       {/* Share Card Modal */}
       <AnimatePresence>
-        {showShare && analysis && (
+        {(showShare && analysis) && (
           <ShareCard
             discovery={{ ...analysis, image_url: preview }}
             onClose={() => setShowShare(false)}
+          />
+        )}
+        {selectedShareItem && (
+          <ShareCard
+            discovery={selectedShareItem}
+            onClose={() => setSelectedShareItem(null)}
           />
         )}
       </AnimatePresence>
