@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Send, RotateCcw, Copy, Check, Sparkles, Sun, Bell, User, Image as ImageIcon, Mic, CheckCheck, Globe, ChevronDown, History, Plus, Edit2, Trash2, X, MessageSquare, MicOff, Volume2, Leaf, Shield } from 'lucide-react';
+import { Send, RotateCcw, Copy, Check, Sparkles, Sun, Bell, User, Image as ImageIcon, Mic, CheckCheck, Globe, ChevronDown, History, Plus, Edit2, Trash2, X, MessageSquare, MicOff, Volume2, VolumeX, Leaf, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -95,87 +95,113 @@ const LANGUAGES = [
   { code: 'hi', name: 'Hindi', native: 'हिंदी', flag: '🇮🇳' },
 ];
 
+const STARTERS = {
+  en: [
+    '🐦 What native birds can I see in Gujarat?',
+    '🌳 Tell me about the sacred Banyan tree ecology',
+    '📍 Top serene nature spots around Ahmedabad',
+    '🌿 How does moss survive on city walls?',
+  ],
+  gu: [
+    '🐦 ગુજરાતમાં કયા સ્થાનિક પક્ષીઓ જોવા મળે છે?',
+    '🌳 પવિત્ર વડ (Banyan Tree) નું ઇકોલોજીકલ મહત્વ શું છે?',
+    '📍 અમદાવાદની આસપાસ શાંત પ્રકૃતિ સ્થાનો કયા છે?',
+    '🌿 શહેરી દીવાલો પર શેવાળ કેવી રીતે જીવે છે?',
+  ],
+  hi: [
+    '🐦 गुजरात में कौन-से स्थानीय पक्षी देखे जा सकते हैं?',
+    '🌳 बरगद (Banyan Tree) के पेड़ का पारिस्थितिक महत्व क्या है?',
+    '📍 अहमदाबाद के पास सबसे अच्छे प्राकृतिक स्थल कौन से हैं?',
+    '🌿 काई (Moss) और पौधे पर्यावरण को कैसे शुद्ध करते हैं?',
+  ],
+};
 
+function renderInlineFormatted(text, isDark) {
+  if (!text) return null;
+  const parts = [];
+  const regex = /(\*\*.*?\*\*|\*.*?\*|`.*?`)/g;
+  let lastIndex = 0;
+  let match;
 
-// Larger, Taller Glowing EKG Pulse Orb
-function EkgPulseOrb({ size = 84, active = false }) {
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    const token = match[0];
+    if (token.startsWith('**') && token.endsWith('**')) {
+      parts.push(
+        <strong key={match.index} className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          {token.slice(2, -2)}
+        </strong>
+      );
+    } else if (token.startsWith('*') && token.endsWith('*')) {
+      parts.push(
+        <em key={match.index} className="italic opacity-90">
+          {token.slice(1, -1)}
+        </em>
+      );
+    } else if (token.startsWith('`') && token.endsWith('`')) {
+      parts.push(
+        <code key={match.index} className={`px-1.5 py-0.5 text-xs rounded font-mono ${isDark ? 'bg-black/40 text-[#4ADE80]' : 'bg-slate-200 text-emerald-900'}`}>
+          {token.slice(1, -1)}
+        </code>
+      );
+    }
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+  return parts.length > 0 ? parts : text;
+}
+
+function FormattedMessage({ content, isDark }) {
+  if (!content) return null;
+  const lines = content.split('\n');
   return (
-    <div className="relative inline-flex items-center justify-center shrink-0 gpu-layer" style={{ width: size, height: size }}>
-      <motion.span
-        animate={active ? { scale: [1, 1.25, 1], opacity: [0.4, 0.85, 0.4] } : { scale: [0.96, 1.1, 0.96], opacity: [0.35, 0.65, 0.35] }}
-        transition={{ duration: active ? 1.2 : 2.4, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute inset-0 rounded-full bg-[#4ADE80]/30 blur-md"
-      />
-      <div className="absolute inset-[3%] rounded-full bg-gradient-to-br from-[#2E6141] via-[#163321] to-[#0A180F] p-[2px] shadow-xl">
-        <div className="w-full h-full rounded-full bg-[#0E2015] flex items-center justify-center relative overflow-hidden border border-[#3E7D55]/60">
-          <svg viewBox="0 0 100 100" className="w-4/5 h-4/5 relative z-10">
-            <motion.path
-              d="M 10 50 L 30 50 L 37 32 L 45 68 L 53 20 L 61 78 L 69 40 L 76 54 L 82 50 L 90 50"
-              fill="none"
-              stroke="#4ADE80"
-              strokeWidth="4.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              animate={active ? { opacity: [0.5, 1, 0.5] } : { opacity: [0.8, 1, 0.8] }}
-              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ filter: 'drop-shadow(0 0 8px #4ADE80)' }}
-            />
-          </svg>
-        </div>
-      </div>
+    <div className="space-y-2 leading-relaxed text-sm sm:text-base font-normal">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={idx} className="h-1" />;
+        }
+        if (trimmed.startsWith('### ') || trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
+          const headerText = trimmed.replace(/^#+\s*/, '');
+          return (
+            <h4 key={idx} className={`font-display font-bold text-base sm:text-lg pt-1 pb-0.5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>
+              {renderInlineFormatted(headerText, isDark)}
+            </h4>
+          );
+        }
+        if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+          const itemText = trimmed.replace(/^[\*\-•]\s*/, '');
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-1 my-0.5">
+              <span className={`mt-2 w-1.5 h-1.5 rounded-full shrink-0 ${isDark ? 'bg-[#4ADE80]' : 'bg-emerald-700'}`} />
+              <span className="flex-1">{renderInlineFormatted(itemText, isDark)}</span>
+            </div>
+          );
+        }
+        const numMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+        if (numMatch) {
+          return (
+            <div key={idx} className="flex items-start gap-2 pl-1 my-0.5">
+              <span className={`font-semibold shrink-0 text-xs px-1.5 py-0.2 rounded-md ${isDark ? 'bg-[#1E3B2A] text-[#4ADE80]' : 'bg-emerald-100 text-emerald-900'}`}>
+                {numMatch[1]}
+              </span>
+              <span className="flex-1">{renderInlineFormatted(numMatch[2], isDark)}</span>
+            </div>
+          );
+        }
+        return (
+          <p key={idx} className="leading-relaxed">
+            {renderInlineFormatted(trimmed, isDark)}
+          </p>
+        );
+      })}
     </div>
   );
 }
-
-function LeafBranchHeader() {
-  return (
-    <div className="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none overflow-hidden hidden md:block select-none">
-      {[...Array(8)].map((_, i) => (
-        <span
-          key={i}
-          className="absolute rounded-full bg-[#E6C176] animate-pulse"
-          style={{
-            width: 3 + (i % 3) * 2,
-            height: 3 + (i % 3) * 2,
-            right: `${15 + (i * 9) % 35}%`,
-            top: `${20 + (i * 11) % 60}%`,
-            boxShadow: '0 0 8px #E6C176',
-            animationDuration: `${2 + (i % 3)}s`,
-          }}
-        />
-      ))}
-      <svg viewBox="0 0 320 220" className="absolute right-0 top-1/2 -translate-y-1/2 h-[120%] w-auto opacity-75">
-        <path d="M 240 220 Q 200 130 130 30" fill="none" stroke="#1D452B" strokeWidth="4" strokeLinecap="round" />
-        <path d="M 130 30 Q 150 10 175 22 Q 150 45 130 30" fill="#285C3A" stroke="#3D8254" strokeWidth="1.5" />
-        <path d="M 150 60 Q 185 45 205 60 Q 160 85 150 60" fill="#1C452A" stroke="#316B45" strokeWidth="1.5" />
-        <path d="M 175 95 Q 215 80 235 100 Q 200 125 175 95" fill="#2C6942" stroke="#489A63" strokeWidth="1.5" />
-      </svg>
-    </div>
-  );
-}
-
-function BouncingDots() {
-  return (
-    <div className="flex items-center gap-1.5 px-3 py-2.5 bg-[#13271C] border border-[#20422E] rounded-2xl rounded-tl-xs shadow-xs">
-      {[0, 0.15, 0.3].map((delay, i) => (
-        <motion.span
-          key={i}
-          animate={{ y: [0, -4, 0], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 0.6, repeat: Infinity, delay }}
-          className="w-2 h-2 rounded-full bg-[#4ADE80]"
-        />
-      ))}
-    </div>
-  );
-}
-
-// Suggested starter prompts
-const STARTERS = [
-  'What bird is singing outside my window?',
-  'I have 5 minutes — what should I notice?',
-  'Why do leaves change color in autumn?',
-  'What lives in the moss on my garden wall?',
-];
 
 export default function PulseChat() {
   const { toggleTheme, isDark } = useTheme();
@@ -207,6 +233,7 @@ export default function PulseChat() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState(null);
+  const [speakingId, setSpeakingId] = useState(null);
   const endRef = useRef(null);
 
   const copyMessage = useCallback(async (id, content) => {
@@ -218,6 +245,37 @@ export default function PulseChat() {
       // Clipboard API not available or denied
     }
   }, []);
+
+  const speakMessage = useCallback((id, content) => {
+    if (!('speechSynthesis' in window)) {
+      return;
+    }
+    if (speakingId === id) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+      return;
+    }
+    window.speechSynthesis.cancel();
+
+    const cleanSpeechText = String(content || '')
+      .replace(/[\*\#\`\-\_]/g, '')
+      .replace(/\n+/g, '. ')
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanSpeechText);
+    if (lang === 'gu') utterance.lang = 'gu-IN';
+    else if (lang === 'hi') utterance.lang = 'hi-IN';
+    else utterance.lang = 'en-US';
+
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
+
+    setSpeakingId(id);
+    window.speechSynthesis.speak(utterance);
+  }, [speakingId, lang]);
 
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
@@ -498,12 +556,26 @@ export default function PulseChat() {
           setError('Microphone access was denied. Please allow microphone permissions in your browser.');
           isListeningRef.current = false;
           setIsListening(false);
-        } else if (event.error === 'network' && recognition.lang !== 'en-US') {
-          // Fallback to en-US if regional language server is temporarily unreachable
-          recognition.lang = 'en-US';
-          try {
-            recognition.start();
-          } catch {}
+        } else if (event.error === 'audio-capture') {
+          setError('No microphone found or audio capture failed. Please check your system input settings and browser permissions.');
+          isListeningRef.current = false;
+          setIsListening(false);
+        } else if (event.error === 'service-not-allowed') {
+          setError('Speech recognition service is not allowed or is blocked by your browser/system.');
+          isListeningRef.current = false;
+          setIsListening(false);
+        } else if (event.error === 'language-not-supported') {
+          setError(`The language code is not supported by your browser's speech recognition engine.`);
+          isListeningRef.current = false;
+          setIsListening(false);
+        } else if (event.error === 'network') {
+          setError('Network error occurred during speech recognition. Please check your internet connection.');
+          isListeningRef.current = false;
+          setIsListening(false);
+        } else if (event.error !== 'no-speech') {
+          setError(`Speech recognition failed: ${event.error}`);
+          isListeningRef.current = false;
+          setIsListening(false);
         }
       };
 
@@ -659,8 +731,73 @@ export default function PulseChat() {
     endRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [messages, busy]);
 
+  const sendPromptText = async (promptString) => {
+    if (busy || !promptString?.trim()) return;
+    const content = promptString.trim();
+    setText('');
+    setBusy(true);
+    setError('');
+
+    const userMsg = {
+      id: Date.now(),
+      user_id: '',
+      role: 'user',
+      content,
+      created_at: new Date().toISOString(),
+    };
+
+    const newMsgs = [...messages, userMsg];
+    setMessages(newMsgs);
+    saveActiveThreadMessages(newMsgs);
+
+    try {
+      const replyData = await apiFetch(
+        '/api/pulse',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            message: content,
+            lang,
+            thread_id: activeThreadId,
+            messages: newMsgs.slice(-10),
+          }),
+        },
+        token
+      );
+
+      const botReply = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: replyData?.reply || replyData?.content || replyData?.text || 'I observed your request. How else can I help you explore?',
+        created_at: new Date().toISOString(),
+      };
+
+      const finalMsgs = [...newMsgs, botReply];
+      setMessages(finalMsgs);
+      saveActiveThreadMessages(finalMsgs);
+    } catch {
+      setError('Unable to reach Pulse AI. Please check your connection and try again.');
+      let replyText = `I observed your note: "${content}". Nature ecosystems respond dynamically to shade canopy, seasonal humidity, and bird nesting corridors.`;
+      const isGujarati = lang === 'gu' || /[\u0A80-\u0AFF]/.test(content);
+      if (isGujarati) {
+        replyText = `તમારા પ્રશ્ન "${content}" માટે પલ્સ ઇન્ટેલિજન્સ:\nપલ્સ એઆઈ તમારી આસપાસના પર્યાવરણ, જૈવવિવિધતા, અમદાવાદના સ્થાનો અને વનસ્પતિઓ વિશે સચોટ માહિતી આપે છે. તમે કયા ચોક્કસ વિષય કે પ્રજાતિ વિશે વધુ વિગત જાણવા માગો છો?`;
+      } else if (lang === 'hi' || /[\u0900-\u097F]/.test(content)) {
+        replyText = `आपके प्रश्न "${content}" के लिए पल्स उत्तर: आपके आस-पास के पौधों और पक्षियों के बारे में पल्स इंटेलिजेंस सीधा उत्तर देता है।`;
+      }
+      const fallbackReply = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: replyText,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, fallbackReply]);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const send = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     if (busy) return;
     const content = text.trim();
     if (!content && !attachedImage) return;
@@ -720,6 +857,7 @@ export default function PulseChat() {
               contentType: capturedPayload.mime,
               lang,
               thread_id: activeThreadId,
+              messages: newMsgs.slice(-10),
             }),
           },
           token
@@ -733,6 +871,7 @@ export default function PulseChat() {
               message: content,
               lang,
               thread_id: activeThreadId,
+              messages: newMsgs.slice(-10),
             }),
           },
           token
@@ -1306,21 +1445,47 @@ export default function PulseChat() {
         )}
 
         {!busy && !messages.length && (
-              <div className="flex items-start gap-3.5 justify-start max-w-full">
-                <div className="hidden sm:block"><EkgPulseOrb size={40} /></div>
-                <div className="sm:hidden shrink-0"><EkgPulseOrb size={30} /></div>
-                <div className={`max-w-[90%] sm:max-w-lg border-l-4 rounded-2xl rounded-tl-xs p-3.5 sm:p-4.5 shadow-md space-y-2 relative border ${
-              isDark
-                ? 'bg-[#13271C] border-[#20422E] border-l-[#4ADE80] text-slate-100'
-                : 'bg-[#FDFBF7] border-[#E3DDD1] border-l-[#183B28] text-[#0F2418]'
-            }`}>
-              <p className="text-base font-medium leading-relaxed pr-4">
-                {t.welcomeBotMsg1}
+          <div className="space-y-4 max-w-full">
+            <div className="flex items-start gap-3.5 justify-start max-w-full">
+              <div className="hidden sm:block"><EkgPulseOrb size={40} /></div>
+              <div className="sm:hidden shrink-0"><EkgPulseOrb size={30} /></div>
+              <div className={`max-w-[90%] sm:max-w-lg border-l-4 rounded-2xl rounded-tl-xs p-3.5 sm:p-4.5 shadow-md space-y-2 relative border ${
+                isDark
+                  ? 'bg-[#13271C] border-[#20422E] border-l-[#4ADE80] text-slate-100'
+                  : 'bg-[#FDFBF7] border-[#E3DDD1] border-l-[#183B28] text-[#0F2418]'
+              }`}>
+                <p className="text-base font-medium leading-relaxed pr-4">
+                  {t.welcomeBotMsg1}
+                </p>
+                <p className={`text-sm sm:text-base leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-600'}`}>
+                  {t.welcomeBotMsg2}
+                </p>
+                <p className={`text-xs text-right pt-1 ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>{formatTime()}</p>
+              </div>
+            </div>
+
+            {/* Quick Starter Prompts */}
+            <div className="pl-0 sm:pl-13 space-y-2">
+              <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
+                {lang === 'gu' ? '✨ ઝડપી પ્રશ્નો પસંદ કરો:' : lang === 'hi' ? '✨ तुरंत पूछने के लिए चुनें:' : '✨ Suggested Inquiries:'}
               </p>
-              <p className={`text-sm sm:text-base leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-600'}`}>
-                {t.welcomeBotMsg2}
-              </p>
-              <p className={`text-xs text-right pt-1 ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>{formatTime()}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {(STARTERS[lang] || STARTERS.en).map((starter, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => sendPromptText(starter.replace(/^[^a-zA-Z\u0900-\u0AFF\s]+\s*/, ''))}
+                    className={`text-left text-xs sm:text-sm p-3 rounded-2xl border transition-all cursor-pointer shadow-xs hover:scale-[1.01] active:scale-98 flex items-center justify-between gap-2 ${
+                      isDark
+                        ? 'bg-[#13271C]/70 hover:bg-[#183424] border-[#20422E] text-slate-200 hover:text-white hover:border-[#4ADE80]/50'
+                        : 'bg-[#FDFBF7] hover:bg-[#EFE9DC] border-[#E3DDD1] text-[#142D1E] hover:border-[#183B28]/50'
+                    }`}
+                  >
+                    <span>{starter}</span>
+                    <Sparkles className={`w-3.5 h-3.5 shrink-0 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`} />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -1364,18 +1529,40 @@ export default function PulseChat() {
                       />
                     </div>
                   )}
-                  <div className={m.role !== 'user' ? 'pr-6' : ''}>{m.content}</div>
+                  <div className={m.role !== 'user' ? 'pr-12' : ''}>
+                    {m.role === 'user' ? (
+                      <p className="whitespace-pre-wrap">{m.content}</p>
+                    ) : (
+                      <FormattedMessage content={m.content} isDark={isDark} />
+                    )}
+                  </div>
 
                   {m.role !== 'user' && (
-                    <button
-                      onClick={() => copyMessage(m.id, m.content)}
-                      className={`absolute right-2.5 top-2.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md ${
-                        isDark ? 'text-slate-400 hover:text-white hover:bg-[#1A3827]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#F2ECE1]'
-                      }`}
-                      title="Copy message"
-                    >
-                      {copiedId === m.id ? <Check className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-600'}`} /> : <Copy className="w-4 h-4" />}
-                    </button>
+                    <div className="absolute right-2.5 top-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => speakMessage(m.id, m.content)}
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          speakingId === m.id
+                            ? 'bg-[#4ADE80] text-black animate-pulse'
+                            : isDark ? 'text-slate-400 hover:text-white hover:bg-[#1A3827]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#F2ECE1]'
+                        }`}
+                        title={speakingId === m.id ? 'Stop listening' : 'Read aloud with Pulse voice'}
+                        aria-label="Read aloud"
+                      >
+                        {speakingId === m.id ? <VolumeX className="w-4 h-4 text-black" /> : <Volume2 className="w-4 h-4" />}
+                      </button>
+
+                      <button
+                        onClick={() => copyMessage(m.id, m.content)}
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          isDark ? 'text-slate-400 hover:text-white hover:bg-[#1A3827]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#F2ECE1]'
+                        }`}
+                        title="Copy message"
+                        aria-label="Copy message"
+                      >
+                        {copiedId === m.id ? <Check className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-600'}`} /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    </div>
                   )}
                 </div>
 

@@ -4,16 +4,16 @@ const { sanitizeText, sanitizeUrl } = require('../utils/sanitize');
 const validatePulseChat = [
   body('message')
     .optional()
-    .customSanitizer((v) => sanitizeText(String(v || ''), 2000))
-    .isLength({ max: 2000 }).withMessage('Message cannot exceed 2000 characters'),
+    .customSanitizer((v) => sanitizeText(String(v || ''), 4000))
+    .isLength({ max: 4000 }).withMessage('Message cannot exceed 4000 characters'),
   body('content')
     .optional()
-    .customSanitizer((v) => sanitizeText(String(v || ''), 2000))
-    .isLength({ max: 2000 }).withMessage('Content cannot exceed 2000 characters'),
+    .customSanitizer((v) => sanitizeText(String(v || ''), 4000))
+    .isLength({ max: 4000 }).withMessage('Content cannot exceed 4000 characters'),
   body('text')
     .optional()
-    .customSanitizer((v) => sanitizeText(String(v || ''), 2000))
-    .isLength({ max: 2000 }).withMessage('Text cannot exceed 2000 characters'),
+    .customSanitizer((v) => sanitizeText(String(v || ''), 4000))
+    .isLength({ max: 4000 }).withMessage('Text cannot exceed 4000 characters'),
   body('imageBase64')
     .optional()
     .isString()
@@ -25,7 +25,24 @@ const validatePulseChat = [
     }),
   body('language')
     .optional()
-    .customSanitizer((v) => sanitizeText(String(v || ''), 10)),
+    .customSanitizer((v) => sanitizeText(String(v || ''), 20)),
+  body('lang')
+    .optional()
+    .customSanitizer((v) => sanitizeText(String(v || ''), 20)),
+  body('thread_id')
+    .optional()
+    .customSanitizer((v) => sanitizeText(String(v || ''), 100)),
+  body('contentType')
+    .optional()
+    .customSanitizer((v) => sanitizeText(String(v || ''), 50)),
+  body('messages')
+    .optional()
+    .isArray()
+    .withMessage('Messages must be an array if provided'),
+  body('history')
+    .optional()
+    .isArray()
+    .withMessage('History must be an array if provided'),
 ];
 
 const validateImageAnalyze = [

@@ -13,17 +13,27 @@ Guide people through Observe → Understand → Experience → Act → Measure �
 Offer one clear next step when useful. Keep replies under 180 words unless the user asks for more.`;
 
 const handlePulseChat = async (req, res) => {
-  const { content, message, text, imageBase64, contentType, language, lang } = req.body || {};
+  const { content, message, text, imageBase64, contentType, language, lang, messages, history } = req.body || {};
   const userText = (message || content || text || '').trim();
   if (!userText && !imageBase64) {
     return res.status(400).json({ error: 'Say something to Pulse.' });
   }
 
   let detectedLang = lang || language || 'en';
-  const gujlishRegex = /(vishe|kaho|kem|kya|che|nthi|su|chhe|mate|maj|aaj|batao|apvo|kro)/i;
-  if (/[\u0A80-\u0AFF]/.test(userText) || gujlishRegex.test(userText)) {
+  const gujlishRegex = /\b(vishe|kaho|kem|che|nthi|chhe|mate|maj|aaj|apvo|joiye|nathi|tame|mane|amne)\b/i;
+  const hindlishRegex = /\b(kaise|batao|kahan|kyun|mujhe|humko|dekho|pehle|pakshi)\b/i;
+
+  if (lang === 'gu' || language === 'gu') {
     detectedLang = 'gu';
-  } else if (/[\u0900-\u097F]/.test(userText)) {
+  } else if (lang === 'hi' || language === 'hi') {
+    detectedLang = 'hi';
+  } else if (lang === 'en' || language === 'en') {
+    if (/[\u0A80-\u0AFF]/.test(userText)) detectedLang = 'gu';
+    else if (/[\u0900-\u097F]/.test(userText)) detectedLang = 'hi';
+    else detectedLang = 'en';
+  } else if (/[\u0A80-\u0AFF]/.test(userText) || gujlishRegex.test(userText)) {
+    detectedLang = 'gu';
+  } else if (/[\u0900-\u097F]/.test(userText) || hindlishRegex.test(userText)) {
     detectedLang = 'hi';
   }
 
@@ -32,20 +42,42 @@ const handlePulseChat = async (req, res) => {
     languageInstruction = ' (CRITICAL: Answer strictly in natural, fluent Gujarati / ગુજરાતી language only!)';
   } else if (detectedLang === 'hi') {
     languageInstruction = ' (CRITICAL: Answer strictly in natural, fluent Hindi / हिंदी language only!)';
-  } else if (detectedLang && detectedLang !== 'en') {
+  } else if (detectedLang === 'en') {
+    languageInstruction = ' (CRITICAL: Answer strictly in fluent, natural English only!)';
+  } else if (detectedLang) {
     languageInstruction = ` (CRITICAL: Answer strictly in natural, fluent ${detectedLang} language only!)`;
   }
 
-  const pulseSystem = `You are Pulse, an intelligent, calm, and accurate ecological AI guide for NaturePulse.
+  const pulseSystem = `You are Pulse, the calm, intelligent, and practical ecological AI guide for NaturePulse (a Nature Relationship Platform).
+Your purpose is to help people notice, understand, experience, and care for the living world around them.
+Voice: calm, encouraging, intelligent, practical, friendly. Never preachy, never cute, never corporate.
+Provide grounded answers with specific sensory cues, micro-observations, and actionable ecological insight.
 CRITICAL MANDATES:
-1. Answer the user's EXACT question directly and specifically. Do NOT generate irrelevant or generic paragraphs.
-2. If the user asks in Gujarati or Gujlish or if language is Gujarati, reply ONLY in natural, fluent Gujarati (ગુજરાતી).
-3. If the user asks in Hindi or if language is Hindi, reply ONLY in natural, fluent Hindi (हिंदी).
-4. Keep your answers concise, practical, and directly helpful.`;
+1. Answer the user's EXACT inquiry directly with helpful clarity and accurate ecological knowledge.
+2. Language Rule: Answer strictly in ${detectedLang === 'gu' ? 'natural, fluent Gujarati (ગુજરાતી)' : detectedLang === 'hi' ? 'natural, fluent Hindi (हिंदी)' : 'fluent, natural English'}. Do not mix languages unless providing scientific names in parentheses.
+3. If an image is provided, identify the species/nature element observed and describe visible field marks, habitat, and how to look closer.
+4. Format your output cleanly with readable bullet points and short paragraphs when appropriate.`;
 
   let prompt = (userText || 'Look at this photo and describe what you observe.') + languageInstruction;
 
-  const ai = await callGeminiApi({ prompt, system: pulseSystem, imageBase64, mimeType: contentType || 'image/jpeg', temperature: 0.5 });
+  // Format past history turns
+  const pastTurns = Array.isArray(messages) ? messages : (Array.isArray(history) ? history : []);
+  const formattedHistory = pastTurns
+    .slice(-12) // Keep recent context
+    .filter((m) => m && (m.content || m.text))
+    .map((m) => ({
+      role: m.role === 'assistant' || m.role === 'model' ? 'model' : 'user',
+      content: typeof m.content === 'string' ? m.content : (typeof m.text === 'string' ? m.text : ''),
+    }));
+
+  const ai = await callGeminiApi({
+    prompt,
+    system: pulseSystem,
+    imageBase64,
+    mimeType: contentType || 'image/jpeg',
+    temperature: 0.6,
+    messages: formattedHistory,
+  });
 
   if (ai.text) {
     return res.json({ content: ai.text, reply: ai.text, text: ai.text });
@@ -68,9 +100,9 @@ CRITICAL MANDATES:
       fallbackReply = `તમારા પ્રશ્ન "${userText}" માટે પલ્સ ઇન્ટેલિજન્સ:\nપલ્સ એઆઈ તમારી આસપાસના પર્યાવરણ, જૈવવિવિધતા, અમદાવાદના સ્થાનો અને વનસ્પતિઓ વિશે સચોટ માહિતી આપે છે. તમે કયા ચોક્કસ વિષય કે પ્રજાતિ વિશે વધુ વિગત જાણવા માગો છો?`;
     }
   } else if (detectedLang === 'hi') {
-    fallbackReply = `आपके प्रश्न "${userText}" के लिए पल्स उत्तर: साबरमती रिवरफ्रंट, थोड़ पक्षी अभयारण्य और परिमल उद्यान अहमदाबाद के प्रमुख प्राकृतिक स्थल हैं।`;
+    fallbackReply = `आपके प्रश्न "${userText}" के लिए पल्स उत्तर: साबरमती रिवरफ्रंट, थोड़ पक्षी अभयारण्य और परिमल उद्यान अहमदाबाद के प्रमुख प्राकृतिक स्थल हैं। प्रकृति के बारे में और क्या जानना चाहते हैं?`;
   } else {
-    fallbackReply = `Pulse Intelligence for "${userText}": Sabarmati Riverfront Park, Thol Lake Bird Sanctuary, and Indroda Nature Park are top ecological destinations around Ahmedabad. How else can Pulse help you explore?`;
+    fallbackReply = `Pulse Intelligence for "${userText}": Nature ecosystems respond dynamically to canopy shade, seasonal soil moisture, and wildlife corridors. How else can Pulse assist your exploration?`;
   }
 
   return res.json({ content: fallbackReply, reply: fallbackReply, text: fallbackReply });
