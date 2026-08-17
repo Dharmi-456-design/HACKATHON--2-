@@ -70,19 +70,125 @@ export default function Act() {
   const t = ACT_TRANSLATIONS[lang] || ACT_TRANSLATIONS.en;
   const token = session?.access_token;
 
+  // Rich Ahmedabad & Gujarat nature place data
+  const GUJARAT_PLACES = [
+    {
+      id: 'guj-1',
+      title: 'Observe Sabarmati Riverfront Birds at Dawn',
+      category: 'Birdwatch',
+      minutes: 20,
+      status: 'pending',
+      image: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80',
+      description: 'Walk the Sabarmati Riverfront promenade and record birds — herons, kingfishers, and parakeets — in the golden dawn light.',
+      place: 'Sabarmati Riverfront, Ahmedabad',
+      location: '23.0333° N, 72.5820° E',
+      habitat: 'Urban River Corridor',
+      bestTime: 'Early Morning (5:30 AM – 7:30 AM)',
+      wildlife: 'Grey Heron, Indian Roller, Purple Sunbird, Black Kite, Common Kingfisher',
+      ecologicalRole: 'The river corridor acts as a critical flyway for migratory birds across Gujarat. Mangrove patches near the bank support nesting for 40+ species.',
+      impactNote: 'Helps build the local bird count database for Ahmedabad urban biodiversity monitoring.',
+    },
+    {
+      id: 'guj-2',
+      title: 'Explore Thol Bird Sanctuary Wetlands',
+      category: 'Wetland Walk',
+      minutes: 45,
+      status: 'pending',
+      image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80',
+      description: 'Trek the boardwalk at Thol Lake and scan for flamingos, painted storks, and migratory waders resting on shallow flats.',
+      place: 'Thol Bird Sanctuary, Mehsana (near Ahmedabad)',
+      location: '23.1833° N, 72.3500° E',
+      habitat: 'Freshwater Wetland & Shallow Lake',
+      bestTime: 'November–March (Winter Migration Season)',
+      wildlife: 'Greater Flamingo, Painted Stork, Sarus Crane, Black-winged Stilt, Spot-billed Duck',
+      ecologicalRole: 'Ramsar-listed wetland supporting 150+ migratory bird species annually. Acts as natural water filtration for surrounding farmland.',
+      impactNote: 'Your observation count contributes to Gujarat Forest Department wetland health assessments.',
+    },
+    {
+      id: 'guj-3',
+      title: 'Document Banyan Trees at Nalsarovar',
+      category: 'Tree Survey',
+      minutes: 30,
+      status: 'pending',
+      image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80',
+      description: 'Record ancient Banyan and Peepal tree girths along the Nalsarovar sanctuary shore and photograph aerial root systems.',
+      place: 'Nalsarovar Bird Sanctuary, Sanand',
+      location: '22.7500° N, 72.0833° E',
+      habitat: 'Seasonal Wetland & Scrub Forest',
+      bestTime: 'October–February',
+      wildlife: 'Pelicans, Spoonbills, Cranes, Glossy Ibis, Jacana, Monitor Lizard',
+      ecologicalRole: 'Nalsarovar covers 120 km² and is one of Gujarat largest bird sanctuaries. Banyan tree groves along the shore provide roost sites for hundreds of birds.',
+      impactNote: 'Tree girth records help track canopy growth and carbon sequestration over time.',
+    },
+    {
+      id: 'guj-4',
+      title: 'Night Walk at Indroda Nature Park',
+      category: 'Night Ecology',
+      minutes: 35,
+      status: 'pending',
+      image: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80',
+      description: 'Join the evening eco-trail at Indroda Nature Park and listen for owls, crickets, and monsoon frogs under the canopy.',
+      place: 'Indroda Nature Park (Dinosaur Park), Gandhinagar',
+      location: '23.2156° N, 72.6369° E',
+      habitat: 'Dry Deciduous Forest & Riparian Strip',
+      bestTime: 'Post-Monsoon (August–October) Evenings',
+      wildlife: 'Spotted Owlet, Indian Eagle-Owl, Jungle Cat, Indian Fox, Peacock',
+      ecologicalRole: 'One of the largest fossil parks in Asia. The forest buffer alongside the Sabarmati headwater zone protects seasonal amphibian breeding pools.',
+      impactNote: 'Night wildlife logs help identify urban wildlife corridors for future green infrastructure planning.',
+    },
+    {
+      id: 'guj-5',
+      title: 'Survey Parimal Garden Urban Pollinators',
+      category: 'Pollinator Count',
+      minutes: 15,
+      status: 'pending',
+      image: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=800&q=80',
+      description: 'Sit near flowering shrubs at Parimal Garden and count bee and butterfly species visiting blooms in a 10-minute window.',
+      place: 'Parimal Garden, Ellisbridge, Ahmedabad',
+      location: '23.0234° N, 72.5614° E',
+      habitat: 'Urban Botanical Garden',
+      bestTime: 'Morning (7 AM – 10 AM)',
+      wildlife: 'Rock Bee, Common Mormon Butterfly, Crimson Rose, Lime Butterfly, Asian Honey Bee',
+      ecologicalRole: 'Urban gardens like Parimal support pollinators displaced from agricultural land. Dense flower corridors improve surrounding neighbourhood fruit tree yields.',
+      impactNote: 'Pollinator counts feed into city-wide urban biodiversity health scores for Ahmedabad Smart City mission.',
+    },
+    {
+      id: 'guj-6',
+      title: 'Soil Moisture Check at Kankaria Lakeshore',
+      category: 'Soil & Water',
+      minutes: 20,
+      status: 'pending',
+      image: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80',
+      description: 'Check soil compaction and moisture levels under shade trees around the Kankaria Lake perimeter using a simple stick test.',
+      place: 'Kankaria Lake, Maninagar, Ahmedabad',
+      location: '22.9965° N, 72.6007° E',
+      habitat: 'Urban Lake Ecosystem',
+      bestTime: 'Early Morning or Post-Monsoon',
+      wildlife: 'Lesser Whistling Duck, Purple Moorhen, Painted Snipe, Indian Cormorant',
+      ecologicalRole: 'Kankaria Lake is an artificial 15th-century reservoir supporting aquatic biodiversity in dense urban Ahmedabad. Shore vegetation buffers storm runoff.',
+      impactNote: 'Soil moisture data helps city planners design bioswales and rain gardens around urban lakes.',
+    },
+  ];
+
   const toUiAction = (a) => ({
     id: a._id || a.id,
     title: a.title,
     category: a.category,
     minutes: a.minutes,
     status: a.status || 'pending',
-    image: a.image_url || 'https://images.unsplash.com/photo-1511497584788-8767611136f6?auto=format&fit=crop&w=800&q=80',
+    image: a.image_url || GUJARAT_PLACES[0].image,
     description: a.description,
     impactNote: a.impact_note || a.description,
+    place: a.place || 'Ahmedabad, Gujarat',
+    location: a.location || '23.0225° N, 72.5714° E',
+    habitat: a.habitat || 'Urban Nature Corridor',
+    bestTime: a.bestTime || 'Morning',
+    wildlife: a.wildlife || 'Local species',
+    ecologicalRole: a.ecologicalRole || a.description,
   });
 
   // Persistent States
-  const [actions, setActions] = useState([]);
+  const [actions, setActions] = useState(GUJARAT_PLACES);
 
   const [minutes, setMinutes] = useState(15);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -91,10 +197,14 @@ export default function Act() {
   const [actError, setActError] = useState('');
 
   useEffect(() => {
-    if (!token) return;
     apiFetch('/api/actions', {}, token)
-      .then((list) => setActions(Array.isArray(list) ? list.map(toUiAction) : []))
-      .catch(() => setActError(''));
+      .then((list) => {
+        if (Array.isArray(list) && list.length > 0) {
+          const merged = [...GUJARAT_PLACES, ...list.map(toUiAction).filter(a => !GUJARAT_PLACES.some(g => g.title === a.title))];
+          setActions(merged);
+        }
+      })
+      .catch(() => {});
   }, [token]);
 
   // Complete Action
@@ -428,27 +538,46 @@ export default function Act() {
                       </div>
                     </div>
 
-                    {/* BACK ACTION CARD */}
-                    <div className={`absolute inset-0 backface-hidden rotate-y-180 rounded-3xl p-6 flex flex-col justify-between border transition-colors ${
-                      isDark ? 'bg-[#112318] border-[#4ADE80]/50 text-slate-200' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] shadow-sm'
+                    {/* BACK ACTION CARD — Full Place Details */}
+                    <div className={`absolute inset-0 backface-hidden rotate-y-180 rounded-3xl overflow-hidden flex flex-col border transition-colors ${
+                      isDark ? 'bg-[#061209] border-[#4ADE80]/50' : 'bg-[#F2ECE1] border-[#E0D8C8] shadow-sm'
                     }`}>
-                      <div className="space-y-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                          isDark ? 'bg-[#1A3827] text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28]'
-                        }`}>
-                          Eco Impact Analysis
+                      {/* Mini image strip at top */}
+                      <div className="relative h-20 overflow-hidden shrink-0">
+                        <img src={action.image} alt={action.title} className="w-full h-full object-cover opacity-70" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#061209]" />
+                        <span className="absolute bottom-2 left-3 text-[10px] font-bold text-[#4ADE80] bg-[#07130B]/80 px-2 py-0.5 rounded-full border border-[#4ADE80]/30">
+                          📍 {action.place || 'Ahmedabad, Gujarat'}
                         </span>
-                        <h4 className={`font-display text-base font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{action.title}</h4>
-                        <p className={`text-xs italic leading-relaxed ${isDark ? 'text-slate-300' : 'text-[#2D4536]'}`}>
-                          "{action.impactNote}"
-                        </p>
                       </div>
 
-                      <div className={`pt-2 border-t flex justify-between items-center text-[10px] ${
-                        isDark ? 'border-[#20422E] text-slate-400' : 'border-[#E0D8C8] text-[#3E5C48]'
-                      }`}>
-                        <span>Real Field Action</span>
-                        <span className={`font-bold ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>Nature Connection +15</span>
+                      {/* Details body */}
+                      <div className="flex-1 p-4 overflow-y-auto space-y-2.5">
+                        <h4 className="font-display text-sm font-bold text-white leading-tight">{action.title}</h4>
+
+                        <div className="space-y-1.5 text-[10px]">
+                          <div className="flex gap-2">
+                            <span className="text-[#4ADE80] font-bold w-16 shrink-0">🌍 Habitat</span>
+                            <span className="text-slate-300">{action.habitat || 'Urban Nature Corridor'}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <span className="text-[#4ADE80] font-bold w-16 shrink-0">⏰ Best Time</span>
+                            <span className="text-slate-300">{action.bestTime || 'Morning'}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <span className="text-[#4ADE80] font-bold w-16 shrink-0">🐦 Wildlife</span>
+                            <span className="text-slate-300">{action.wildlife || 'Local species'}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <span className="text-[#4ADE80] font-bold w-16 shrink-0">🌱 Eco Role</span>
+                            <span className="text-slate-300 leading-relaxed">{action.ecologicalRole || action.impactNote}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="px-4 py-2 border-t border-[#20422E] flex justify-between items-center text-[10px] shrink-0">
+                        <span className="text-slate-400">📌 {action.location || '23.0225° N, 72.5714° E'}</span>
+                        <span className="font-bold text-[#4ADE80]">+{action.minutes * 2} XP</span>
                       </div>
                     </div>
                   </motion.div>
