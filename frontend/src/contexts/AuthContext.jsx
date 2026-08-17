@@ -22,16 +22,31 @@ export function AuthProvider({ children }) {
 
   // Exchange a Supabase OAuth session for a NaturePulse backend JWT, so the
   // token we store matches what the backend `protect` middleware verifies.
-  const exchangeSupabaseSession = useCallback(async (session) => {
+  const exchangeSupabaseSession = useCallback(async (session, retries = 3) => {
     if (!session?.access_token) return null;
     try {
-      const data = await apiFetch('/api/auth/google', {
-        method: 'POST',
-        body: JSON.stringify({ access_token: session.access_token }),
-      });
-      if (data?.token && data?.user) return data;
+      let data;
+      for (let i = 0; i < retries; i++) {
+        try {
+          data = await apiFetch('/api/auth/google', {
+            method: 'POST',
+            body: JSON.stringify({ access_token: session.access_token }),
+          });
+          // If apiFetch caught a network error, it returns { failed: true }
+          if (data && !data.failed && data.token && data.user) {
+            return data;
+          }
+          if (data && data.failed) {
+            throw new Error('Network or 503 Error');
+          }
+        } catch (e) {
+          if (i === retries - 1) throw e;
+          // Wait 3 seconds before retrying (Render takes time to wake up)
+          await new Promise(r => setTimeout(r, 3000));
+        }
+      }
     } catch (err) {
-      // Exchange failed — Google OAuth not configured on the backend.
+      // Exchange permanently failed.
       // Silently clear the stale Supabase session via localStorage to avoid
       // triggering onAuthStateChange('SIGNED_OUT') which would wipe backend JWT state.
       try {
