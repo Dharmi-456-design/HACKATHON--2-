@@ -108,7 +108,7 @@ export default function AppShell() {
                   className="relative group p-0.5 rounded-xl transition-transform duration-150 cursor-pointer hover:scale-105"
                 >
                   <img
-                    src="/logo.png"
+                    src="/logo.webp"
                     alt="NaturePulse Logo"
                     className="w-9 h-9 rounded-xl object-cover shadow-sm border border-emerald-500/30 group-hover:border-emerald-400 transition-all"
                   />
@@ -127,7 +127,7 @@ export default function AppShell() {
                 className="w-full flex items-center justify-between min-w-0"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <img src="/logo.png" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shrink-0 shadow-xs" />
+                  <img src="/logo.webp" alt="NaturePulse Logo" className="w-9 h-9 rounded-xl object-cover shrink-0 shadow-xs" />
                   <div className="truncate">
                     <p className="font-display text-[16px] leading-none font-semibold truncate whitespace-nowrap">NaturePulse</p>
                     <p className="text-[9px] uppercase tracking-[0.15em] text-forest/40 mt-1 truncate whitespace-nowrap">Nature Connection</p>
@@ -285,7 +285,7 @@ export default function AppShell() {
           ${isDark ? 'bg-[#111f17] border-white/8' : 'bg-[#FAF7F0] border-ink/8'}`}
         >
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="NaturePulse Logo" className="w-8 h-8 rounded-lg object-cover shrink-0" />
+            <img src="/logo.webp" alt="NaturePulse Logo" className="w-8 h-8 rounded-lg object-cover shrink-0" />
             <span className="font-display text-base font-semibold">NaturePulse</span>
           </div>
           {/* Mini toggle on mobile header */}

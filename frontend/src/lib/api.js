@@ -44,12 +44,9 @@ export async function apiFetch(path, options = {}, token = null) {
 
   if (res.ok) return data;
 
-  // Silently handle 401 — never surface auth errors to the UI
+  // Silently handle 401 — clear token and return graceful response
   if (res.status === 401) {
-    if (authToken && !authToken.startsWith('demo-')) {
-      clearToken();
-    }
-    // Return empty graceful response instead of throwing
+    clearToken();
     return { failed: true, data: [], items: [], success: false };
   }
 

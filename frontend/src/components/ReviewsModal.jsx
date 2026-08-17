@@ -79,6 +79,7 @@ export default function ReviewsModal({ isOpen, onClose, reports = [] }) {
 
               <button
                 onClick={onClose}
+                aria-label="Close reviews"
                 className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
                   isDark ? 'bg-white/10 hover:bg-white/20 text-white/80 hover:text-white' : 'bg-[#F2ECE1] hover:bg-[#EDE6D8] text-[#183B28] hover:text-[#0F2418]'
                 }`}

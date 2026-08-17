@@ -112,7 +112,9 @@ const getMe = asyncHandler(async (req, res) => {
   if (req.user?._id) {
     try {
       user = await User.findById(req.user._id).select('-password');
-    } catch {}
+    } catch (err) {
+      console.warn('[getMe] User lookup failed:', err.message);
+    }
   }
   user = user || req.user;
   res.json({ user });
@@ -173,18 +175,9 @@ const googleOAuth = asyncHandler(async (req, res, next) => {
       });
     }
   } catch (dbErr) {
-    console.warn('MongoDB query timed out or failed in googleOAuth, generating fallback session:', dbErr.message);
-    user = {
-      _id: '650000000000000000000001',
-      name:
-        sbUser.user_metadata?.full_name ||
-        sbUser.user_metadata?.name ||
-        email.split('@')[0] ||
-        'Explorer',
-      email,
-      role: 'user',
-      points: 100,
-    };
+    console.error('MongoDB query failed in googleOAuth:', dbErr.message);
+    res.status(500);
+    throw new Error('Database error during authentication');
   }
 
   const token = generateToken(user);

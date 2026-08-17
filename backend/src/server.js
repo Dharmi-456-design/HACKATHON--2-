@@ -13,7 +13,26 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 
-app.use(helmet());
+const isProd = process.env.NODE_ENV === 'production';
+
+app.use(helmet({
+  contentSecurityPolicy: isProd ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://fonts.googleapis.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://unpkg.com"],
+      connectSrc: ["'self'", "https:", "http://localhost:*", "http://127.0.0.1:*"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
+    },
+  } : false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
 const allowedOrigins = [
   'http://localhost:5173',
@@ -31,17 +50,14 @@ if (process.env.CORS_ORIGIN) {
 app.use(
   cors({
     origin(origin, callback) {
-      if (
-        !origin ||
-        allowedOrigins.includes(origin) ||
-        origin.endsWith('.vercel.app') ||
-        origin.endsWith('.netlify.app') ||
-        origin.endsWith('.onrender.com') ||
-        /^http:\/\/(localhost|127\.0\.0\.1):\d{4}$/.test(origin)
-      ) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(null, true);
+      if (isProd && origin.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+      callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
   })

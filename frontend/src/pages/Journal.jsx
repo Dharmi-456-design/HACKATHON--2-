@@ -825,7 +825,7 @@ export default function Journal() {
                 className={`bg-transparent text-xs outline-none w-full ${isDark ? 'text-white placeholder:text-slate-500' : 'text-[#0F2418] placeholder:text-slate-400'}`}
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-xs text-slate-400 hover:text-white cursor-pointer">
+                <button onClick={() => setSearchQuery('')} aria-label="Clear search" className="text-xs text-slate-400 hover:text-white cursor-pointer">
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}

@@ -1061,6 +1061,7 @@ export default function PulseChat() {
                               }}
                               className={`p-1 rounded ${isDark ? 'text-slate-400 hover:text-white hover:bg-[#254B35]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#EDE6D8]'}`}
                               title="Rename"
+                              aria-label="Rename thread"
                             >
                               <Edit2 className="w-3 h-3" />
                             </button>
@@ -1068,6 +1069,7 @@ export default function PulseChat() {
                               onClick={(e) => deleteThread(e, th.id)}
                               className={`p-1 rounded hover:text-red-500 ${isDark ? 'text-slate-400 hover:bg-[#254B35]' : 'text-[#3E5C48] hover:bg-[#EDE6D8]'}`}
                               title="Delete"
+                              aria-label="Delete thread"
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
