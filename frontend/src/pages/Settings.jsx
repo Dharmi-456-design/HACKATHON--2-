@@ -174,7 +174,7 @@ export default function Settings() {
                 Display Name
               </label>
               <div className="relative">
-                <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 z-10 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                 <input
                   type="text"
                   value={profile.display_name}
@@ -196,7 +196,7 @@ export default function Settings() {
                   City
                 </label>
                 <div className="relative">
-                  <MapPin className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                  <MapPin className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 z-10 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                   <input
                     type="text"
                     value={profile.city}
@@ -216,7 +216,7 @@ export default function Settings() {
                   Region
                 </label>
                 <div className="relative">
-                  <Globe className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                  <Globe className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 z-10 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                   <input
                     type="text"
                     value={profile.region}
