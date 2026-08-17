@@ -498,12 +498,26 @@ export default function PulseChat() {
           setError('Microphone access was denied. Please allow microphone permissions in your browser.');
           isListeningRef.current = false;
           setIsListening(false);
-        } else if (event.error === 'network' && recognition.lang !== 'en-US') {
-          // Fallback to en-US if regional language server is temporarily unreachable
-          recognition.lang = 'en-US';
-          try {
-            recognition.start();
-          } catch {}
+        } else if (event.error === 'audio-capture') {
+          setError('No microphone found or audio capture failed. Please check your system input settings and browser permissions.');
+          isListeningRef.current = false;
+          setIsListening(false);
+        } else if (event.error === 'service-not-allowed') {
+          setError('Speech recognition service is not allowed or is blocked by your browser/system.');
+          isListeningRef.current = false;
+          setIsListening(false);
+        } else if (event.error === 'language-not-supported') {
+          setError(`The language code is not supported by your browser's speech recognition engine.`);
+          isListeningRef.current = false;
+          setIsListening(false);
+        } else if (event.error === 'network') {
+          setError('Network error occurred during speech recognition. Please check your internet connection.');
+          isListeningRef.current = false;
+          setIsListening(false);
+        } else if (event.error !== 'no-speech') {
+          setError(`Speech recognition failed: ${event.error}`);
+          isListeningRef.current = false;
+          setIsListening(false);
         }
       };
 
