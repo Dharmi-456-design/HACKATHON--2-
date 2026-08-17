@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen, uploadImage, fileToResizedBase64 } from '../lib/api';
-import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
+import { Badge, Card, Empty, ErrorBanner, Skeleton, FallbackImg } from '../components/ui';
 
 // Multilingual UI Translations for Living Botanical Parchment Journal
 const JOURNAL_TRANSLATIONS = {
@@ -553,10 +553,11 @@ export default function Journal() {
               <div>
                 {photoPreview ? (
                   <div className="relative rounded-2xl overflow-hidden max-h-52 bg-black">
-                    <img src={photoPreview} alt="Attached field photo" className="w-full h-full object-cover" />
+                    <FallbackImg src={photoPreview} alt="Attached field photo" className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={clearPhoto}
+                      aria-label="Clear photo"
                       className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80 transition-colors cursor-pointer"
                     >
                       <X className="w-4 h-4" />
@@ -896,7 +897,7 @@ export default function Journal() {
                       {/* Photo Preview if attached from Nature Lens */}
                       {entry.image_url && (
                         <div className="relative rounded-2xl overflow-hidden aspect-[16/9] max-h-48 bg-black">
-                          <img
+                          <FallbackImg
                             src={entry.image_url}
                             alt={entry.title}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

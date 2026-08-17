@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { apiFetch } from "../lib/api";
+import { FallbackImg } from "../components/ui";
 
 // ── Leaflet CSS (loaded once dynamically) ────────────────────────────────────
 if (!document.getElementById("leaflet-css")) {
@@ -487,7 +488,7 @@ export default function CommunityBiodiversityMap() {
               }`}
             >
               {selectedPin.image_url && (
-                <img src={selectedPin.image_url} alt={selectedPin.name}
+                <FallbackImg src={selectedPin.image_url} alt={selectedPin.name}
                   className="w-full max-h-48 object-cover" />
               )}
               <div className="p-5 sm:p-6 space-y-3">
