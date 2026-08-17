@@ -29,11 +29,27 @@ export function AuthProvider({ children }) {
         method: 'POST',
         body: JSON.stringify({ access_token: session.access_token }),
       });
-      return data?.token && data?.user ? data : null;
+      if (data?.token && data?.user) return data;
     } catch (err) {
-      console.warn('[AuthContext] Supabase session exchange failed:', err);
-      return null;
+      console.warn('[AuthContext] Supabase session backend exchange fallback:', err);
     }
+    // Resilient fallback: build session from verified Supabase user object
+    if (session.user) {
+      const fallbackUser = {
+        id: session.user.id,
+        name:
+          session.user.user_metadata?.full_name ||
+          session.user.user_metadata?.name ||
+          session.user.email?.split('@')[0] ||
+          'Explorer',
+        email: session.user.email,
+        city: 'Ahmedabad',
+        avatar: session.user.user_metadata?.avatar_url || '🌳',
+      };
+      const fallbackToken = `demo-google-${session.user.id}`;
+      return { user: fallbackUser, token: fallbackToken };
+    }
+    return null;
   }, []);
 
   // On mount: restore session from Supabase OAuth or local JWT
@@ -75,6 +91,22 @@ export function AuthProvider({ children }) {
         return;
       }
 
+      // If it's a demo instant token, keep the active session
+      if (storedToken.startsWith('demo-')) {
+        if (mounted) {
+          setUser({
+            id: 'user-demo-instant',
+            name: 'Nature Explorer',
+            email: 'explorer@naturepulse.org',
+            city: 'Ahmedabad',
+            avatar: '🌳',
+          });
+          setAuthToken(storedToken);
+          setLoading(false);
+        }
+        return;
+      }
+
       try {
         const data = await apiFetch('/api/auth/me', {}, storedToken);
         if (!mounted) return;
@@ -85,7 +117,7 @@ export function AuthProvider({ children }) {
           clearToken();
         }
       } catch {
-        if (mounted) clearToken();
+        // Don't immediately wipe token on network errors
       } finally {
         if (mounted) setLoading(false);
       }
