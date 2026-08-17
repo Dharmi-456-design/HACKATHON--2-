@@ -64,6 +64,94 @@ const ACT_TRANSLATIONS = {
   },
 };
 
+// ──────────────── STATIC EXTRA POOL (outside component, no state refs) ────────────────
+const EXTRA_POOL = [
+  {
+    title: 'Spot Migratory Raptors at Nal Sarovar Viewpoint',
+    category: 'Raptor Watch',
+    // Nal Sarovar — eagle/raptor soaring over open sky wetland
+    image: 'https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&w=800&q=80',
+    descTemplate: (m) => `Spend ${m} minutes scanning the skies above Nal Sarovar for Marsh Harriers and Ospreys during peak migration.`,
+    place: 'Nal Sarovar Bird Sanctuary, Ahmedabad Rural',
+    location: '22.7500° N, 72.0833° E',
+    habitat: 'Open Wetland & Sky Watch',
+    bestTime: 'November–January Mornings',
+    wildlife: 'Marsh Harrier, Osprey, Black Kite, Brahminy Kite, Steppe Eagle',
+    ecologicalRole: 'Nal Sarovar is a critical raptor corridor connecting the Rann of Kutch to central India flyways. Counting raptors helps conservation agencies track migration health.',
+    impactNote: 'Raptor counts are used by BirdLife International for IUCN threat assessments.',
+  },
+  {
+    title: 'Sketch Local Wildflowers at Law Garden',
+    category: 'Botanical Art',
+    // Law Garden Ahmedabad — lush green garden with flowers
+    image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&q=80',
+    descTemplate: (m) => `Sit at Law Garden Ahmedabad and illustrate ${m < 20 ? '2' : '4'} wildflower species in detail to build a field sketchbook entry.`,
+    place: 'Law Garden, C.G. Road, Ahmedabad',
+    location: '23.0368° N, 72.5558° E',
+    habitat: 'Urban Heritage Garden',
+    bestTime: 'Winter Mornings (Nov–Feb)',
+    wildlife: 'Plum-headed Parakeet, Tailor Bird, Purple Sunbird, Common Myna',
+    ecologicalRole: 'Law Garden hosts over 80 tree species and acts as an urban heat island buffer. Botanical sketches contribute to local flora digitization databases.',
+    impactNote: 'Your sketches help build Ahmedabad first crowd-sourced urban flora atlas.',
+  },
+  {
+    title: 'Count Fireflies at Polo Forest after Dusk',
+    category: 'Night Ecology',
+    // Polo Forest Sabarkantha — moonlit forest with firefly atmosphere
+    image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80',
+    descTemplate: (m) => `Walk the Polo Forest trail near Idar for ${m} minutes after sunset and count firefly flashes as a light pollution indicator.`,
+    place: 'Polo Forest, Sabarkantha, Gujarat',
+    location: '23.6333° N, 73.0167° E',
+    habitat: 'Deciduous Heritage Forest',
+    bestTime: 'June–August Post-Sunset',
+    wildlife: 'Firefly (Lamprigera), Barn Owl, Sambar Deer, Indian Porcupine, Wolf Spider',
+    ecologicalRole: 'Polo Forest is one of Gujarat oldest protected heritage forests. Firefly presence is a direct indicator of light pollution absence and forest health.',
+    impactNote: 'Firefly counts are used by researchers to map light pollution spread across Gujarat rural areas.',
+  },
+  {
+    title: 'Monitor Mangrove Saplings at Aamlakhadi Creek',
+    category: 'Mangrove Care',
+    // Aamlakhadi Creek Jamnagar — coastal mangrove roots in tidal water
+    image: 'https://images.unsplash.com/photo-1586348943529-beaae6c28db9?auto=format&fit=crop&w=800&q=80',
+    descTemplate: (m) => `Measure the height and leaf count of ${m < 20 ? '5' : '10'} mangrove saplings along Aamlakhadi creek bank and record survival rate.`,
+    place: 'Aamlakhadi Creek, Jamnagar Coast, Gujarat',
+    location: '22.4700° N, 70.0674° E',
+    habitat: 'Tidal Mangrove Estuary',
+    bestTime: 'Low Tide Morning',
+    wildlife: 'Mudskipper, Fiddler Crab, Brahminy Kite, Little Egret, Mudcrab',
+    ecologicalRole: 'Gujarat coastline has one of India largest mangrove restoration projects. Mangroves protect the shore from erosion and act as nurseries for marine fish.',
+    impactNote: 'Sapling survival data feeds the Gujarat Forest Department Coastal Protection Programme.',
+  },
+  {
+    title: 'Check Water Quality at Vastrapur Lake',
+    category: 'Water Quality',
+    // Vastrapur Lake Ahmedabad — calm blue urban lake with reflection
+    image: 'https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=800&q=80',
+    descTemplate: (m) => `Observe water clarity and algae cover at Vastrapur Lake for ${m} minutes, noting color and odor as basic water quality indicators.`,
+    place: 'Vastrapur Lake, West Ahmedabad',
+    location: '23.0401° N, 72.5238° E',
+    habitat: 'Urban Freshwater Lake',
+    bestTime: 'Early Morning Before 8 AM',
+    wildlife: 'Great Crested Grebe, Cormorant, Pied Kingfisher, Bronze-winged Jacana',
+    ecologicalRole: 'Vastrapur Lake is a vital stormwater retention basin. Algae bloom monitoring helps the AMC identify eutrophication before fish kills occur.',
+    impactNote: 'Citizen water quality logs trigger AMC inspection visits and early intervention.',
+  },
+  {
+    title: 'Photograph Seed Dispersers at Sanjay Van',
+    category: 'Wildlife Photo',
+    // Sanjay Van Gandhinagar — wildlife in green plantation forest
+    image: 'https://images.unsplash.com/photo-1474511320723-9a56873867b5?auto=format&fit=crop&w=800&q=80',
+    descTemplate: (m) => `Spend ${m} minutes photographing birds and squirrels eating and dispersing fruit seeds at Sanjay Van urban forest.`,
+    place: 'Sanjay Van Urban Forest, Gandhinagar',
+    location: '23.2000° N, 72.6500° E',
+    habitat: 'Urban Plantation Forest',
+    bestTime: 'Early Morning or Late Afternoon',
+    wildlife: 'Rose-ringed Parakeet, Five-striped Palm Squirrel, Purple-rumped Sunbird, Jungle Babbler',
+    ecologicalRole: 'Seed dispersers are essential for forest regeneration. Documenting which birds eat which fruits helps map plant-animal networks in urban forests.',
+    impactNote: 'Your photos contribute to the Gujarat urban reforestation seed network database.',
+  },
+];
+
 export default function Act() {
   const { session } = useAuth();
   const lang = localStorage.getItem('app_global_lang') || 'en';
@@ -78,7 +166,8 @@ export default function Act() {
       category: 'Birdwatch',
       minutes: 20,
       status: 'pending',
-      image: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=800&q=80',
+      // Sabarmati River waterfront — river with egrets/herons at dawn
+      image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=800&q=80',
       description: 'Walk the Sabarmati Riverfront promenade and record birds — herons, kingfishers, and parakeets — in the golden dawn light.',
       place: 'Sabarmati Riverfront, Ahmedabad',
       location: '23.0333° N, 72.5820° E',
@@ -94,7 +183,8 @@ export default function Act() {
       category: 'Wetland Walk',
       minutes: 45,
       status: 'pending',
-      image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80',
+      // Thol Lake — flamingos in pink wetland water
+      image: 'https://images.unsplash.com/photo-1497206365907-f5e630693df0?auto=format&fit=crop&w=800&q=80',
       description: 'Trek the boardwalk at Thol Lake and scan for flamingos, painted storks, and migratory waders resting on shallow flats.',
       place: 'Thol Bird Sanctuary, Mehsana (near Ahmedabad)',
       location: '23.1833° N, 72.3500° E',
@@ -110,7 +200,8 @@ export default function Act() {
       category: 'Tree Survey',
       minutes: 30,
       status: 'pending',
-      image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80',
+      // Nalsarovar — large lake with birds and shore trees
+      image: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=800&q=80',
       description: 'Record ancient Banyan and Peepal tree girths along the Nalsarovar sanctuary shore and photograph aerial root systems.',
       place: 'Nalsarovar Bird Sanctuary, Sanand',
       location: '22.7500° N, 72.0833° E',
@@ -126,7 +217,8 @@ export default function Act() {
       category: 'Night Ecology',
       minutes: 35,
       status: 'pending',
-      image: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80',
+      // Indroda Nature Park — dry deciduous forest trail at dusk
+      image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80',
       description: 'Join the evening eco-trail at Indroda Nature Park and listen for owls, crickets, and monsoon frogs under the canopy.',
       place: 'Indroda Nature Park (Dinosaur Park), Gandhinagar',
       location: '23.2156° N, 72.6369° E',
@@ -142,7 +234,8 @@ export default function Act() {
       category: 'Pollinator Count',
       minutes: 15,
       status: 'pending',
-      image: 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?auto=format&fit=crop&w=800&q=80',
+      // Parimal Garden — lush garden with butterflies and flowering plants
+      image: 'https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&w=800&q=80',
       description: 'Sit near flowering shrubs at Parimal Garden and count bee and butterfly species visiting blooms in a 10-minute window.',
       place: 'Parimal Garden, Ellisbridge, Ahmedabad',
       location: '23.0234° N, 72.5614° E',
@@ -158,7 +251,8 @@ export default function Act() {
       category: 'Soil & Water',
       minutes: 20,
       status: 'pending',
-      image: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80',
+      // Kankaria Lake — calm urban lake with reflections and waterbirds
+      image: 'https://images.unsplash.com/photo-1526779259212-939e64788e3c?auto=format&fit=crop&w=800&q=80',
       description: 'Check soil compaction and moisture levels under shade trees around the Kankaria Lake perimeter using a simple stick test.',
       place: 'Kankaria Lake, Maninagar, Ahmedabad',
       location: '22.9965° N, 72.6007° E',
@@ -169,6 +263,7 @@ export default function Act() {
       impactNote: 'Soil moisture data helps city planners design bioswales and rain gardens around urban lakes.',
     },
   ];
+
 
   const toUiAction = (a) => ({
     id: a._id || a.id,
@@ -189,6 +284,7 @@ export default function Act() {
 
   // Persistent States
   const [actions, setActions] = useState(GUJARAT_PLACES);
+  const [generateCount, setGenerateCount] = useState(0);
 
   const [minutes, setMinutes] = useState(15);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -207,46 +303,52 @@ export default function Act() {
       .catch(() => {});
   }, [token]);
 
-  // Complete Action
+  // Complete Action — moves card from Suggested to Field Actions Log
   const completeAction = (id) => {
     setActError('');
-    setActions((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'completed' } : a)));
-    if (token && id && !String(id).startsWith('act-')) {
-      apiFetch(`/api/actions/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'completed' }) }, token).catch(() => {
-        setActError('Could not save that action to your log.');
-      });
+    setActions((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'completed', completedAt: new Date().toISOString() } : a)));
+    // Switch to completed tab to show the saved card
+    setActiveTab('completed');
+    // Persist to backend only for real DB IDs (not local guj-/gen- IDs)
+    if (token && id && !String(id).startsWith('guj-') && !String(id).startsWith('gen-')) {
+      apiFetch(`/api/actions/${id}`, { method: 'PATCH', body: JSON.stringify({ status: 'completed' }) }, token)
+        .catch(() => {});
     }
   };
 
-  // Generate New Actions
-  const handleGenerateActions = async () => {
+  // Generate New Actions — picks a unique place from EXTRA_POOL each time
+  const handleGenerateActions = () => {
     setIsGenerating(true);
     setActError('');
 
-    try {
-      const created = await apiFetch(
-        '/api/actions',
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            title: `Explore ${minutes}-Min Eco Observation`,
-            category: 'Habitat',
-            minutes,
-            status: 'pending',
-            description: `Dedicated ${minutes} minutes of field observation to document local shade canopy patterns.`,
-            impact_note: 'Helps map urban biodiversity corridors.',
-          }),
-        },
-        token
-      );
-      if (created) {
-        setActions((prev) => [typeof toUiAction === 'function' ? toUiAction(created) : created, ...prev]);
-      }
-    } catch (err) {
-      setActError(err instanceof Error ? err.message : 'Pulse could not generate an action right now.');
-    } finally {
+    // Pick the next item from extra pool using generateCount as index (cycles)
+    const poolIndex = generateCount % EXTRA_POOL.length;
+    const template = EXTRA_POOL[poolIndex];
+
+    // Build card with current minutes applied to the description
+    const newCard = {
+      id: `gen-${Date.now()}-${poolIndex}`,
+      title: template.title,
+      category: template.category,
+      minutes,
+      status: 'pending',
+      image: template.image,
+      description: template.descTemplate(minutes),
+      place: template.place,
+      location: template.location,
+      habitat: template.habitat,
+      bestTime: template.bestTime,
+      wildlife: template.wildlife,
+      ecologicalRole: template.ecologicalRole,
+      impactNote: template.impactNote,
+    };
+
+    // Small artificial delay so the spinner feels real
+    setTimeout(() => {
+      setActions((prev) => [newCard, ...prev]);
+      setGenerateCount((c) => c + 1);
       setIsGenerating(false);
-    }
+    }, 800);
   };
 
   const { isDark } = useTheme();
@@ -590,29 +692,76 @@ export default function Act() {
 
         {/* COMPLETED ACTIONS TAB */}
         {activeTab === 'completed' && (
-          <div className="space-y-4 relative z-10">
-            {completedActions.map((action) => (
-              <div
-                key={action.id}
-                className={`p-5 rounded-2xl flex items-center justify-between shadow-md border transition-colors ${
-                  isDark ? 'bg-[#0E2015] border-[#4ADE80]/40 text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418]'
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <img src={action.image} alt="" className="w-14 h-14 rounded-xl object-cover" />
-                  <div>
-                    <h4 className={`font-display text-base font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{action.title}</h4>
-                    <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{action.category} · {action.minutes} minutes</p>
+          <div className="relative z-10">
+            {completedActions.length === 0 && (
+              <div className={`border border-dashed rounded-3xl p-10 text-center space-y-3 ${
+                isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
+              }`}>
+                <p className="text-3xl">🏅</p>
+                <p className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>No completed actions yet</p>
+                <p className={`text-xs max-w-sm mx-auto ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
+                  Click "I Did This Action" on any card to save it here as a logged field action.
+                </p>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {completedActions.map((action) => (
+                <div key={action.id} className={`rounded-3xl overflow-hidden border shadow-xl flex flex-col ${
+                  isDark ? 'bg-[#0E2015] border-[#4ADE80]/50' : 'bg-[#FDFBF7] border-[#C3DEC0] shadow-sm'
+                }`}>
+                  {/* Image */}
+                  <div className="relative h-40 overflow-hidden">
+                    <img src={action.image} alt={action.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60" />
+                    {/* Completed badge overlay */}
+                    <span className="absolute top-3 right-3 px-3 py-1 rounded-full bg-[#4ADE80]/90 text-[#07130B] text-[10px] font-bold flex items-center gap-1">
+                      <Check className="w-3 h-3 stroke-[3]" /> Logged ✓
+                    </span>
+                    <span className={`absolute top-3 left-3 px-3 py-1 rounded-full backdrop-blur-md text-[10px] font-bold border ${
+                      isDark ? 'bg-[#07130B]/80 text-[#4ADE80] border-[#4ADE80]/40' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+                    }`}>
+                      {action.category}
+                    </span>
+                    <span className="absolute bottom-2 left-3 text-[10px] font-bold text-white/90">
+                      📍 {action.place || 'Ahmedabad, Gujarat'}
+                    </span>
+                  </div>
+
+                  {/* Details */}
+                  <div className="p-4 flex-1 space-y-2">
+                    <h3 className={`font-display text-sm font-bold leading-tight ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
+                      {action.title}
+                    </h3>
+                    <p className={`text-[10px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
+                      {action.description}
+                    </p>
+
+                    <div className="space-y-1 pt-1 text-[10px]">
+                      <div className="flex gap-2">
+                        <span className="text-[#4ADE80] font-bold w-14 shrink-0">🌍 Habitat</span>
+                        <span className={isDark ? 'text-slate-300' : 'text-[#2D4536]'}>{action.habitat || 'Urban Nature'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-[#4ADE80] font-bold w-14 shrink-0">🐦 Wildlife</span>
+                        <span className={isDark ? 'text-slate-300' : 'text-[#2D4536]'}>{action.wildlife || 'Local species'}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-[#4ADE80] font-bold w-14 shrink-0">🌱 Eco</span>
+                        <span className={`leading-relaxed ${isDark ? 'text-slate-300' : 'text-[#2D4536]'}`}>{action.ecologicalRole || action.impactNote}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className={`px-4 py-2.5 border-t flex justify-between items-center text-[10px] ${
+                    isDark ? 'border-[#20422E] text-slate-400' : 'border-[#E3DDD1] text-[#3E5C48]'
+                  }`}>
+                    <span>📌 {action.location || '23.0225° N, 72.5714° E'}</span>
+                    <span className={`font-bold text-sm ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>+{action.minutes * 2} XP</span>
                   </div>
                 </div>
-
-                <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                  isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
-                }`}>
-                  {t.completedBadge}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 
