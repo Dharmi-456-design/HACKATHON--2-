@@ -900,31 +900,6 @@ async function callGeminiApi({ prompt, system, imageBase64, mimeType, json = fal
   return { unavailable: true };
 }
 
-const getWeeklyRecap = async (req, res) => {
-  try {
-    const list = await Discovery.find({}).sort({ createdAt: -1 });
-    const total_species = list.length || 15;
-    const species_list = list.map((x) => x.common_name).filter(Boolean);
-    const total_days = Math.min(7, Math.max(1, new Set(list.map((x) => new Date(x.createdAt || x.created_at || Date.now()).toISOString().slice(0, 10))).size || 7));
-    return res.json({
-      total_species,
-      total_days,
-      slides: [
-        { title: 'Weekly Summary', text: `You recorded ${total_species} species across ${total_days} active days.` },
-        { title: 'Species List', species_list: species_list.length ? species_list : ['Banyan Tree', 'Indian Peafowl', 'Golden Shower Tree', 'Asian Koel', 'Tulsi Plant'] },
-      ],
-    });
-  } catch (err) {
-    return res.json({
-      total_species: 15,
-      total_days: 7,
-      slides: [
-        { title: 'Weekly Summary', text: 'You recorded 15 species across 7 active days.' },
-        { title: 'Species List', species_list: ['Banyan Tree', 'Indian Peafowl', 'Golden Shower Tree', 'Asian Koel', 'Tulsi Plant'] },
-      ],
-    });
-  }
-};
 
 const handlePulseChat = async (req, res) => {
   const { content, message, text, imageBase64, contentType, language, lang } = req.body || {};

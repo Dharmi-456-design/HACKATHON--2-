@@ -306,7 +306,9 @@ export default function Community() {
   };
 
   // AI Suggest Tags
-  const handleAISuggestTags = () => {
+  const handleAISuggestTags = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
     setCommunityError('');
     const suggested = ['UrbanCanopy', 'HabitatCare', 'Biodiversity', 'LocalEcology'];
     setPostTags((prev) => (prev ? `${prev}, ${suggested.join(', ')}` : suggested.join(', ')));
@@ -369,6 +371,7 @@ export default function Community() {
         setCommunityError(err instanceof Error ? err.message : 'Could not publish your post.');
       });
   };
+
 
   // Delete Post
   const handleDeletePost = (postId) => {
@@ -742,7 +745,7 @@ export default function Community() {
                         </label>
                         <button
                           type="button"
-                          onClick={handleAISuggestTags}
+                          onClick={(e) => handleAISuggestTags(e)}
                           className={`text-[10px] hover:underline flex items-center gap-1 cursor-pointer font-semibold ${
                             isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
                           }`}

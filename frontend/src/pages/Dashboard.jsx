@@ -55,7 +55,6 @@ export default function Dashboard() {
       setDiscoveries(Array.isArray(d) ? d.map((x) => ({ ...x, id: x.id || x._id })) : []);
       setActions(Array.isArray(a) ? a.map((x) => ({ ...x, id: x.id || x._id })) : []);
       setStreak(st && typeof st === 'object' && typeof st.streak === 'number' ? st.streak : null);
-      setError('');
     } catch {
       setError('');
     } finally {
@@ -182,7 +181,9 @@ export default function Dashboard() {
 
         </div>
 
-        {error && <p className="text-sm text-red-400 bg-red-950/50 border border-red-500/30 p-3 rounded-2xl">{error}</p>}
+        {error && !error.includes('authorized') && !error.includes('token') && (
+          <p className="text-sm text-red-400 bg-red-950/50 border border-red-500/30 p-3 rounded-2xl">{error}</p>
+        )}
 
         {/* Best time to explore widget */}
         <div className="relative z-10">
