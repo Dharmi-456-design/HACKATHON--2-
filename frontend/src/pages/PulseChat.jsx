@@ -784,6 +784,11 @@ export default function PulseChat() {
     <div className={`h-[calc(100vh-2rem)] md:h-screen w-full max-w-4xl mx-auto px-3 sm:px-6 py-3 flex flex-col overflow-hidden font-sans selection:bg-[#4ADE80]/30 selection:text-white relative gpu-layer transition-colors duration-300 ${
       isDark ? 'text-slate-100' : 'text-slate-900'
     }`}>
+      {loading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0A1610]/80 backdrop-blur-sm">
+          <div className="w-8 h-8 rounded-full border-2 border-[#4ADE80]/30 border-t-[#4ADE80] animate-spin" />
+        </div>
+      )}
       {/* Hidden File Input for Image Selection */}
       <input
         type="file"

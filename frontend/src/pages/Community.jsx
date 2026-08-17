@@ -192,6 +192,7 @@ export default function Community() {
 
   // Persistent States
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [savedPostIds, setSavedPostIds] = useState([]);
   const [followedUserIds, setFollowedUserIds] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -229,7 +230,8 @@ export default function Community() {
   useEffect(() => {
     apiFetch('/api/community', {}, null)
       .then((list) => setPosts(Array.isArray(list) ? list.map(toUiPost) : []))
-      .catch(() => setCommunityError('Could not load the community feed. Please check your connection and try again.'));
+      .catch(() => setCommunityError('Could not load the community feed. Please check your connection and try again.'))
+      .finally(() => setLoading(false));
   }, []);
 
   // Reaction Toggle Handler
@@ -532,6 +534,18 @@ export default function Community() {
     });
 
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
+
+  if (loading) {
+    return (
+      <div className={`min-h-screen font-sans transition-colors duration-300 ${
+        isDark ? 'bg-[#07130B]' : 'bg-[#FAF7F0]'
+      }`}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-4">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-40" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen font-sans selection:bg-[#4ADE80]/30 pb-20 transition-colors duration-300 ${
