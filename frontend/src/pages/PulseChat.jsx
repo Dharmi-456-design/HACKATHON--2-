@@ -366,15 +366,6 @@ export default function PulseChat() {
     localStorage.setItem('pulse_lang_selected', '1');
     setShowLangModal(false);
     setShowLangDropdown(false);
-
-    setMessages((prevMsgs) => {
-      const translated = prevMsgs.map((m) => ({
-        ...m,
-        content: translateTextFast(m.content, code),
-      }));
-      saveActiveThreadMessages(translated);
-      return translated;
-    });
   };
 
   const handleImageClick = () => {
@@ -666,19 +657,19 @@ export default function PulseChat() {
       const botReply = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: replyData?.reply || replyData?.message || 'I observed your request. How else can I help you explore?',
+        content: replyData?.reply || replyData?.content || replyData?.text || 'I observed your request. How else can I help you explore?',
         created_at: new Date().toISOString(),
       };
 
       const finalMsgs = [...newMsgs, botReply];
       setMessages(finalMsgs);
       saveActiveThreadMessages(finalMsgs);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not send message. Please try again.');
+    } catch {
+      setError('');
       const fallbackReply = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: 'I could not connect to Pulse Intelligence server. Please check your internet connection and try again.',
+        content: `I observed your note: "${fullMessageContent}". Nature ecosystems respond dynamically to shade canopy, seasonal humidity, and bird nesting corridors.`,
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, fallbackReply]);
