@@ -708,18 +708,20 @@ export default function Community() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
-                        isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                    <div className="space-y-1.5">
+                      <label className={`block text-xs uppercase tracking-wider font-semibold ${
+                        isDark ? 'text-slate-300' : 'text-[#3E5C48]'
                       }`}>
                         {t.postCategoryLabel}
                       </label>
                       <select
                         value={postCategory}
                         onChange={(e) => setPostCategory(e.target.value)}
-                        className={`w-full rounded-2xl px-3 py-2.5 text-sm outline-none transition-colors ${
-                          isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
+                        className={`w-full h-11 rounded-2xl px-4 py-2.5 text-sm font-medium outline-none transition-all cursor-pointer border ${
+                          isDark
+                            ? 'bg-[#0A180F] border-[#20422E] text-white focus:border-[#4ADE80] focus:ring-2 focus:ring-[#4ADE80]/20'
+                            : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
                         }`}
                       >
                         <option value="Nature & Ecology">{t.catNature}</option>
@@ -731,18 +733,18 @@ export default function Community() {
                       </select>
                     </div>
 
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center h-5">
                         <label className={`text-xs uppercase tracking-wider font-semibold ${
-                          isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                          isDark ? 'text-slate-300' : 'text-[#3E5C48]'
                         }`}>
                           {t.postTagsLabel}
                         </label>
                         <button
                           type="button"
                           onClick={handleAISuggestTags}
-                          className={`text-[10px] hover:underline flex items-center gap-1 cursor-pointer font-medium ${
-                            isDark ? 'text-[#4ADE80]' : 'text-[#183B28] font-bold'
+                          className={`text-[10px] hover:underline flex items-center gap-1 cursor-pointer font-semibold ${
+                            isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
                           }`}
                         >
                           <Sparkles className="w-3 h-3" />
@@ -753,16 +755,18 @@ export default function Community() {
                         value={postTags}
                         onChange={(e) => setPostTags(e.target.value)}
                         placeholder="birds, trees, urbanwild"
-                        className={`w-full rounded-2xl px-4 py-2.5 text-sm outline-none transition-colors ${
-                          isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
+                        className={`w-full h-11 rounded-2xl px-4 py-2.5 text-sm font-medium outline-none transition-all border ${
+                          isDark
+                            ? 'bg-[#0A180F] border-[#20422E] text-white placeholder-slate-500 focus:border-[#4ADE80] focus:ring-2 focus:ring-[#4ADE80]/20'
+                            : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
                         }`}
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
-                      isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                  <div className="space-y-1.5">
+                    <label className={`block text-xs uppercase tracking-wider font-semibold ${
+                      isDark ? 'text-slate-300' : 'text-[#3E5C48]'
                     }`}>
                       {t.postContentLabel}
                     </label>
@@ -772,8 +776,10 @@ export default function Community() {
                       value={postContent}
                       onChange={(e) => setPostContent(e.target.value)}
                       placeholder="Share your detailed observations, questions, or ideas…"
-                      className={`w-full rounded-2xl p-4 text-sm outline-none resize-none transition-colors ${
-                        isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
+                      className={`w-full rounded-2xl p-4 text-sm font-medium outline-none resize-none transition-all border ${
+                        isDark
+                          ? 'bg-[#0A180F] border-[#20422E] text-white placeholder-slate-500 focus:border-[#4ADE80] focus:ring-2 focus:ring-[#4ADE80]/20'
+                          : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
                       }`}
                     />
                   </div>
@@ -782,8 +788,10 @@ export default function Community() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-2xl border text-xs cursor-pointer transition-colors ${
-                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]'
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-xs font-semibold cursor-pointer transition-all ${
+                        isDark
+                          ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white hover:border-[#4ADE80]/50'
+                          : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]'
                       }`}
                     >
                       <ImageIcon className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
@@ -815,24 +823,80 @@ export default function Community() {
                   </div>
                 </form>
               ) : (
-                <div className={`space-y-4 p-5 rounded-2xl border ${
+                <div className={`space-y-4 p-6 rounded-2xl border backdrop-blur-md ${
                   isDark ? 'bg-[#0E2015] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
                 }`}>
-                  <span className={`text-[10px] uppercase px-2.5 py-1 rounded-full font-semibold ${
-                    isDark ? 'bg-[#1A3827] text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28]'
-                  }`}>
-                    {postCategory}
-                  </span>
-                  <h3 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{postTitle || 'Untitled Post'}</h3>
+                  <div className="flex items-center justify-between border-b pb-3 border-emerald-900/30">
+                    <span className={`text-[10px] uppercase px-3 py-1 rounded-full font-bold tracking-wider ${
+                      isDark ? 'bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28]'
+                    }`}>
+                      {postCategory}
+                    </span>
+
+                    {/* Edit Post Option Button */}
+                    <button
+                      type="button"
+                      onClick={() => setComposerMode('write')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer border transition-all ${
+                        isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/50 hover:bg-[#254B35]' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0] hover:bg-[#C3DEC0]'
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#4ADE80]" />
+                      <span>Edit Post ✏️</span>
+                    </button>
+                  </div>
+
+                  <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
+                    {postTitle || 'Untitled Discussion'}
+                  </h3>
+
                   <p className={`text-sm leading-relaxed whitespace-pre-line ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>
-                    {postContent || 'No content written yet.'}
+                    {postContent || 'No observations written yet.'}
                   </p>
+
+                  {postImage && (
+                    <img src={postImage} alt="Attachment Preview" className="w-full max-h-64 object-cover rounded-2xl border border-[#20422E] mt-2" />
+                  )}
+
+                  {postTags && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {postTags.split(',').map((tg) => tg.trim()).filter(Boolean).map((t) => (
+                        <span key={t} className="text-xs font-semibold text-[#4ADE80]">#{t}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Preview Footer Action Bar with Edit & Publish options */}
+                  <div className={`flex items-center justify-between pt-4 border-t ${
+                    isDark ? 'border-[#20422E]' : 'border-[#E0D8C8]'
+                  }`}>
+                    <button
+                      type="button"
+                      onClick={() => setComposerMode('write')}
+                      className={`px-4 py-2 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28]'
+                      }`}
+                    >
+                      ← Back to Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCreatePostSubmit}
+                      className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-md cursor-pointer ${
+                        isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                      }`}
+                    >
+                      Publish Post
+                    </button>
+                  </div>
                 </div>
               )}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
 
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
