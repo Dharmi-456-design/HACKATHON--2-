@@ -651,26 +651,29 @@ export default function NatureMissions() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {badges.map((badge) => (
-                  <div
-                    key={badge.id}
-                    className={`p-4 rounded-2xl border flex items-center gap-3.5 transition-all ${
-                      badge.unlocked
-                        ? isDark ? 'bg-[#13271C] border-[#4ADE80]/50 text-white' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#0F2418]'
-                        : isDark ? 'bg-[#07150C] border-[#20422E] opacity-60 text-slate-400' : 'bg-[#F2ECE1] border-[#E0D8C8] opacity-60 text-[#3E5C48]'
-                    }`}
-                  >
-                    <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center text-2xl shrink-0 ${
-                      isDark ? 'bg-[#1A3827] border-[#4ADE80]/40' : 'bg-[#FDFBF7] border-[#C3DEC0]'
-                    }`}>
-                      {badge.icon}
+                {badges.map((badge) => {
+                  const IconComponent = badge.icon;
+                  return (
+                    <div
+                      key={badge.id}
+                      className={`p-4 rounded-2xl border flex items-center gap-3.5 transition-all ${
+                        badge.unlocked
+                          ? isDark ? 'bg-[#13271C] border-[#4ADE80]/50 text-white' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#0F2418]'
+                          : isDark ? 'bg-[#07150C] border-[#20422E] opacity-60 text-slate-400' : 'bg-[#F2ECE1] border-[#E0D8C8] opacity-60 text-[#3E5C48]'
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 ${
+                        isDark ? 'bg-[#1A3827] border-[#4ADE80]/40 text-[#4ADE80]' : 'bg-[#FDFBF7] border-[#C3DEC0] text-[#183B28]'
+                      }`}>
+                        <IconComponent className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{badge.name}</h4>
+                        <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{badge.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{badge.name}</h4>
-                      <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{badge.desc}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

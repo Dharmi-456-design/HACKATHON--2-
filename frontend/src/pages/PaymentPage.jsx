@@ -121,8 +121,8 @@ export default function PaymentPage() {
   const [sessionData, setSessionData] = useState(null);
   const [loadingSession, setLoadingSession] = useState(true);
 
-  // QR Expiry countdown (30 seconds)
-  const [qrSecondsLeft, setQrSecondsLeft] = useState(30);
+  // QR Expiry countdown (60 seconds / 1 minute)
+  const [qrSecondsLeft, setQrSecondsLeft] = useState(60);
   const [qrExpired, setQrExpired] = useState(false);
   const qrTimerRef = useRef(null);
 
@@ -173,10 +173,10 @@ export default function PaymentPage() {
     setPaymentAmount(currentPlan.amountNum);
   }, [planId]);
 
-  // QR 30-second expiry countdown timer
+  // QR 60-second (1 minute) expiry countdown timer
   const startQrTimer = useCallback(() => {
     if (qrTimerRef.current) clearInterval(qrTimerRef.current);
-    setQrSecondsLeft(30);
+    setQrSecondsLeft(60);
     setQrExpired(false);
     qrTimerRef.current = setInterval(() => {
       setQrSecondsLeft((prev) => {
@@ -613,9 +613,9 @@ export default function PaymentPage() {
                   {!loadingSession && (
                     <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-200/60">
                       <div
-                        className={`h-full transition-all ease-linear ${qrExpired ? 'bg-rose-500' : qrSecondsLeft <= 5 ? 'bg-rose-400' : 'bg-[#96CD7B]'}`}
+                        className={`h-full transition-all ease-linear ${qrExpired ? 'bg-rose-500' : qrSecondsLeft <= 10 ? 'bg-rose-400' : 'bg-[#96CD7B]'}`}
                         style={{
-                          width: `${(qrSecondsLeft / 30) * 100}%`,
+                          width: `${(qrSecondsLeft / 60) * 100}%`,
                           transition: 'width 1s linear, background-color 0.3s',
                         }}
                       />
