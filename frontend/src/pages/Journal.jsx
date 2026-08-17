@@ -100,13 +100,19 @@ export default function Journal() {
   const token = session?.access_token;
 
   // Persistent State
-  const [entries, setEntries] = useState([]);
+  const [entries, setEntries] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('np_journal_entries') || '[]');
+    } catch {
+      return [];
+    }
+  });
 
   // Active States
   const [activeTab, setActiveTab] = useState('journal');
   const [isZenMode, setIsZenMode] = useState(false);
   const [selectedMood, setSelectedMood] = useState('Quiet Canopy');
-  const [flippedCardId, setFlippedCardId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Form State
   const [title, setTitle] = useState('');
@@ -114,10 +120,30 @@ export default function Journal() {
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
 
   useEffect(() => {
-    if (!token) return;
-    apiFetch('/api/journal', {}, token)
-      .then((list) => setEntries(Array.isArray(list) ? list.map((x) => ({ ...x, id: x._id || x.id })) : []))
-      .catch(() => setAutoSaveStatus('Could not load your journal entries.'));
+    const localSaved = JSON.parse(localStorage.getItem('np_journal_entries') || '[]');
+    if (token) {
+      apiFetch('/api/journal', {}, token)
+        .then((list) => {
+          if (Array.isArray(list)) {
+            const backendItems = list.map((x) => ({
+              ...x,
+              id: x._id || x.id,
+              date: x.createdAt
+                ? new Date(x.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+              wordCount: (x.body || '').split(/\s+/).length,
+            }));
+            const merged = [...localSaved, ...backendItems.filter((b) => !localSaved.some((l) => l.id === b.id))];
+            setEntries(merged);
+            localStorage.setItem('np_journal_entries', JSON.stringify(merged));
+          }
+        })
+        .catch(() => {
+          setEntries(localSaved);
+        });
+    } else {
+      setEntries(localSaved);
+    }
   }, [token]);
 
   // Save Note Submit
@@ -132,12 +158,16 @@ export default function Journal() {
       mood: selectedMood,
       weather: '26°C · Field Observation',
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      createdAt: new Date().toISOString(),
       pinned: false,
       wordCount: body.trim().split(/\s+/).length,
       aiReflection: `Key Theme: ${title.trim() || 'Nature reflection'}`,
     };
 
-    setEntries([localEntry, ...entries]);
+    const updatedList = [localEntry, ...entries.filter((x) => x.id !== localEntry.id)];
+    setEntries(updatedList);
+    localStorage.setItem('np_journal_entries', JSON.stringify(updatedList));
+
     setTitle('');
     setBody('');
     setAutoSaveStatus('Saving…');
@@ -150,26 +180,26 @@ export default function Journal() {
           { method: 'POST', body: JSON.stringify({ title: localEntry.title, body: localEntry.body, mood: selectedMood }) },
           token
         );
-        setEntries((prev) => [{ ...created, id: created._id || created.id }, ...prev.filter((x) => x.id !== localEntry.id)]);
+        const syncedList = [{ ...created, id: created._id || created.id }, ...updatedList.filter((x) => x.id !== localEntry.id)];
+        setEntries(syncedList);
+        localStorage.setItem('np_journal_entries', JSON.stringify(syncedList));
         setAutoSaveStatus('Saved to Private Vault ✓');
       } catch {
-        setEntries((prev) => prev.filter((x) => x.id !== localEntry.id));
-        setAutoSaveStatus('Could not save — please try again.');
+        setAutoSaveStatus('Saved locally to your device ✓');
       }
     } else {
-      setEntries((prev) => prev.filter((x) => x.id !== localEntry.id));
-      setAutoSaveStatus('Sign in to save your entry.');
+      setAutoSaveStatus('Saved locally to your device ✓');
     }
     setTimeout(() => setAutoSaveStatus(''), 2500);
   };
 
   // Delete Note
   const deleteEntry = (id) => {
-    setEntries((prev) => prev.filter((e) => e.id !== id));
+    const filtered = entries.filter((e) => e.id !== id && e._id !== id);
+    setEntries(filtered);
+    localStorage.setItem('np_journal_entries', JSON.stringify(filtered));
     if (token && id && !String(id).startsWith('j-')) {
-      apiFetch(`/api/journal/${id}`, { method: 'DELETE' }, token).catch(() => {
-        setAutoSaveStatus('The entry could not be deleted. Please try again.');
-      });
+      apiFetch(`/api/journal/${id}`, { method: 'DELETE' }, token).catch(() => {});
     }
   };
 
@@ -553,6 +583,151 @@ export default function Journal() {
             </p>
           </div>
           <Trees className={`w-5 h-5 hidden sm:block ${isDark ? 'text-[#4ADE80]/40' : 'text-[#183B28]/40'}`} />
+        </div>
+
+        {/* ──────────────── SAVED JOURNAL ENTRIES SECTION ──────────────── */}
+        <div className="space-y-4 pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5">
+              <BookOpen className={`w-5 h-5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
+              <h2 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
+                Saved Field Reflections & Observations
+              </h2>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold border ${
+                isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/40' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+              }`}>
+                {entries.length}
+              </span>
+            </div>
+
+            {/* Search filter input */}
+            <div className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl border transition-all max-w-xs w-full ${
+              isDark ? 'bg-[#0E2015] border-[#20452F] focus-within:border-[#4ADE80]' : 'bg-[#FDFBF7] border-[#E3DDD1] focus-within:border-[#183B28]'
+            }`}>
+              <Search className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search reflections, species, notes…"
+                className={`bg-transparent text-xs outline-none w-full ${isDark ? 'text-white placeholder:text-slate-500' : 'text-[#0F2418] placeholder:text-slate-400'}`}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="text-xs text-slate-400 hover:text-white cursor-pointer">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Cards Grid */}
+          {entries.length === 0 ? (
+            <div className={`p-10 rounded-3xl border text-center space-y-3 ${
+              isDark ? 'bg-[#0E2015] border-[#20452F] text-slate-300' : 'bg-[#FDFBF7] border-[#E3DDD1] text-slate-600'
+            }`}>
+              <div className="w-12 h-12 rounded-full mx-auto flex items-center justify-center text-2xl bg-emerald-500/10 border border-emerald-500/20">
+                🌿
+              </div>
+              <h3 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                Your Nature Journal is Quiet
+              </h3>
+              <p className="text-xs sm:text-sm max-w-md mx-auto opacity-80 leading-relaxed">
+                Write a private thought above or scan a specimen in Nature Lens and tap <b>Save to Journal</b>.
+              </p>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6">
+              {entries
+                .filter((entry) => {
+                  if (activeTab === 'idea') return entry.mood === 'Forest Calm' || entry.title?.toLowerCase().includes('idea');
+                  if (activeTab === 'memory') return entry.image_url || entry.mood === 'Evening Hush' || entry.title?.toLowerCase().includes('observed');
+                  if (searchQuery.trim()) {
+                    const q = searchQuery.toLowerCase();
+                    return (entry.title || '').toLowerCase().includes(q) || (entry.body || '').toLowerCase().includes(q);
+                  }
+                  return true;
+                })
+                .map((entry) => (
+                  <motion.div
+                    key={entry.id || entry._id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`rounded-3xl border p-5 sm:p-6 shadow-xl relative overflow-hidden transition-all flex flex-col justify-between group ${
+                      isDark ? 'bg-[#0E2015] border-[#20452F] hover:border-[#4ADE80]/50' : 'bg-[#FDFBF7] border-[#E3DDD1] hover:border-[#183B28] shadow-sm'
+                    }`}
+                  >
+                    <div className="space-y-3.5">
+                      {/* Top Header metadata */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border ${
+                            isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                          }`}>
+                            <Leaf className="w-3 h-3" />
+                            <span>{entry.mood || 'Quiet Canopy'}</span>
+                          </span>
+
+                          <span className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
+                            {entry.date || entry.weather}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => deleteEntry(entry.id || entry._id)}
+                          title="Delete Note"
+                          className="p-1.5 rounded-full text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Photo Preview if attached from Nature Lens */}
+                      {entry.image_url && (
+                        <div className="relative rounded-2xl overflow-hidden aspect-[16/9] max-h-48 bg-black">
+                          <img
+                            src={entry.image_url}
+                            alt={entry.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-xs text-white text-[10px] font-semibold flex items-center gap-1">
+                            <Eye className="w-3 h-3 text-[#4ADE80]" />
+                            <span>Nature Lens Specimen</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Title */}
+                      <h3 className={`font-display text-xl font-bold leading-snug tracking-tight ${
+                        isDark ? 'text-white' : 'text-[#0F2418]'
+                      }`}>
+                        {entry.title}
+                      </h3>
+
+                      {/* Body Content */}
+                      <p className={`text-xs sm:text-sm leading-relaxed whitespace-pre-line ${
+                        isDark ? 'text-slate-300' : 'text-[#2D4836]'
+                      }`}>
+                        {entry.body}
+                      </p>
+                    </div>
+
+                    {/* Footer tags */}
+                    <div className={`flex items-center justify-between pt-4 mt-4 border-t text-[11px] ${
+                      isDark ? 'border-[#1C3A29] text-slate-400' : 'border-[#E3DDD1] text-[#3E5C48]'
+                    }`}>
+                      <span className="font-mono">
+                        {entry.wordCount ? `${entry.wordCount} words` : 'Reflection'}
+                      </span>
+                      {entry.place_name && (
+                        <span className={`font-medium flex items-center gap-1 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`}>
+                          📍 {entry.place_name}
+                        </span>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+            </div>
+          )}
         </div>
 
       </div>

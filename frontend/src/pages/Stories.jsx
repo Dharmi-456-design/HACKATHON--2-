@@ -323,7 +323,7 @@ export default function Stories() {
   };
 
   // Text-To-Speech Functions
-  const handleSpeakStory = (customText) => {
+  const handleSpeakStory = (customText, customRate) => {
     if (!('speechSynthesis' in window)) {
       alert('Text-to-Speech is not supported in this browser.');
       return;
@@ -335,7 +335,7 @@ export default function Stories() {
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(textToRead);
-    utterance.rate = speechRate;
+    utterance.rate = customRate !== undefined ? customRate : speechRate;
     utterance.pitch = speechPitch;
 
     if (availableVoices.length > 0 && availableVoices[selectedVoiceIndex]) {
@@ -709,13 +709,13 @@ export default function Stories() {
                   <div className={`flex items-center gap-1 border rounded-full p-0.5 ${
                     isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#FDFBF7] border-[#E3DDD1]'
                   }`}>
-                    {[0.8, 1.0, 1.25].map((rate) => (
+                    {[0.5, 1.0, 2.0].map((rate) => (
                       <button
                         key={rate}
                         onClick={() => {
                           setSpeechRate(rate);
                           if (isSpeaking) {
-                            handleSpeakStory();
+                            handleSpeakStory(undefined, rate);
                           }
                         }}
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-colors ${
@@ -724,7 +724,7 @@ export default function Stories() {
                             : isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
                         }`}
                       >
-                        {rate}x
+                        {rate === 1.0 ? '1x' : rate === 2.0 ? '2x' : `${rate}x`}
                       </button>
                     ))}
                   </div>
