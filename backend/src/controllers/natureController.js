@@ -7,7 +7,8 @@ const { getMissions, createMission, updateMission, deleteMission } = require('./
 const { getPlaces, getPlaceById } = require('./placeController');
 const { getStories, createStory, deleteStory, generateAIStory, assistAIStory } = require('./storyController');
 const { getCommunityPosts, createCommunityPost, deleteCommunityPost, getTestimonials, getPublicStats } = require('./communityController');
-const { getActions, createAction, updateAction, deleteAction, getStreak, getBestTime, getWeeklyRecap, getConnection } = require('./actionController');
+const { getActions, createAction, updateAction, deleteAction, getStreak, getBestTime, getConnection } = require('./actionController');
+const { getWeeklyRecap, getRecapSnapshots, createRecapSnapshot, deleteRecapSnapshot } = require('./recapController');
 const { handlePulseChat, handleImageAnalyze, getPulseThreads, createPulseThread, renamePulseThread, deletePulseThread, clearPulseThreads, updatePulseThreadMessages } = require('./aiController');
 
 module.exports = {
@@ -42,6 +43,9 @@ module.exports = {
   getStreak,
   getBestTime,
   getWeeklyRecap,
+  getRecapSnapshots,
+  createRecapSnapshot,
+  deleteRecapSnapshot,
   getConnection,
   handlePulseChat,
   handleImageAnalyze,

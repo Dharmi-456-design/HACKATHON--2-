@@ -7,7 +7,8 @@ const { getMissions, createMission, updateMission, deleteMission } = require('..
 const { getPlaces, getPlaceById } = require('../controllers/placeController');
 const { getStories, createStory, deleteStory, generateAIStory, assistAIStory } = require('../controllers/storyController');
 const { getCommunityPosts, createCommunityPost, deleteCommunityPost, getTestimonials, getPublicStats } = require('../controllers/communityController');
-const { getActions, createAction, updateAction, deleteAction, getStreak, getBestTime, getWeeklyRecap, getConnection } = require('../controllers/actionController');
+const { getActions, createAction, updateAction, deleteAction, getStreak, getBestTime, getConnection } = require('../controllers/actionController');
+const { getWeeklyRecap, getRecapSnapshots, createRecapSnapshot, deleteRecapSnapshot } = require('../controllers/recapController');
 const { handlePulseChat, handleImageAnalyze, getPulseThreads, createPulseThread, renamePulseThread, deletePulseThread, clearPulseThreads, updatePulseThreadMessages } = require('../controllers/aiController');
 const asyncHandler = require('../utils/asyncHandler');
 const { protect } = require('../middleware/authMiddleware');
@@ -99,6 +100,11 @@ router.route('/actions/:id').patch(protect, asyncHandler(updateAction)).delete(p
 router.route('/streak').get(protect, asyncHandler(getStreak));
 router.route('/best-time').get(protect, asyncHandler(getBestTime));
 router.route('/weekly-recap').get(protect, asyncHandler(getWeeklyRecap));
+router
+  .route('/weekly-recap/snapshots')
+  .get(protect, asyncHandler(getRecapSnapshots))
+  .post(protect, asyncHandler(createRecapSnapshot));
+router.route('/weekly-recap/snapshots/:id').delete(protect, asyncHandler(deleteRecapSnapshot));
 router.route('/connection').get(protect, asyncHandler(getConnection));
 
 module.exports = router;

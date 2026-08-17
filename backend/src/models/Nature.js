@@ -180,6 +180,34 @@ const chatThreadSchema = new mongoose.Schema(
 );
 chatThreadSchema.index({ user: 1, updatedAt: -1 });
 
+// Weekly Recap Snapshot Schema (Vault Archive)
+const weeklyRecapSnapshotSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true, required: true },
+    week_id: { type: String, required: true, trim: true, index: true },
+    week_label: { type: String, required: true, trim: true },
+    start_date: { type: Date, required: true },
+    end_date: { type: Date, required: true },
+    eco_score: { type: Number, default: 0, min: 0, max: 100 },
+    eco_rank: { type: String, default: 'Seedling Scout' },
+    total_species: { type: Number, default: 0 },
+    total_observations: { type: Number, default: 0 },
+    active_days: { type: Number, default: 0 },
+    most_active_day: { type: String, default: '—' },
+    top_species: { type: mongoose.Schema.Types.Mixed, default: null },
+    categories: { type: [{ category: String, count: Number, percentage: Number }], default: [] },
+    places_count: { type: Number, default: 0 },
+    missions_count: { type: Number, default: 0 },
+    actions_count: { type: Number, default: 0 },
+    journals_count: { type: Number, default: 0 },
+    summary: { type: String, default: '' },
+    snapshot_data: { type: mongoose.Schema.Types.Mixed, default: {} },
+  },
+  { timestamps: true }
+);
+weeklyRecapSnapshotSchema.index({ user: 1, createdAt: -1 });
+weeklyRecapSnapshotSchema.index({ user: 1, week_id: 1 });
+
 module.exports = {
   Profile: mongoose.model('Profile', profileSchema),
   Discovery: mongoose.model('Discovery', discoverySchema),
@@ -190,4 +218,5 @@ module.exports = {
   CommunityPost: mongoose.model('CommunityPost', communityPostSchema),
   Action: mongoose.model('Action', actionSchema),
   ChatThread: mongoose.model('ChatThread', chatThreadSchema),
+  WeeklyRecapSnapshot: mongoose.model('WeeklyRecapSnapshot', weeklyRecapSnapshotSchema),
 };
