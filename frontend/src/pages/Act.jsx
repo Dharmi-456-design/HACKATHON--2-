@@ -289,6 +289,7 @@ export default function Act() {
   const [minutes, setMinutes] = useState(15);
   const [isGenerating, setIsGenerating] = useState(false);
   const [flippedCardId, setFlippedCardId] = useState(null);
+  const [clickedCardId, setClickedCardId] = useState(null);
   const [activeTab, setActiveTab] = useState('suggested');
   const [actError, setActError] = useState('');
 
@@ -582,8 +583,17 @@ export default function Act() {
                 <div
                   key={action.id}
                   className="perspective-1000 h-96 cursor-pointer"
-                  onMouseEnter={() => setFlippedCardId(action.id)}
-                  onMouseLeave={() => setFlippedCardId(null)}
+                  onMouseEnter={() => { if (clickedCardId !== action.id) setFlippedCardId(action.id); }}
+                  onMouseLeave={() => { if (clickedCardId !== action.id) setFlippedCardId(null); }}
+                  onClick={() => {
+                    if (clickedCardId === action.id) {
+                      setClickedCardId(null);
+                      setFlippedCardId(null);
+                    } else {
+                      setClickedCardId(action.id);
+                      setFlippedCardId(action.id);
+                    }
+                  }}
                 >
                   <motion.div
                     className="w-full h-full relative transition-transform duration-500 transform-style-3d shadow-2xl rounded-3xl"

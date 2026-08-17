@@ -108,6 +108,93 @@ const NEARBY_TRANSLATIONS = {
   },
 };
 
+const DEFAULT_TOP_PICKS = [
+  {
+    id: "kankaria-lake",
+    name: "Kankaria Lake & Eco Sanctuary",
+    category: "Nature",
+    icon: "🌊",
+    image: "/kankaria_lake.png",
+    description: "A historic circular lake with central island gardens and rich birdlife.",
+    address: "Maninagar, Ahmedabad, Gujarat",
+    distance: "1.2 km",
+    walkTime: "15 min walk",
+    rating: 4.9,
+    reviewsCount: 320,
+    isOpen: true,
+    whyRecommend: "Iconic eco sanctuary taking reference from real Google GPS coordinates.",
+    hours: "8 AM - 10 PM",
+    price: "Free",
+    lat: 23.0063,
+    lng: 72.6026,
+    mapX: "35%",
+    mapY: "40%",
+  },
+  {
+    id: "sabarmati-riverfront",
+    name: "Sabarmati Riverfront Biodiversity Park",
+    category: "Parks",
+    icon: "🌿",
+    image: "/sabarmati_riverfront.png",
+    description: "Lush urban green promenade with native flora and riverside walking trails.",
+    address: "Sabarmati Riverfront, Ahmedabad",
+    distance: "0.8 km",
+    walkTime: "10 min walk",
+    rating: 4.8,
+    reviewsCount: 240,
+    isOpen: true,
+    whyRecommend: "Restored riparian habitat buffer along the Sabarmati.",
+    hours: "6 AM - 9 PM",
+    price: "Free",
+    lat: 23.0300,
+    lng: 72.5800,
+    mapX: "55%",
+    mapY: "30%",
+  },
+  {
+    id: "thol-sanctuary",
+    name: "Thol Lake Bird Sanctuary",
+    category: "Nature",
+    icon: "🦩",
+    image: "/thol_lake.png",
+    description: "Freshwater wetland habitat supporting thousands of migratory flamingos and pelicans.",
+    address: "Thol Village, Kalol, Gujarat",
+    distance: "3.5 km",
+    walkTime: "40 min walk",
+    rating: 4.9,
+    reviewsCount: 410,
+    isOpen: true,
+    whyRecommend: "Ramsar site providing vital wintering grounds for waterbirds.",
+    hours: "6 AM - 6 PM",
+    price: "₹50",
+    lat: 23.1381,
+    lng: 72.3957,
+    mapX: "70%",
+    mapY: "65%",
+  },
+  {
+    id: "law-garden",
+    name: "Law Garden Botanical Reserve",
+    category: "Culture",
+    icon: "🌸",
+    image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=600&q=80",
+    description: "Vibrant city garden featuring over 80 species of native flowers and medicinal plants.",
+    address: "Ellisbridge, Ahmedabad",
+    distance: "1.8 km",
+    walkTime: "22 min walk",
+    rating: 4.7,
+    reviewsCount: 180,
+    isOpen: true,
+    whyRecommend: "Urban heat island buffer with rich pollinator gardens.",
+    hours: "7 AM - 9 PM",
+    price: "Free",
+    lat: 23.0245,
+    lng: 72.5595,
+    mapX: "25%",
+    mapY: "70%",
+  },
+];
+
 export default function Places() {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -151,7 +238,7 @@ export default function Places() {
   const [mapCenterOverride, setMapCenterOverride] = useState(null);
 
   // Persistent State
-  const [places, setPlaces] = useState([]);
+  const [places, setPlaces] = useState(DEFAULT_TOP_PICKS);
 
   // Fetch dynamic places from backend MongoDB API
   useEffect(() => {
@@ -181,6 +268,8 @@ export default function Places() {
   const [radarViewMode, setRadarViewMode] = useState('google_maps'); // Default to Live Google Maps
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [flippedCardId, setFlippedCardId] = useState(null);
+  const [clickedCardId, setClickedCardId] = useState(null);
+  const [googleSearchQuery, setGoogleSearchQuery] = useState('');
   const [showAllPlacesModal, setShowAllPlacesModal] = useState(false);
   const [isBuildingRoute, setIsBuildingRoute] = useState(false);
   const [builtRoute, setBuiltRoute] = useState(null);
@@ -266,6 +355,27 @@ export default function Places() {
             reviewsCount: apiItem.reviewsCount || apiItem.review_count || 120,
             isOpen: apiItem.isOpen !== undefined ? apiItem.isOpen : true,
           }));
+          if (!merged.some(p => p.name.includes("Kankaria"))) {
+            merged.push({
+              id: "kankaria-lake",
+              name: "Kankaria Lake",
+              category: "Nature",
+              icon: "🌊",
+              image: "/kankaria_lake.png",
+              description: "A beautiful circular lake with an island garden.",
+              address: "Ahmedabad, Gujarat",
+              distance: "1.2 km",
+              walkTime: "15 min walk",
+              rating: 4.9,
+              reviewsCount: 300,
+              isOpen: true,
+              whyRecommend: "Beautiful scenic view of the lake.",
+              hours: "8 AM - 10 PM",
+              price: "Free",
+              lat: 23.0063,
+              lng: 72.6026
+            });
+          }
           setPlaces(merged);
         }
       })
@@ -414,8 +524,17 @@ export default function Places() {
                     <div
                       key={place.id}
                       className="perspective-1000 h-96 cursor-pointer"
-                      onMouseEnter={() => setFlippedCardId(place.id)}
-                      onMouseLeave={() => setFlippedCardId(null)}
+                      onMouseEnter={() => { if (clickedCardId !== place.id) setFlippedCardId(place.id); }}
+                      onMouseLeave={() => { if (clickedCardId !== place.id) setFlippedCardId(null); }}
+                      onClick={() => {
+                        if (clickedCardId === place.id) {
+                          setClickedCardId(null);
+                          setFlippedCardId(null);
+                        } else {
+                          setClickedCardId(place.id);
+                          setFlippedCardId(place.id);
+                        }
+                      }}
                     >
                       <motion.div
                         className="w-full h-full relative transition-transform duration-500 transform-style-3d shadow-2xl rounded-3xl"
@@ -514,7 +633,7 @@ export default function Places() {
           {/* HD Sunset Mountain Pine Forest Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-            style={{ backgroundImage: `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80')` }}
+            style={{ backgroundImage: `url('/hero_background.png')` }}
           />
 
           {/* Dark Forest Gradient Overlay */}
@@ -611,25 +730,43 @@ export default function Places() {
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setGoogleSearchQuery(searchQuery);
+                    setRadarViewMode('google_maps');
+                  }
+                }}
                 placeholder={t.askNearbyPlaceholder}
-                className={`w-full rounded-2xl pl-11 pr-28 py-3.5 text-xs sm:text-sm outline-none transition-colors ${
+                className={`w-full rounded-2xl pl-11 pr-52 py-3.5 text-xs sm:text-sm outline-none transition-colors ${
                   isDark
                     ? 'bg-[#07150C] border border-[#20422E] text-white focus:border-[#4ADE80]'
                     : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
                 }`}
               />
-              <button
-                onClick={handleLocateMe}
-                disabled={isLocating}
-                className={`absolute right-2.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-all border ${
-                  isDark
-                    ? 'bg-[#1A3827] border-[#4ADE80]/40 text-[#4ADE80] hover:bg-[#20452F]'
-                    : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28] hover:bg-[#D4E8D2]'
-                }`}
-              >
-                <LocateFixed className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
-                <span>{isLocating ? t.locating : t.locateMe}</span>
-              </button>
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                <button
+                  onClick={() => {
+                    setGoogleSearchQuery(searchQuery);
+                    setRadarViewMode('google_maps');
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#4ADE80] text-[#07130B] font-bold text-xs hover:bg-[#3ECE77] transition-all flex items-center gap-1 cursor-pointer shadow-md"
+                >
+                  <Search className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Search</span>
+                </button>
+                <button
+                  onClick={handleLocateMe}
+                  disabled={isLocating}
+                  className={`px-3 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-all border ${
+                    isDark
+                      ? 'bg-[#1A3827] border-[#4ADE80]/40 text-[#4ADE80] hover:bg-[#20452F]'
+                      : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28] hover:bg-[#D4E8D2]'
+                  }`}
+                >
+                  <LocateFixed className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
+                  <span>{isLocating ? t.locating : t.locateMe}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -693,7 +830,7 @@ export default function Places() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button
+            <button
                       onClick={handleLocateMe}
                       disabled={isLocating}
                       className={`px-2.5 py-1 rounded-full border font-bold text-[11px] transition-all flex items-center gap-1 cursor-pointer ${
@@ -753,8 +890,8 @@ export default function Places() {
                           ? `${mapCenterOverride.lat},${mapCenterOverride.lng}`
                           : hasLocation
                           ? `${userLat},${userLng}`
-                          : searchQuery.trim() 
-                          ? `${searchQuery}, Ahmedabad`
+                          : googleSearchQuery.trim() 
+                          ? `${googleSearchQuery}, Ahmedabad`
                           : 'Sabarmati Riverfront Park, Ahmedabad'
                       )}&t=&z=${selectedPlace ? 16 : hasLocation ? 16 : 14}&ie=UTF8&iwloc=&output=embed`}
                     />
@@ -940,8 +1077,17 @@ export default function Places() {
                     <div
                       key={place.id}
                       className="perspective-1000 h-96 cursor-pointer"
-                      onMouseEnter={() => setFlippedCardId(place.id)}
-                      onMouseLeave={() => setFlippedCardId(null)}
+                      onMouseEnter={() => { if (clickedCardId !== place.id) setFlippedCardId(place.id); }}
+                      onMouseLeave={() => { if (clickedCardId !== place.id) setFlippedCardId(null); }}
+                      onClick={() => {
+                        if (clickedCardId === place.id) {
+                          setClickedCardId(null);
+                          setFlippedCardId(null);
+                        } else {
+                          setClickedCardId(place.id);
+                          setFlippedCardId(place.id);
+                        }
+                      }}
                     >
                       <motion.div
                         className="w-full h-full relative transition-transform duration-500 transform-style-3d shadow-2xl rounded-3xl"
