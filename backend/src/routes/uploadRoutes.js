@@ -9,19 +9,23 @@ const router = express.Router();
 
 const uploadLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 20,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many uploads, please try again later.' },
 });
 
-router.post(
-  '/',
-  uploadLimiter,
-  protect,
-  upload.single('image'),
-  validateImageBuffer,
-  asyncHandler(uploadImage)
-);
+const handleUploadMiddleware = (req, res, next) => {
+  if (req.is('multipart/form-data')) {
+    return upload.single('image')(req, res, (err) => {
+      if (err) return next(err);
+      validateImageBuffer(req, res, next);
+    });
+  }
+  next();
+};
+
+router.post('/', uploadLimiter, protect, handleUploadMiddleware, asyncHandler(uploadImage));
+router.post('/base64', uploadLimiter, protect, asyncHandler(uploadImage));
 
 module.exports = router;
