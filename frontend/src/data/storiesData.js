@@ -8,7 +8,7 @@ export const DEFAULT_STORIES = [
     isFeatured: true,
     isInteractive: true,
     isMine: false,
-    coverImage: 'https://images.unsplash.com/photo-1511497584788-87676104235f?w=1200&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1200&q=80',
     summary: 'An ancient canopy conceals an underground communication network of symbiotic fungi. Follow Maya as she decodes the bioacoustic rhythms of an eight-hundred-year-old forest cathedral.',
     narrative: `The mist hung thick over the northern coastal range, wrapping the colossal redwoods in a blanket of Pacific ocean moisture. Maya adjusted her bio-acoustic sensor array, strapping the bronze contact nodes securely around the furrowed, mossy bark of an eight-hundred-year-old Sequoia sempervirens known locally as "The Elder Sentinel."
 

@@ -5,6 +5,7 @@ import { Leaf, ThumbsUp, MapPin } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 import { toTestimonial, DEFAULT_TESTIMONIALS } from '../lib/testimonials';
 import { usePublicStats } from '../hooks/usePublicStats';
+import { useAuth } from '../contexts/AuthContext';
 
 function FadeUp({ children, delay = 0, y = 24, className = '' }) {
   return (
@@ -114,6 +115,7 @@ function LivePreviewPanel() {
 
 // Main CtaSection Component
 export default function CtaSection() {
+  const { user } = useAuth();
   const sectionRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -158,10 +160,10 @@ export default function CtaSection() {
             </FadeUp>
             <FadeUp delay={0.3} className="mt-10">
               <Link
-                to="/register"
+                to={user ? "/app" : "/register"}
                 className="inline-flex items-center gap-2 rounded-full bg-[#96CD7B] px-6 py-3 text-sm font-semibold text-[#0A1610] transition-all hover:scale-[1.03] hover:bg-[#A8DD90] shadow-lg cursor-pointer"
               >
-                Start for free
+                {user ? "Go to Dashboard →" : "Start for free"}
               </Link>
             </FadeUp>
           </div>

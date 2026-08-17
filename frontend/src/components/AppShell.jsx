@@ -103,15 +103,18 @@ export default function AppShell() {
                 <button
                   type="button"
                   onClick={toggleSidebar}
-                  title="Expand sidebar"
+                  title="NaturePulse - Click to expand sidebar"
                   aria-label="Expand sidebar"
-                  className={`p-2 rounded-xl transition-all duration-150 cursor-pointer ${
-                    isDark
-                      ? 'text-[#96CD7B] hover:bg-white/10'
-                      : 'text-[#1C3727] hover:bg-[#E2EFE0]'
-                  }`}
+                  className="relative group p-0.5 rounded-xl transition-transform duration-150 cursor-pointer hover:scale-105"
                 >
-                  <PanelLeftOpen size={20} strokeWidth={2} />
+                  <img
+                    src="/logo.png"
+                    alt="NaturePulse Logo"
+                    className="w-9 h-9 rounded-xl object-cover shadow-sm border border-emerald-500/30 group-hover:border-emerald-400 transition-all"
+                  />
+                  <div className="absolute inset-0 rounded-xl bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                    <PanelLeftOpen size={15} />
+                  </div>
                 </button>
               </motion.div>
             ) : (
