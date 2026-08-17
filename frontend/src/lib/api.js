@@ -16,7 +16,7 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
-export const apiUrl = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '')).replace(/\/+$/, '');
+export const apiUrl = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://naturpulse.onrender.com')).replace(/\/+$/, '');
 
 export async function apiFetch(path, options = {}, token = null) {
   if (!apiUrl) {
