@@ -276,10 +276,22 @@ export default function WeeklyRecap() {
 • Species Logged: ${totalSpecies}
 • Active Days: ${totalDays}
 ${mostActiveDay !== '—' ? `• Most Active Day: ${mostActiveDay} (${mostActiveCount} observations)` : ''}
-• Top Species: ${speciesNames.slice(0, 3).join(', ') || 'None yet'}`;
+• Top Species: ${speciesNames.slice(0, 3).join(', ') || 'None yet'}
+• Total Observations: ${recap.total_species || 0}`;
 
       navigator.clipboard.writeText(summaryText2);
-      alert('Weekly Recap Summary copied to clipboard!');
+
+      // Trigger text file download
+      try {
+        const dataStr = 'data:text/plain;charset=utf-8,' + encodeURIComponent(summaryText2);
+        const link = document.createElement('a');
+        link.href = dataStr;
+        link.download = `NaturePulse_Weekly_Recap_${new Date().toISOString().slice(0, 10)}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch {}
+
       setIsExporting(false);
     }, 300);
   };
