@@ -119,7 +119,7 @@ const MISSION_TRANSLATIONS = {
 
 export default function NatureMissions() {
   const { session, user } = useAuth();
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = MISSION_TRANSLATIONS[lang] || MISSION_TRANSLATIONS.en;
   const token = session?.access_token;
 

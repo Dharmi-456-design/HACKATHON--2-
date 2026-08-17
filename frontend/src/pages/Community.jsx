@@ -160,7 +160,7 @@ const COMMUNITY_TRANSLATIONS = {
 export default function Community() {
   const { user, session } = useAuth();
   const { isDark } = useTheme();
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = COMMUNITY_TRANSLATIONS[lang] || COMMUNITY_TRANSLATIONS.en;
   const myId = user?.id || user?._id || 'my-user-id';
   const tokenFromSession = session?.access_token;

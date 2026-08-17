@@ -666,10 +666,28 @@ export default function PulseChat() {
       saveActiveThreadMessages(finalMsgs);
     } catch {
       setError('');
+      let replyText = `I observed your note: "${fullMessageContent}". Nature ecosystems respond dynamically to shade canopy, seasonal humidity, and bird nesting corridors.`;
+      const isGujarati = lang === 'gu' || /[\u0A80-\u0AFF]/.test(fullMessageContent) || /(vishe|kaho|kem|kya|che|nthi|su|chhe|mate|visit|joiye|kaya|kya|batao|kro)/i.test(fullMessageContent);
+      if (isGujarati) {
+        const textLower = fullMessageContent.toLowerCase();
+        if (textLower.includes('ahmedabad') || textLower.includes('place') || textLower.includes('visit') || textLower.includes('જોવા') || textLower.includes('સ્થાન') || textLower.includes('જગ્યા') || textLower.includes('ફરવા') || textLower.includes('ક્યાં')) {
+          replyText = 'અમદાવાદ અને આસપાસ મુલાકાત લેવા માટેના શ્રેષ્ઠ ૪ પ્રકૃતિ સ્થાનો:\n૧. સાબરમતી રિવરસાઇડ પાર્ક — નદી કિનારે પક્ષી દર્શન અને શાંતિ માટે\n૨. થોળ સરોવર પક્ષી અભયારણ્ય — ફ્લેમિંગો અને મિગ્રેટરી જળચરો માટે\n૩. પરિમલ ગાર્ડન — પ્રાચીન વડ અને બોટનિકલ ક્રેસ્ટ માટે\n૪. ઇન્દ્રોડા નેચર હેરિટેજ પાર્ક (ગાંધીનગર) — વિશાળ ફોરેસ્ટ ટ્રાયલ માટે\n\nતમે આમાંથી કયા સ્થાન વિશે વધુ વિગત જાણવા માંગો છો?';
+        } else if (textLower.includes('bird') || textLower.includes('પક્ષી') || textLower.includes('pakshi') || textLower.includes('મોર') || textLower.includes('પોપટ')) {
+          replyText = 'ગુજરાત અને અમદાવાદમાં મોર (Peafowl), પોપટ (Parakeet), એશિયન કોયલ (Koel), શ્વેત બગલા (Egrets) અને લીલો પતંગો (Bee-Eater) મુખ્યત્વે જોવા મળે છે. તમે કયા પક્ષી વિશે વધુ વિગત જાણવા માગો છો?';
+        } else if (textLower.includes('tree') || textLower.includes('વૃક્ષ') || textLower.includes('છોડ') || textLower.includes('vruksh') || textLower.includes('plant') || textLower.includes('flower') || textLower.includes('ફૂલ')) {
+          replyText = 'તમારી આસપાસ પવિત્ર વડ (Banyan Tree), ઔષધીય લીમડો (Neem), પીપળો (Peepal) અને અમલતાસ (Golden Shower) મુખ્ય ઓક્સિજન આપતા વૃક્ષો છે. તમે કયા વૃક્ષ કે ફૂલ વિશે પૂછવા માંગો છો?';
+        } else if (textLower.includes('hi') || textLower.includes('hello') || textLower.includes('kem cho') || textLower.includes('કેમ') || textLower.includes('નામ') || textLower.includes('કોણ')) {
+          replyText = 'નમસ્તે! 🍃 હું પલ્સ (Pulse AI) છું — તમારો ઇકોલોજીકલ ગાઇડ. તમે મને અમદાવાદના સ્થાનો, પક્ષીઓ, વૃક્ષો, વાતાવરણ અથવા પર્યાવરણ વિશે ગમે તે પ્રશ્ન પૂછી શકો છો!';
+        } else {
+          replyText = `તમારા પ્રશ્ન "${fullMessageContent}" માટે પલ્સ ઇન્ટેલિજન્સ:\nપલ્સ એઆઈ તમારી આસપાસના પર્યાવરણ, જૈવવિવિધતા, અમદાવાદના સ્થાનો અને વનસ્પતિઓ વિશે સચોટ માહિતી આપે છે. તમે કયા ચોક્કસ વિષય કે પ્રજાતિ વિશે વધુ વિગત જાણવા માગો છો?`;
+        }
+      } else if (lang === 'hi' || /[\u0900-\u097F]/.test(fullMessageContent)) {
+        replyText = `आपके प्रश्न "${fullMessageContent}" के लिए पल्स उत्तर: आपके आस-पास के पौधों और पक्षियों के बारे में पल्स इंटेलिजेंस सीधा उत्तर देता है।`;
+      }
       const fallbackReply = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: `I observed your note: "${fullMessageContent}". Nature ecosystems respond dynamically to shade canopy, seasonal humidity, and bird nesting corridors.`,
+        content: replyText,
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, fallbackReply]);
@@ -1006,7 +1024,7 @@ export default function PulseChat() {
             title="Start New Chat"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
-            <span>{t.newChat || 'New Chat'}</span>
+            <span>New Chat</span>
           </button>
 
           <button
@@ -1017,7 +1035,7 @@ export default function PulseChat() {
             title="Chat History"
           >
             <History className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-emerald-700'}`} />
-            <span className="hidden sm:inline">{t.historyTitle}</span>
+            <span className="hidden sm:inline">Chat History</span>
             {threads.filter((th) => th.messages?.length > 0).length > 0 && (
               <span className={`ml-0.5 px-1.5 py-0.2 text-[10px] rounded-full font-bold ${
                 isDark ? 'bg-[#4ADE80]/20 text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28]'

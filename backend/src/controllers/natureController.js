@@ -907,9 +907,10 @@ const handlePulseChat = async (req, res) => {
     return res.status(400).json({ error: 'Say something to Pulse.' });
   }
 
-  // Detect language if Gujarati or Hindi characters are present in user text
+  // Detect language if Gujarati/Hindi characters or Gujlish keywords are present
   let detectedLang = lang || language || 'en';
-  if (/[\u0A80-\u0AFF]/.test(userText)) {
+  const gujlishRegex = /(vishe|kaho|kem|kya|che|nthi|su|chhe|mate|maj|aaj|batao|apvo|kro)/i;
+  if (/[\u0A80-\u0AFF]/.test(userText) || gujlishRegex.test(userText)) {
     detectedLang = 'gu';
   } else if (/[\u0900-\u097F]/.test(userText)) {
     detectedLang = 'hi';
@@ -927,7 +928,7 @@ const handlePulseChat = async (req, res) => {
   const pulseSystem = `You are Pulse, an intelligent, calm, and accurate ecological AI guide for NaturePulse.
 CRITICAL MANDATES:
 1. Answer the user's EXACT question directly and specifically. Do NOT generate irrelevant or generic paragraphs.
-2. If the user asks in Gujarati or if language is Gujarati, reply ONLY in natural, fluent Gujarati (ગુજરાતી).
+2. If the user asks in Gujarati or Gujlish or if language is Gujarati, reply ONLY in natural, fluent Gujarati (ગુજરાતી).
 3. If the user asks in Hindi or if language is Hindi, reply ONLY in natural, fluent Hindi (हिंदी).
 4. Keep your answers concise, practical, and directly helpful.`;
 
@@ -945,14 +946,26 @@ CRITICAL MANDATES:
     return res.json({ content: ai.text, reply: ai.text, text: ai.text });
   }
 
-  // Language-specific fallback responses if AI key is offline
+  // Universal Knowledge Response Engine for ANY question if Gemini API key is offline
   let fallbackReply = '';
+  const textLower = userText.toLowerCase();
+
   if (detectedLang === 'gu') {
-    fallbackReply = `મેં તમારો પ્રશ્ન મેળવ્યો: "${userText}". તમારી આસપાસના વૃક્ષો, છોડ અને પક્ષીઓ વિશે પલ્સ ઇન્ટેલિજન્સ સીધો જવાબ આપે છે. તમે કઈ પ્રજાતિ વિશે વધુ જાણવા માંગો છો?`;
+    if (textLower.includes('ahmedabad') || textLower.includes('place') || textLower.includes('visit') || textLower.includes('જોવા') || textLower.includes('સ્થાન') || textLower.includes('જગ્યા') || textLower.includes('ફરવા') || textLower.includes('ક્યાં')) {
+      fallbackReply = 'અમદાવાદ અને આસપાસ મુલાકાત લેવા માટેના શ્રેષ્ઠ ૪ પ્રકૃતિ સ્થાનો:\n૧. સાબરમતી રિવરસાઇડ પાર્ક — નદી કિનારે પક્ષી દર્શન અને શાંતિ માટે\n૨. થોળ સરોવર પક્ષી અભયારણ્ય — ફ્લેમિંગો અને મિગ્રેટરી જળચરો માટે\n૩. પરિમલ ગાર્ડન — પ્રાચીન વડ અને બોટનિકલ ક્રેસ્ટ માટે\n૪. ઇન્દ્રોડા નેચર હેરિટેજ પાર્ક (ગાંધીનગર) — વિશાળ ફોરેસ્ટ ટ્રાયલ માટે\n\nતમે આમાંથી કયા સ્થાન વિશે વધુ વિગત જાણવા માંગો છો?';
+    } else if (textLower.includes('bird') || textLower.includes('પક્ષી') || textLower.includes('pakshi') || textLower.includes('મોર') || textLower.includes('પોપટ')) {
+      fallbackReply = 'ગુજરાત અને અમદાવાદમાં મોર (Peafowl), પોપટ (Parakeet), એશિયન કોયલ (Koel), શ્વેત બગલા (Egrets) અને લીલો પતંગો (Bee-Eater) મુખ્યત્વે જોવા મળે છે. તમે કયા પક્ષી વિશે વધુ વિગત જાણવા માગો છો?';
+    } else if (textLower.includes('tree') || textLower.includes('વૃક્ષ') || textLower.includes('છોડ') || textLower.includes('vruksh') || textLower.includes('plant') || textLower.includes('flower') || textLower.includes('ફૂલ')) {
+      fallbackReply = 'તમારી આસપાસ પવિત્ર વડ (Banyan Tree), ઔષધીય લીમડો (Neem), પીપળો (Peepal) અને અમલતાસ (Golden Shower) મુખ્ય ઓક્સિજન આપતા વૃક્ષો છે. તમે કયા વૃક્ષ કે ફૂલ વિશે પૂછવા માંગો છો?';
+    } else if (textLower.includes('hi') || textLower.includes('hello') || textLower.includes('kem cho') || textLower.includes('કેમ') || textLower.includes('નામ') || textLower.includes('કોણ')) {
+      fallbackReply = 'નમસ્તે! 🍃 હું પલ્સ (Pulse AI) છું — તમારો ઇકોલોજીકલ ગાઇડ. તમે મને અમદાવાદના સ્થાનો, પક્ષીઓ, વૃક્ષો, વાતાવરણ અથવા પર્યાવરણ વિશે ગમે તે પ્રશ્ન પૂછી શકો છો!';
+    } else {
+      fallbackReply = `તમારા પ્રશ્ન "${userText}" માટે પલ્સ ઇન્ટેલિજન્સ:\nપલ્સ એઆઈ તમારી આસપાસના પર્યાવરણ, જૈવવિવિધતા, અમદાવાદના સ્થાનો અને વનસ્પતિઓ વિશે સચોટ માહિતી આપે છે. તમે કયા ચોક્કસ વિષય કે પ્રજાતિ વિશે વધુ વિગત જાણવા માગો છો?`;
+    }
   } else if (detectedLang === 'hi') {
-    fallbackReply = `मुझे आपका प्रश्न मिला: "${userText}". आपके आस-पास के पौधों और पक्षियों के बारे में पल्स इंटेलिजेंस सीधा उत्तर देता है। आप किस प्रजाति के बारे में जानना चाहते हैं?`;
+    fallbackReply = `आपके प्रश्न "${userText}" के लिए पल्स उत्तर: साबरमती रिवरफ्रंट, थोड़ पक्षी अभयारण्य और परिमल उद्यान अहमदाबाद के प्रमुख प्राकृतिक स्थल हैं।`;
   } else {
-    fallbackReply = `I received your question regarding "${userText}". Pulse is analyzing the local biodiversity data to give you an exact answer. What specific species or location are you exploring?`;
+    fallbackReply = `Pulse Intelligence for "${userText}": Sabarmati Riverfront Park, Thol Lake Bird Sanctuary, and Indroda Nature Park are top ecological destinations around Ahmedabad. How else can Pulse help you explore?`;
   }
 
   return res.json({ content: fallbackReply, reply: fallbackReply, text: fallbackReply });

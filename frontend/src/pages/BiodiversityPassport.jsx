@@ -56,7 +56,7 @@ const PASSPORT_TRANSLATIONS = {
 
 export default function BiodiversityPassport() {
   const { session, user } = useAuth();
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = PASSPORT_TRANSLATIONS[lang] || PASSPORT_TRANSLATIONS.en;
   const token = session?.access_token;
 
