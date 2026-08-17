@@ -1,7 +1,7 @@
 async function callGeminiApi({ prompt, system, imageBase64, mimeType, json = false, temperature = 0.5 }) {
   const key = process.env.GEMINI_API_KEY || '';
   if (!key) return { unavailable: true, reason: 'missing-key' };
-  const models = ['gemini-flash-lite-latest', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'];
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-8b'];
 
   const parts = [];
   if (prompt) parts.push({ text: prompt });

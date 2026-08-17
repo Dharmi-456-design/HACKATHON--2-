@@ -549,7 +549,7 @@ export default function PaymentPage() {
                 <div className="w-16 h-16 rounded-full bg-[#96CD7B]/20 text-[#96CD7B] flex items-center justify-center mx-auto shadow-inner border border-[#96CD7B]/40">
                   <ShieldCheck size={32} />
                 </div>
-                <h3 className="font-display text-xl font-bold">Instant Instant Activation</h3>
+                <h3 className="font-display text-xl font-bold">Instant Activation</h3>
                 <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>
                   Click <strong>"Continue to Payment"</strong> to view your scannable UPI QR code or pay directly with GPay, PhonePe, Paytm, or Card.
                 </p>
