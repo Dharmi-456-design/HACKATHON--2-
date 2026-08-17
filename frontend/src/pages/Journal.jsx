@@ -450,125 +450,266 @@ export default function Journal() {
           </div>
         </div>
 
-        {/* ──────────────── CAPTURE A NEW FIELD REFLECTION FORM ──────────────── */}
-        <div className={`rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden border transition-colors ${
-          isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
-        }`}>
-          <div className={`flex items-center gap-3 border-b pb-4 ${
-            isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+        {/* ──────────────── TAB CONTENT AREA: DYNAMIC 4 VIEWS ──────────────── */}
+        
+        {/* VIEW 1: JOURNAL CANVAS (Writing Form) */}
+        {activeTab === 'journal' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-hidden border transition-colors ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
           }`}>
-            <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-lg ${
-              isDark ? 'bg-[#1A3827] border-[#4ADE80]/50 text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
-            }`}>
-              🍃
-            </div>
-            <div>
-              <h3 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.newReflectionTitle}</h3>
-              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.newReflectionSub}</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSaveNote} className="space-y-4">
-            <div className={`relative flex items-center border rounded-2xl overflow-hidden transition-all ${
-              isDark
-                ? 'bg-[#07150C] border-[#20422E] focus-within:border-[#4ADE80]'
-                : 'bg-[#F2ECE1] border-[#E0D8C8] focus-within:border-[#183B28]'
-            }`}>
-              <div className={`px-4 py-3.5 border-r ${
-                isDark ? 'border-[#20422E] bg-[#0E2015] text-[#4ADE80]' : 'border-[#E0D8C8] bg-[#EDE6D8] text-[#183B28]'
+            <div className={`flex items-center gap-3 border-b pb-4 ${isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'}`}>
+              <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-lg ${
+                isDark ? 'bg-[#1A3827] border-[#4ADE80]/50 text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
               }`}>
                 🍃
               </div>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={t.titlePlaceholder}
-                className={`w-full bg-transparent px-4 py-3.5 text-xs sm:text-sm outline-none ${
-                  isDark ? 'text-white placeholder:text-slate-500' : 'text-[#0F2418] placeholder:text-[#3E5C48]'
-                }`}
-              />
+              <div>
+                <h3 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.newReflectionTitle}</h3>
+                <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.newReflectionSub}</p>
+              </div>
             </div>
 
-            <div className={`relative flex items-start border rounded-2xl overflow-hidden transition-all ${
-              isDark
-                ? 'bg-[#07150C] border-[#20422E] focus-within:border-[#4ADE80]'
-                : 'bg-[#F2ECE1] border-[#E0D8C8] focus-within:border-[#183B28]'
-            }`}>
-              <div className={`px-4 py-4 border-r self-stretch flex items-start ${
-                isDark ? 'border-[#20422E] bg-[#0E2015] text-[#4ADE80]' : 'border-[#E0D8C8] bg-[#EDE6D8] text-[#183B28]'
+            <form onSubmit={handleSaveNote} className="space-y-4">
+              <div className={`relative flex items-center border rounded-2xl overflow-hidden transition-all ${
+                isDark
+                  ? 'bg-[#07150C] border-[#20422E] focus-within:border-[#4ADE80]'
+                  : 'bg-[#F2ECE1] border-[#E0D8C8] focus-within:border-[#183B28]'
               }`}>
-                “
-              </div>
-              <textarea
-                rows={4}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder={t.bodyPlaceholder}
-                className={`w-full bg-transparent p-4 text-xs sm:text-sm outline-none resize-none ${
-                  isDark ? 'text-white placeholder:text-slate-500' : 'text-[#0F2418] placeholder:text-[#3E5C48]'
-                }`}
-              />
-            </div>
-
-            <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-4 border-t ${
-              isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
-            }`}>
-              <div className="space-y-2">
-                <div>
-                  <p className={`text-xs font-bold ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>{t.moodLabel}</p>
-                  <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.moodSub}</p>
-                </div>
-
-                <div className="flex items-center gap-3 overflow-x-auto pb-1">
-                  {MOOD_OPTIONS.map((m) => {
-                    const isSelected = selectedMood === m.id;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setSelectedMood(m.id)}
-                        className="flex flex-col items-center gap-1.5 cursor-pointer group"
-                      >
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
-                          isSelected
-                            ? isDark
-                              ? 'bg-[#1A3827] border-2 border-[#4ADE80] shadow-lg shadow-[#4ADE80]/20 scale-105'
-                              : 'bg-[#E1EFE0] border-2 border-[#183B28] shadow-sm scale-105'
-                            : isDark
-                              ? 'bg-[#07150C] border border-[#20422E] group-hover:border-[#4ADE80]/50'
-                              : 'bg-[#EDE6D8] border border-[#D4CBB8] group-hover:border-[#183B28]'
-                        }`}>
-                          {m.icon}
-                        </div>
-                        <span className={`text-[10px] font-semibold ${
-                          isSelected ? (isDark ? 'text-[#4ADE80]' : 'text-[#183B28] font-bold') : (isDark ? 'text-slate-400' : 'text-[#3E5C48]')
-                        }`}>
-                          {m.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className={`w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center justify-center gap-3 cursor-pointer shrink-0 ${
-                  isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77] shadow-[#4ADE80]/20' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
-                }`}
-              >
-                <div className="w-7 h-7 rounded-full bg-black/15 flex items-center justify-center text-xs">
+                <div className={`px-4 py-3.5 border-r ${
+                  isDark ? 'border-[#20422E] bg-[#0E2015] text-[#4ADE80]' : 'border-[#E0D8C8] bg-[#EDE6D8] text-[#183B28]'
+                }`}>
                   🍃
                 </div>
-                <div className="text-left">
-                  <p className="font-extrabold">{t.saveBtn}</p>
-                  <p className="text-[10px] opacity-80 font-normal">{t.saveSub}</p>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t.titlePlaceholder}
+                  className={`w-full bg-transparent px-4 py-3.5 text-xs sm:text-sm outline-none ${
+                    isDark ? 'text-white placeholder:text-slate-500' : 'text-[#0F2418] placeholder:text-[#3E5C48]'
+                  }`}
+                />
+              </div>
+
+              <div className={`relative flex items-start border rounded-2xl overflow-hidden transition-all ${
+                isDark
+                  ? 'bg-[#07150C] border-[#20422E] focus-within:border-[#4ADE80]'
+                  : 'bg-[#F2ECE1] border-[#E0D8C8] focus-within:border-[#183B28]'
+              }`}>
+                <div className={`px-4 py-4 border-r self-stretch flex items-start ${
+                  isDark ? 'border-[#20422E] bg-[#0E2015] text-[#4ADE80]' : 'border-[#E0D8C8] bg-[#EDE6D8] text-[#183B28]'
+                }`}>
+                  “
                 </div>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </button>
+                <textarea
+                  rows={4}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder={t.bodyPlaceholder}
+                  className={`w-full bg-transparent p-4 text-xs sm:text-sm outline-none resize-none ${
+                    isDark ? 'text-white placeholder:text-slate-500' : 'text-[#0F2418] placeholder:text-[#3E5C48]'
+                  }`}
+                />
+              </div>
+
+              <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-4 border-t ${
+                isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'
+              }`}>
+                <div className="space-y-2">
+                  <div>
+                    <p className={`text-xs font-bold ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>{t.moodLabel}</p>
+                    <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{t.moodSub}</p>
+                  </div>
+
+                  <div className="flex items-center gap-3 overflow-x-auto pb-1">
+                    {MOOD_OPTIONS.map((m) => {
+                      const isSelected = selectedMood === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => setSelectedMood(m.id)}
+                          className="flex flex-col items-center gap-1.5 cursor-pointer group"
+                        >
+                          <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                            isSelected
+                              ? isDark
+                                ? 'bg-[#1A3827] border-2 border-[#4ADE80] shadow-lg shadow-[#4ADE80]/20 scale-105'
+                                : 'bg-[#E1EFE0] border-2 border-[#183B28] shadow-sm scale-105'
+                              : isDark
+                                ? 'bg-[#07150C] border border-[#20422E] group-hover:border-[#4ADE80]/50'
+                                : 'bg-[#EDE6D8] border border-[#D4CBB8] group-hover:border-[#183B28]'
+                          }`}>
+                            {m.icon}
+                          </div>
+                          <span className={`text-[10px] font-semibold ${
+                            isSelected ? (isDark ? 'text-[#4ADE80]' : 'text-[#183B28] font-bold') : (isDark ? 'text-slate-400' : 'text-[#3E5C48]')
+                          }`}>
+                            {m.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className={`w-full md:w-auto px-8 py-4 rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-xl flex items-center justify-center gap-3 cursor-pointer shrink-0 ${
+                    isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77] shadow-[#4ADE80]/20' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                  }`}
+                >
+                  <div className="w-7 h-7 rounded-full bg-black/15 flex items-center justify-center text-xs">
+                    🍃
+                  </div>
+                  <div className="text-left">
+                    <p className="font-extrabold">{t.saveBtn}</p>
+                    <p className="text-[10px] opacity-80 font-normal">{t.saveSub}</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+
+        {/* VIEW 2: IDEA VAULT */}
+        {activeTab === 'idea' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1]'
+          }`}>
+            <div className="flex items-center justify-between border-b pb-4 border-emerald-900/30">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg">
+                  🌱
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-bold text-white">Idea Vault</h3>
+                  <p className="text-xs text-slate-400">12 Stored Ecological Hypotheses & Urban Conservation Ideas</p>
+                </div>
+              </div>
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30">
+                12 Ideas Stored
+              </span>
             </div>
-          </form>
-        </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { title: 'Rainwater Retention Corridors', tag: '#RainHarvest', text: 'Installing terraced soil basins around Peepal trees to absorb monsoon runoff.' },
+                { title: 'Songbird Nesting Canopy', tag: '#SongbirdCorridor', text: 'Preserving old growth Banyan branches for Asian Koel and Parakeet nests.' },
+                { title: 'Micro-Fungi Soil Regenerator', tag: '#MicroFungi', text: 'Introducing native mycorrhizal fungi to revive urban soil moisture retention.' },
+                { title: 'Urban Heat Island Shield', tag: '#BioShield', text: 'Densely planting Neem and Gulmohar along riverfront walking trails.' },
+                { title: 'Night Pollinator Corridor', tag: '#NightSkySense', text: 'Reducing artificial night lighting near Jasmine and Plumbago flower beds.' },
+                { title: 'Shade Canopy Temperature Sensor', tag: '#ShadeGarden', text: 'Measuring 3°C drop under dense Tulsi and Banyan tree canopies.' },
+                { title: 'Dew Collector Netting', tag: '#DewCollector', text: 'Experimental mesh nets to harvest morning humidity in Gujarat dry months.' },
+                { title: 'Pollinator Floral Pathway', tag: '#PollinatorPathway', text: 'Connecting city parks with wildflower strips for honeybee foraging.' },
+                { title: 'Native Tree Bark Sponge', tag: '#TreesBark', text: 'Observing how bark textures trap urban dust and humidity.' },
+                { title: 'Urban Wildlife Water Basin', tag: '#UrbanWild', text: 'Installing quiet clay water saucers for peacocks and squirrels.' },
+                { title: 'Soil Moisture Bio-Indicator', tag: '#SoilRegen', text: 'Using earthworm activity as a metric for healthy garden compost.' },
+                { title: 'Autumn Leaf Mulching', tag: '#NativeFlora', text: 'Keeping fallen leaves as natural fertilizer under shade trees.' },
+              ].map((item, idx) => (
+                <div key={idx} className="p-4 rounded-2xl bg-[#07150C] border border-[#20422E] space-y-2 hover:border-[#4ADE80]/50 transition-all">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-[#4ADE80] bg-[#1A3827] px-2 py-0.5 rounded-full border border-[#4ADE80]/30">{item.tag}</span>
+                    <span className="text-[10px] text-slate-500">Idea #{idx + 1}</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-white">{item.title}</h4>
+                  <p className="text-xs text-slate-300 leading-relaxed">{item.text}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* VIEW 3: MEMORY CAPSULES */}
+        {activeTab === 'memory' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1]'
+          }`}>
+            <div className="flex items-center justify-between border-b pb-4 border-emerald-900/30">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg">
+                  🫙
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-bold text-white">Memory Capsules</h3>
+                  <p className="text-xs text-slate-400">8 Preserved Sensory Time Capsules of Nature Experiences</p>
+                </div>
+              </div>
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30">
+                8 Capsules Sealed
+              </span>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { title: 'Dawn Peepal Dew Drops', date: 'Aug 15, 2026', mood: 'Quiet Canopy', text: 'Fresh morning condensation glistening on Peepal leaf tips after rain.' },
+                { title: 'Peafowl Dawn Call', date: 'Aug 14, 2026', mood: 'Sunlit Meadow', text: 'Resonant peacock calls echoing across Sabarmati Riverfront Park at 6:15 AM.' },
+                { title: 'First Monsoon Soil Scent', date: 'Aug 12, 2026', mood: 'Rain Whisper', text: 'The unmistakable petrichor aroma as dry soil absorbs the season first rain.' },
+                { title: 'Banyan Canopy Shade Corridor', date: 'Aug 10, 2026', mood: 'Forest Calm', text: 'Stepping into cool 24°C shade under ancient Banyan aerial roots.' },
+                { title: 'Golden Shower Blossom Meadow', date: 'Aug 8, 2026', mood: 'Sunlit Meadow', text: 'Bright yellow Cassia flowers carpeting the garden walking path.' },
+                { title: 'Night Cricket Symphony', date: 'Aug 5, 2026', mood: 'Evening Hush', text: 'Rhythmic insect soundscape under clear starlit evening sky.' },
+                { title: 'Riverfront Heron Flight', date: 'Aug 2, 2026', mood: 'Quiet Canopy', text: 'Graceful white heron gliding low over river water mirror reflection.' },
+                { title: 'Tulsi Morning Aroma', date: 'Jul 30, 2026', mood: 'Forest Calm', text: 'Aromatic herbal scent releasing as morning sun warms Tulsi leaves.' },
+              ].map((capsule, idx) => (
+                <div key={idx} className="p-4 rounded-2xl bg-[#07150C] border border-[#20422E] space-y-2 hover:border-[#4ADE80]/50 transition-all">
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="text-amber-400 font-bold">🫙 Time Capsule #{idx + 1}</span>
+                    <span className="text-slate-400">{capsule.date}</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-white">{capsule.title}</h4>
+                  <p className="text-xs text-slate-300 leading-relaxed">{capsule.text}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* VIEW 4: ASK MY JOURNAL AI */}
+        {activeTab === 'ask' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl border ${
+            isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1]'
+          }`}>
+            <div className="flex items-center justify-between border-b pb-4 border-emerald-900/30">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#1A3827] border border-[#4ADE80]/40 flex items-center justify-center text-lg">
+                  💬
+                </div>
+                <div>
+                  <h3 className="font-display text-xl font-bold text-white">Ask My Journal AI</h3>
+                  <p className="text-xs text-slate-400">Pulse AI analyzes your saved reflections and unlocks ecological insights</p>
+                </div>
+              </div>
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30">
+                Pulse AI Ready
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-xs text-slate-300 font-medium">Quick prompt suggestions to ask Pulse AI:</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'What patterns did I notice in bird species?',
+                  'Summarize my reflections on Banyan tree shade',
+                  'Which morning times did I record the most reflections?',
+                  'What sensory rain moments did I record?',
+                ].map((promptText, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setTitle(`AI Analysis: ${promptText}`);
+                      setBody(`Pulse AI Search Analysis: Based on your recorded journal reflections, you frequently observe Peafowls, Koels, and Herons during early morning walks at Sabarmati Riverfront and Parimal Garden. Shade canopy observations show peak relaxation on Wednesday evenings.`);
+                      setActiveTab('journal');
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-[#13271C] border border-[#20422E] text-xs font-semibold text-[#4ADE80] hover:bg-[#1A3827] hover:border-[#4ADE80] cursor-pointer transition-all"
+                  >
+                    ✨ {promptText}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
 
         {/* ──────────────── GARY SNYDER QUOTE STRIP ──────────────── */}
         <div className={`rounded-2xl p-4 sm:p-5 flex items-center justify-between shadow-lg border transition-colors ${
