@@ -36,10 +36,10 @@ export default function ScrollTypographyHighlight() {
   const total = words.length;
 
   const SHOWCASE = [
-    { title: 'Ancient Forest Canopy', category: 'Forest Park Edge', img: 'https://upload.wikimedia.org/wikipedia/commons/4/41/Redwood_National_Park%2C_Fog_in_the_Forest.jpg' },
-    { title: 'Champa Night Bloom', category: 'Plumeria Rubra', img: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Plumeria_rubra_flower.jpg' },
-    { title: 'Indian Myna Foraging', category: 'Urban Wildlife', img: 'https://upload.wikimedia.org/wikipedia/commons/0/05/Common_Myna_%28Acridotheres_tristis%29.jpg' },
-    { title: 'Wetland Riparian Stream', category: 'Willamette River', img: 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Vallee_des_Couleurs_waterfall.jpg' },
+    { title: 'Ancient Forest Canopy', category: 'Forest Park Edge', img: '/ancient_forest_canopy.png' },
+    { title: 'Champa Night Bloom', category: 'Plumeria Rubra', img: '/champa_night_bloom.png' },
+    { title: 'Indian Myna Foraging', category: 'Urban Wildlife', img: '/indian_myna_foraging.png' },
+    { title: 'Wetland Riparian Stream', category: 'Willamette River', img: '/wetland_riparian_stream.png' },
   ];
 
   return (
