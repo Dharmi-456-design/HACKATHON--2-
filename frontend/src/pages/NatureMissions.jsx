@@ -224,33 +224,68 @@ export default function NatureMissions() {
   const [customDifficulty, setCustomDifficulty] = useState('Easy');
 
   useEffect(() => {
-    if (!token) return;
+    let savedLocal = null;
+    try {
+      const raw = localStorage.getItem('nature_missions_saved_v2');
+      if (raw) savedLocal = JSON.parse(raw);
+    } catch {}
+
+    if (!token) {
+      if (savedLocal && Array.isArray(savedLocal) && savedLocal.length > 0) {
+        setMissions(savedLocal);
+        setTotalXP(savedLocal.filter((m) => m.status === 'completed' || m.steps?.every?.(s => s.done)).reduce((sum, m) => sum + m.xpReward, 0));
+      }
+      return;
+    }
+
     Promise.all([
       apiFetch('/api/missions', {}, token),
       apiFetch('/api/streak', {}, token),
     ])
       .then(([list, streakData]) => {
-        const ui = Array.isArray(list) && list.length > 0
+        let ui = Array.isArray(list) && list.length > 0
           ? list.map((m, i) => toUiMission(m, i))
           : FALLBACK_DEFAULT_MISSIONS;
+
+        // Merge locally saved steps & status so completed tasks stay saved!
+        if (savedLocal && Array.isArray(savedLocal)) {
+          const localMap = new Map(savedLocal.map((m) => [m.id, m]));
+          ui = ui.map((m) => {
+            const loc = localMap.get(m.id);
+            if (loc) {
+              return {
+                ...m,
+                status: loc.status || m.status,
+                steps: Array.isArray(loc.steps) ? loc.steps : m.steps,
+              };
+            }
+            return m;
+          });
+        }
+
         setMissions(ui);
-        setTotalXP(ui.filter((m) => m.status === 'completed').reduce((sum, m) => sum + m.xpReward, 0));
+        setTotalXP(ui.filter((m) => m.status === 'completed' || m.steps?.every?.(s => s.done)).reduce((sum, m) => sum + m.xpReward, 0));
         if (streakData && typeof streakData.streak === 'number') setStreakDays(streakData.streak);
       })
-      .catch(() => setMissionError(''));
+      .catch(() => {
+        if (savedLocal && Array.isArray(savedLocal) && savedLocal.length > 0) {
+          setMissions(savedLocal);
+        }
+      });
   }, [token]);
 
   const pushMissionStatus = (mission) => {
-    if (!token || !mission.id || String(mission.id).startsWith('m-')) return;
-    apiFetch(`/api/missions/${mission.id}`, { method: 'PATCH', body: JSON.stringify({ status: mission.status }) }, token).catch(() => {
-      setMissionError('Your mission progress could not be saved. Please check your connection and try again.');
-    });
+    if (!token || !mission.id || String(mission.id).startsWith('fm-') || String(mission.id).startsWith('gen-')) return;
+    apiFetch(`/api/missions/${mission.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: mission.status, steps: mission.steps }),
+    }, token).catch(() => null);
   };
 
-  // Toggle Step Completion
+  // Toggle Step Completion & Save
   const toggleStep = (missionId, stepId) => {
-    setMissions((prev) =>
-      prev.map((m) => {
+    setMissions((prev) => {
+      const updated = prev.map((m) => {
         if (m.id !== missionId) return m;
         const updatedSteps = m.steps.map((s) => (s.id === stepId ? { ...s, done: !s.done } : s));
         const allDone = updatedSteps.every((s) => s.done);
@@ -258,14 +293,30 @@ export default function NatureMissions() {
 
         if (allDone && m.status !== 'completed') {
           setTotalXP((xp) => xp + m.xpReward);
+          // Celebration confetti burst when mission is completed!
+          try {
+            confetti({
+              particleCount: 120,
+              spread: 80,
+              origin: { y: 0.6 },
+              colors: ['#4ADE80', '#96CD7B', '#FCD34D', '#38BDF8'],
+            });
+          } catch {}
         }
 
         const updatedMission = { ...m, steps: updatedSteps, status: nextStatus };
         pushMissionStatus(updatedMission);
         if (selectedMission?.id === missionId) setSelectedMission(updatedMission);
         return updatedMission;
-      })
-    );
+      });
+
+      // Save immediately to localStorage so progress is NEVER lost!
+      try {
+        localStorage.setItem('nature_missions_saved_v2', JSON.stringify(updated));
+      } catch {}
+
+      return updated;
+    });
   };
 
   // Generate AI Mission
@@ -622,9 +673,9 @@ export default function NatureMissions() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {(activeTab === 'active'
-                  ? missions.filter((m) => m.status !== 'completed')
+                  ? missions.filter((m) => m.status !== 'completed' && !(Array.isArray(m.steps) && m.steps.length > 0 && m.steps.every((s) => s.done)))
                   : activeTab === 'completed'
-                  ? missions.filter((m) => m.status === 'completed')
+                  ? missions.filter((m) => m.status === 'completed' || (Array.isArray(m.steps) && m.steps.length > 0 && m.steps.every((s) => s.done)))
                   : missions).map((mission) => {
                   const isSelected = selectedMission?.id === mission.id;
                   const completedStepsCount = mission.steps.filter((s) => s.done).length;

@@ -3,7 +3,7 @@ const { isValidId, pick, sanitizeText, sanitizeMultiline } = require('../utils/n
 
 const missionAllowlist = [
   'title', 'description', 'mission_type', 'duration_minutes', 'status',
-  'location_hint', 'why_it_matters', 'scheduled_date', 'completed_at',
+  'location_hint', 'why_it_matters', 'scheduled_date', 'completed_at', 'steps',
 ];
 
 const missionDefaults = [
