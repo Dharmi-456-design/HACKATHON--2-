@@ -191,7 +191,9 @@ export default function PulseChat() {
   const [attachedImage, setAttachedImage] = useState(null);
   const [attachedPayload, setAttachedPayload] = useState(null);
   const [isListening, setIsListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
   const recognitionRef = useRef(null);
+  const isListeningRef = useRef(false);
 
   const [threads, setThreads] = useState([]);
   const [activeThreadId, setActiveThreadId] = useState('');
@@ -405,24 +407,45 @@ export default function PulseChat() {
     e.target.value = '';
   };
 
+  // Cleanup Speech Recognition on unmount
+  useEffect(() => {
+    return () => {
+      isListeningRef.current = false;
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {}
+      }
+    };
+  }, []);
+
   // Multilingual Voice Input Handler with Animated Modal Popup
   const toggleListening = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert('Voice input is supported in Google Chrome and Microsoft Edge browsers.');
+    if (isListening) {
+      isListeningRef.current = false;
+      setIsListening(false);
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {}
+      }
       return;
     }
 
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setError('Voice speech recognition is not supported in this browser. Please use Google Chrome, Microsoft Edge, or Safari.');
       return;
     }
+
+    setError('');
+    setVoiceTranscript(text || '');
 
     try {
       const recognition = new SpeechRecognition();
-      recognition.continuous = false;
+      recognition.continuous = true;
       recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
 
       if (lang === 'gu') {
         recognition.lang = 'gu-IN';
@@ -433,30 +456,65 @@ export default function PulseChat() {
       }
 
       recognition.onstart = () => {
+        isListeningRef.current = true;
         setIsListening(true);
+        setError('');
       };
 
       recognition.onresult = (event) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
+        let finalStr = '';
+        let interimStr = '';
+
+        for (let i = 0; i < event.results.length; ++i) {
+          const res = event.results[i];
+          if (res.isFinal) {
+            finalStr += res[0].transcript + ' ';
+          } else {
+            interimStr += res[0].transcript;
+          }
         }
-        setText(transcript);
+
+        const recognizedText = (finalStr + interimStr).trim();
+        if (recognizedText) {
+          setVoiceTranscript(recognizedText);
+          setText(recognizedText);
+        }
       };
 
       recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        setIsListening(false);
+        console.warn('Speech recognition notice:', event.error);
+        if (event.error === 'not-allowed') {
+          setError('Microphone access was denied. Please allow microphone permissions in your browser.');
+          isListeningRef.current = false;
+          setIsListening(false);
+        } else if (event.error === 'network' && recognition.lang !== 'en-US') {
+          // Fallback to en-US if regional language server is temporarily unreachable
+          recognition.lang = 'en-US';
+          try {
+            recognition.start();
+          } catch {}
+        }
       };
 
       recognition.onend = () => {
-        setIsListening(false);
+        if (isListeningRef.current) {
+          try {
+            recognition.start();
+          } catch {
+            isListeningRef.current = false;
+            setIsListening(false);
+          }
+        } else {
+          setIsListening(false);
+        }
       };
 
       recognitionRef.current = recognition;
       recognition.start();
     } catch (err) {
       console.error('Failed to start speech recognition:', err);
+      setError('Could not access microphone. Please check your browser audio permissions.');
+      isListeningRef.current = false;
       setIsListening(false);
     }
   };
@@ -771,14 +829,34 @@ export default function PulseChat() {
               </div>
 
               {/* Live Transcribed Speech Preview Box */}
-              <div className={`border rounded-2xl p-4 min-h-[90px] flex items-center justify-center text-center ${
+              <div className={`border rounded-2xl p-5 min-h-[110px] flex flex-col items-center justify-center text-center transition-all ${
                 isDark ? 'bg-[#0E2015] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
               }`}>
-                <p className={`text-sm sm:text-base font-normal leading-relaxed italic ${
-                  isDark ? 'text-slate-200' : 'text-slate-700'
-                }`}>
-                  {text ? `"${text}"` : t.listening}
-                </p>
+                {(voiceTranscript || text) ? (
+                  <div className="space-y-1">
+                    <p className={`text-base sm:text-lg font-medium leading-relaxed ${
+                      isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
+                    }`}>
+                      "{voiceTranscript || text}"
+                    </p>
+                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${
+                      isDark ? 'text-slate-400' : 'text-slate-500'
+                    }`}>
+                      Live Speech Transcription Active
+                    </span>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <p className={`text-sm sm:text-base font-normal animate-pulse ${
+                      isDark ? 'text-slate-300' : 'text-slate-600'
+                    }`}>
+                      Listening to your voice… Start speaking now!
+                    </p>
+                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                      (Your spoken words will appear here in real-time)
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Dynamic Soundwave Visualizer Bars */}
@@ -786,15 +864,16 @@ export default function PulseChat() {
                 {[0.1, 0.3, 0.15, 0.45, 0.2, 0.5, 0.25, 0.4].map((delay, i) => (
                   <motion.span
                     key={i}
-                    animate={{ height: ['8px', '32px', '12px', '28px', '8px'] }}
-                    transition={{ duration: 0.9, repeat: Infinity, delay }}
+                    animate={{ height: (voiceTranscript || text) ? ['12px', '36px', '16px', '32px', '12px'] : ['6px', '18px', '8px', '14px', '6px'] }}
+                    transition={{ duration: 0.8, repeat: Infinity, delay }}
                     className="w-1.5 rounded-full bg-gradient-to-t from-moss via-sage to-[#4ADE80]"
                   />
                 ))}
               </div>
 
-              <div className="flex justify-center pt-2">
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
+                  type="button"
                   onClick={toggleListening}
                   className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-all shadow-md cursor-pointer flex items-center gap-2 ${
                     isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
