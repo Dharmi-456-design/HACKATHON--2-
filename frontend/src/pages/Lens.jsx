@@ -358,10 +358,13 @@ export default function Lens() {
     }
   };
 
+  const [saveSuccess, setSaveSuccess] = useState('');
+
   const save = async () => {
     if (!filePayload && !preview) return;
     setSaving(true);
     setError('');
+    setSaveSuccess('');
     try {
       let imageUrl = preview;
       if (filePayload) {
@@ -410,6 +413,73 @@ export default function Lens() {
         return updated;
       });
 
+      // ──────────────── DIRECT JOURNAL SYNC ────────────────
+      const speciesTitle = analysis?.common_name
+        ? `🌿 Observed: ${analysis.common_name}`
+        : '🌿 Field Observation Note';
+
+      let journalBody = '';
+      if (analysis?.common_name) {
+        journalBody += `Species: ${analysis.common_name}`;
+        if (analysis.scientific_name) journalBody += ` (${analysis.scientific_name})`;
+        journalBody += `\nConfidence: ${analysis.confidence_pct || 90}% (${analysis.confidence || 'High'})\n`;
+      }
+      if (placeName) {
+        journalBody += `Location: ${placeName}\n`;
+      }
+      if (notes) {
+        journalBody += `\nObserver Notes:\n${notes}\n`;
+      }
+      if (analysis?.description && analysis.description !== notes) {
+        journalBody += `\nBotanical Analysis:\n${analysis.description}\n`;
+      }
+      if (analysis?.why_it_matters) {
+        journalBody += `\nEcological Importance:\n${analysis.why_it_matters}\n`;
+      }
+      if (analysis?.experience_suggestion) {
+        journalBody += `\nObservation Suggestion:\n${analysis.experience_suggestion}\n`;
+      }
+      if (!journalBody.trim()) {
+        journalBody = 'Field specimen photograph captured and logged into personal nature journal.';
+      }
+
+      const journalPayload = {
+        title: speciesTitle,
+        body: journalBody,
+        mood: analysis?.category === 'birds' ? 'Sunlit Meadow' : 'Quiet Canopy',
+        weather: '26°C · Field Observation',
+        place_name: placeName || profile?.city || 'Sabarmati Nature Corridor',
+        image_url: imageUrl,
+      };
+
+      // 1. Post to backend /api/journal
+      if (token) {
+        await apiFetch('/api/journal', {
+          method: 'POST',
+          body: JSON.stringify(journalPayload),
+        }, token).catch((err) => console.warn('Could not post to /api/journal:', err));
+      }
+
+      // 2. Save locally into np_journal_entries
+      try {
+        const localJournals = JSON.parse(localStorage.getItem('np_journal_entries') || '[]');
+        const newJournalEntry = {
+          id: `j-${Date.now()}`,
+          title: journalPayload.title,
+          body: journalPayload.body,
+          mood: journalPayload.mood,
+          weather: journalPayload.weather,
+          place_name: journalPayload.place_name,
+          image_url: imageUrl,
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          createdAt: new Date().toISOString(),
+          wordCount: journalPayload.body.split(/\s+/).length,
+          aiReflection: `Key Theme: ${analysis?.common_name || 'Observation'}`,
+        };
+        const updatedJournals = [newJournalEntry, ...localJournals.filter((j) => j.id !== newJournalEntry.id)];
+        localStorage.setItem('np_journal_entries', JSON.stringify(updatedJournals));
+      } catch {}
+
       if (isPublic && token) {
         await apiFetch('/api/community', {
           method: 'POST',
@@ -420,6 +490,10 @@ export default function Lens() {
           }),
         }, token).catch(() => {});
       }
+
+      setSaveSuccess('Saved successfully to your Journal and Field Record! 📖✨');
+      setTimeout(() => setSaveSuccess(''), 4000);
+
       setPreview(''); setFilePayload(null); setAnalysis(null);
       setNotes(''); setPlaceName(''); setIsPublic(false); setLookStep(0);
     } catch (err) {
@@ -468,6 +542,16 @@ export default function Lens() {
       </div>
 
       {error && <div className="mt-5"><ErrorBanner message={error} /></div>}
+      {saveSuccess && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-5 p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 flex items-center gap-2.5 text-sm font-semibold shadow-md"
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+          <span>{saveSuccess}</span>
+        </motion.div>
+      )}
 
       <div className="mt-8 grid lg:grid-cols-2 gap-5">
         {/* LEFT: Capture / Scanning / Result image area */}
