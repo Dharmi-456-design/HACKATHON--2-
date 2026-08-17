@@ -6,17 +6,17 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function PricingSection() {
-  const { user } = useAuth();
+  const { user, ensureUserOrGuest } = useAuth();
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState('yearly'); // 'monthly' | 'yearly'
 
-  const handleSelectPlan = () => {
-    if (user) {
-      navigate('/app');
-    } else {
-      navigate('/login');
+  const handleSelectPlan = async (planId) => {
+    if (!user && ensureUserOrGuest) {
+      await ensureUserOrGuest();
     }
+    const targetUrl = `/app/payment?plan=${planId}&billing=${billingCycle}`;
+    navigate(targetUrl);
   };
 
   const PLANS = [
@@ -264,7 +264,7 @@ export default function PricingSection() {
 
                 {/* CTA Button */}
                 <button
-                  onClick={handleSelectPlan}
+                  onClick={() => handleSelectPlan(plan.id)}
                   className={`w-full py-3.5 px-6 rounded-full text-sm font-semibold transition-all cursor-pointer shadow-md ${
                     plan.popular
                       ? 'bg-[#96CD7B] hover:bg-white text-[#0A1610] hover:scale-[1.02]'

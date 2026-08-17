@@ -29,6 +29,8 @@ const NatureMissions = lazy(() => import('./pages/NatureMissions'));
 const CommunityBiodiversityMap = lazy(() => import('./pages/CommunityBiodiversityMap'));
 const WeeklyRecap = lazy(() => import('./pages/WeeklyRecap'));
 const LithosHero = lazy(() => import('./components/LithosHero'));
+const PaymentPage = lazy(() => import('./pages/PaymentPage'));
+const PaymentHistory = lazy(() => import('./pages/PaymentHistory'));
 
 function RouteFallback() {
   return (
@@ -141,6 +143,8 @@ export default function App() {
                 <Route path="missions" element={<NatureMissions />} />
                 <Route path="community-map" element={<CommunityBiodiversityMap />} />
                 <Route path="recap" element={<WeeklyRecap />} />
+                <Route path="payment" element={<PaymentPage />} />
+                <Route path="payment-history" element={<PaymentHistory />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

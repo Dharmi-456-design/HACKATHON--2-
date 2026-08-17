@@ -255,6 +255,22 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const ensureUserOrGuest = useCallback(async () => {
+    if (user && token) return { user, token };
+    try {
+      const guestEmail = `guest_${Date.now()}@naturepulse.app`;
+      const data = await register({
+        name: 'Explorer Guest',
+        email: guestEmail,
+        password: 'GuestExplorerPass123!',
+      });
+      return data;
+    } catch (err) {
+      console.warn('[ensureUserOrGuest] Guest registration failed:', err);
+      return null;
+    }
+  }, [user, token, register]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -265,6 +281,7 @@ export function AuthProvider({ children }) {
         login,
         register,
         demoLogin,
+        ensureUserOrGuest,
         signInWithGoogle,
         logout,
       }}
