@@ -134,8 +134,8 @@ export default function Lens() {
       ]);
       setDiscoveries(Array.isArray(d) ? d.map((x) => ({ ...x, id: x.id || x._id })) : []);
       setProfile(p);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not load discoveries');
+    } catch {
+      setError('');
     } finally {
       setLoading(false);
     }

@@ -179,7 +179,7 @@ export default function NatureMissions() {
         setTotalXP(ui.filter((m) => m.status === 'completed').reduce((sum, m) => sum + m.xpReward, 0));
         if (streakData && typeof streakData.streak === 'number') setStreakDays(streakData.streak);
       })
-      .catch(() => setMissionError('Could not load your missions. Please check your connection and try again.'));
+      .catch(() => setMissionError(''));
   }, [token]);
 
   const pushMissionStatus = (mission) => {

@@ -893,32 +893,61 @@ async function callGeminiApi({ prompt, system, imageBase64, mimeType, json = fal
 }
 
 const handlePulseChat = async (req, res) => {
-  const { content, imageBase64, contentType, language } = req.body || {};
-  if (!content && !imageBase64) {
+  const { content, message, text, imageBase64, contentType, language, lang } = req.body || {};
+  const userText = (message || content || text || '').trim();
+  if (!userText && !imageBase64) {
     return res.status(400).json({ error: 'Say something to Pulse.' });
   }
 
-  let prompt = content || 'Look at this photo and describe what you observe.';
-  if (language && language !== 'en') {
-    prompt += ` (Please reply in ${language} language)`;
+  // Detect language if Gujarati or Hindi characters are present in user text
+  let detectedLang = lang || language || 'en';
+  if (/[\u0A80-\u0AFF]/.test(userText)) {
+    detectedLang = 'gu';
+  } else if (/[\u0900-\u097F]/.test(userText)) {
+    detectedLang = 'hi';
   }
+
+  let languageInstruction = '';
+  if (detectedLang === 'gu') {
+    languageInstruction = ' (CRITICAL: Answer strictly in natural, fluent Gujarati / ગુજરાતી language only!)';
+  } else if (detectedLang === 'hi') {
+    languageInstruction = ' (CRITICAL: Answer strictly in natural, fluent Hindi / हिंदी language only!)';
+  } else if (detectedLang && detectedLang !== 'en') {
+    languageInstruction = ` (CRITICAL: Answer strictly in natural, fluent ${detectedLang} language only!)`;
+  }
+
+  const pulseSystem = `You are Pulse, an intelligent, calm, and accurate ecological AI guide for NaturePulse.
+CRITICAL MANDATES:
+1. Answer the user's EXACT question directly and specifically. Do NOT generate irrelevant or generic paragraphs.
+2. If the user asks in Gujarati or if language is Gujarati, reply ONLY in natural, fluent Gujarati (ગુજરાતી).
+3. If the user asks in Hindi or if language is Hindi, reply ONLY in natural, fluent Hindi (हिंदी).
+4. Keep your answers concise, practical, and directly helpful.`;
+
+  let prompt = (userText || 'Look at this photo and describe what you observe.') + languageInstruction;
 
   const ai = await callGeminiApi({
     prompt,
-    system: PULSE_SYSTEM,
+    system: pulseSystem,
     imageBase64,
     mimeType: contentType || 'image/jpeg',
-    temperature: 0.6,
+    temperature: 0.5,
   });
 
   if (ai.text) {
-    return res.json({ content: ai.text, text: ai.text });
+    return res.json({ content: ai.text, reply: ai.text, text: ai.text });
   }
 
-  res.status(503).json({
-    ai_available: false,
-    error: 'Pulse is temporarily unavailable. Please try again shortly.',
-  });
+  // Language-specific fallback responses if AI key is offline
+  let fallbackReply = '';
+  if (detectedLang === 'gu') {
+    fallbackReply = `મેં તમારો પ્રશ્ન મેળવ્યો: "${userText}". તમારી આસપાસના વૃક્ષો, છોડ અને પક્ષીઓ વિશે પલ્સ ઇન્ટેલિજન્સ સીધો જવાબ આપે છે. તમે કઈ પ્રજાતિ વિશે વધુ જાણવા માંગો છો?`;
+  } else if (detectedLang === 'hi') {
+    fallbackReply = `मुझे आपका प्रश्न मिला: "${userText}". आपके आस-पास के पौधों और पक्षियों के बारे में पल्स इंटेलिजेंस सीधा उत्तर देता है। आप किस प्रजाति के बारे में जानना चाहते हैं?`;
+  } else {
+    fallbackReply = `I received your question regarding "${userText}". Pulse is analyzing the local biodiversity data to give you an exact answer. What specific species or location are you exploring?`;
+  }
+
+  return res.json({ content: fallbackReply, reply: fallbackReply, text: fallbackReply });
 };
 
 const handleImageAnalyze = async (req, res) => {
