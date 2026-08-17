@@ -114,7 +114,11 @@ const communityPostAllowlist = [
   'note',
   'image_url',
   'confidence',
+  'confidence_pct',
   'city',
+  'place_name',
+  'lat',
+  'lng',
 ];
 const actionAllowlist = ['title', 'category', 'status', 'points', 'minutes', 'description', 'image_url', 'impact_note'];
 
@@ -547,25 +551,75 @@ Provide output that directly fits into or enriches the narrative.`;
   });
 };
 
+// City→coords lookup (Ahmedabad area + major Indian cities)
+const CITY_COORDS_MAP = {
+  'sabarmati': { lat: 23.0395, lng: 72.5876 },
+  'law garden': { lat: 23.0247, lng: 72.5618 },
+  'parimal': { lat: 23.0295, lng: 72.559 },
+  'prahladnagar': { lat: 23.017, lng: 72.5062 },
+  'riverfront': { lat: 23.0571, lng: 72.5842 },
+  'vastrapur': { lat: 23.0388, lng: 72.5277 },
+  'bodakdev': { lat: 23.0443, lng: 72.5152 },
+  'navrangpura': { lat: 23.0358, lng: 72.5578 },
+  'maninagar': { lat: 22.9945, lng: 72.5997 },
+  'science city': { lat: 23.0485, lng: 72.5295 },
+  'gandhinagar': { lat: 23.2156, lng: 72.6369 },
+  'ahmedabad': { lat: 23.0225, lng: 72.5714 },
+  'surat': { lat: 21.1702, lng: 72.8311 },
+  'vadodara': { lat: 22.3072, lng: 73.1812 },
+  'rajkot': { lat: 22.3039, lng: 70.8022 },
+  'mumbai': { lat: 19.076, lng: 72.8777 },
+  'delhi': { lat: 28.6139, lng: 77.209 },
+  'bangalore': { lat: 12.9716, lng: 77.5946 },
+  'pune': { lat: 18.5204, lng: 73.8567 },
+};
+
+function cityToCoords(city, index) {
+  const cl = (city || '').toLowerCase();
+  for (const [key, coords] of Object.entries(CITY_COORDS_MAP)) {
+    if (cl.includes(key)) {
+      return {
+        lat: coords.lat + Math.sin(index * 1.7) * 0.008,
+        lng: coords.lng + Math.cos(index * 2.3) * 0.01,
+      };
+    }
+  }
+  // Default: Ahmedabad centre with scatter
+  return {
+    lat: 23.0225 + Math.sin(index * 1.7) * 0.018,
+    lng: 72.5714 + Math.cos(index * 2.3) * 0.022,
+  };
+}
+
 // Community
 const getCommunityPosts = async (req, res) => {
   const posts = await CommunityPost.find({}).sort({ createdAt: -1 }).limit(100);
-  if (posts.length) {
-    return res.json(posts);
-  }
-  const discoveries = await Discovery.find({ is_public: true }).sort({ createdAt: -1 }).limit(30);
-  const derived = discoveries.map((d) => ({
-    _id: d._id,
-    common_name: d.common_name,
-    scientific_name: d.scientific_name,
-    category: d.category,
-    city: d.city || 'Portland',
-    image_url: d.image_url,
-    note: d.notes || d.description,
-    confidence: d.confidence,
-    createdAt: d.createdAt,
-  }));
-  res.json(derived);
+  const enriched = (posts.length ? posts : await (async () => {
+    const discoveries = await Discovery.find({ is_public: true }).sort({ createdAt: -1 }).limit(30);
+    return discoveries.map((d) => ({
+      _id: d._id,
+      common_name: d.common_name,
+      scientific_name: d.scientific_name,
+      category: d.category,
+      city: d.city || 'Ahmedabad',
+      image_url: d.image_url,
+      note: d.notes || d.description,
+      confidence: d.confidence,
+      confidence_pct: d.confidence_pct || 0,
+      lat: d.lat || null,
+      lng: d.lng || null,
+      createdAt: d.createdAt,
+    }));
+  })()).map((p, i) => {
+    const obj = p.toObject ? p.toObject() : { ...p };
+    if (!obj.lat || !obj.lng) {
+      const coords = cityToCoords(obj.city || '', i);
+      obj.lat = coords.lat;
+      obj.lng = coords.lng;
+    }
+    return obj;
+  });
+  res.json(enriched);
 };
 
 const createCommunityPost = async (req, res) => {
