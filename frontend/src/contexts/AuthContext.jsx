@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
   // Deduplicates by access_token to prevent the same session from triggering
   // multiple POST /api/auth/google calls.
   const exchangeSupabaseSession = useCallback(async (session) => {
-    if (!session?.access_token) return null;
+    if (!session?.user?.email) return null;
 
     // Skip if we already exchanged this exact token
     const accessToken = session.access_token;
@@ -39,7 +39,10 @@ export function AuthProvider({ children }) {
     try {
       const data = await apiFetch('/api/auth/google', {
         method: 'POST',
-        body: JSON.stringify({ access_token: accessToken }),
+        body: JSON.stringify({
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0],
+        }),
       });
       if (data?.token && data?.user) return data;
     } catch (err) {
