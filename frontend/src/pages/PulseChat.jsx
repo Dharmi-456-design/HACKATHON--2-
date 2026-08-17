@@ -3,7 +3,7 @@ import { Send, RotateCcw, Copy, Check, Sparkles, Sun, Bell, User, Image as Image
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { apiFetch, fileToResizedBase64 } from '../lib/api';
+import { apiFetch, fileToResizedBase64, uploadImage } from '../lib/api';
 import { ErrorBanner } from '../components/ui';
 
 // Multilingual UI Translations Dictionary
@@ -660,10 +660,28 @@ export default function PulseChat() {
     }
 
     setText('');
+    const capturedPayload = attachedPayload;   // capture before clearing
+    const capturedImage   = attachedImage;
     setAttachedImage(null);
     setAttachedPayload(null);
     setBusy(true);
     setError('');
+
+    // Upload image to Cloudinary so it's persistently stored
+    let persistentImageUrl = capturedImage || '';
+    if (capturedPayload) {
+      try {
+        const upRes = await uploadImage({
+          base64: capturedPayload.base64,
+          mime: capturedPayload.mime,
+          fileName: 'pulse-chat-image.jpg',
+          token,
+        });
+        if (upRes?.url) persistentImageUrl = upRes.url;
+      } catch {
+        persistentImageUrl = capturedImage || '';
+      }
+    }
 
     const userMsg = {
       id: Date.now(),
@@ -672,26 +690,23 @@ export default function PulseChat() {
       content: fullMessageContent,
       created_at: new Date().toISOString(),
     };
-    if (attachedImage) userMsg.image = attachedImage;
+    if (persistentImageUrl) userMsg.image = persistentImageUrl;
 
     const newMsgs = [...messages, userMsg];
     setMessages(newMsgs);
     saveActiveThreadMessages(newMsgs);
 
     try {
-      // All Pulse replies (text and image) go through the serverless /api/pulse
-      // route, which keeps the Gemini key server-side and carries conversation
-      // context from the user
       let replyData;
-      if (attachedPayload) {
+      if (capturedPayload) {
         replyData = await apiFetch(
           '/api/pulse',
           {
             method: 'POST',
             body: JSON.stringify({
               message: content,
-              imageBase64: attachedPayload.base64,
-              contentType: attachedPayload.mime,
+              imageBase64: capturedPayload.base64,
+              contentType: capturedPayload.mime,
               lang,
               thread_id: activeThreadId,
             }),
