@@ -170,7 +170,7 @@ export default function Community() {
     id: p._id || p.id,
     author: {
       id: p.user || 'community',
-      name: 'Nature Explorer',
+      name: p.user_name || 'Nature Explorer',
       city: p.city || 'Shared Field',
       avatar: '🌿',
       bio: 'Shared field observation',
@@ -183,9 +183,9 @@ export default function Community() {
     tags: Array.isArray(p.tags) ? p.tags : [],
     pinned: false,
     created_at: p.createdAt || p.created_at || new Date().toISOString(),
-    reactions: { like: 0, insightful: 0, ecoLove: 0, hot: 0, educational: 0 },
+    reactions: p.reactions || { like: p.upvotes || 0, insightful: 0, ecoLove: 0, hot: 0, educational: 0 },
     userReactions: {},
-    comments: [],
+    comments: Array.isArray(p.comments) ? p.comments : [],
     aiSummary: null,
     image_url: p.image_url,
   });

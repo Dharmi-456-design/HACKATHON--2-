@@ -361,7 +361,7 @@ export default function Lens() {
   const [saveSuccess, setSaveSuccess] = useState('');
 
   const save = async () => {
-    if (!filePayload && !preview) return;
+    if ((!filePayload && !preview) || !analysis) return;
     setSaving(true);
     setError('');
     setSaveSuccess('');

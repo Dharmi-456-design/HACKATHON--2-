@@ -533,9 +533,14 @@ export default function CommunityBiodiversityMap() {
                 <p className={`text-sm leading-relaxed ${isDark?"text-slate-200":"text-[#2D4836]"}`}>
                   "{selectedPin.note || "Community nature observation. Click the map view to see location."}"
                 </p>
-                {selectedPin._localDiscovery && !shareStatus[selectedPin.id] && token && (
+                    {selectedPin._localDiscovery && !shareStatus[selectedPin.id] && token && (
                   <p className={`text-[11px] ${isDark?"text-slate-400":"text-slate-500"}`}>
                     💡 This is your private sighting — tap <Share2 className="w-3 h-3 inline" /> to share it with the community map.
+                  </p>
+                )}
+                {shareStatus[selectedPin.id]==="error" && (
+                  <p className={`text-[11px] ${isDark?"text-red-400":"text-red-500"}`}>
+                    Share failed. Please check your connection and try again.
                   </p>
                 )}
               </div>

@@ -123,7 +123,7 @@ export default function Settings() {
             How Pulse knows you
           </h1>
           <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-            City and region only. {user?.email || 'dharmipatel.cg@gmail.com'}
+            City and region only. {user?.email || ''}
           </p>
         </div>
 
