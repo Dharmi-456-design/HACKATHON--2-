@@ -142,7 +142,7 @@ const actionSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
     title: { type: String, required: true, trim: true, maxlength: 300 },
     category: { type: String, default: 'conservation', maxlength: 100 },
-    status: { type: String, enum: ['todo', 'in_progress', 'done', 'recommended'], default: 'todo' },
+    status: { type: String, enum: ['todo', 'in_progress', 'done', 'recommended', 'pending', 'completed', 'scheduled'], default: 'todo' },
     points: { type: Number, default: 10 },
     minutes: { type: Number, default: 15 },
     description: { type: String, default: '', maxlength: 5000 },

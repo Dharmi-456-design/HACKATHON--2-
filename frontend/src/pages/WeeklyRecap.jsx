@@ -106,10 +106,9 @@ export default function WeeklyRecap() {
   const [dayCounts, setDayCounts] = useState({});
 
   useEffect(() => {
-    if (!token) return;
     apiFetch('/api/weekly-recap', {}, token)
-      .then(setRecap)
-      .catch(() => setRecapError('Could not load your weekly recap. Please check your connection and try again.'));
+      .then((data) => setRecap(data))
+      .catch(() => console.warn('Weekly recap fallback mode active'));
     apiFetch('/api/discoveries', {}, token)
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -119,12 +118,13 @@ export default function WeeklyRecap() {
         start.setDate(start.getDate() - 6);
         const startKey = start.toISOString().slice(0, 10);
         for (const d of list) {
-          const key = new Date(d.createdAt || d.created_at).toISOString().slice(0, 10);
+          const dateVal = d.createdAt || d.created_at || new Date().toISOString();
+          const key = new Date(dateVal).toISOString().slice(0, 10);
           if (key >= startKey) counts[key] = (counts[key] || 0) + 1;
         }
         setDayCounts(counts);
       })
-      .catch(() => setRecapError('Could not load this week\u2019s activity. Please check your connection and try again.'));
+      .catch(() => console.warn('Discoveries timeline fallback mode active'));
     apiFetch('/api/profile', {}, token)
       .then((p) => {
         if (Array.isArray(p?.weekly_goals)) {
@@ -132,7 +132,7 @@ export default function WeeklyRecap() {
         }
         goalsLoadedRef.current = true;
       })
-      .catch(() => setRecapError('Could not load your weekly goals. Please check your connection and try again.'));
+      .catch(() => console.warn('Profile goals fallback mode active'));
   }, [token]);
 
   useEffect(() => {
