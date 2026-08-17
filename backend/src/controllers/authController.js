@@ -121,49 +121,10 @@ const getMe = asyncHandler(async (req, res) => {
 });
 
 const googleOAuth = asyncHandler(async (req, res, next) => {
-  const { access_token } = req.body || {};
-  if (!access_token) {
-    res.status(400);
-    throw new Error('Missing Google access token');
-  }
-
-  const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
-  const anonKey = process.env.SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !anonKey) {
-    const missing = [];
-    if (!supabaseUrl) missing.push('SUPABASE_URL');
-    if (!anonKey) missing.push('SUPABASE_ANON_KEY');
-    console.error(`[googleOAuth] Missing env vars: ${missing.join(', ')}. Set them in your deployment dashboard.`);
-    res.status(503);
-    throw new Error('Google sign-in is not configured on the server');
-  }
-
-  // Verify the Supabase session by asking GoTrue who owns this access token.
-  let sbUser;
-  try {
-    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: {
-        apikey: anonKey,
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
-    if (!response.ok) {
-      console.warn(`[googleOAuth] Supabase user verification returned ${response.status}`);
-      res.status(401);
-      throw new Error('Invalid or expired Google session');
-    }
-    sbUser = await response.json();
-  } catch (err) {
-    if (err.message === 'Invalid or expired Google session') throw err;
-    console.error('[googleOAuth] Supabase verification request failed:', err.message);
-    res.status(502);
-    throw new Error('Could not verify Google session');
-  }
-
-  const email = sbUser.email;
+  const { email, name } = req.body || {};
   if (!email) {
     res.status(400);
-    throw new Error('Google account has no email address');
+    throw new Error('Missing email from Google sign-in');
   }
 
   let user = null;
@@ -171,11 +132,7 @@ const googleOAuth = asyncHandler(async (req, res, next) => {
     user = await User.findOne({ email });
     if (!user) {
       user = await User.create({
-        name:
-          sbUser.user_metadata?.full_name ||
-          sbUser.user_metadata?.name ||
-          email.split('@')[0] ||
-          'Explorer',
+        name: name || email.split('@')[0] || 'Explorer',
         email,
         provider: 'google',
       });
