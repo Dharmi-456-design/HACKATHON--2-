@@ -25,6 +25,8 @@ const NEARBY_TRANSLATIONS = {
     searchBtn: 'Search Radar',
     radiusLabel: 'Discovery Radius:',
     openNowFilter: 'Open Now Only',
+    locateMe: 'Locate Me',
+    locating: 'Locating…',
     comparePlacesBtn: 'Compare Places',
     buildRouteBtn: '✨ Build Afternoon Route →',
     tabRadarTitle: 'Interactive Radar Map',
@@ -53,6 +55,8 @@ const NEARBY_TRANSLATIONS = {
     searchBtn: 'રડાર શોધો',
     radiusLabel: 'શોધ ત્રિજ્યા:',
     openNowFilter: 'હાલમાં ખુલ્લું',
+    locateMe: 'મારું સ્થાન',
+    locating: 'સ્થાન શોધી રહ્યા…',
     comparePlacesBtn: 'સ્થળોની સરખામણી કરો',
     buildRouteBtn: '✨ બપોરનો રૂટ બનાવો →',
     tabRadarTitle: 'ઇન્ટરેક્ટિવ રડાર મેપ',
@@ -81,6 +85,8 @@ const NEARBY_TRANSLATIONS = {
     searchBtn: 'रडार खोजें',
     radiusLabel: 'खोज त्रिज्या:',
     openNowFilter: 'अभी खुला हुआ',
+    locateMe: 'मेरा स्थान',
+    locating: 'स्थान खोज रहे हैं…',
     comparePlacesBtn: 'स्थानों की तुलना करें',
     buildRouteBtn: '✨ दोपहर का मार्ग बनाएं →',
     tabRadarTitle: 'इंटरैक्टिव रडार मैप',
@@ -239,6 +245,8 @@ export default function Places() {
 
   // Sync places with API if available
   useEffect(() => {
+    // Skip if places were already loaded from the first fetch
+    if (places.length > 0) return;
     let mounted = true;
     apiFetch('/api/places')
       .then((data) => {

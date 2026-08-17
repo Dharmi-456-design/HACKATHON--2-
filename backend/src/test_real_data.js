@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const Test_real_data = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default Test_real_data;
-  const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
 const User = require('./models/User');

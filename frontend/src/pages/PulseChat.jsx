@@ -208,6 +208,16 @@ export default function PulseChat() {
   const [copiedId, setCopiedId] = useState(null);
   const endRef = useRef(null);
 
+  const copyMessage = useCallback(async (id, content) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      // Clipboard API not available or denied
+    }
+  }, []);
+
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
   const todayDateString = new Date().toLocaleDateString('en-US', {
@@ -739,7 +749,7 @@ export default function PulseChat() {
       setMessages(finalMsgs);
       saveActiveThreadMessages(finalMsgs);
     } catch {
-      setError('');
+      setError('Unable to reach Pulse AI. Please check your connection and try again.');
       let replyText = `I observed your note: "${fullMessageContent}". Nature ecosystems respond dynamically to shade canopy, seasonal humidity, and bird nesting corridors.`;
       const isGujarati = lang === 'gu' || /[\u0A80-\u0AFF]/.test(fullMessageContent) || /(vishe|kaho|kem|kya|che|nthi|su|chhe|mate|visit|joiye|kaya|kya|batao|kro)/i.test(fullMessageContent);
       if (isGujarati) {
