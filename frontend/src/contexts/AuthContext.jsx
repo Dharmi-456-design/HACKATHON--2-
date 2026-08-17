@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch, getToken, setToken, clearToken } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { signInWithGoogle as performGoogleSignIn } from '../lib/googleAuth';
@@ -20,129 +20,135 @@ export function AuthProvider({ children }) {
   const [token, setAuthToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Exchange a Supabase OAuth session for a NaturePulse backend JWT, so the
-  // token we store matches what the backend `protect` middleware verifies.
+  // Refs for deduplication — shared across async calls and listeners
+  const lastExchangedTokenRef = useRef(null);
+  const initDoneRef = useRef(false);
+
+  // Exchange a Supabase OAuth session for a NaturePulse backend JWT.
+  // Deduplicates by access_token to prevent the same session from triggering
+  // multiple POST /api/auth/google calls.
   const exchangeSupabaseSession = useCallback(async (session) => {
     if (!session?.access_token) return null;
+
+    // Skip if we already exchanged this exact token
+    const accessToken = session.access_token;
+    if (accessToken === lastExchangedTokenRef.current) return null;
+    // Lock immediately to block concurrent calls with the same token
+    lastExchangedTokenRef.current = accessToken;
+
     try {
       const data = await apiFetch('/api/auth/google', {
         method: 'POST',
-        body: JSON.stringify({ access_token: session.access_token }),
+        body: JSON.stringify({ access_token: accessToken }),
       });
       if (data?.token && data?.user) return data;
     } catch (err) {
-      // Exchange failed — Google OAuth not configured on the backend.
-      // Silently clear the stale Supabase session via localStorage to avoid
-      // triggering onAuthStateChange('SIGNED_OUT') which would wipe backend JWT state.
+      // Exchange failed — unlock so a retry is possible if the user retries
+      lastExchangedTokenRef.current = null;
+      // Silently clear the stale Supabase session from localStorage
       try {
-        const key = Object.keys(localStorage).find((k) => k.startsWith('sb-') && k.endsWith('-auth-token'));
+        const key = Object.keys(localStorage).find(
+          (k) => k.startsWith('sb-') && k.endsWith('-auth-token')
+        );
         if (key) localStorage.removeItem(key);
       } catch {}
     }
     return null;
   }, []);
 
-  // On mount: restore session from Supabase OAuth or local JWT
+  // Clean OAuth callback hash/query params from the URL without triggering navigation
+  const cleanOAuthUrl = useCallback(() => {
+    try {
+      const url = new URL(window.location.href);
+      if (url.hash && (url.hash.includes('access_token') || url.hash.includes('error_description'))) {
+        window.history.replaceState(null, '', url.pathname + url.search);
+      }
+    } catch {}
+  }, []);
+
+  // On mount: restore session from backend JWT or Supabase OAuth
   useEffect(() => {
     let mounted = true;
-    let exchanging = false; // prevent duplicate exchanges
 
-    // Check Supabase session for Google Auth
-    const checkSupabaseAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!mounted || !session?.user) return false;
-
-        exchanging = true;
-        const exchanged = await exchangeSupabaseSession(session);
-        exchanging = false;
-        if (!mounted) return false;
-
-        if (exchanged) {
-          setUser(exchanged.user);
-          setAuthToken(exchanged.token);
-          setToken(exchanged.token);
-          setLoading(false);
-          return true;
-        }
-        // Exchange failed — fall through to backend JWT auth
-      } catch {
-        exchanging = false;
-      }
-      return false;
-    };
-
-    // Check custom backend JWT
-    const checkBackendAuth = async () => {
+    const initAuth = async () => {
+      // 1. Try backend JWT first (fast path — no external call needed if token is valid)
       const storedToken = getToken();
-      if (!storedToken) {
-        if (mounted) setLoading(false);
-        return;
-      }
-
-      try {
-        const data = await apiFetch('/api/auth/me', {}, storedToken);
-        if (!mounted) return;
-        if (data?.user) {
-          setUser(data.user);
-          setAuthToken(storedToken);
-        } else {
+      if (storedToken) {
+        try {
+          const data = await apiFetch('/api/auth/me', {}, storedToken);
+          if (mounted && data?.user) {
+            setUser(data.user);
+            setAuthToken(storedToken);
+            setLoading(false);
+            initDoneRef.current = true;
+            return;
+          }
+        } catch {
           clearToken();
         }
-      } catch {
-        clearToken();
-      } finally {
-        if (mounted) setLoading(false);
+      }
+
+      // 2. No valid backend JWT — try Supabase session (e.g. after OAuth redirect)
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+
+        if (session?.user) {
+          const exchanged = await exchangeSupabaseSession(session);
+          if (!mounted) return;
+
+          if (exchanged) {
+            setUser(exchanged.user);
+            setAuthToken(exchanged.token);
+            setToken(exchanged.token);
+            cleanOAuthUrl();
+          }
+        }
+      } catch {}
+
+      if (mounted) {
+        setLoading(false);
+        initDoneRef.current = true;
       }
     };
 
-    // Initialize Auth
-    checkSupabaseAuth().then((hasSbSession) => {
-      if (!hasSbSession) {
-        checkBackendAuth();
-      }
-    });
+    initAuth();
 
-    // Listen to Supabase Auth State Changes (e.g. Google OAuth redirect callback)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      // Skip INITIAL_SESSION if checkSupabaseAuth already handled it
-      if (event === 'INITIAL_SESSION' && exchanging) return;
-
-      if (session && session.user) {
-        exchanging = true;
-        const exchanged = await exchangeSupabaseSession(session);
-        exchanging = false;
+    // Listen to Supabase Auth State Changes (OAuth redirect callback)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
         if (!mounted) return;
-        if (exchanged) {
-          setUser(exchanged.user);
-          setAuthToken(exchanged.token);
-          setToken(exchanged.token);
-        } else if (event === 'SIGNED_IN') {
-          // User explicitly tried Google sign-in but exchange failed.
-          // Clear Supabase session via localStorage (not signOut to avoid SIGNED_OUT cascade).
-          try {
-            const key = Object.keys(localStorage).find((k) => k.startsWith('sb-') && k.endsWith('-auth-token'));
-            if (key) localStorage.removeItem(key);
-          } catch {}
+
+        // INITIAL_SESSION: session restored from storage — already handled by initAuth
+        if (event === 'INITIAL_SESSION') return;
+
+        if (event === 'SIGNED_IN' && session?.user) {
+          const exchanged = await exchangeSupabaseSession(session);
+          if (!mounted) return;
+          if (exchanged) {
+            setUser(exchanged.user);
+            setAuthToken(exchanged.token);
+            setToken(exchanged.token);
+            cleanOAuthUrl();
+          } else {
+            // Exchange failed — clear state
+            setUser(null);
+            setAuthToken(null);
+            clearToken();
+          }
+        } else if (event === 'SIGNED_OUT') {
           setUser(null);
           setAuthToken(null);
           clearToken();
         }
-        // For INITIAL_SESSION with failed exchange: do nothing, let backend JWT take over
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setAuthToken(null);
-        clearToken();
       }
-    });
+    );
 
     return () => {
       mounted = false;
       subscription?.unsubscribe();
     };
-  }, []);
+  }, [exchangeSupabaseSession, cleanOAuthUrl]);
 
   const demoLogin = useCallback(() => {
     console.warn('[AuthContext] Demo login is disabled. Use a real account.');
@@ -184,6 +190,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    lastExchangedTokenRef.current = null;
     try {
       await supabase.auth.signOut();
     } catch {}

@@ -130,6 +130,10 @@ const googleOAuth = asyncHandler(async (req, res, next) => {
   const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
   const anonKey = process.env.SUPABASE_ANON_KEY;
   if (!supabaseUrl || !anonKey) {
+    const missing = [];
+    if (!supabaseUrl) missing.push('SUPABASE_URL');
+    if (!anonKey) missing.push('SUPABASE_ANON_KEY');
+    console.error(`[googleOAuth] Missing env vars: ${missing.join(', ')}. Set them in your deployment dashboard.`);
     res.status(503);
     throw new Error('Google sign-in is not configured on the server');
   }
@@ -144,12 +148,14 @@ const googleOAuth = asyncHandler(async (req, res, next) => {
       },
     });
     if (!response.ok) {
+      console.warn(`[googleOAuth] Supabase user verification returned ${response.status}`);
       res.status(401);
       throw new Error('Invalid or expired Google session');
     }
     sbUser = await response.json();
   } catch (err) {
     if (err.message === 'Invalid or expired Google session') throw err;
+    console.error('[googleOAuth] Supabase verification request failed:', err.message);
     res.status(502);
     throw new Error('Could not verify Google session');
   }
@@ -173,9 +179,12 @@ const googleOAuth = asyncHandler(async (req, res, next) => {
         email,
         provider: 'google',
       });
+      console.log(`[googleOAuth] Created new user: ${email}`);
+    } else {
+      console.log(`[googleOAuth] Found existing user: ${email}`);
     }
   } catch (dbErr) {
-    console.error('MongoDB query failed in googleOAuth:', dbErr.message);
+    console.error('[googleOAuth] MongoDB query failed:', dbErr.message);
     res.status(500);
     throw new Error('Database error during authentication');
   }
