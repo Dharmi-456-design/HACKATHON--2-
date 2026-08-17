@@ -83,7 +83,7 @@ export default function Settings() {
           setProfile((prev) => ({ ...prev, ...next }));
         }
       }
-      setSaved('✨ Profile & Ecological preferences saved successfully! Pulse AI will personalize your field missions.');
+      setSaved('Profile & Ecological preferences saved successfully! Pulse AI will personalize your field missions.');
       setTimeout(() => setSaved(''), 4000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save profile preferences');

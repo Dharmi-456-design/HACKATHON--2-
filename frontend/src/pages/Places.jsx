@@ -5,7 +5,7 @@ import {
   ChevronRight, Filter, Plus, Trash2, CheckCircle2, Shield, User, 
   Coffee, BookOpen, Trees, Palette, ShoppingBag, Utensils, Landmark, 
   HelpCircle, Eye, EyeOff, X, ArrowRight, Radio, Layers, RotateCcw, Send, Check,
-  Activity, Gauge, Crosshair, Map, ArrowUpRight, LocateFixed
+  Activity, Gauge, Crosshair, Map, ArrowUpRight, LocateFixed, Radar, Scale, Bookmark, AlertTriangle, GraduationCap, Leaf, Sprout
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,7 +19,7 @@ const NEARBY_TRANSLATIONS = {
   en: {
     heroTag: 'SPATIAL DISCOVERY COMPASS',
     heroTitle: 'Discover What Is Around',
-    heroHighlight: 'You ✨',
+    heroHighlight: 'You',
     heroSubtitle: 'Spatial discovery for quiet study spots, nature sanctuaries, local cafés, and cultural places with real-time GPS precision.',
     searchPromptTag: 'Find places that inspire your journey',
     askNearbyPlaceholder: 'Search nearby (e.g. Find a quiet place to study nearby…)',
@@ -29,7 +29,7 @@ const NEARBY_TRANSLATIONS = {
     locateMe: 'Locate Me',
     locating: 'Locating…',
     comparePlacesBtn: 'Compare Places',
-    buildRouteBtn: '✨ Build Afternoon Route →',
+    buildRouteBtn: 'Build Afternoon Route →',
     tabRadarTitle: 'Interactive Radar Map',
     tabRadarSub: "See what's around you",
     tabCompareTitle: 'Place Comparison',
@@ -41,7 +41,7 @@ const NEARBY_TRANSLATIONS = {
     whyAIRecommends: 'Why Recommends This',
     getDirectionsBtn: 'Get Directions',
     savePlaceBtn: 'Bookmark Place',
-    topPicksTitle: '🌿 Top Picks Nearby',
+    topPicksTitle: 'Top Picks Nearby',
     viewAllBtn: 'View All 7 Places →',
     allPlacesTitle: '📡 All Local Places & Eco Sanctuaries',
     allPlacesSub: 'Hover cards for 3D flip details, operating hours, and travel breakdown',
@@ -637,35 +637,38 @@ export default function Places() {
         {/* ──────────────── 4 TAB ICON CARDS ──────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { id: 'radar', title: t.tabRadarTitle, sub: t.tabRadarSub, icon: '🎯' },
-            { id: 'compare', title: t.tabCompareTitle, sub: t.tabCompareSub, icon: '⚖️' },
-            { id: 'saved', title: `${t.tabSavedTitle} (${savedPlaceIds.length})`, sub: t.tabSavedSub, icon: '🔖' },
-            { id: 'route', title: t.tabRouteTitle, sub: t.tabRouteSub, icon: '🗺️' },
-          ].map((tab) => (
-            <div
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 shadow-lg ${
-                activeTab === tab.id
-                  ? isDark
-                    ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
-                    : 'bg-[#E1EFE0] border-[#183B28] text-[#0F2418] ring-1 ring-[#183B28] font-bold'
-                  : isDark
-                    ? 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
-                    : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] hover:bg-[#F2ECE1]'
-              }`}
-            >
-              <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-lg shrink-0 ${
-                isDark ? 'bg-[#1A3827] border-[#4ADE80]/40' : 'bg-[#E1EFE0] border-[#C3DEC0]'
-              }`}>
-                {tab.icon}
+            { id: 'radar', title: t.tabRadarTitle, sub: t.tabRadarSub, icon: Radar },
+            { id: 'compare', title: t.tabCompareTitle, sub: t.tabCompareSub, icon: Scale },
+            { id: 'saved', title: `${t.tabSavedTitle} (${savedPlaceIds.length})`, sub: t.tabSavedSub, icon: Bookmark },
+            { id: 'route', title: t.tabRouteTitle, sub: t.tabRouteSub, icon: Map },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <div
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-3.5 shadow-lg ${
+                  activeTab === tab.id
+                    ? isDark
+                      ? 'bg-[#132B1C] border-[#4ADE80] ring-1 ring-[#4ADE80]/50'
+                      : 'bg-[#E1EFE0] border-[#183B28] text-[#0F2418] ring-1 ring-[#183B28] font-bold'
+                    : isDark
+                      ? 'bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/50'
+                      : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] hover:bg-[#F2ECE1]'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-full border flex items-center justify-center shrink-0 ${
+                  isDark ? 'bg-[#1A3827] border-[#4ADE80]/40 text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
+                }`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{tab.title}</h4>
+                  <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{tab.sub}</p>
+                </div>
               </div>
-              <div>
-                <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{tab.title}</h4>
-                <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{tab.sub}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* ──────────────── MAIN 2-COLUMN DISCOVERY GRID ──────────────── */}
@@ -837,28 +840,31 @@ export default function Places() {
                   isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'
                 }`}>
                   {[
-                    { label: 'Study Spots', icon: '🎓' },
-                    { label: 'Cafés', icon: '☕' },
-                    { label: 'Parks', icon: '🌲' },
-                    { label: 'Culture', icon: '🏛️' },
-                    { label: 'Nature', icon: '🌿' },
-                  ].map((item) => (
-                    <button
-                      key={item.label}
-                      onClick={() => setSelectedCategory(item.label === 'Study Spots' ? 'Study' : item.label)}
-                      className={`px-3.5 py-1.5 rounded-xl border font-semibold text-[11px] flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                        isDark ? 'bg-[#07150C] border-[#20422E] text-[#4ADE80] hover:bg-[#13271C]' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]'
-                      }`}
-                    >
-                      <span>{item.icon}</span>
-                      <span>{item.label}</span>
-                    </button>
-                  ))}
+                    { label: 'Study Spots', icon: GraduationCap },
+                    { label: 'Cafés', icon: Coffee },
+                    { label: 'Parks', icon: Trees },
+                    { label: 'Culture', icon: Landmark },
+                    { label: 'Nature', icon: Leaf },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={() => setSelectedCategory(item.label === 'Study Spots' ? 'Study' : item.label)}
+                        className={`px-3.5 py-1.5 rounded-xl border font-semibold text-[11px] flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                          isDark ? 'bg-[#07150C] border-[#20422E] text-[#4ADE80] hover:bg-[#13271C]' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
               </div>
 
-              {/* RIGHT COLUMN: 🌿 TOP PICKS NEARBY */}
+              {/* RIGHT COLUMN: TOP PICKS NEARBY */}
               <div className={`rounded-3xl p-5 space-y-4 shadow-2xl flex flex-col justify-between border transition-colors ${
                 isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
               }`}>
@@ -867,7 +873,7 @@ export default function Places() {
                   <div className={`flex items-center gap-2 border-b pb-3 ${
                     isDark ? 'border-[#20422E]' : 'border-[#E3DDD1]'
                   }`}>
-                    <span className="text-lg">🌿</span>
+                    <Leaf className="w-5 h-5 text-[#4ADE80] shrink-0" />
                     <h3 className={`font-display text-base font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.topPicksTitle}</h3>
                   </div>
 

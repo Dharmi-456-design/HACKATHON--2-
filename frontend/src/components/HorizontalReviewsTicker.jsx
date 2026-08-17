@@ -1,277 +1,189 @@
-import { useState, useRef, useLayoutEffect, useEffect } from 'react';
-import { motion, useScroll, useTransform, useSpring, useMotionValueEvent } from 'framer-motion';
-import { ShieldCheck, ChevronRight, ThumbsUp } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
-import { apiFetch } from '../lib/api';
-import { toTestimonial, DEFAULT_TESTIMONIALS } from '../lib/testimonials';
-import { usePublicStats } from '../hooks/usePublicStats';
-import ReviewsModal from './ReviewsModal';
+import { useState, useRef, useLayoutEffect } from 'react';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 
-const OFFSETS = [
-  '-translate-y-6',
-  'translate-y-8',
-  '-translate-y-4',
-  'translate-y-10',
-  '-translate-y-8',
-  'translate-y-6',
-  '-translate-y-10',
-  'translate-y-8',
-  '-translate-y-6',
-  'translate-y-9',
+const REVIEWS = [
+  {
+    id: 1,
+    name: 'Jimmy Slage',
+    role: 'Parker AI',
+    quote: `Alexandr is an artist. Absolutely brilliant. He's someone who loves the craft of design. His first message to me was "I don't want to do what every other AI company does. I want it to be unique."`,
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+    topOffset: 0,
+  },
+  {
+    id: 2,
+    name: 'Ty Zamkow',
+    role: 'Nolana AI',
+    quote: `Alexandr did an outstanding job on our logo! He's incredibly responsive, fully dedicated, and went above and beyond to ensure we achieved the perfect result.`,
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+    topOffset: 32,
+  },
+  {
+    id: 3,
+    name: 'Nathan Graville',
+    role: 'Geviti',
+    quote: `Alex has been amazing. Only a month in, but Produx Design very active role in our operation already in terms of web, UI/UX, and eventual marketing.`,
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+    topOffset: 64,
+  },
+  {
+    id: 4,
+    name: 'Delbert Ty',
+    role: 'Gather AI',
+    quote: `Great experience working together. The team went above expectations at every stage and brought strong thinking, taste, and attention to detail.`,
+    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+    topOffset: 16,
+  },
+  {
+    id: 5,
+    name: 'Arianna Armelli',
+    role: 'Dorothy Tech',
+    quote: `Produx brand sprint exceeded our expectations. They captured our vision perfectly, delivering a cohesive and impactful brand.`,
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80',
+    topOffset: 48,
+  },
+  {
+    id: 6,
+    name: 'Fawaz Buqammaz',
+    role: 'SOOR',
+    quote: `Honestly, we were given a better designs than we asked for, produx design is our trusted partner! LETS GROW TOGETHER!`,
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
+    topOffset: 8,
+  },
 ];
 
-const NUM_TICKS = 120;
+// 110 background tick marks for top linear track
+const TRACK_TICKS = Array.from({ length: 110 }, (_, i) => i);
+
+// Scrubber node bar heights (wave bump shape)
+const SCRUBBER_BARS = [4, 6, 9, 14, 20, 28, 36, 28, 20, 14, 9, 6, 4];
 
 export default function HorizontalReviewsTicker() {
   const targetRef = useRef(null);
   const trackRef = useRef(null);
-  const [hoveredId, setHoveredId] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [scrollPos, setScrollPos] = useState(0);
-  const [maxScrollDistance, setMaxScrollDistance] = useState(0);
-  const [reports, setReports] = useState(DEFAULT_TESTIMONIALS);
-  const [loadError, setLoadError] = useState(false);
-  const stats = usePublicStats();
+  const indicatorTrackRef = useRef(null);
+  const scrubberRef = useRef(null);
 
-  // Load real community field reports that power the ticker
-  useEffect(() => {
-    apiFetch('/api/testimonials', {}, null)
-      .then((list) => {
-        if (Array.isArray(list) && list.length) {
-          setReports(list.map(toTestimonial));
-        }
-      })
-      .catch(() => setLoadError(false));
-  }, []);
-
-  // Calculate dynamic horizontal distance based on actual track width vs viewport width
-  const updateScrollDistance = () => {
-    if (trackRef.current) {
-      const scrollWidth = trackRef.current.scrollWidth;
-      const clientWidth = window.innerWidth;
-      const extraPadding = 80;
-      const distance = Math.max(0, scrollWidth - clientWidth + extraPadding);
-      setMaxScrollDistance(distance);
-    }
-  };
+  const [distances, setDistances] = useState({ cards: 0, indicator: 0 });
 
   useLayoutEffect(() => {
-    updateScrollDistance();
-    window.addEventListener('resize', updateScrollDistance);
-    return () => window.removeEventListener('resize', updateScrollDistance);
+    const calculateDistances = () => {
+      if (trackRef.current && indicatorTrackRef.current && scrubberRef.current) {
+        // Exact travel needed to align rightmost edge flush with viewport
+        const cardsDist = Math.max(0, trackRef.current.scrollWidth - window.innerWidth);
+        const indicatorDist = Math.max(0, indicatorTrackRef.current.clientWidth - scrubberRef.current.clientWidth);
+        setDistances({ cards: cardsDist, indicator: indicatorDist });
+      }
+    };
+
+    calculateDistances();
+    window.addEventListener('resize', calculateDistances);
+    return () => window.removeEventListener('resize', calculateDistances);
   }, []);
 
-  // Recompute travel distance once real reports arrive
-  useEffect(() => {
-    updateScrollDistance();
-  }, [reports.length]);
-
-  // Framer Motion useScroll hook bound to targetRef
+  /* ─── Scroll Progress over pinned sticky duration ─── */
   const { scrollYProgress } = useScroll({
     target: targetRef,
     offset: ['start start', 'end end'],
   });
 
-  // Smooth physics spring easing for zero jitter/flicker
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 90,
-    damping: 20,
-    mass: 0.5,
-    restDelta: 0.001,
+    stiffness: 80,
+    damping: 26,
+    mass: 0.1,
+    restDelta: 0.0001,
   });
 
-  useMotionValueEvent(smoothProgress, 'change', (latest) => {
-    setScrollPos(latest);
-  });
+  /* Cards translate RIGHT -> LEFT */
+  const cardsX = useTransform(smoothProgress, [0, 1], [0, -distances.cards]);
 
-  // Map scroll progress (0 to 1) so cards visually travel from LEFT to RIGHT (-maxScrollDistance to 0)
-  const x = useTransform(smoothProgress, [0, 1], [-maxScrollDistance, 0]);
-
-  // Initial Card Entrance: Cards start slightly below and move UPWARD into position as section enters viewport
-  const cardsY = useTransform(smoothProgress, [0, 0.15], [35, 0]);
-  const cardsOpacity = 1;
-
-  const { isDark } = useTheme();
-  const userCount = stats && typeof stats.users === 'number' ? stats.users.toLocaleString() : null;
+  /* Top scrubber node translates LEFT -> RIGHT (Opposite direction) */
+  const indicatorX = useTransform(smoothProgress, [0, 1], [0, distances.indicator]);
 
   return (
-    <>
-      {/* Outer Section - Pinning duration tuned to 120vh to guarantee zero empty space between sections */}
-      <div ref={targetRef} className={`relative h-[120vh] transition-colors duration-300 ${isDark ? 'bg-[#0E1E15] text-white' : 'bg-[#F4F7F4] text-slate-900'}`}>
-        
-        {/* Sticky Viewport Container - Pins section while user completes the horizontal travel */}
-        <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between py-6 px-6 sm:px-12 select-none">
-          
-          {/* Header Bar */}
-          <div className="max-w-7xl w-full mx-auto flex items-end justify-between z-20 pt-2 shrink-0">
-            <div>
-              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold uppercase tracking-wider mb-2 ${
-                isDark ? 'bg-[#96CD7B]/15 border border-[#96CD7B]/30 text-[#96CD7B]' : 'bg-emerald-800/15 border border-emerald-800/30 text-emerald-800'
-              }`}>
-                <ShieldCheck size={14} /> REAL COMMUNITY FIELD REPORTS
-              </div>
-              <h2 className={`font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {userCount ? `Loved by ${userCount} urban explorers` : 'Loved by urban explorers'}
-              </h2>
-            </div>
+    <div ref={targetRef} className="relative h-[180vh] bg-[#242C26] select-none overflow-clip">
+      {/* Sticky viewport panel matching full screen height */}
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between pt-6 pb-10">
 
-            {/* Read All Reports Button */}
-            <button
-              onClick={() => setModalOpen(true)}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border transition-all cursor-pointer shadow-lg hover:scale-[1.03] shrink-0 ${
-                isDark ? 'bg-white/10 hover:bg-[#96CD7B] text-white hover:text-[#0A1610] border-white/20' : 'bg-slate-900/10 hover:bg-[#1C3727] text-slate-900 hover:text-white border-slate-900/20'
-              }`}
-            >
-              Read all field reports <ChevronRight size={16} />
-            </button>
-          </div>
-
-          {/* Linear Wave Scrubber Bar (Dynamic Green Peak following scroll progress) */}
-          <div className="relative max-w-7xl w-full mx-auto my-2 sm:my-4 z-20 shrink-0">
-            <div className={`flex items-center justify-between gap-1 h-12 px-3 rounded-2xl backdrop-blur-md border ${
-              isDark ? 'bg-white/5 border-white/10' : 'bg-slate-900/5 border-slate-900/10'
-            }`}>
-              {Array.from({ length: NUM_TICKS }).map((_, i) => {
-                const tickProgress = i / (NUM_TICKS - 1);
-                const distance = Math.abs(tickProgress - scrollPos);
-                
-                // Continuous Smooth Gaussian Wave Peak
-                const wave = Math.exp(-Math.pow(distance / 0.065, 2));
-                const heightPx = Math.max(8, Math.round(wave * 32 + 8));
-                const opacity = 0.3 + wave * 0.7;
-                const isWaveActive = wave > 0.5;
-
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      height: `${heightPx}px`,
-                      opacity,
-                    }}
-                    className={`w-1 rounded-full transition-all duration-100 ${
-                      isWaveActive
-                        ? isDark ? 'bg-[#96CD7B] shadow-[0_0_10px_#96CD7B]' : 'bg-emerald-700 shadow-[0_0_10px_rgba(4,120,87,0.5)]'
-                        : isDark ? 'bg-white/35' : 'bg-slate-900/25'
-                    }`}
-                  />
-                );
-              })}
-            </div>
-            
-            {/* Scrubber Label */}
-            <div className={`flex items-center justify-between text-[11px] font-mono px-3 mt-1.5 uppercase tracking-widest ${
-              isDark ? 'text-white/50' : 'text-slate-600'
-            }`}>
-              <span>01 / START</span>
-              <span className={isDark ? 'text-[#96CD7B]' : 'text-emerald-700 font-bold'}>
-                {scrollPos >= 0.98 ? '✓ ALL 10 CARDS COMPLETED' : 'SCROLL LEFT → RIGHT (10 CARDS)'}
-              </span>
-              <span>{Math.max(10, reports.length)} / END</span>
-            </div>
-          </div>
-
-          {/* Horizontal Staircase Ticker Cards (Cards Enter UPWARD -> Move LEFT to RIGHT -> Focus Hover Blur) */}
-          <motion.div
-            style={{ y: cardsY, opacity: cardsOpacity }}
-            className="relative w-full overflow-hidden z-10 my-auto py-2"
+        {/* ─── Top Linear Indicator Line (Opposite Motion: Left -> Right) ─── */}
+        <div className="w-full px-6 sm:px-12 flex justify-center shrink-0 my-3">
+          <div
+            ref={indicatorTrackRef}
+            className="relative w-full max-w-4xl h-10 flex items-center justify-between"
           >
+            {/* Background Dim Ticks Track */}
+            <div className="absolute inset-0 flex items-center justify-between pointer-events-none px-1">
+              {TRACK_TICKS.map((i) => (
+                <div
+                  key={i}
+                  className="w-[2px] h-[5px] bg-white/20 rounded-full"
+                />
+              ))}
+            </div>
+
+            {/* Hardware-Accelerated Scrubber Node sliding LEFT -> RIGHT */}
             <motion.div
-              ref={trackRef}
-              style={{ x }}
-              className="flex gap-6 sm:gap-8 items-center pl-4 sm:pl-8 pr-16 w-max"
+              ref={scrubberRef}
+              style={{ x: indicatorX }}
+              className="relative z-10 flex items-center gap-[3px] py-1 px-2 bg-[#242C26]/90 backdrop-blur-sm rounded-full border border-white/10 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
             >
-              {reports.length === 0 ? (
-                <motion.div
-                  className="w-[320px] sm:w-[360px] h-[280px] shrink-0 bg-[#E8E6E1] text-[#1A1A1A] rounded-2xl p-6 shadow-2xl flex flex-col justify-center items-center text-center border border-black/10"
-                >
-                  <span className="text-4xl mb-4">🌿</span>
-                  <h3 className="font-display text-lg font-semibold mb-2">
-                    {loadError ? 'Could not load reports' : 'No field reports yet'}
-                  </h3>
-                  <p className="text-sm text-black/60 max-w-[240px] leading-relaxed">
-                    {loadError
-                      ? 'Check your connection and try again.'
-                      : 'Share your first species observation from the Community feed and it will appear here.'}
-                  </p>
-                </motion.div>
-              ) : (
-                reports.map((r, i) => {
-                  const isHovered = hoveredId === r.id;
-                  const isAnyHovered = hoveredId !== null;
-                  const isBlur = isAnyHovered && !isHovered;
-
-                  return (
-                    <motion.div
-                      key={r.id}
-                      onMouseEnter={() => setHoveredId(r.id)}
-                      onMouseLeave={() => setHoveredId(null)}
-                      style={{
-                        filter: isBlur ? 'blur(2px)' : 'blur(0px)',
-                        opacity: isBlur ? 0.65 : 1,
-                        scale: isHovered ? 1.05 : 1,
-                      }}
-                      className={`w-[320px] sm:w-[360px] h-[280px] shrink-0 bg-[#162C20] text-white rounded-2xl p-6 shadow-2xl flex flex-col justify-between transition-all duration-300 ${OFFSETS[i % OFFSETS.length]} ${
-                        isHovered ? 'bg-[#1D3A2A] shadow-[0_20px_50px_rgba(150,205,123,0.3)] border-2 border-[#96CD7B]' : 'border border-white/15'
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center gap-3.5 mb-5 pb-4 border-b border-white/10">
-                          {r.avatar ? (
-                            <img
-                              src={r.avatar}
-                              alt={r.species || r.name}
-                              loading="lazy"
-                              decoding="async"
-                              width="44"
-                              height="44"
-                              className="w-11 h-11 rounded-full object-cover border border-white/20 shadow-sm"
-                            />
-                          ) : (
-                            <div className="w-11 h-11 rounded-full bg-[#96CD7B]/20 border border-[#96CD7B]/40 flex items-center justify-center text-xl text-[#96CD7B]">
-                              🌿
-                            </div>
-                          )}
-                          <div className="flex flex-col">
-                            <h3 className="text-base font-bold text-white font-sans leading-tight">{r.name}</h3>
-                            <p className="text-xs text-[#96CD7B] font-medium">{r.role}</p>
-                          </div>
-                        </div>
-
-                        <p className="text-xs sm:text-sm text-white/90 leading-relaxed font-normal line-clamp-4">
-                          "{r.quote}"
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                        <div className="flex items-center gap-1 text-[#E6C176] text-xs font-mono font-semibold">
-                          <ThumbsUp size={13} aria-hidden="true" />
-                          {r.upvotes} upvote{r.upvotes === 1 ? '' : 's'}
-                        </div>
-                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#96CD7B]/20 text-[#96CD7B] border border-[#96CD7B]/30">
-                          {r.species || r.tag}
-                        </span>
-                      </div>
-
-                    </motion.div>
-                  );
-                })
-              )}
+              {SCRUBBER_BARS.map((h, idx) => (
+                <div
+                  key={idx}
+                  style={{ height: `${h}px` }}
+                  className="w-[3px] bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.7)]"
+                />
+              ))}
             </motion.div>
-          </motion.div>
-
-          {/* Bottom Hint */}
-          <div className={`max-w-7xl w-full mx-auto flex items-center justify-between text-xs z-20 pb-2 shrink-0 ${
-            isDark ? 'text-white/40' : 'text-slate-500'
-          }`}>
-            <span>Scroll vertically to complete all 10 cards horizontally (LEFT → RIGHT)</span>
-            <span>10 Verified Explorer Reports</span>
           </div>
-
         </div>
-      </div>
 
-      {/* Reviews Modal */}
-      <ReviewsModal isOpen={modalOpen} onClose={() => setModalOpen(false)} reports={reports} />
-    </>
+        {/* ─── Review Cards Row (Motion: Right -> Left as user scrolls down) ─── */}
+        <div className="flex-1 flex items-center overflow-hidden py-2">
+          <motion.div
+            ref={trackRef}
+            style={{ x: cardsX }}
+            className="flex items-start gap-6 sm:gap-8 px-8 sm:px-16 w-max"
+          >
+            {REVIEWS.map((r) => (
+              <motion.div
+                key={r.id}
+                style={{ marginTop: r.topOffset }}
+                whileHover={{ scale: 1.03, y: -6 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="w-[300px] sm:w-[340px] md:w-[360px] shrink-0 bg-[#D4CDC0] rounded-2xl p-6 sm:p-7 flex flex-col gap-5 cursor-default select-none shadow-[0_16px_40px_rgba(0,0,0,0.35)]"
+              >
+                {/* Header: Avatar + Info */}
+                <div className="flex items-center gap-3.5">
+                  <img
+                    src={r.avatar}
+                    alt={r.name}
+                    className="w-12 h-12 rounded-full object-cover shrink-0 shadow-sm border border-black/10"
+                  />
+                  <div>
+                    <h3 className="text-base sm:text-lg font-semibold text-[#141C16] leading-tight">
+                      {r.name}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#525E55] mt-0.5 font-medium">
+                      {r.role}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Quote Body */}
+                <p className="text-[14px] sm:text-[15px] text-[#1D271F] leading-[1.6] font-normal">
+                  {r.quote}
+                </p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+
+      </div>
+    </div>
   );
 }
+
+
+
+

@@ -22,6 +22,11 @@ export default defineConfig(async ({ mode }) => {
     plugins,
     envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
     define: processEnvDefines,
+    server: {
+      port: 5174,
+      strictPort: false,
+      host: true,
+    },
     build: {
       target: 'esnext',
       cssCodeSplit: true,
