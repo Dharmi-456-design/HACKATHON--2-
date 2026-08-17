@@ -40,6 +40,7 @@ const allowedOrigins = [
   'http://localhost:4173',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
+  'https://naturepulse.vercel.app',
 ];
 if (process.env.CLIENT_URL) {
   allowedOrigins.push(process.env.CLIENT_URL);
@@ -54,7 +55,7 @@ app.use(
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      if (isProd && origin.endsWith('.vercel.app')) {
+      if (origin.endsWith('.vercel.app')) {
         return callback(null, true);
       }
       callback(new Error('Not allowed by CORS'));
