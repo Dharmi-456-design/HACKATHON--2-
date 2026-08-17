@@ -3,7 +3,8 @@ import {
   Sparkles, Search, Plus, ThumbsUp, Heart, Lightbulb, Flame, Award, 
   MessageSquare, Bookmark, Share2, Flag, UserPlus, UserCheck, Trash2, 
   Edit3, Check, Filter, Bell, Tag, ArrowRight, Eye, ShieldAlert, Pin, 
-  CornerDownRight, CheckCheck, RefreshCw, X, FileText, Globe, Image as ImageIcon
+  CornerDownRight, CheckCheck, RefreshCw, X, FileText, Globe, Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -215,6 +216,8 @@ export default function Community() {
   const [postTags, setPostTags] = useState('');
   const [postImage, setPostImage] = useState(null);
   const [composerMode, setComposerMode] = useState('write'); // write, preview
+  const [isSuggestingTags, setIsSuggestingTags] = useState(false);
+  const [tagSuggestionMsg, setTagSuggestionMsg] = useState('');
   const fileInputRef = useRef(null);
 
   // Comment & Reply State
@@ -305,11 +308,118 @@ export default function Community() {
     );
   };
 
+  // Dynamic Heuristic Keyword Extractor (Fallback & Enhancer)
+  const extractDynamicKeywords = (title, content, category) => {
+    const combinedText = `${title} ${content}`.toLowerCase();
+    const tags = new Set();
+
+    // Category based primary tag
+    if (category === 'Nature & Ecology') tags.add('NatureEcology');
+    else if (category === 'AI & Technology') tags.add('NatureTech');
+    else if (category === 'Education & Learning') tags.add('EcoLearning');
+    else if (category === 'Questions & Answers') tags.add('FieldQnA');
+    else if (category === 'Ideas & Suggestions') tags.add('EcoIdeas');
+    else tags.add('CommunityDiscussion');
+
+    // Species & Habitat matching
+    const natureDictionary = [
+      { match: /\b(bird|nest|avian|owl|sparrow|eagle|hawk|peacock|crow|duck|goose|feather|flight)\b/, tag: 'AvianLife' },
+      { match: /\b(tree|canopy|bark|oak|pine|banyan|peepal|neem|mango|bamboo|forest|woods)\b/, tag: 'TreeCanopy' },
+      { match: /\b(moss|fungi|mushroom|lichen|spore|mycelium)\b/, tag: 'MossFungi' },
+      { match: /\b(flower|wildflower|flora|bloom|petal|plant|leaf|botany|gardening)\b/, tag: 'WildFlora' },
+      { match: /\b(insect|butterfly|bee|pollinator|beetle|ant|dragonfly|spider)\b/, tag: 'Pollinators' },
+      { match: /\b(water|stream|river|lake|pond|rain|wetland|creek|monsoon)\b/, tag: 'Watershed' },
+      { match: /\b(soil|earth|ground|compost|root|mud|rock|mineral)\b/, tag: 'LivingSoil' },
+      { match: /\b(dawn|morning|sunset|dusk|night|sky|sunlight|shadow)\b/, tag: 'DawnDuskWatch' },
+      { match: /\b(urban|city|park|sidewalk|garden|balcony|terrace|roof)\b/, tag: 'UrbanWild' },
+      { match: /\b(clean|litter|plastic|waste|stewardship|care|protect|conserve|restore)\b/, tag: 'HabitatCare' },
+    ];
+
+    for (const item of natureDictionary) {
+      if (item.match.test(combinedText)) {
+        tags.add(item.tag);
+      }
+    }
+
+    // Extract key words from title (skip stop words)
+    const stopWords = new Set(['this', 'that', 'with', 'from', 'have', 'what', 'where', 'when', 'some', 'about', 'your', 'their', 'there', 'here', 'into', 'over', 'under', 'just', 'more', 'very']);
+    const titleWords = title
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .split(/\s+/)
+      .filter((w) => w.length >= 4 && !stopWords.has(w.toLowerCase()));
+
+    for (const word of titleWords.slice(0, 2)) {
+      const pascal = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      tags.add(pascal);
+    }
+
+    if (tags.size < 3) {
+      tags.add('Biodiversity');
+      tags.add('FieldObservation');
+    }
+
+    return Array.from(tags).slice(0, 4);
+  };
+
   // AI Suggest Tags
-  const handleAISuggestTags = () => {
-    setCommunityError('');
-    const suggested = ['UrbanCanopy', 'HabitatCare', 'Biodiversity', 'LocalEcology'];
-    setPostTags((prev) => (prev ? `${prev}, ${suggested.join(', ')}` : suggested.join(', ')));
+  const handleAISuggestTags = async () => {
+    setTagSuggestionMsg('');
+    const rawTitle = postTitle.trim();
+    const rawContent = postContent.trim();
+
+    if (!rawTitle && !rawContent) {
+      setTagSuggestionMsg('Please enter a discussion title or content first so AI can suggest relevant tags.');
+      return;
+    }
+
+    setIsSuggestingTags(true);
+
+    try {
+      // Send prompt to backend Pulse AI
+      const prompt = `You are an ecological tag generator. Provide 3 to 4 concise, PascalCase or single-word hashtag tags (without #, comma-separated, e.g. BanyanCanopy, AvianNesting, UrbanWild) specifically tailored to this discussion:
+Title: "${rawTitle}"
+Category: "${postCategory}"
+Content: "${rawContent || rawTitle}"
+Output ONLY the comma-separated tags and nothing else.`;
+
+      const res = await apiFetch(
+        '/api/pulse',
+        {
+          method: 'POST',
+          body: JSON.stringify({ message: prompt }),
+        },
+        tokenFromSession
+      );
+
+      const replyText = res?.reply || res?.message || res?.text || '';
+      let generated = replyText
+        .split(/[,;\n]/)
+        .map((t) => t.replace(/^[#\s\-*0-9.]+|[#\s\-*]+$/g, '').trim())
+        .filter((t) => t && t.length >= 2 && t.length <= 25 && !t.includes(' '));
+
+      if (!generated.length) {
+        generated = extractDynamicKeywords(rawTitle, rawContent, postCategory);
+      }
+
+      const currentTags = postTags
+        ? postTags.split(',').map((t) => t.trim()).filter(Boolean)
+        : [];
+      const combined = Array.from(new Set([...currentTags, ...generated]));
+      setPostTags(combined.join(', '));
+      setTagSuggestionMsg(`✨ Added ${generated.length} AI suggested tags!`);
+      setTimeout(() => setTagSuggestionMsg(''), 4000);
+    } catch (err) {
+      const fallbackTags = extractDynamicKeywords(rawTitle, rawContent, postCategory);
+      const currentTags = postTags
+        ? postTags.split(',').map((t) => t.trim()).filter(Boolean)
+        : [];
+      const combined = Array.from(new Set([...currentTags, ...fallbackTags]));
+      setPostTags(combined.join(', '));
+      setTagSuggestionMsg(`✨ Added ${fallbackTags.length} suggested tags!`);
+      setTimeout(() => setTagSuggestionMsg(''), 4000);
+    } finally {
+      setIsSuggestingTags(false);
+    }
   };
 
   // Create Post Submit Handler
@@ -742,13 +852,23 @@ export default function Community() {
                         </label>
                         <button
                           type="button"
+                          disabled={isSuggestingTags}
                           onClick={handleAISuggestTags}
-                          className={`text-[10px] hover:underline flex items-center gap-1 cursor-pointer font-semibold ${
+                          className={`text-[10px] hover:underline flex items-center gap-1 cursor-pointer font-semibold disabled:opacity-50 ${
                             isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
                           }`}
                         >
-                          <Sparkles className="w-3 h-3" />
-                          <span>{t.aiSuggestTags}</span>
+                          {isSuggestingTags ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <span>Analyzing…</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3 h-3" />
+                              <span>{t.aiSuggestTags}</span>
+                            </>
+                          )}
                         </button>
                       </div>
                       <input
@@ -761,6 +881,15 @@ export default function Community() {
                             : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
                         }`}
                       />
+                      {tagSuggestionMsg && (
+                        <p className={`text-[11px] mt-1.5 leading-snug font-medium transition-all ${
+                          tagSuggestionMsg.includes('✨')
+                            ? isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
+                            : 'text-amber-500'
+                        }`}>
+                          {tagSuggestionMsg}
+                        </p>
+                      )}
                     </div>
                   </div>
 

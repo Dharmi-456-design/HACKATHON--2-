@@ -1,4 +1,14 @@
-const mongoose = require('mongoose');
+import React from 'react';
+  
+  const Seed = () =>  {
+	return (
+	  <div>
+	  </div>
+	);
+  }
+  
+  export default Seed;
+  const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
 const {
