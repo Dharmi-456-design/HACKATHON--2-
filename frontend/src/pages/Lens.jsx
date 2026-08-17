@@ -710,45 +710,111 @@ export default function Lens() {
                       </div>
                     )}
                     <motion.div variants={stagger.container} initial="initial" animate="animate">
-                      <motion.div variants={stagger.item} className="flex flex-wrap gap-2 mb-3">
-                        <Badge tone={analysis.confidence === 'high' ? 'sage' : 'warn'}>{analysis.confidence}</Badge>
-                        <Badge tone="ink">{analysis.category}</Badge>
+                      <motion.div variants={stagger.item} className="flex flex-wrap items-center gap-2 mb-3">
+                        <Badge tone={analysis.confidence === 'high' ? 'sage' : 'warn'}>
+                          {analysis.confidence === 'high' ? 'High Confidence' : analysis.confidence === 'medium' ? 'Medium Confidence' : 'Low Confidence'}
+                        </Badge>
+                        <Badge tone="ink">{analysis.category || 'botanical'}</Badge>
                       </motion.div>
-                      <motion.h2 variants={stagger.item} className="font-display text-3xl">{analysis.common_name || 'Unidentified species'}</motion.h2>
+
+                      {/* Accurate Common Name / Title */}
+                      <motion.h2 variants={stagger.item} className="font-display text-3xl sm:text-4xl font-extrabold text-forest tracking-tight leading-tight">
+                        {analysis.common_name || 'Field Observation Specimen'}
+                      </motion.h2>
+
+                      {/* Accurate Scientific Name */}
                       {analysis.scientific_name && (
-                        <motion.p variants={stagger.item} className="italic text-sm text-forest/55 mt-1">{analysis.scientific_name}</motion.p>
+                        <motion.p variants={stagger.item} className="italic text-base text-forest/65 mt-1 font-serif">
+                          {analysis.scientific_name}
+                        </motion.p>
                       )}
+
                       {isLowConfidence && (
-                        <motion.p variants={stagger.item} className="text-[11px] uppercase tracking-[0.16em] text-amber-700 mt-2 font-semibold">Best guess — unconfirmed</motion.p>
+                        <motion.p variants={stagger.item} className="text-[11px] uppercase tracking-[0.16em] text-amber-700 mt-2 font-semibold">
+                          Best guess — unconfirmed candidate
+                        </motion.p>
                       )}
+
+                      {/* Confidence Meter */}
                       <motion.div variants={stagger.item} className="mt-4 flex justify-center">
                         <ConfidenceRing pct={analysis.confidence_pct || (analysis.confidence === 'high' ? 90 : analysis.confidence === 'medium' ? 65 : 35)} />
                       </motion.div>
-                      <motion.div variants={stagger.item} className="mt-4 rounded-2xl bg-cream p-4 border border-ink/5">
-                        <p className="text-[11px] uppercase tracking-[0.16em] text-forest/45">Why this matters</p>
-                        <p className="mt-1 text-sm leading-relaxed">{analysis.why_it_matters}</p>
-                      </motion.div>
-                      {analysis.experience_suggestion && (
-                        <motion.div variants={stagger.item} className="mt-3 rounded-2xl bg-mist/40 p-4 border border-ink/5">
-                          <p className="text-[11px] uppercase tracking-[0.16em] text-forest/45">Experience it</p>
-                          <p className="mt-1 text-sm leading-relaxed">{analysis.experience_suggestion}</p>
+
+                      {/* Botanical Description & Visible Features */}
+                      {analysis.description && (
+                        <motion.div variants={stagger.item} className="mt-4 rounded-2xl bg-cream p-4 sm:p-5 border border-ink/5 space-y-2">
+                          <p className="text-[11px] uppercase tracking-[0.16em] text-forest/50 font-bold">
+                            Description & Visible Features
+                          </p>
+                          <p className="text-sm leading-relaxed text-forest/90">
+                            {analysis.description}
+                          </p>
+                          {Array.isArray(analysis.visible_features) && analysis.visible_features.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {analysis.visible_features.map((feat, idx) => (
+                                <span key={idx} className="px-2.5 py-1 rounded-full bg-forest/10 text-forest text-[11px] font-medium">
+                                  🌿 {feat}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </motion.div>
                       )}
+
+                      {/* Why it Matters */}
+                      {analysis.why_it_matters && (
+                        <motion.div variants={stagger.item} className="mt-3 rounded-2xl bg-mist/30 p-4 sm:p-5 border border-ink/5">
+                          <p className="text-[11px] uppercase tracking-[0.16em] text-forest/50 font-bold">
+                            Why this matters
+                          </p>
+                          <p className="mt-1 text-sm leading-relaxed text-forest/90">
+                            {analysis.why_it_matters}
+                          </p>
+                        </motion.div>
+                      )}
+
+                      {/* User Field Notes */}
+                      {notes && (
+                        <motion.div variants={stagger.item} className="mt-3 rounded-2xl bg-cream/70 p-4 border border-ink/5">
+                          <p className="text-[11px] uppercase tracking-[0.16em] text-forest/50 font-bold">
+                            Your Field Notes
+                          </p>
+                          <p className="mt-1 text-sm leading-relaxed text-forest/80 italic">
+                            "{notes}"
+                          </p>
+                        </motion.div>
+                      )}
+
+                      {analysis.experience_suggestion && (
+                        <motion.div variants={stagger.item} className="mt-3 rounded-2xl bg-mist/40 p-4 border border-ink/5">
+                          <p className="text-[11px] uppercase tracking-[0.16em] text-forest/50 font-bold">
+                            Experience it
+                          </p>
+                          <p className="mt-1 text-sm leading-relaxed text-forest/90">
+                            {analysis.experience_suggestion}
+                          </p>
+                        </motion.div>
+                      )}
+
                       {analysis.photo_coach_tip && (isLowConfidence || coachMode) && (
                         <motion.div variants={stagger.item} className="mt-3 rounded-2xl bg-amber-50 border border-amber-200 p-4">
-                          <p className="text-[11px] uppercase tracking-[0.14em] text-amber-700 mb-1"><Lightbulb size={11} className="inline mr-1" />Photo Coach</p>
+                          <p className="text-[11px] uppercase tracking-[0.14em] text-amber-700 mb-1 font-semibold">
+                            <Lightbulb size={12} className="inline mr-1" />Photo Coach
+                          </p>
                           <p className="text-sm text-amber-900">{analysis.photo_coach_tip}</p>
                         </motion.div>
                       )}
-                      <motion.div variants={stagger.item} className="mt-5 flex flex-wrap gap-2">
-                        <PrimaryButton onClick={save} disabled={!filePayload || saving}>
-                          <Save size={14} /> {saving ? 'Saving…' : 'Save to Journal'}
+
+                      {/* ──────────────── ACTION BUTTONS (APPEARS AFTER ASK PULSE DONE) ──────────────── */}
+                      <motion.div variants={stagger.item} className="mt-6 flex flex-wrap gap-2.5 pt-3 border-t border-ink/5">
+                        <PrimaryButton onClick={save} disabled={!filePayload || saving} className="shadow-lg shadow-forest/20">
+                          <Save size={15} /> {saving ? 'Saving…' : 'Save to Journal'}
                         </PrimaryButton>
                         <GhostButton onClick={downloadCapturedPhoto}>
-                          <Download size={14} /> Save to Device
+                          <Download size={15} /> Save to Device
                         </GhostButton>
                         <GhostButton onClick={() => setShowShare(true)}>
-                          <Share2 size={14} /> Share Card
+                          <Share2 size={15} /> Share Card
                         </GhostButton>
                       </motion.div>
                     </motion.div>
@@ -784,15 +850,13 @@ export default function Lens() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 pt-1">
-                <PrimaryButton onClick={analyze} disabled={!filePayload || analyzing}>
-                  <Sparkles size={14} /> {analyzing ? 'Pulse is analyzing…' : 'Ask Pulse to Identify'}
+              {/* Only Ask Pulse to Identify & Retake appear here (Save to Journal appears after analysis) */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                <PrimaryButton onClick={analyze} disabled={!filePayload || analyzing} className="flex-1 sm:flex-none justify-center">
+                  <Sparkles size={15} /> {analyzing ? 'Pulse is analyzing…' : 'Ask Pulse to Identify'}
                 </PrimaryButton>
-                <GhostButton onClick={save} disabled={!filePayload || saving}>
-                  <Save size={14} /> {saving ? 'Saving…' : 'Save to Journal'}
-                </GhostButton>
                 <GhostButton onClick={retakePhoto}>
-                  <Camera size={14} /> Retake
+                  <Camera size={15} /> Retake
                 </GhostButton>
               </div>
             </Card>
