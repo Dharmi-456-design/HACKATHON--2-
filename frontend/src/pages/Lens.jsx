@@ -562,73 +562,54 @@ export default function Lens() {
             {state === 'capture' && (
               <motion.div key="capture" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <Card className="p-6 space-y-4">
-                  {/* Primary Camera Action Card */}
-                  <div className="space-y-3">
+                  {/* Two Main Actions: Click Photo & Upload Photo */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    {/* BUTTON 1: Click Photo */}
                     <button
                       type="button"
                       onClick={() => startCamera('environment')}
-                      className="w-full py-4 px-6 rounded-2xl bg-forest hover:bg-forest-light text-cream font-semibold text-base flex items-center justify-center gap-3 shadow-xl shadow-forest/20 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer border border-forest/30"
+                      className="py-6 px-5 rounded-2xl bg-forest hover:bg-forest-light text-cream font-bold text-base flex flex-col items-center justify-center gap-2 shadow-xl shadow-forest/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border border-forest/30 group"
                     >
-                      <div className="w-8 h-8 rounded-full bg-cream/15 flex items-center justify-center text-gold">
-                        <Camera size={18} />
+                      <div className="w-12 h-12 rounded-full bg-cream/15 group-hover:bg-cream/25 flex items-center justify-center text-gold transition-colors">
+                        <Camera size={24} />
                       </div>
-                      <div className="text-left">
-                        <p className="leading-tight">Open Live Camera</p>
-                        <p className="text-[11px] font-normal text-cream/70">Tap to start real-time viewfinder</p>
+                      <div className="text-center">
+                        <p className="font-extrabold text-sm sm:text-base">Click Photo</p>
+                        <p className="text-[11px] font-normal text-cream/70">Open live rear camera</p>
                       </div>
                     </button>
 
-                    <div className="flex items-center gap-2 text-xs text-forest/40 uppercase tracking-wider justify-center my-1">
-                      <span className="h-px bg-ink/10 flex-1" />
-                      <span>or choose from device</span>
-                      <span className="h-px bg-ink/10 flex-1" />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => nativeCameraInputRef.current?.click()}
-                        className="py-2.5 px-3 rounded-xl bg-cream/80 hover:bg-mist/50 text-forest text-xs font-semibold flex items-center justify-center gap-1.5 border border-forest/15 transition-colors cursor-pointer"
-                        title="Open device native camera app"
-                      >
-                        <Smartphone size={14} className="text-forest/70" />
-                        <span>Native Camera</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="py-2.5 px-3 rounded-xl bg-cream/80 hover:bg-mist/50 text-forest text-xs font-semibold flex items-center justify-center gap-1.5 border border-forest/15 transition-colors cursor-pointer"
-                        title="Browse photos on device"
-                      >
-                        <Upload size={14} className="text-forest/70" />
-                        <span>Upload File</span>
-                      </button>
-                    </div>
-
-                    {/* Drag & Drop Surface */}
-                    <label className="block border-2 border-dashed border-forest/20 rounded-2xl bg-cream/40 hover:bg-mist/20 cursor-pointer overflow-hidden transition-colors p-4 text-center">
-                      <div className="flex flex-col items-center justify-center text-forest/50 gap-1.5 py-3">
-                        <ImageIcon size={22} className="text-forest/40" />
-                        <p className="text-xs font-medium">Drop a field photograph or tap here</p>
-                        <p className="text-[10px] text-forest/40">JPG, PNG, WebP · resized securely on device</p>
+                    {/* BUTTON 2: Upload Photo */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="py-6 px-5 rounded-2xl bg-cream/90 hover:bg-mist/60 text-forest font-bold text-base flex flex-col items-center justify-center gap-2 shadow-lg shadow-black/5 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border border-forest/20 group"
+                    >
+                      <div className="w-12 h-12 rounded-full bg-forest/10 group-hover:bg-forest/15 flex items-center justify-center text-forest transition-colors">
+                        <Upload size={24} />
                       </div>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                        onChange={(e) => onFile(e.target.files?.[0])}
-                      />
-                      <input
-                        ref={nativeCameraInputRef}
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        className="sr-only"
-                        onChange={(e) => onFile(e.target.files?.[0])}
-                      />
-                    </label>
+                      <div className="text-center">
+                        <p className="font-extrabold text-sm sm:text-base text-forest">Upload Photo</p>
+                        <p className="text-[11px] font-normal text-forest/70">Choose from device or gallery</p>
+                      </div>
+                    </button>
+
+                    {/* Hidden file inputs */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="sr-only"
+                      onChange={(e) => onFile(e.target.files?.[0])}
+                    />
+                    <input
+                      ref={nativeCameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="sr-only"
+                      onChange={(e) => onFile(e.target.files?.[0])}
+                    />
                   </div>
 
                   <div className="mt-4 space-y-3 pt-2 border-t border-ink/5">
