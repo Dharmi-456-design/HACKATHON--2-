@@ -6,16 +6,20 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
 export default function PricingSection() {
-  const { user, ensureUserOrGuest } = useAuth();
+  const { user } = useAuth();
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState('yearly'); // 'monthly' | 'yearly'
 
-  const handleSelectPlan = async (planId) => {
-    if (!user && ensureUserOrGuest) {
-      await ensureUserOrGuest();
-    }
+  const handleSelectPlan = (planId) => {
     const targetUrl = `/app/payment?plan=${planId}&billing=${billingCycle}`;
+
+    if (!user) {
+      // Not signed in → redirect to login, come back here after
+      navigate(`/login?redirect=${encodeURIComponent(targetUrl)}`);
+      return;
+    }
+
     navigate(targetUrl);
   };
 

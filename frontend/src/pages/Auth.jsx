@@ -67,12 +67,15 @@ export default function Auth({ initialMode = 'login' }) {
   const [resetBusy, setResetBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
-  // Auto-redirect to dashboard when authenticated
+  // Read optional ?redirect= param so we can return users to their original destination
+  const redirectTo = new URLSearchParams(location.search).get('redirect') || '/app';
+
+  // Auto-redirect to destination when authenticated
   useEffect(() => {
     if (user && !busy && !googleBusy) {
-      navigate('/app', { replace: true });
+      navigate(redirectTo, { replace: true });
     }
-  }, [user, navigate, busy, googleBusy]);
+  }, [user, navigate, busy, googleBusy, redirectTo]);
 
   // Sync mode with URL if path changes
   useEffect(() => {
@@ -100,10 +103,11 @@ export default function Auth({ initialMode = 'login' }) {
     setInfo('');
     setGoogleBusy(true);
     try {
-      const redirectUrl = `${window.location.origin}/app`;
-      await signInWithGoogle(redirectUrl);
+      // Preserve the redirect param so Google OAuth returns to the right place
+      const afterAuthUrl = `${window.location.origin}${redirectTo}`;
+      await signInWithGoogle(afterAuthUrl);
       // Browser will redirect to Google's official email picker page (accounts.google.com).
-      // Upon selecting email and successful auth, Google redirects to /app.
+      // Upon selecting email and successful auth, Google redirects to afterAuthUrl.
     } catch (err) {
       console.error('[Auth.jsx] Google OAuth failed:', err);
       setError(err?.message || 'Google authentication failed. Please select your Google account.');
