@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Globe, Search, ZoomIn, ZoomOut, X, MapPin, Eye, Share2, CheckCircle,
-  Filter, Layers, Navigation
+  Filter, Layers
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../contexts/ThemeContext";
@@ -46,12 +46,6 @@ const CITY_COORDS = {
   "ahmedabad": [23.0225, 72.5714],
 };
 
-function isValidCoord(lat, lng) {
-  return typeof lat === 'number' && typeof lng === 'number'
-    && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
-    && !Number.isNaN(lat) && !Number.isNaN(lng);
-}
-
 function cityToLatLng(city, idx) {
   const cl = (city || "").toLowerCase();
   for (const [k, c] of Object.entries(CITY_COORDS)) {
@@ -72,11 +66,10 @@ const DEFAULT_PINS = [
 ];
 
 // ── Leaflet Map component ────────────────────────────────────────────────────
-function LeafletMap({ pins, selectedPin, onSelect, isDark, userLocation }) {
+function LeafletMap({ pins, selectedPin, onSelect, isDark }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef({});
-  const userMarkerRef = useRef(null);
   const L = useRef(null);
 
   useEffect(() => {
@@ -113,7 +106,6 @@ function LeafletMap({ pins, selectedPin, onSelect, isDark, userLocation }) {
         mapInstance.current.remove();
         mapInstance.current = null;
         markersRef.current = {};
-        userMarkerRef.current = null;
       }
     };
   }, []); // init once
@@ -125,7 +117,7 @@ function LeafletMap({ pins, selectedPin, onSelect, isDark, userLocation }) {
     markersRef.current = {};
 
     pinsToAdd.forEach((pin) => {
-      if (!isValidCoord(pin.lat, pin.lng)) return;
+      if (!pin.lat || !pin.lng) return;
       const emoji = CAT_EMOJI[pin.category] || "🌱";
       const icon = L.current.divIcon({
         className: "",
@@ -151,7 +143,7 @@ function LeafletMap({ pins, selectedPin, onSelect, isDark, userLocation }) {
           <div style="font-family:sans-serif;min-width:180px;padding:4px">
             <div style="font-weight:700;font-size:14px;color:#183B28">${emoji} ${pin.name}</div>
             <div style="font-size:11px;color:#3E5C48;margin:3px 0">📍 ${pin.city || "Unknown"}</div>
-            ${pin.image_url ? `<img src="${pin.image_url}" alt="${pin.common_name || pin.name || 'Observation'}" style="width:100%;border-radius:6px;margin:6px 0;max-height:120px;object-fit:cover" />` : ""}
+            ${pin.image_url ? `<img src="${pin.image_url}" style="width:100%;border-radius:6px;margin:6px 0;max-height:120px;object-fit:cover" />` : ""}
             <div style="font-size:11px;color:#555;line-height:1.5">${pin.note || ""}</div>
             <div style="font-size:10px;color:#22c55e;font-weight:700;margin-top:6px">✅ ${pin.confidence || "Verified"}</div>
           </div>
@@ -177,32 +169,6 @@ function LeafletMap({ pins, selectedPin, onSelect, isDark, userLocation }) {
       if (marker) marker.openPopup();
     }
   }, [selectedPin]);
-
-  // Handle userLocation
-  useEffect(() => {
-    if (userLocation && mapInstance.current && L.current) {
-      if (userMarkerRef.current) {
-        userMarkerRef.current.setLatLng([userLocation.lat, userLocation.lng]);
-      } else {
-        const icon = L.current.divIcon({
-          className: "",
-          html: `<div style="
-            background:${isDark ? "#4ADE80" : "#22c55e"};
-            border:2px solid #fff;
-            border-radius:50%;
-            width:16px;height:16px;
-            box-shadow:0 0 10px rgba(0,0,0,0.5);
-          "></div>`,
-          iconSize: [16, 16],
-          iconAnchor: [8, 8],
-        });
-        userMarkerRef.current = L.current.marker([userLocation.lat, userLocation.lng], { icon })
-          .addTo(mapInstance.current)
-          .bindPopup("<div style='font-family:sans-serif;font-size:12px;font-weight:bold;color:#183B28;padding:2px'>You are here</div>");
-      }
-      mapInstance.current.flyTo([userLocation.lat, userLocation.lng], 14, { duration: 1 });
-    }
-  }, [userLocation, isDark]);
 
   return (
     <div
@@ -296,23 +262,15 @@ export default function CommunityBiodiversityMap() {
 
   const [pins, setPins] = useState(DEFAULT_PINS);
   const [loading, setLoading] = useState(true);
-  const [apiError, setApiError] = useState(null);
   const [selCat, setSelCat] = useState("All");
   const [query, setQuery] = useState("");
   const [selectedPin, setSelectedPin] = useState(null);
   const [viewMode, setViewMode] = useState("map"); // "map" | "constellation"
   const [zoomLevel, setZoomLevel] = useState(1);
   const [shareStatus, setShareStatus] = useState({}); // id→"sharing"|"done"
-  const [userLocation, setUserLocation] = useState(null);
-  const [locating, setLocating] = useState(false);
-  const [locationError, setLocationError] = useState(null);
-  const fetchedRef = useRef(false);
 
-  // Load community posts from backend (prevent duplicate fetch)
+  // Load community posts from backend
   useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-
     apiFetch("/api/community", {}, null)
       .then(list => {
         if (Array.isArray(list) && list.length > 0) {
@@ -331,16 +289,13 @@ export default function CommunityBiodiversityMap() {
             };
           });
           setPins(mapped);
-          setApiError(null);
         }
       })
-      .catch(() => {
-        setApiError("Could not load community observations. Showing defaults.");
-      })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  // Merge user's local lens discoveries (runs once)
+  // Merge user's local lens discoveries
   useEffect(() => {
     try {
       const local = JSON.parse(localStorage.getItem("pulse_user_lens_discoveries") || "[]");
@@ -357,7 +312,7 @@ export default function CommunityBiodiversityMap() {
             image_url: d.image_url || "",
             lat: d.lat || lat,
             lng: d.lng || lng,
-            _localDiscovery: d,
+            _localDiscovery: d, // for sharing
           };
         });
         setPins(prev => {
@@ -366,6 +321,7 @@ export default function CommunityBiodiversityMap() {
         });
       }
     } catch {}
+    setLoading(false);
   }, []);
 
   const filtered = pins.filter(p => {
@@ -376,34 +332,6 @@ export default function CommunityBiodiversityMap() {
     }
     return true;
   });
-
-  const locateUser = () => {
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by your browser.");
-      return;
-    }
-    setLocating(true);
-    setLocationError(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setViewMode("map");
-        setLocating(false);
-        setLocationError(null);
-      },
-      (err) => {
-        setLocating(false);
-        if (err.code === 1) {
-          setLocationError("Location permission denied. Please enable location access in your browser settings.");
-        } else if (err.code === 2) {
-          setLocationError("Location unavailable. Please try again.");
-        } else {
-          setLocationError("Location request timed out. Please try again.");
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
-  };
 
   // Share local discovery to community backend
   const shareToMap = async (pin) => {
@@ -482,25 +410,14 @@ export default function CommunityBiodiversityMap() {
               {viewMode==="constellation" && (
                 <>
                   <button onClick={() => setZoomLevel(z => Math.min(z+0.15, 1.5))}
-                    aria-label="Zoom in"
                     className={`p-2.5 rounded-xl border cursor-pointer ${isDark?"bg-[#13271C] border-[#20422E] text-slate-300":"bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28]"}`}>
                     <ZoomIn className="w-4 h-4" />
                   </button>
                   <button onClick={() => setZoomLevel(z => Math.max(z-0.15, 0.6))}
-                    aria-label="Zoom out"
                     className={`p-2.5 rounded-xl border cursor-pointer ${isDark?"bg-[#13271C] border-[#20422E] text-slate-300":"bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28]"}`}>
                     <ZoomOut className="w-4 h-4" />
                   </button>
                 </>
-              )}
-              {viewMode==="map" && (
-                <button onClick={locateUser} disabled={locating}
-                  className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
-                    locating ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-                  } ${isDark ? "bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white" : "bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]"}`}>
-                  <Navigation className={`w-4 h-4 ${locating ? "animate-pulse" : ""}`} />
-                  <span className="hidden sm:inline">{locating ? "Locating…" : "Locate Me"}</span>
-                </button>
               )}
               <div className={`flex items-center gap-1 p-1 rounded-xl border ${isDark?"bg-[#07150C] border-[#20422E]":"bg-[#EDE6D8] border-[#D4CBB8]"}`}>
                 <button onClick={() => setViewMode("map")}
@@ -526,11 +443,6 @@ export default function CommunityBiodiversityMap() {
                 }`}>{CAT_LABELS[key]}</button>
             ))}
           </div>
-          {locationError && (
-            <div className={`text-xs px-3 py-2 rounded-xl border ${isDark ? "bg-amber-950/50 border-amber-700/50 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-700"}`}>
-              {locationError}
-            </div>
-          )}
         </div>
 
         {/* ── Map Panel ── */}
@@ -543,7 +455,6 @@ export default function CommunityBiodiversityMap() {
               </span>
             </div>
             {loading && <span className={`text-[10px] animate-pulse ${isDark?"text-slate-400":"text-slate-500"}`}>Loading…</span>}
-            {apiError && <span className={`text-[10px] ${isDark?"text-amber-400":"text-amber-600"}`}>{apiError}</span>}
           </div>
           <div className={`p-3 sm:p-4 ${viewMode==="map" ? "" : ""}`}>
             {viewMode==="map" ? (
@@ -553,7 +464,6 @@ export default function CommunityBiodiversityMap() {
                 selectedPin={selectedPin}
                 onSelect={setSelectedPin}
                 isDark={isDark}
-                userLocation={userLocation}
               />
             ) : (
               <ConstellationMap
@@ -603,7 +513,6 @@ export default function CommunityBiodiversityMap() {
                         onClick={() => shareToMap(selectedPin)}
                         disabled={shareStatus[selectedPin.id]==="sharing"||shareStatus[selectedPin.id]==="done"}
                         title="Share to Community Map"
-                        aria-label="Share observation"
                         className={`p-2 rounded-full border cursor-pointer transition-colors ${
                           shareStatus[selectedPin.id]==="done"
                             ? isDark?"border-[#4ADE80] text-[#4ADE80]":"border-green-500 text-green-600"
@@ -616,7 +525,6 @@ export default function CommunityBiodiversityMap() {
                       </button>
                     )}
                     <button onClick={() => setSelectedPin(null)}
-                      aria-label="Close details"
                       className={`cursor-pointer ${isDark?"text-slate-400 hover:text-white":"text-slate-400 hover:text-[#0F2418]"}`}>
                       <X className="w-5 h-5" />
                     </button>
