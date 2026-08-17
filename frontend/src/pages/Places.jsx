@@ -240,13 +240,34 @@ export default function Places() {
   // Persistent State
   const [places, setPlaces] = useState(DEFAULT_TOP_PICKS);
 
-  // Fetch dynamic places from backend MongoDB API
+  // Fetch dynamic places from backend MongoDB API and merge with DEFAULT_TOP_PICKS
   useEffect(() => {
     let mounted = true;
     apiFetch('/api/places')
       .then((data) => {
         if (mounted && Array.isArray(data) && data.length > 0) {
-          setPlaces(data);
+          const merged = data.map((apiItem) => ({
+            ...apiItem,
+            id: apiItem.id || apiItem._id,
+            name: apiItem.name || apiItem.title || 'Ecological Sanctuary',
+            category: apiItem.category || 'Park',
+            image: apiItem.image || apiItem.image_url || '',
+            description: apiItem.description || '',
+            address: apiItem.address || apiItem.city || 'Oregon, USA',
+            distance: apiItem.distance || '0.8 km',
+            walkTime: apiItem.walkTime || '10 min walk',
+            rating: apiItem.rating || 4.8,
+            reviewsCount: apiItem.reviewsCount || apiItem.review_count || 120,
+            isOpen: apiItem.isOpen !== undefined ? apiItem.isOpen : true,
+          }));
+
+          const combined = [...DEFAULT_TOP_PICKS];
+          merged.forEach((item) => {
+            if (!combined.some((c) => c.name.toLowerCase().includes(item.name.toLowerCase()))) {
+              combined.push(item);
+            }
+          });
+          setPlaces(combined);
         }
       })
       .catch((err) => {
@@ -333,57 +354,7 @@ export default function Places() {
     }
   }, [locateMe]);
 
-  // Sync places with API if available
-  useEffect(() => {
-    // Skip if places were already loaded from the first fetch
-    if (places.length > 0) return;
-    let mounted = true;
-    apiFetch('/api/places')
-      .then((data) => {
-        if (mounted && Array.isArray(data) && data.length > 0) {
-          const merged = data.map((apiItem) => ({
-            ...apiItem,
-            id: apiItem.id || apiItem._id,
-            name: apiItem.name || apiItem.title || 'Ecological Sanctuary',
-            category: apiItem.category || 'Park',
-            image: apiItem.image || apiItem.image_url || '',
-            description: apiItem.description || '',
-            address: apiItem.address || apiItem.city || 'Oregon, USA',
-            distance: apiItem.distance || '0.8 km',
-            walkTime: apiItem.walkTime || '10 min walk',
-            rating: apiItem.rating || 4.8,
-            reviewsCount: apiItem.reviewsCount || apiItem.review_count || 120,
-            isOpen: apiItem.isOpen !== undefined ? apiItem.isOpen : true,
-          }));
-          if (!merged.some(p => p.name.includes("Kankaria"))) {
-            merged.push({
-              id: "kankaria-lake",
-              name: "Kankaria Lake",
-              category: "Nature",
-              icon: "🌊",
-              image: "/kankaria_lake.png",
-              description: "A beautiful circular lake with an island garden.",
-              address: "Ahmedabad, Gujarat",
-              distance: "1.2 km",
-              walkTime: "15 min walk",
-              rating: 4.9,
-              reviewsCount: 300,
-              isOpen: true,
-              whyRecommend: "Beautiful scenic view of the lake.",
-              hours: "8 AM - 10 PM",
-              price: "Free",
-              lat: 23.0063,
-              lng: 72.6026
-            });
-          }
-          setPlaces(merged);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      mounted = false;
-    };
-  }, []);
+
 
   // Load saved place bookmarks from the user profile (server-side)
   useEffect(() => {
