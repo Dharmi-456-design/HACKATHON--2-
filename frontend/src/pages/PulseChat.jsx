@@ -277,7 +277,7 @@ export default function PulseChat() {
     window.speechSynthesis.speak(utterance);
   }, [speakingId, lang]);
 
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en || {};
 
   const todayDateString = new Date().toLocaleDateString('en-US', {
     weekday: 'short',
