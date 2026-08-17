@@ -1263,9 +1263,12 @@ export default function Stories() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
               <div className="lg:col-span-7 relative h-72 lg:h-96 overflow-hidden">
                 <img
-                  src={featuredStory.coverImage}
+                  src={featuredStory.coverImage || 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1200&q=80'}
                   alt={featuredStory.title}
-                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1200&q=80';
+                  }}
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                 />
                 <div className={`absolute inset-0 lg:hidden ${
                   isDark ? 'bg-gradient-to-t from-[#0E2015] via-transparent to-transparent' : 'bg-gradient-to-t from-[#FDFBF7] via-transparent to-transparent'
