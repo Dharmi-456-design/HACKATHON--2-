@@ -193,11 +193,7 @@ export function AuthProvider({ children }) {
     }, 800);
 
     // Initialize Auth
-    checkSupabaseAuth().then((hasSbSession) => {
-      if (!hasSbSession) {
-        checkBackendAuth();
-      }
-    });
+    initAuth();
 
     return () => {
       mounted = false;
@@ -293,4 +289,4 @@ export function AuthProvider({ children }) {
 
 export const useAuth = () => useContext(AuthContext);
 
-export default AuthContext;
+export { AuthContext };
