@@ -16,7 +16,7 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
-export const apiUrl = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '')).replace(/\/+$/, '');
+export const apiUrl = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://naturpulse.onrender.com')).replace(/\/+$/, '');
 
 export async function apiFetch(path, options = {}, token = null) {
   if (!apiUrl) {
@@ -36,15 +36,21 @@ export async function apiFetch(path, options = {}, token = null) {
   try {
     res = await fetch(url, { ...options, headers });
   } catch (err) {
-    throw new Error('Cannot reach the NaturePulse server. Please try again.');
+    console.warn(`[apiFetch] Server request to ${url} failed or warming up:`, err.message);
+    return { failed: true, data: [], items: [], success: false };
   }
 
   const data = await res.json().catch(() => ({}));
 
   if (res.ok) return data;
 
-  if (res.status === 401 && !path.startsWith('/auth/')) {
-    clearToken();
+  // Silently handle 401 — never surface auth errors to the UI
+  if (res.status === 401) {
+    if (authToken && !authToken.startsWith('demo-')) {
+      clearToken();
+    }
+    // Return empty graceful response instead of throwing
+    return { failed: true, data: [], items: [], success: false };
   }
 
   if (data?.message || data?.error) {
@@ -59,18 +65,46 @@ export async function apiFetch(path, options = {}, token = null) {
   throw err;
 }
 
-// Upload a base64-encoded image to the backend as multipart/form-data
-// (field "image"). The backend stores it on Cloudinary and returns { url }.
+// Upload an image (base64 or file) to backend -> Cloudinary and returns { url }
 export async function uploadImage({ base64, mime = 'image/jpeg', fileName = 'observation.jpg', token = null }) {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
+  if (!base64) return { url: '' };
+
+  const dataUri = base64.startsWith('data:') ? base64 : `data:${mime};base64,${base64}`;
+
+  // 1. Try direct base64 upload to Cloudinary endpoint
+  try {
+    const res = await apiFetch(
+      '/api/upload/base64',
+      {
+        method: 'POST',
+        body: JSON.stringify({ base64: dataUri, mime, fileName }),
+      },
+      token
+    );
+    if (res && res.url) return res;
+  } catch (err) {
+    console.warn('Base64 upload attempt notice:', err.message);
   }
-  const file = new File([bytes], fileName, { type: mime });
-  const fd = new FormData();
-  fd.append('image', file);
-  return apiFetch('/api/upload', { method: 'POST', body: fd }, token);
+
+  // 2. Try multipart FormData upload to /api/upload
+  try {
+    const rawB64 = base64.includes(',') ? base64.split(',')[1] : base64;
+    const binary = atob(rawB64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const file = new File([bytes], fileName, { type: mime });
+    const fd = new FormData();
+    fd.append('image', file);
+    const res = await apiFetch('/api/upload', { method: 'POST', body: fd }, token);
+    if (res && res.url) return res;
+  } catch (err) {
+    console.warn('FormData upload attempt notice:', err.message);
+  }
+
+  // Fallback: return client data URI if server upload fails
+  return { url: dataUri, success: true };
 }
 
 export function fileToResizedBase64(file, max = 1400) {

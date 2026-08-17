@@ -196,5 +196,35 @@ body {
   transform: rotateY(180deg);
 }
 
+/* ── Print Stylesheet for Official Passport Export ── */
+@media print {
+  body {
+    background: #0A1A10 !important;
+    color: #F8F9FA !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  header, nav, footer, .no-print, button, .app-nav {
+    display: none !important;
+  }
+  #printable-passport-certificate {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: 2px solid #D4A359 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  @page {
+    size: auto;
+    margin: 10mm;
+  }
+}
+
+
 
 

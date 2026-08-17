@@ -158,7 +158,7 @@ const STORIES_TRANSLATIONS = {
 export default function Stories() {
   const { session } = useAuth();
   const { isDark } = useTheme();
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = STORIES_TRANSLATIONS[lang] || STORIES_TRANSLATIONS.en;
 
   // Persistent Stories State
@@ -323,7 +323,7 @@ export default function Stories() {
   };
 
   // Text-To-Speech Functions
-  const handleSpeakStory = (customText) => {
+  const handleSpeakStory = (customText, customRate) => {
     if (!('speechSynthesis' in window)) {
       alert('Text-to-Speech is not supported in this browser.');
       return;
@@ -335,7 +335,7 @@ export default function Stories() {
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(textToRead);
-    utterance.rate = speechRate;
+    utterance.rate = customRate !== undefined ? customRate : speechRate;
     utterance.pitch = speechPitch;
 
     if (availableVoices.length > 0 && availableVoices[selectedVoiceIndex]) {
@@ -709,13 +709,13 @@ export default function Stories() {
                   <div className={`flex items-center gap-1 border rounded-full p-0.5 ${
                     isDark ? 'bg-[#13271C] border-[#20422E]' : 'bg-[#FDFBF7] border-[#E3DDD1]'
                   }`}>
-                    {[0.8, 1.0, 1.25].map((rate) => (
+                    {[0.5, 1.0, 2.0].map((rate) => (
                       <button
                         key={rate}
                         onClick={() => {
                           setSpeechRate(rate);
                           if (isSpeaking) {
-                            handleSpeakStory();
+                            handleSpeakStory(undefined, rate);
                           }
                         }}
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-colors ${
@@ -724,7 +724,7 @@ export default function Stories() {
                             : isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
                         }`}
                       >
-                        {rate}x
+                        {rate === 1.0 ? '1x' : rate === 2.0 ? '2x' : `${rate}x`}
                       </button>
                     ))}
                   </div>
@@ -1071,9 +1071,9 @@ export default function Stories() {
                     { key: 'thoughtful', label: t.thoughtful, Icon: Brain },
                   ].map(({ key, label, Icon }) => (
                     <button
-                      key={rx.key}
-                      onClick={() => handleReaction(readingStory.id, rx.key)}
-                      className={`px-3 py-1.5 rounded-full border text-xs font-medium cursor-pointer ${
+                      key={key}
+                      onClick={() => handleReaction(readingStory.id, key)}
+                      className={`px-3 py-1.5 rounded-full border text-xs font-medium cursor-pointer flex items-center gap-1.5 ${
                         isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] hover:bg-[#EDE6D8]'
                       }`}
                     >
@@ -1263,9 +1263,12 @@ export default function Stories() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
               <div className="lg:col-span-7 relative h-72 lg:h-96 overflow-hidden">
                 <img
-                  src={featuredStory.coverImage}
+                  src={featuredStory.coverImage || 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1200&q=80'}
                   alt={featuredStory.title}
-                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=1200&q=80';
+                  }}
+                  className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                 />
                 <div className={`absolute inset-0 lg:hidden ${
                   isDark ? 'bg-gradient-to-t from-[#0E2015] via-transparent to-transparent' : 'bg-gradient-to-t from-[#FDFBF7] via-transparent to-transparent'

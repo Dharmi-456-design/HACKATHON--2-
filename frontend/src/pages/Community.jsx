@@ -3,7 +3,8 @@ import {
   Sparkles, Search, Plus, ThumbsUp, Heart, Lightbulb, Flame, Award, 
   MessageSquare, Bookmark, Share2, Flag, UserPlus, UserCheck, Trash2, 
   Edit3, Check, Filter, Bell, Tag, ArrowRight, Eye, ShieldAlert, Pin, 
-  CornerDownRight, CheckCheck, RefreshCw, X, FileText, Globe, Image as ImageIcon
+  CornerDownRight, CheckCheck, RefreshCw, X, FileText, Globe, Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -160,7 +161,7 @@ const COMMUNITY_TRANSLATIONS = {
 export default function Community() {
   const { user, session } = useAuth();
   const { isDark } = useTheme();
-  const lang = localStorage.getItem('pulse_chat_lang') || 'en';
+  const lang = localStorage.getItem('app_global_lang') || 'en';
   const t = COMMUNITY_TRANSLATIONS[lang] || COMMUNITY_TRANSLATIONS.en;
   const myId = user?.id || user?._id || 'my-user-id';
   const tokenFromSession = session?.access_token;
@@ -215,6 +216,8 @@ export default function Community() {
   const [postTags, setPostTags] = useState('');
   const [postImage, setPostImage] = useState(null);
   const [composerMode, setComposerMode] = useState('write'); // write, preview
+  const [isSuggestingTags, setIsSuggestingTags] = useState(false);
+  const [tagSuggestionMsg, setTagSuggestionMsg] = useState('');
   const fileInputRef = useRef(null);
 
   // Comment & Reply State
@@ -305,8 +308,63 @@ export default function Community() {
     );
   };
 
+  // Dynamic Heuristic Keyword Extractor (Fallback & Enhancer)
+  const extractDynamicKeywords = (title, content, category) => {
+    const combinedText = `${title} ${content}`.toLowerCase();
+    const tags = new Set();
+
+    // Category based primary tag
+    if (category === 'Nature & Ecology') tags.add('NatureEcology');
+    else if (category === 'AI & Technology') tags.add('NatureTech');
+    else if (category === 'Education & Learning') tags.add('EcoLearning');
+    else if (category === 'Questions & Answers') tags.add('FieldQnA');
+    else if (category === 'Ideas & Suggestions') tags.add('EcoIdeas');
+    else tags.add('CommunityDiscussion');
+
+    // Species & Habitat matching
+    const natureDictionary = [
+      { match: /\b(bird|nest|avian|owl|sparrow|eagle|hawk|peacock|crow|duck|goose|feather|flight)\b/, tag: 'AvianLife' },
+      { match: /\b(tree|canopy|bark|oak|pine|banyan|peepal|neem|mango|bamboo|forest|woods)\b/, tag: 'TreeCanopy' },
+      { match: /\b(moss|fungi|mushroom|lichen|spore|mycelium)\b/, tag: 'MossFungi' },
+      { match: /\b(flower|wildflower|flora|bloom|petal|plant|leaf|botany|gardening)\b/, tag: 'WildFlora' },
+      { match: /\b(insect|butterfly|bee|pollinator|beetle|ant|dragonfly|spider)\b/, tag: 'Pollinators' },
+      { match: /\b(water|stream|river|lake|pond|rain|wetland|creek|monsoon)\b/, tag: 'Watershed' },
+      { match: /\b(soil|earth|ground|compost|root|mud|rock|mineral)\b/, tag: 'LivingSoil' },
+      { match: /\b(dawn|morning|sunset|dusk|night|sky|sunlight|shadow)\b/, tag: 'DawnDuskWatch' },
+      { match: /\b(urban|city|park|sidewalk|garden|balcony|terrace|roof)\b/, tag: 'UrbanWild' },
+      { match: /\b(clean|litter|plastic|waste|stewardship|care|protect|conserve|restore)\b/, tag: 'HabitatCare' },
+    ];
+
+    for (const item of natureDictionary) {
+      if (item.match.test(combinedText)) {
+        tags.add(item.tag);
+      }
+    }
+
+    // Extract key words from title (skip stop words)
+    const stopWords = new Set(['this', 'that', 'with', 'from', 'have', 'what', 'where', 'when', 'some', 'about', 'your', 'their', 'there', 'here', 'into', 'over', 'under', 'just', 'more', 'very']);
+    const titleWords = title
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .split(/\s+/)
+      .filter((w) => w.length >= 4 && !stopWords.has(w.toLowerCase()));
+
+    for (const word of titleWords.slice(0, 2)) {
+      const pascal = word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      tags.add(pascal);
+    }
+
+    if (tags.size < 3) {
+      tags.add('Biodiversity');
+      tags.add('FieldObservation');
+    }
+
+    return Array.from(tags).slice(0, 4);
+  };
+
   // AI Suggest Tags
-  const handleAISuggestTags = () => {
+  const handleAISuggestTags = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
     setCommunityError('');
     const suggested = ['UrbanCanopy', 'HabitatCare', 'Biodiversity', 'LocalEcology'];
     setPostTags((prev) => (prev ? `${prev}, ${suggested.join(', ')}` : suggested.join(', ')));
@@ -369,6 +427,7 @@ export default function Community() {
         setCommunityError(err instanceof Error ? err.message : 'Could not publish your post.');
       });
   };
+
 
   // Delete Post
   const handleDeletePost = (postId) => {
@@ -708,18 +767,20 @@ export default function Community() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
-                        isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                    <div className="space-y-1.5">
+                      <label className={`block text-xs uppercase tracking-wider font-semibold ${
+                        isDark ? 'text-slate-300' : 'text-[#3E5C48]'
                       }`}>
                         {t.postCategoryLabel}
                       </label>
                       <select
                         value={postCategory}
                         onChange={(e) => setPostCategory(e.target.value)}
-                        className={`w-full rounded-2xl px-3 py-2.5 text-sm outline-none transition-colors ${
-                          isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
+                        className={`w-full h-11 rounded-2xl px-4 py-2.5 text-sm font-medium outline-none transition-all cursor-pointer border ${
+                          isDark
+                            ? 'bg-[#0A180F] border-[#20422E] text-white focus:border-[#4ADE80] focus:ring-2 focus:ring-[#4ADE80]/20'
+                            : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] focus:border-[#183B28]'
                         }`}
                       >
                         <option value="Nature & Ecology">{t.catNature}</option>
@@ -731,38 +792,58 @@ export default function Community() {
                       </select>
                     </div>
 
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center h-5">
                         <label className={`text-xs uppercase tracking-wider font-semibold ${
-                          isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                          isDark ? 'text-slate-300' : 'text-[#3E5C48]'
                         }`}>
                           {t.postTagsLabel}
                         </label>
                         <button
                           type="button"
-                          onClick={handleAISuggestTags}
-                          className={`text-[10px] hover:underline flex items-center gap-1 cursor-pointer font-medium ${
-                            isDark ? 'text-[#4ADE80]' : 'text-[#183B28] font-bold'
+                          onClick={(e) => handleAISuggestTags(e)}
+                          className={`text-[10px] hover:underline flex items-center gap-1 cursor-pointer font-semibold ${
+                            isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
                           }`}
                         >
-                          <Sparkles className="w-3 h-3" />
-                          <span>{t.aiSuggestTags}</span>
+                          {isSuggestingTags ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <span>Analyzing…</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3 h-3" />
+                              <span>{t.aiSuggestTags}</span>
+                            </>
+                          )}
                         </button>
                       </div>
                       <input
                         value={postTags}
                         onChange={(e) => setPostTags(e.target.value)}
                         placeholder="birds, trees, urbanwild"
-                        className={`w-full rounded-2xl px-4 py-2.5 text-sm outline-none transition-colors ${
-                          isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
+                        className={`w-full h-11 rounded-2xl px-4 py-2.5 text-sm font-medium outline-none transition-all border ${
+                          isDark
+                            ? 'bg-[#0A180F] border-[#20422E] text-white placeholder-slate-500 focus:border-[#4ADE80] focus:ring-2 focus:ring-[#4ADE80]/20'
+                            : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
                         }`}
                       />
+                      {tagSuggestionMsg && (
+                        <p className={`text-[11px] mt-1.5 leading-snug font-medium transition-all ${
+                          tagSuggestionMsg.includes('✨')
+                            ? isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'
+                            : 'text-amber-500'
+                        }`}>
+                          {tagSuggestionMsg}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div>
-                    <label className={`block text-xs uppercase tracking-wider mb-1 font-semibold ${
-                      isDark ? 'text-slate-400' : 'text-[#3E5C48]'
+                  <div className="space-y-1.5">
+                    <label className={`block text-xs uppercase tracking-wider font-semibold ${
+                      isDark ? 'text-slate-300' : 'text-[#3E5C48]'
                     }`}>
                       {t.postContentLabel}
                     </label>
@@ -772,8 +853,10 @@ export default function Community() {
                       value={postContent}
                       onChange={(e) => setPostContent(e.target.value)}
                       placeholder="Share your detailed observations, questions, or ideas…"
-                      className={`w-full rounded-2xl p-4 text-sm outline-none resize-none transition-colors ${
-                        isDark ? 'bg-[#0E2015] border border-[#20422E] text-white focus:border-[#4ADE80]' : 'bg-[#F2ECE1] border border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
+                      className={`w-full rounded-2xl p-4 text-sm font-medium outline-none resize-none transition-all border ${
+                        isDark
+                          ? 'bg-[#0A180F] border-[#20422E] text-white placeholder-slate-500 focus:border-[#4ADE80] focus:ring-2 focus:ring-[#4ADE80]/20'
+                          : 'bg-[#F2ECE1] border-[#E0D8C8] text-[#0F2418] placeholder:text-[#3E5C48] focus:border-[#183B28]'
                       }`}
                     />
                   </div>
@@ -782,8 +865,10 @@ export default function Community() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-2xl border text-xs cursor-pointer transition-colors ${
-                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]'
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-xs font-semibold cursor-pointer transition-all ${
+                        isDark
+                          ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white hover:border-[#4ADE80]/50'
+                          : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:bg-[#E3DDD1]'
                       }`}
                     >
                       <ImageIcon className={`w-4 h-4 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
@@ -815,24 +900,80 @@ export default function Community() {
                   </div>
                 </form>
               ) : (
-                <div className={`space-y-4 p-5 rounded-2xl border ${
+                <div className={`space-y-4 p-6 rounded-2xl border backdrop-blur-md ${
                   isDark ? 'bg-[#0E2015] border-[#20422E]' : 'bg-[#F2ECE1] border-[#E0D8C8]'
                 }`}>
-                  <span className={`text-[10px] uppercase px-2.5 py-1 rounded-full font-semibold ${
-                    isDark ? 'bg-[#1A3827] text-[#4ADE80]' : 'bg-[#E1EFE0] text-[#183B28]'
-                  }`}>
-                    {postCategory}
-                  </span>
-                  <h3 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{postTitle || 'Untitled Post'}</h3>
+                  <div className="flex items-center justify-between border-b pb-3 border-emerald-900/30">
+                    <span className={`text-[10px] uppercase px-3 py-1 rounded-full font-bold tracking-wider ${
+                      isDark ? 'bg-[#1A3827] text-[#4ADE80] border border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28]'
+                    }`}>
+                      {postCategory}
+                    </span>
+
+                    {/* Edit Post Option Button */}
+                    <button
+                      type="button"
+                      onClick={() => setComposerMode('write')}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 cursor-pointer border transition-all ${
+                        isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/50 hover:bg-[#254B35]' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0] hover:bg-[#C3DEC0]'
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#4ADE80]" />
+                      <span>Edit Post ✏️</span>
+                    </button>
+                  </div>
+
+                  <h3 className={`font-display text-2xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
+                    {postTitle || 'Untitled Discussion'}
+                  </h3>
+
                   <p className={`text-sm leading-relaxed whitespace-pre-line ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>
-                    {postContent || 'No content written yet.'}
+                    {postContent || 'No observations written yet.'}
                   </p>
+
+                  {postImage && (
+                    <img src={postImage} alt="Attachment Preview" className="w-full max-h-64 object-cover rounded-2xl border border-[#20422E] mt-2" />
+                  )}
+
+                  {postTags && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {postTags.split(',').map((tg) => tg.trim()).filter(Boolean).map((t) => (
+                        <span key={t} className="text-xs font-semibold text-[#4ADE80]">#{t}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Preview Footer Action Bar with Edit & Publish options */}
+                  <div className={`flex items-center justify-between pt-4 border-t ${
+                    isDark ? 'border-[#20422E]' : 'border-[#E0D8C8]'
+                  }`}>
+                    <button
+                      type="button"
+                      onClick={() => setComposerMode('write')}
+                      className={`px-4 py-2 rounded-full text-xs font-bold border transition-colors cursor-pointer ${
+                        isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28]'
+                      }`}
+                    >
+                      ← Back to Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCreatePostSubmit}
+                      className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all shadow-md cursor-pointer ${
+                        isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
+                      }`}
+                    >
+                      Publish Post
+                    </button>
+                  </div>
                 </div>
               )}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
 
       {/* ──────────────── MAIN CONTAINER ──────────────── */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
