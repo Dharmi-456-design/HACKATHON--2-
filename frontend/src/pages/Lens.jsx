@@ -415,8 +415,8 @@ export default function Lens() {
 
       // ──────────────── DIRECT JOURNAL SYNC ────────────────
       const speciesTitle = analysis?.common_name
-        ? `🌿 Observed: ${analysis.common_name}`
-        : '🌿 Field Observation Note';
+        ? `Observed: ${analysis.common_name}`
+        : 'Field Observation Note';
 
       let journalBody = '';
       if (analysis?.common_name) {
@@ -939,7 +939,7 @@ export default function Lens() {
 
               <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 text-xs font-semibold backdrop-blur-xs border border-white/15">
                 <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-ping" />
-                <span>{facingMode === 'environment' ? '🌿 Rear Macro Lens' : '👤 Front Lens'}</span>
+                <span>{facingMode === 'environment' ? 'Rear Macro Lens' : 'Front Lens'}</span>
               </div>
 
               <button

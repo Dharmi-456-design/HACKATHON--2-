@@ -36,26 +36,10 @@ export default function ScrollTypographyHighlight() {
   const total = words.length;
 
   const SHOWCASE = [
-    {
-      title: 'Misty Ancient Pine Forest',
-      category: 'Deep Evergreen Canopy',
-      img: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      title: 'Sunlit Rainforest Waterfall',
-      category: 'Tropical Oasis Stream',
-      img: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      title: 'Sun-Drenched Woodland Trail',
-      category: 'Golden Hour Forest',
-      img: 'https://images.unsplash.com/photo-1507041957456-9c397ce39c97?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      title: 'Dewy Emerald Fern Leaves',
-      category: 'Micro-Habitat Canopy',
-      img: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?auto=format&fit=crop&w=800&q=80',
-    },
+    { title: 'Ancient Forest Canopy', category: 'Forest Park Edge', img: 'https://upload.wikimedia.org/wikipedia/commons/4/41/Redwood_National_Park%2C_Fog_in_the_Forest.jpg' },
+    { title: 'Champa Night Bloom', category: 'Plumeria Rubra', img: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Plumeria_rubra_flower.jpg' },
+    { title: 'Indian Myna Foraging', category: 'Urban Wildlife', img: 'https://upload.wikimedia.org/wikipedia/commons/0/05/Common_Myna_%28Acridotheres_tristis%29.jpg' },
+    { title: 'Wetland Riparian Stream', category: 'Willamette River', img: 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Vallee_des_Couleurs_waterfall.jpg' },
   ];
 
   return (

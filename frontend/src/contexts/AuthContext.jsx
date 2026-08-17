@@ -147,8 +147,61 @@ export function AuthProvider({ children }) {
       }
     );
 
+    // Check custom backend JWT
+    const checkBackendAuth = async () => {
+      const storedToken = getToken();
+      if (!storedToken) {
+        if (mounted) setLoading(false);
+        return;
+      }
+
+      // If it's a demo instant token, keep the active session
+      if (storedToken.startsWith('demo-')) {
+        if (mounted) {
+          setUser({
+            id: 'user-demo-instant',
+            name: 'Nature Explorer',
+            email: 'explorer@naturepulse.org',
+            city: 'Ahmedabad',
+            avatar: '🌳',
+          });
+          setAuthToken(storedToken);
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const data = await apiFetch('/api/auth/me', {}, storedToken);
+        if (!mounted) return;
+        if (data?.user) {
+          setUser(data.user);
+          setAuthToken(storedToken);
+        } else {
+          clearToken();
+        }
+      } catch {
+        // Don't immediately wipe token on network errors
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    // Safety fallback: Never trap app in loading state for more than 800ms
+    const safetyTimeout = setTimeout(() => {
+      if (mounted) setLoading(false);
+    }, 800);
+
+    // Initialize Auth
+    checkSupabaseAuth().then((hasSbSession) => {
+      if (!hasSbSession) {
+        checkBackendAuth();
+      }
+    });
+
     return () => {
       mounted = false;
+      clearTimeout(safetyTimeout);
       subscription?.unsubscribe();
     };
   }, [exchangeSupabaseSession, cleanOAuthUrl]);

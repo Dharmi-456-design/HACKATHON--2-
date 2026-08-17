@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Send, RotateCcw, Copy, Check, Sparkles, Sun, Bell, User, Image as ImageIcon, Mic, CheckCheck, Globe, ChevronDown, History, Plus, Edit2, Trash2, X, MessageSquare, MicOff, Volume2 } from 'lucide-react';
+import { Send, RotateCcw, Copy, Check, Sparkles, Sun, Bell, User, Image as ImageIcon, Mic, CheckCheck, Globe, ChevronDown, History, Plus, Edit2, Trash2, X, MessageSquare, MicOff, Volume2, Leaf, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, fileToResizedBase64, uploadImage } from '../lib/api';
 import { ErrorBanner, FallbackImg } from '../components/ui';
+import BlackHole from '../components/BlackHole';
 
 // Multilingual UI Translations Dictionary
 const TRANSLATIONS = {
@@ -789,6 +790,19 @@ export default function PulseChat() {
           <div className="w-8 h-8 rounded-full border-2 border-[#4ADE80]/30 border-t-[#4ADE80] animate-spin" />
         </div>
       )}
+      {/* ──────────────── 3D BLACK HOLE BACKGROUND ACCRETION DISK ──────────────── */}
+      <div className="absolute inset-0 pointer-events-none z-0 opacity-40 sm:opacity-55 overflow-hidden">
+        <BlackHole
+          particleCount={758}
+          particleSize={1}
+          orbitSpeed={1}
+          outerRadius={100}
+          tilt={20}
+          tiltSideway={160}
+          showCenter={true}
+          colors={isDark ? ['#4ADE80', '#22C55E', '#A7F3D0', '#ffffff', '#15803D'] : ['#183B28', '#2D5A3F', '#4ADE80', '#15803D', '#3E5C48']}
+        />
+      </div>
       {/* Hidden File Input for Image Selection */}
       <input
         type="file"
@@ -1249,8 +1263,8 @@ export default function PulseChat() {
 
           <div className="space-y-1">
             <p className={`text-xs sm:text-sm font-medium tracking-wide ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>Welcome to</p>
-            <h1 className={`font-display text-2xl sm:text-5xl font-bold tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Pulse <span className="text-lg sm:text-3xl">🍃</span>
+            <h1 className={`font-display text-4xl sm:text-5xl font-bold tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              Pulse <Leaf className="w-8 h-8 text-[#4ADE80] shrink-0" />
             </h1>
 
             <div className={`text-sm sm:text-base leading-relaxed font-normal pt-0.5 ${isDark ? 'text-slate-200/90' : 'text-slate-600'}`}>
@@ -1260,12 +1274,12 @@ export default function PulseChat() {
 
             <div className={`hidden sm:flex flex-wrap items-center gap-3 pt-2 text-xs sm:text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-600'}`}>
               <div className="flex items-center gap-1.5">
-                <span>🍃</span>
+                <Leaf className="w-4 h-4 text-[#4ADE80] shrink-0" />
                 <span>Live Neural Sensing</span>
               </div>
               <span className={isDark ? 'text-slate-600' : 'text-slate-300'}>|</span>
               <div className="flex items-center gap-1.5">
-                <span>🛡️</span>
+                <Shield className="w-4 h-4 text-[#4ADE80] shrink-0" />
                 <span>Your Ecological Guide</span>
               </div>
             </div>
@@ -1274,8 +1288,8 @@ export default function PulseChat() {
       </div>
 
       {/* ──────────────── DATE DIVIDER ──────────────── */}
-      <div className="shrink-0 flex justify-center my-1 sm:my-3">
-        <span className={`px-3 sm:px-4 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs tracking-wider border ${
+      <div className="shrink-0 flex justify-center my-3 relative z-10">
+        <span className={`px-4 py-1 rounded-full text-xs tracking-wider border ${
           isDark ? 'bg-[#122519] border-[#20452F] text-slate-400' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#3E5C48] shadow-xs'
         }`}>
           {todayDateString}
@@ -1283,7 +1297,7 @@ export default function PulseChat() {
       </div>
 
       {/* ──────────────── CHAT MESSAGES THREAD ──────────────── */}
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-4 pr-1.5 custom-chat-scroll">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden space-y-4 pr-1.5 custom-chat-scroll relative z-10">
         {busy && (
           <div className={`flex items-center justify-center py-10 gap-3 text-sm ${isDark ? 'text-emerald-400/80' : 'text-emerald-700'}`}>
             <EkgPulseOrb size={34} active={true} />
@@ -1402,7 +1416,7 @@ export default function PulseChat() {
       )}
 
       {/* ──────────────── BOTTOM FLOATING INPUT CONSOLE ──────────────── */}
-      <form onSubmit={send} className="shrink-0 pt-2 pb-[env(safe-area-inset-bottom,8px)] space-y-1.5">
+      <form onSubmit={send} className="shrink-0 pt-2 pb-[env(safe-area-inset-bottom,8px)] space-y-1.5 relative z-10">
         {/* Thumbnail Preview for Image Attachment */}
         {attachedImage && (
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl w-fit border ${
