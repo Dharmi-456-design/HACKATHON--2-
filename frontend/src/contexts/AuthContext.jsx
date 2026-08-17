@@ -31,10 +31,13 @@ export function AuthProvider({ children }) {
       });
       if (data?.token && data?.user) return data;
     } catch (err) {
-      // Exchange failed — likely Google OAuth not configured on the backend.
-      // Clear the stale Supabase session so it stops retrying on every mount.
-      try { await supabase.auth.signOut(); } catch {}
-      clearToken();
+      // Exchange failed — Google OAuth not configured on the backend.
+      // Silently clear the stale Supabase session via localStorage to avoid
+      // triggering onAuthStateChange('SIGNED_OUT') which would wipe backend JWT state.
+      try {
+        const key = Object.keys(localStorage).find((k) => k.startsWith('sb-') && k.endsWith('-auth-token'));
+        if (key) localStorage.removeItem(key);
+      } catch {}
     }
     return null;
   }, []);
@@ -59,13 +62,10 @@ export function AuthProvider({ children }) {
           setUser(exchanged.user);
           setAuthToken(exchanged.token);
           setToken(exchanged.token);
-        } else {
-          setUser(null);
-          setAuthToken(null);
-          clearToken();
+          setLoading(false);
+          return true;
         }
-        setLoading(false);
-        return true;
+        // Exchange failed — fall through to backend JWT auth
       } catch {
         exchanging = false;
       }
@@ -120,10 +120,17 @@ export function AuthProvider({ children }) {
           setAuthToken(exchanged.token);
           setToken(exchanged.token);
         } else if (event === 'SIGNED_IN') {
+          // User explicitly tried Google sign-in but exchange failed.
+          // Clear Supabase session via localStorage (not signOut to avoid SIGNED_OUT cascade).
+          try {
+            const key = Object.keys(localStorage).find((k) => k.startsWith('sb-') && k.endsWith('-auth-token'));
+            if (key) localStorage.removeItem(key);
+          } catch {}
           setUser(null);
           setAuthToken(null);
           clearToken();
         }
+        // For INITIAL_SESSION with failed exchange: do nothing, let backend JWT take over
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setAuthToken(null);
