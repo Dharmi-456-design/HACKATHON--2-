@@ -130,7 +130,11 @@ const communityPostSchema = new mongoose.Schema(
     note: { type: String, default: '' },
     image_url: { type: String, default: '' },
     confidence: { type: String, default: 'high' },
+    confidence_pct: { type: Number, default: 0 },
     city: { type: String, default: '' },
+    place_name: { type: String, default: '' },
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
     upvotes: { type: Number, default: 0 },
   },
   { timestamps: true }
