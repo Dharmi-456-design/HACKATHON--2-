@@ -37,22 +37,22 @@ const PHILOSOPHY_PHOTOS = [
   {
     title: 'Urban Canopy Moss',
     location: 'Pacific Northwest Forest',
-    img: 'https://images.unsplash.com/photo-1682018673550-c70a28c9c447?auto=format&fit=crop&w=800&q=80',
+    img: '/urban_canopy_moss.png',
   },
   {
     title: 'Dawn Avian Haven',
     location: 'Coastal Wetland Seam',
-    img: 'https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=600&q=80',
+    img: '/dawn_avian_haven.png',
   },
   {
     title: 'Fungal Network Soil',
     location: 'Alpine Woodland Ridge',
-    img: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=600&q=80',
+    img: '/fungal_network_soil.png',
   },
   {
     title: 'Native Habitat Telemetry',
     location: 'Urban Oasis Park',
-    img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80',
+    img: '/native_habitat_telemetry.png',
   },
 ];
 
