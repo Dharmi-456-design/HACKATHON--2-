@@ -56,7 +56,7 @@ export default function ShareCard({ discovery, onClose }) {
         >
           {/* Header */}
           <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-            <img src="/logo.png" alt="NaturePulse Logo" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
+            <img src="/logo.webp" alt="NaturePulse Logo" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
             <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 600, color: '#14261C' }}>NaturePulse</span>
           </div>
 

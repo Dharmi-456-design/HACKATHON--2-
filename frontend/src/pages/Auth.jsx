@@ -569,18 +569,7 @@ export default function Auth({ initialMode = 'login' }) {
                       )}
                     </button>
 
-                    {/* Instant 1-Click Demo Login */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        demoLogin();
-                        navigate('/app');
-                      }}
-                      className="w-full mt-2 bg-emerald-950/80 hover:bg-emerald-900 border border-[#96CD7B]/50 text-[#96CD7B] rounded-2xl py-2.5 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
-                    >
-                      <Sparkles size={14} className="text-[#96CD7B] animate-pulse" />
-                      <span>⚡ Instant 1-Click Access (No Password Required)</span>
-                    </button>
+                    {/* Demo login removed for security — real accounts only */}
                   </form>
 
                   {/* Switcher Link */}

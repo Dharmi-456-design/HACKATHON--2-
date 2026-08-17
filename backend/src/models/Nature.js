@@ -13,14 +13,14 @@ const weeklyGoalSchema = new mongoose.Schema(
 
 const profileSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true, index: true },
     display_name: { type: String, default: 'Explorer' },
     city: { type: String, default: 'Portland' },
     region: { type: String, default: 'Oregon' },
-    available_minutes: { type: Number, default: 20 },
-    interests: [{ type: String }],
+    available_minutes: { type: Number, default: 20, min: 0, max: 1440 },
+    interests: [{ type: String, maxlength: 40 }],
     onboarding_complete: { type: Boolean, default: true },
-    saved_places: [{ type: String }],
+    saved_places: [{ type: String, maxlength: 100 }],
     weekly_goals: { type: [weeklyGoalSchema], default: [] },
   },
   { timestamps: true }
@@ -47,7 +47,7 @@ const discoverySchema = new mongoose.Schema(
     image_url: { type: String, default: '' },
     is_public: { type: Boolean, default: true },
     notes: { type: String, default: '', maxlength: 5000 },
-    raw_analysis: { type: Object },
+    raw_analysis: { type: mongoose.Schema.Types.Mixed, default: null },
   },
   { timestamps: true }
 );
@@ -139,6 +139,8 @@ const communityPostSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+communityPostSchema.index({ createdAt: -1 });
+communityPostSchema.index({ user: 1, createdAt: -1 });
 
 // Action Schema
 const actionSchema = new mongoose.Schema(

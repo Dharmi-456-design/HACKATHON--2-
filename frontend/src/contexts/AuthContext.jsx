@@ -31,23 +31,7 @@ export function AuthProvider({ children }) {
       });
       if (data?.token && data?.user) return data;
     } catch (err) {
-      console.warn('[AuthContext] Supabase session backend exchange fallback:', err);
-    }
-    // Resilient fallback: build session from verified Supabase user object
-    if (session.user) {
-      const fallbackUser = {
-        id: session.user.id,
-        name:
-          session.user.user_metadata?.full_name ||
-          session.user.user_metadata?.name ||
-          session.user.email?.split('@')[0] ||
-          'Explorer',
-        email: session.user.email,
-        city: 'Ahmedabad',
-        avatar: session.user.user_metadata?.avatar_url || '🌳',
-      };
-      const fallbackToken = `demo-google-${session.user.id}`;
-      return { user: fallbackUser, token: fallbackToken };
+      console.warn('[AuthContext] Supabase session backend exchange failed:', err);
     }
     return null;
   }, []);
@@ -91,22 +75,6 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      // If it's a demo instant token, keep the active session
-      if (storedToken.startsWith('demo-')) {
-        if (mounted) {
-          setUser({
-            id: 'user-demo-instant',
-            name: 'Nature Explorer',
-            email: 'explorer@naturepulse.org',
-            city: 'Ahmedabad',
-            avatar: '🌳',
-          });
-          setAuthToken(storedToken);
-          setLoading(false);
-        }
-        return;
-      }
-
       try {
         const data = await apiFetch('/api/auth/me', {}, storedToken);
         if (!mounted) return;
@@ -117,7 +85,7 @@ export function AuthProvider({ children }) {
           clearToken();
         }
       } catch {
-        // Don't immediately wipe token on network errors
+        clearToken();
       } finally {
         if (mounted) setLoading(false);
       }
@@ -160,91 +128,38 @@ export function AuthProvider({ children }) {
   }, []);
 
   const demoLogin = useCallback(() => {
-    const mockUser = {
-      id: 'user-demo-instant',
-      name: 'Nature Explorer',
-      email: 'explorer@naturepulse.org',
-      city: 'Ahmedabad',
-      avatar: '🌳',
-      created_at: new Date().toISOString(),
-    };
-    const mockToken = 'demo-jwt-token-instant';
-    setToken(mockToken);
-    setAuthToken(mockToken);
-    setUser(mockUser);
-    return { user: mockUser, token: mockToken };
+    console.warn('[AuthContext] Demo login is disabled. Use a real account.');
+    return null;
   }, []);
 
   const login = useCallback(async (email, password) => {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const data = await apiFetch('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await apiFetch('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-        signal: controller.signal,
-      }).finally(() => clearTimeout(timeoutId));
-
-      if (data?.token && data?.user) {
-        setToken(data.token);
-        setAuthToken(data.token);
-        setUser(data.user);
-        return data;
-      }
-    } catch {
-      console.warn('[AuthContext] Fast login fallback activated');
+    if (data?.token && data?.user) {
+      setToken(data.token);
+      setAuthToken(data.token);
+      setUser(data.user);
+      return data;
     }
-    // Instant fallback login
-    const mockUser = {
-      id: `user-${Date.now()}`,
-      name: email?.split('@')[0] || 'Nature Explorer',
-      email: email || 'explorer@naturepulse.org',
-      city: 'Ahmedabad',
-      avatar: '🌳',
-      created_at: new Date().toISOString(),
-    };
-    const mockToken = `demo-token-${Date.now()}`;
-    setToken(mockToken);
-    setAuthToken(mockToken);
-    setUser(mockUser);
-    return { user: mockUser, token: mockToken };
+    throw new Error('Login failed');
   }, []);
 
   const register = useCallback(async ({ name, email, password }) => {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const data = await apiFetch('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    });
 
-      const data = await apiFetch('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, password }),
-        signal: controller.signal,
-      }).finally(() => clearTimeout(timeoutId));
-
-      if (data?.token && data?.user) {
-        setToken(data.token);
-        setAuthToken(data.token);
-        setUser(data.user);
-        return data;
-      }
-    } catch {
-      console.warn('[AuthContext] Fast register fallback activated');
+    if (data?.token && data?.user) {
+      setToken(data.token);
+      setAuthToken(data.token);
+      setUser(data.user);
+      return data;
     }
-    // Instant fallback registration
-    const mockUser = {
-      id: `user-${Date.now()}`,
-      name: name || email?.split('@')[0] || 'Nature Explorer',
-      email: email || 'explorer@naturepulse.org',
-      city: 'Ahmedabad',
-      avatar: '🌳',
-      created_at: new Date().toISOString(),
-    };
-    const mockToken = `demo-token-${Date.now()}`;
-    setToken(mockToken);
-    setAuthToken(mockToken);
-    setUser(mockUser);
-    return { user: mockUser, token: mockToken };
+    throw new Error('Registration failed');
   }, []);
 
   const signInWithGoogle = useCallback(async (redirectTo) => {

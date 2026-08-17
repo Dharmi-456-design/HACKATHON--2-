@@ -566,7 +566,7 @@ export default function Community() {
                     <Bell className={`w-5 h-5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                     <span>{t.notificationsTitle}</span>
                   </div>
-                  <button onClick={() => setShowNotifDrawer(false)} className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
+                  <button onClick={() => setShowNotifDrawer(false)} aria-label="Close notifications" className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -636,7 +636,7 @@ export default function Community() {
                     <p className={`text-xs font-medium ${isDark ? 'text-emerald-400' : 'text-[#183B28]'}`}>{selectedProfileUser.city}</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedProfileUser(null)} className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
+                <button onClick={() => setSelectedProfileUser(null)} aria-label="Close profile" className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -742,7 +742,7 @@ export default function Community() {
                       {t.preview}
                     </button>
                   </div>
-                  <button onClick={() => setShowCreateModal(false)} className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
+                  <button onClick={() => setShowCreateModal(false)} aria-label="Close create post" className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -1007,6 +1007,7 @@ export default function Community() {
                 isDark ? 'bg-[#1A3626] border-[#2D5A3F] text-slate-200 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:text-[#0F2418]'
               }`}
               title="Notifications"
+              aria-label="Notifications"
             >
               <Bell className="w-5 h-5" />
               {unreadNotifCount > 0 && (
@@ -1050,6 +1051,7 @@ export default function Community() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
                   className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}
                 >
                   <X className="w-4 h-4" />
