@@ -418,6 +418,69 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* NEARBY HABITATS & BIOMAP EXPLORER */}
+          <div className="lg:col-span-3 grid sm:grid-cols-2 gap-4 pt-2">
+            {/* Nearby Habitats */}
+            <div className={`border rounded-3xl p-6 shadow-xl space-y-3 relative overflow-hidden flex flex-col justify-between ${cardBg}`}>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${
+                    isDark ? 'bg-[#1A3827] text-[#4ADE80] border-[#4ADE80]/30' : 'bg-[#E1EFE0] text-[#183B28] border-[#C3DEC0]'
+                  }`}>
+                    📍 Nearby Destinations
+                  </span>
+                  <Link to="/app/places" className={`text-xs font-semibold hover:underline flex items-center gap-1 ${accentText}`}>
+                    Explore All <ArrowRight size={12} />
+                  </Link>
+                </div>
+                <h4 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
+                  Urban Eco Habitats & Parks
+                </h4>
+                <p className={`text-xs ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>
+                  Discover local bird sanctuaries, riverfront canopies, and botanical gardens near Sabarmati & Ahmedabad.
+                </p>
+              </div>
+              <Link
+                to="/app/places"
+                className={`w-full py-2.5 rounded-2xl text-xs font-bold inline-flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  isDark ? 'bg-[#1A3827] hover:bg-[#20452F] text-[#4ADE80] border border-[#4ADE80]/30' : 'bg-[#E1EFE0] hover:bg-[#C3DEC0] text-[#183B28]'
+                }`}
+              >
+                <MapPin size={14} /> View Nearby Habitats
+              </Link>
+            </div>
+
+            {/* BioMap Telemetry */}
+            <div className={`border rounded-3xl p-6 shadow-xl space-y-3 relative overflow-hidden flex flex-col justify-between ${cardBg}`}>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${
+                    isDark ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' : 'bg-amber-100 text-amber-800 border-amber-200'
+                  }`}>
+                    🗺️ Live BioMap Telemetry
+                  </span>
+                  <Link to="/app/community-map" className={`text-xs font-semibold hover:underline flex items-center gap-1 ${accentText}`}>
+                    Open Map <ArrowRight size={12} />
+                  </Link>
+                </div>
+                <h4 className={`font-display text-lg font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>
+                  Community Biodiversity Map
+                </h4>
+                <p className={`text-xs ${isDark ? 'text-slate-300' : 'text-[#3E5C48]'}`}>
+                  Track real-time species observation pins, geolocation heatmaps, and community flora & fauna sightings.
+                </p>
+              </div>
+              <Link
+                to="/app/community-map"
+                className={`w-full py-2.5 rounded-2xl text-xs font-bold inline-flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  isDark ? 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 border border-amber-500/30' : 'bg-amber-100 hover:bg-amber-200 text-amber-900'
+                }`}
+              >
+                <Globe size={14} /> Open Live BioMap
+              </Link>
+            </div>
+          </div>
+
         </div>
 
       </div>

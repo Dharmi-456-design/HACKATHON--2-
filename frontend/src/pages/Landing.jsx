@@ -549,7 +549,7 @@ export default function Landing() {
             isDark ? 'border-white/20' : 'border-[#D4CBB8]'
           }`}>
             <img
-              src="/landing_preview.jpg"
+              src="/landing-preview-hero.png"
               alt="NaturePulse Dashboard Preview"
               loading="lazy"
               decoding="async"

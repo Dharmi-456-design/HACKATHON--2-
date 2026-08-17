@@ -82,6 +82,7 @@ const missionSchema = new mongoose.Schema(
     why_it_matters: { type: String, default: '', maxlength: 5000 },
     scheduled_date: { type: String, default: () => new Date().toISOString().slice(0, 10) },
     completed_at: { type: Date },
+    steps: { type: [{ id: String, text: String, done: Boolean }], default: [] },
   },
   { timestamps: true }
 );
