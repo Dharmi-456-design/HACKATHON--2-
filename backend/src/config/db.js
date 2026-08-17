@@ -1,18 +1,30 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
-  const uri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/naturepluse';
-  if (!process.env.MONGODB_URI && !process.env.MONGO_URI) {
-    console.warn('⚠️ MONGO_URI / MONGODB_URI not specified in environment. Defaulting to local fallback.');
+  const remoteUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+  const localUri = 'mongodb://127.0.0.1:27017/naturepulse';
+
+  if (remoteUri) {
+    try {
+      const conn = await mongoose.connect(remoteUri, {
+        serverSelectionTimeoutMS: 3000,
+      });
+      console.log(`✅ MongoDB Atlas connected: ${conn.connection.host}`);
+      return conn;
+    } catch (err) {
+      console.warn(`⚠️ Remote MongoDB Atlas failed (${err.message}). Attempting local MongoDB connection...`);
+    }
   }
+
   try {
-    const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
+    const localConn = await mongoose.connect(localUri, {
+      serverSelectionTimeoutMS: 2000,
     });
-    console.log(`MongoDB connected: ${conn.connection.host}`);
-    return conn;
-  } catch (err) {
-    console.error(`⚠️ MongoDB connection error: ${err.message}. Running server in resilient memory fallback mode.`);
+    console.log(`✅ Local MongoDB connected: ${localConn.connection.host}`);
+    return localConn;
+  } catch (localErr) {
+    console.error(`⚠️ Local MongoDB connection error: ${localErr.message}. Running server in memory fallback mode.`);
+    mongoose.set('bufferCommands', false);
     return null;
   }
 };

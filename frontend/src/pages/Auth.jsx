@@ -54,15 +54,6 @@ export default function Auth({ initialMode = 'login' }) {
     initialMode === 'register';
   const [mode, setMode] = useState(isRegisterPath ? 'register' : 'login');
 
-  // Sync mode with URL if path changes
-  useEffect(() => {
-    if (location.pathname === '/register' || location.pathname === '/signup') {
-      setMode('register');
-    } else if (location.pathname === '/login' || location.pathname === '/signin') {
-      setMode('login');
-    }
-  }, [location.pathname]);
-
   // Form State
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -75,6 +66,22 @@ export default function Auth({ initialMode = 'login' }) {
   const [showForgot, setShowForgot] = useState(false);
   const [resetBusy, setResetBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+
+  // Auto-redirect to dashboard when authenticated
+  useEffect(() => {
+    if (user && !busy && !googleBusy) {
+      navigate('/app', { replace: true });
+    }
+  }, [user, navigate, busy, googleBusy]);
+
+  // Sync mode with URL if path changes
+  useEffect(() => {
+    if (location.pathname === '/register' || location.pathname === '/signup') {
+      setMode('register');
+    } else if (location.pathname === '/login' || location.pathname === '/signin') {
+      setMode('login');
+    }
+  }, [location.pathname]);
 
   const [showVideo, setShowVideo] = useState(true);
 

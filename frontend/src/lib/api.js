@@ -43,8 +43,10 @@ export async function apiFetch(path, options = {}, token = null) {
 
   if (res.ok) return data;
 
-  if (res.status === 401 && !path.startsWith('/auth/')) {
-    clearToken();
+  if (res.status === 401 && !path.startsWith('/auth/') && !path.startsWith('/api/auth/')) {
+    if (authToken && !authToken.startsWith('demo-')) {
+      clearToken();
+    }
   }
 
   if (data?.message || data?.error) {
