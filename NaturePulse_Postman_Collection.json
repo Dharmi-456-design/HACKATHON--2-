@@ -1,0 +1,378 @@
+{
+  "info": {
+    "_postman_id": "naturepulse-api-v1-collection",
+    "name": "NaturePulse Full-Stack API Collection",
+    "description": "Complete Postman v2.1.0 collection for NaturePulse backend endpoints including Auth, Dashboard, Pulse AI, Species Lens, Eco Actions, Nature Missions, Community, Places, and Journal.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://naturpulse.onrender.com",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "demo-jwt-token-instant",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "0. System & Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 Health OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"ok\",\n  \"db\": \"connected\",\n  \"uptime\": 559.5,\n  \"timestamp\": \"2026-08-17T02:27:08.013Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register New Explorer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Explorer One\",\n  \"email\": \"explorer1@naturepulse.org\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login Explorer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"explorer1@naturepulse.org\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current Profile (/api/auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Dashboard & User Telemetry",
+      "item": [
+        {
+          "name": "Get Full Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"Ahmedabad\",\n  \"bio\": \"Passionate flora & fauna naturalist\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get Connection Score",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/connection",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "connection"]
+            }
+          }
+        },
+        {
+          "name": "Get Streak Telemetry",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/streak",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "streak"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Pulse AI Naturalist Assistant",
+      "item": [
+        {
+          "name": "Ask Pulse AI Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"આજે મારી આસપાસ કયા પક્ષીઓ જોવા મળે છે?\",\n  \"lang\": \"gu\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pulse",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pulse"]
+            }
+          }
+        },
+        {
+          "name": "Get Chat Threads",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/pulse/threads",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pulse", "threads"]
+            }
+          }
+        },
+        {
+          "name": "Create Chat Thread",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Gujarati Ecological Inquiry\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pulse/threads",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pulse", "threads"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Nature Lens & Discoveries",
+      "item": [
+        {
+          "name": "Get All Discoveries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/discoveries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "discoveries"]
+            }
+          }
+        },
+        {
+          "name": "Log New Discovery",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"common_name\": \"Sacred Banyan Tree\",\n  \"scientific_name\": \"Ficus benghalensis\",\n  \"category\": \"plant\",\n  \"confidence\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/discoveries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "discoveries"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Nature Missions & Eco Actions",
+      "item": [
+        {
+          "name": "Get Missions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/missions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "missions"]
+            }
+          }
+        },
+        {
+          "name": "Create Custom Mission",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Document 3 Native Shade Canopies\",\n  \"category\": \"Exploration\",\n  \"difficulty\": \"🟡 Medium\",\n  \"xpReward\": 180\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/missions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "missions"]
+            }
+          }
+        },
+        {
+          "name": "Get Eco Actions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/actions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "actions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Places & Community Feed",
+      "item": [
+        {
+          "name": "Get Habitat Places",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/places",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "places"]
+            }
+          }
+        },
+        {
+          "name": "Get Community Feed Posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/community",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "community"]
+            }
+          }
+        },
+        {
+          "name": "Get Field Testimonials",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/testimonials",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "testimonials"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
