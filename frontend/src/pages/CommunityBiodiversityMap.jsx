@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Globe, Search, ZoomIn, ZoomOut, X, MapPin, Eye, Share2, CheckCircle,
-  Filter, Layers, Navigation
+  Filter, Layers, Navigation, Feather, Trees, Flower2, Bug, Sprout, Leaf, Sparkles, Map as MapIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../contexts/ThemeContext";
@@ -17,12 +17,31 @@ if (!document.getElementById("leaflet-css")) {
   document.head.appendChild(link);
 }
 
+const CAT_ICONS = {
+  birds: Feather,
+  trees: Trees,
+  flowers: Flower2,
+  insects: Bug,
+  fungi: Sprout,
+  moss: Leaf,
+  plant: Sprout,
+  other: Leaf,
+};
+
 const CAT_EMOJI = {
   birds: "🐦", trees: "🌳", flowers: "🌸", insects: "🦋",
   fungi: "🍄", moss: "🌿", plant: "🌱", other: "🌱",
 };
 const CATS = ["All","birds","trees","flowers","insects","fungi","moss"];
-const CAT_LABELS = { All: "All", birds: "🐦 Birds", trees: "🌳 Trees", flowers: "🌸 Flowers", insects: "🦋 Insects", fungi: "🍄 Fungi", moss: "🌿 Moss" };
+const CAT_LABELS = {
+  All: { label: "All", icon: Globe },
+  birds: { label: "Birds", icon: Feather },
+  trees: { label: "Trees", icon: Trees },
+  flowers: { label: "Flowers", icon: Flower2 },
+  insects: { label: "Insects", icon: Bug },
+  fungi: { label: "Fungi", icon: Sprout },
+  moss: { label: "Moss", icon: Leaf },
+};
 
 function catKey(cat) {
   const c = String(cat || "").toLowerCase();
@@ -479,27 +498,40 @@ export default function CommunityBiodiversityMap() {
               )}
               <div className={`flex items-center gap-1 p-1 rounded-xl border ${isDark?"bg-[#07150C] border-[#20422E]":"bg-[#EDE6D8] border-[#D4CBB8]"}`}>
                 <button onClick={() => setViewMode("map")}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     viewMode==="map" ? (isDark?"bg-[#4ADE80] text-[#07130B]":"bg-[#183B28] text-white") : (isDark?"text-slate-400 hover:text-white":"text-[#3E5C48]")
-                  }`}>🗺️ Live Map</button>
+                  }`}>
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>Live Map</span>
+                </button>
                 <button onClick={() => setViewMode("constellation")}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     viewMode==="constellation" ? (isDark?"bg-[#4ADE80] text-[#07130B]":"bg-[#183B28] text-white") : (isDark?"text-slate-400 hover:text-white":"text-[#3E5C48]")
-                  }`}>✨ Constellation</button>
+                  }`}>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Constellation</span>
+                </button>
               </div>
             </div>
           </div>
 
           {/* Category pills */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {CATS.map(key => (
-              <button key={key} onClick={() => setSelCat(key)}
-                className={`px-3.5 py-1.5 rounded-full border text-[11px] font-semibold whitespace-nowrap cursor-pointer transition-colors ${
-                  selCat===key
-                    ? isDark?"bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]":"bg-[#183B28] border-[#183B28] text-white"
-                    : isDark?"bg-[#0E2015]/60 border-[#20422E] text-slate-400 hover:text-white":"bg-white border-[#E3DDD1] text-[#3E5C48] hover:bg-[#F2ECE1]"
-                }`}>{CAT_LABELS[key]}</button>
-            ))}
+            {CATS.map(key => {
+              const item = CAT_LABELS[key];
+              const Icon = item.icon;
+              return (
+                <button key={key} onClick={() => setSelCat(key)}
+                  className={`px-3.5 py-1.5 rounded-full border text-[11px] font-semibold whitespace-nowrap cursor-pointer transition-colors flex items-center gap-1.5 ${
+                    selCat===key
+                      ? isDark?"bg-[#1A3827] border-[#4ADE80] text-[#4ADE80]":"bg-[#183B28] border-[#183B28] text-white"
+                      : isDark?"bg-[#0E2015]/60 border-[#20422E] text-slate-400 hover:text-white":"bg-white border-[#E3DDD1] text-[#3E5C48] hover:bg-[#F2ECE1]"
+                  }`}>
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -606,15 +638,20 @@ export default function CommunityBiodiversityMap() {
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
           {["birds","trees","flowers","insects","fungi","moss"].map(cat => {
             const count = pins.filter(p => p.category===cat).length;
+            const Icon = CAT_ICONS[cat] || Leaf;
             return (
               <button key={cat} onClick={() => setSelCat(selCat===cat ? "All" : cat)}
-                className={`rounded-2xl p-3 border text-center transition-all cursor-pointer ${
+                className={`rounded-2xl p-3 border text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                   selCat===cat
                     ? isDark?"bg-[#1A3827] border-[#4ADE80]":"bg-[#E1EFE0] border-[#183B28]"
                     : isDark?"bg-[#0E2015] border-[#20422E] hover:border-[#4ADE80]/40":"bg-[#FDFBF7] border-[#E3DDD1] hover:border-[#183B28]/40"
                 }`}>
-                <div className="text-xl">{CAT_EMOJI[cat]}</div>
-                <div className={`text-xs font-bold mt-1 ${isDark?"text-white":"text-[#0F2418]"}`}>{count}</div>
+                <div className={`w-8 h-8 rounded-full border flex items-center justify-center mb-1.5 ${
+                  isDark ? 'bg-[#07150C] border-[#20422E] text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
+                }`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className={`text-xs font-bold ${isDark?"text-white":"text-[#0F2418]"}`}>{count}</div>
                 <div className={`text-[9px] uppercase tracking-wide ${isDark?"text-slate-400":"text-slate-500"}`}>{cat}</div>
               </button>
             );

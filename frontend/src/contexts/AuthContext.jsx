@@ -123,6 +123,11 @@ export function AuthProvider({ children }) {
       }
     };
 
+    // Safety fallback: Never trap app in loading state for more than 800ms
+    const safetyTimeout = setTimeout(() => {
+      if (mounted) setLoading(false);
+    }, 800);
+
     // Initialize Auth
     checkSupabaseAuth().then((hasSbSession) => {
       if (!hasSbSession) {
@@ -151,10 +156,12 @@ export function AuthProvider({ children }) {
         setAuthToken(null);
         clearToken();
       }
+      setLoading(false);
     });
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimeout);
       subscription?.unsubscribe();
     };
   }, []);

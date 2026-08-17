@@ -3,7 +3,7 @@ import {
   Sparkles, ShieldCheck, Trophy, Flame, Zap, Target, Clock, CheckCircle2, 
   ChevronRight, Play, Plus, Trash2, X, Wand2, Compass, MapPin, Award, 
   RotateCcw, ArrowLeft, Check, Layers, AlertCircle, BarChart2, Star, Radio,
-  Leaf, Users, Feather, Trees, Crown
+  Leaf, Users, Feather, Trees, Crown, PenTool, Bug, Sprout, Map
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -14,106 +14,106 @@ import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
 // Multilingual UI Translations for Mission Control Universe
 const MISSION_TRANSLATIONS = {
   en: {
-    heroTag: 'Good Morning, Explorer 🌿',
+    heroTag: 'Good Morning, Explorer',
     heroTitle: 'Your Eco Guide',
     heroHighlight: 'Better Tomorrow',
     heroSubtitle1: 'Ask. Learn. Protect.',
     heroSubtitle2: 'Together we create a sustainable future.',
     createMissionBtn: 'Create Custom Mission',
-    generateAIBtn: '✨ Generate Challenge',
-    tabPath: '🗺️ Mission Path',
-    tabActive: '⚡ Active Missions',
-    tabCompleted: '🏆 Completed',
-    tabCreate: '✍️ Custom Creator',
-    catLearning: '📚 Learning',
-    catProductivity: '⚡ Productivity',
-    catCreativity: '🎨 Creativity',
-    catExploration: '🌍 Exploration',
-    catGoals: '🎯 Personal Goals',
-    catAI: '🤖 Challenges',
-    diffEasy: '🟢 Easy',
-    diffMedium: '🟡 Medium',
-    diffHard: '🔴 Hard',
-    diffExpert: '🟣 Expert',
+    generateAIBtn: 'Generate Challenge',
+    tabPath: 'Mission Path',
+    tabActive: 'Active Missions',
+    tabCompleted: 'Completed',
+    tabCreate: 'Custom Creator',
+    catLearning: 'Learning',
+    catProductivity: 'Productivity',
+    catCreativity: 'Creativity',
+    catExploration: 'Exploration',
+    catGoals: 'Personal Goals',
+    catAI: 'Challenges',
+    diffEasy: 'Easy',
+    diffMedium: 'Medium',
+    diffHard: 'Hard',
+    diffExpert: 'Expert',
     startMission: 'Start Mission',
     continueMission: 'Continue Mission',
     completeStep: 'Mark Step Complete',
-    missionCompleted: 'Mission Completed! 🎉',
+    missionCompleted: 'Mission Completed!',
     earnedXP: 'XP Earned',
     levelTitle: 'Level 4 Commander',
     xpLabel: 'Eco XP',
     streakLabel: 'Streak',
     aiAssistantHint: 'Need a hint or breakdown for this step?',
-    achievementsTitle: '🏆 Ecological Milestone Badges',
-    leaderboardTitle: '🌐 Community Eco Leaderboard',
+    achievementsTitle: 'Ecological Milestone Badges',
+    leaderboardTitle: 'Community Eco Leaderboard',
   },
   gu: {
-    heroTag: 'શુભ સવાર, એક્સપ્લોરર 🌿',
+    heroTag: 'શુભ સવાર, એક્સપ્લોરર',
     heroTitle: 'તમારો ઇકો ગાઇડ',
     heroHighlight: 'ઉજ્જવળ ભવિષ્ય માટે',
     heroSubtitle1: 'પૂછો. શીખો. રક્ષણ કરો.',
     heroSubtitle2: 'સાથે મળીને આપણે એક ટકાઉ ભવિષ્ય બનાવીએ છીએ.',
     createMissionBtn: 'કસ્ટમ મિશન બનાવો',
-    generateAIBtn: '✨ પડકાર જનરેટ કરો',
-    tabPath: '🗺️ મિશન પાથ',
-    tabActive: '⚡ સક્રિય મિશનો',
-    tabCompleted: '🏆 પૂર્ણ કરેલ',
-    tabCreate: '✍️ કસ્ટમ ક્રિએટર',
-    catLearning: '📚 શિક્ષણ',
-    catProductivity: '⚡ ઉત્પાદકતા',
-    catCreativity: '🎨 સર્જનાત્મકતા',
-    catExploration: '🌍 સંશોધન',
-    catGoals: '🎯 લક્ષ્યો',
-    catAI: '🤖 પડકારો',
-    diffEasy: '🟢 સરળ',
-    diffMedium: '🟡 મધ્યમ',
-    diffHard: '🔴 કઠિન',
-    diffExpert: '🟣 નિષ્ણાત',
+    generateAIBtn: 'પડકાર જનરેટ કરો',
+    tabPath: 'મિશન પાથ',
+    tabActive: 'સક્રિય મિશનો',
+    tabCompleted: 'પૂર્ણ કરેલ',
+    tabCreate: 'કસ્ટમ ક્રિએટર',
+    catLearning: 'શિક્ષણ',
+    catProductivity: 'ઉત્પાદકતા',
+    catCreativity: 'સર્જનાત્મકતા',
+    catExploration: 'સંશોધન',
+    catGoals: 'લક્ષ્યો',
+    catAI: 'પડકારો',
+    diffEasy: 'સરળ',
+    diffMedium: 'મધ્યમ',
+    diffHard: 'કઠિન',
+    diffExpert: 'નિષ્ણાત',
     startMission: 'મિશન શરૂ કરો',
     continueMission: 'ચાલુ રાખો',
     completeStep: 'પગલું પૂર્ણ માર્ક કરો',
-    missionCompleted: 'મિશન પૂર્ણ થયું! 🎉',
+    missionCompleted: 'મિશન પૂર્ણ થયું!',
     earnedXP: 'XP મેળવ્યું',
     levelTitle: 'લેવલ 4 કમાન્ડર',
     xpLabel: 'ઇકો XP',
     streakLabel: 'શ્રેણી',
     aiAssistantHint: 'આ પગલા માટે સંકેત જોઈએ છે?',
-    achievementsTitle: '🏆 ઇકોલોજીકલ સિદ્ધિ બેજ',
-    leaderboardTitle: '🌐 કમ્યુનિટી લીડરબોર્ડ',
+    achievementsTitle: 'ઇકોલોજીકલ સિદ્ધિ બેજ',
+    leaderboardTitle: 'કમ્યુનિટી લીડરબોર્ડ',
   },
   hi: {
-    heroTag: 'शुभ प्रभात, एक्सप्लोरर 🌿',
+    heroTag: 'शुभ प्रभात, एक्सप्लोरर',
     heroTitle: 'आपका इको गाइड',
     heroHighlight: 'बेहतर कल के लिए',
     heroSubtitle1: 'पूछें। सीखें। रक्षा करें।',
     heroSubtitle2: 'साथ मिलकर हम एक टिकाऊ भविष्य बनाते हैं।',
     createMissionBtn: 'कस्टम मिशन बनाएं',
-    generateAIBtn: '✨ चुनौती बनाएं',
-    tabPath: '🗺️ मिशन पथ',
-    tabActive: '⚡ सक्रिय मिशन',
-    tabCompleted: '🏆 पूरा किया गया',
-    tabCreate: '✍️ कस्टम क्रिएटर',
-    catLearning: '📚 सीखना',
-    catProductivity: '⚡ उत्पादकता',
-    catCreativity: '🎨 रचनात्मकता',
-    catExploration: '🌍 खोज',
-    catGoals: '🎯 व्यक्तिगत लक्ष्य',
-    catAI: '🤖 चुनौतियां',
-    diffEasy: '🟢 आसान',
-    diffMedium: '🟡 मध्यम',
-    diffHard: '🔴 कठिन',
-    diffExpert: '🟣 विशेषज्ञ',
+    generateAIBtn: 'चुनौती बनाएं',
+    tabPath: 'मिशन पथ',
+    tabActive: 'सक्रिय मिशन',
+    tabCompleted: 'पूरा किया गया',
+    tabCreate: 'कस्टम क्रिएटर',
+    catLearning: 'सीखना',
+    catProductivity: 'उत्पादकता',
+    catCreativity: 'रचनात्मकता',
+    catExploration: 'खोज',
+    catGoals: 'व्यक्तिगत लक्ष्य',
+    catAI: 'चुनौतियां',
+    diffEasy: 'आसान',
+    diffMedium: 'मध्यम',
+    diffHard: 'कठिन',
+    diffExpert: 'विशेषज्ञ',
     startMission: 'मिशन शुरू करें',
     continueMission: 'जारी रखें',
     completeStep: 'चरण पूरा चिह्नित करें',
-    missionCompleted: 'मिशन पूरा हुआ! 🎉',
+    missionCompleted: 'मिशन पूरा हुआ!',
     earnedXP: 'XP अर्जित',
     levelTitle: 'लेवल 4 कमांडर',
     xpLabel: 'इको XP',
     streakLabel: 'स्ट्रीक',
     aiAssistantHint: 'इस चरण के लिए संकेत चाहिए?',
-    achievementsTitle: '🏆 पारिस्थितिक उपलब्धि बैज',
-    leaderboardTitle: '🌐 कम्युनिटी लीडरबोर्ड',
+    achievementsTitle: 'पारिस्थितिक उपलब्धि बैज',
+    leaderboardTitle: 'कम्युनिटी लीडरबोर्ड',
   },
 };
 
@@ -323,10 +323,10 @@ export default function NatureMissions() {
 
   const completedCount = missions.filter((m) => m.status === 'completed').length;
   const badges = [
-    { id: 'b1', name: 'First Steps', icon: '🌱', unlocked: completedCount >= 1, desc: 'Complete your first mission' },
-    { id: 'b2', name: 'Canopy Guardian', icon: '🌿', unlocked: completedCount >= 3, desc: 'Complete 3 missions' },
-    { id: 'b3', name: 'Pollinator Protector', icon: '🦋', unlocked: completedCount >= 5, desc: 'Complete 5 missions' },
-    { id: 'b4', name: 'Master Eco Scholar', icon: '👑', unlocked: completedCount >= 10, desc: 'Complete 10 missions' },
+    { id: 'b1', name: 'First Steps', icon: Sprout, unlocked: completedCount >= 1, desc: 'Complete your first mission' },
+    { id: 'b2', name: 'Canopy Guardian', icon: Leaf, unlocked: completedCount >= 3, desc: 'Complete 3 missions' },
+    { id: 'b3', name: 'Pollinator Protector', icon: Bug, unlocked: completedCount >= 5, desc: 'Complete 5 missions' },
+    { id: 'b4', name: 'Master Eco Scholar', icon: Crown, unlocked: completedCount >= 10, desc: 'Complete 10 missions' },
   ];
   const impactStats = [
     { rank: 1, name: user?.name || 'You', xp: `${totalXP.toLocaleString()} XP`, streak: `${streakDays} Day${streakDays === 1 ? '' : 's'}`, badge: 'Your Mission Path' },
@@ -502,27 +502,31 @@ export default function NatureMissions() {
         {/* ──────────────── NAVIGATION TABS ──────────────── */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-chat-scroll scrollbar-none">
           {[
-            { id: 'path', label: t.tabPath },
-            { id: 'active', label: t.tabActive },
-            { id: 'completed', label: t.tabCompleted },
-            { id: 'create', label: t.tabCreate },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                activeTab === tab.id
-                  ? isDark
-                    ? 'bg-[#4ADE80] text-[#07130B] shadow-md shadow-[#4ADE80]/15'
-                    : 'bg-[#183B28] text-[#FAF7F0] shadow-md'
-                  : isDark
-                    ? 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
-                    : 'bg-[#FDFBF7] border border-[#E3DDD1] text-[#0F2418] hover:bg-[#F2ECE1] shadow-xs'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+            { id: 'path', label: t.tabPath, icon: Map },
+            { id: 'active', label: t.tabActive, icon: Zap },
+            { id: 'completed', label: t.tabCompleted, icon: Trophy },
+            { id: 'create', label: t.tabCreate, icon: PenTool },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-2 ${
+                  activeTab === tab.id
+                    ? isDark
+                      ? 'bg-[#4ADE80] text-[#07130B] shadow-md shadow-[#4ADE80]/15'
+                      : 'bg-[#183B28] text-[#FAF7F0] shadow-md'
+                    : isDark
+                      ? 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
+                      : 'bg-[#FDFBF7] border border-[#E3DDD1] text-[#0F2418] hover:bg-[#F2ECE1] shadow-xs'
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* ──────────────── TABS 1, 2, 3: PATH, ACTIVE & COMPLETED ──────────────── */}

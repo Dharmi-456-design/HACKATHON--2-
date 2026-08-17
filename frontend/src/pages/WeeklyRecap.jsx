@@ -3,7 +3,7 @@ import {
   Sparkles, Calendar, TrendingUp, MessageSquare, Clock, Globe, Award, 
   Target, Download, Share2, CheckCircle2, ChevronRight, Zap, RefreshCw, 
   Flame, BookOpen, User, Star, Plus, Trash2, ArrowUpRight, BarChart2, ShieldCheck,
-  Compass, Radio, Disc
+  Compass, Radio, Disc, Archive, Lightbulb
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,10 +19,10 @@ const RECAP_TRANSLATIONS = {
     heroSubtitle: 'An interactive reflection of your exploration, conversations, topics, and progress over the past 7 days.',
     aiSummaryTitle: 'AI Weekly Memory Synthesis',
     aiSummaryText: 'This week you explored biodiversity patterns, spent peak time learning on Wednesday evening, and engaged in Gujarati & English discussions.',
-    tabTimeline: '⚡ S-Curve Timeline',
-    tabTopics: '🌌 Constellation Galaxy',
-    tabGoals: '🎯 Weekly Goals',
-    tabArchive: '📦 Recap Vault',
+    tabTimeline: 'S-Curve Timeline',
+    tabTopics: 'Constellation Galaxy',
+    tabGoals: 'Weekly Goals',
+    tabArchive: 'Recap Vault',
     mostActiveDay: 'Most Active Day',
     totalChats: 'Total Conversations',
     messagesSent: 'Messages Exchanged',
@@ -40,10 +40,10 @@ const RECAP_TRANSLATIONS = {
     heroSubtitle: 'છેલ્લા 7 દિવસના તમારા સંશોધન, વાતચીત, વિષયો અને પ્રગતિનું ઇન્ટરેક્ટિવ પ્રતિબિંબ.',
     aiSummaryTitle: 'એઆઈ મેમરી સિન્થેસિસ',
     aiSummaryText: 'આ અઠવાડિયે તમે જૈવવિવિધતાના પ્રશ્નો પૂછ્યા, બુધવારે સાંજે સૌથી વધુ સમય વિતાવ્યો અને ગુજરાતી અને અંગ્રેજીમાં ચર્ચા કરી.',
-    tabTimeline: '⚡ એસ-કર્વ ટાઇમલાઇન',
-    tabTopics: '🌌 કોન્સ્ટેલેશન ગેલેક્સી',
-    tabGoals: '🎯 સાપ્તાહિક લક્ષ્યો',
-    tabArchive: '📦 રીકેપ વોલ્ટ',
+    tabTimeline: 'એસ-કર્વ ટાઇમલાઇન',
+    tabTopics: 'કોન્સ્ટેલેશન ગેલેક્સી',
+    tabGoals: 'સાપ્તાહિક લક્ષ્યો',
+    tabArchive: 'રીકેપ વોલ્ટ',
     mostActiveDay: 'સૌથી સક્રિય દિવસ',
     totalChats: 'કુલ વાતચીત',
     messagesSent: 'સંદેશા મોકલ્યા',
@@ -61,10 +61,10 @@ const RECAP_TRANSLATIONS = {
     heroSubtitle: 'पिछले 7 दिनों की आपकी खोज, बातचीत, विषयों और प्रगति का इंटरैक्टिव प्रतिबिंब।',
     aiSummaryTitle: 'एआई मेमोरी सिंथेसिस',
     aiSummaryText: 'इस सप्ताह आपने जैव विविधता के प्रश्न पूछे, बुधवार की शाम को सबसे अधिक समय बिताया और हिंदी व अंग्रेजी में चर्चा की।',
-    tabTimeline: '⚡ एस-कर्व टाइमलाइन',
-    tabTopics: '🌌 कॉन्स्टिलेशन गैलेक्सी',
-    tabGoals: '🎯 साप्ताहिक लक्ष्य',
-    tabArchive: '📦 रीकैप वॉल्ट',
+    tabTimeline: 'एस-कर्व टाइमलाइन',
+    tabTopics: 'कॉन्स्टिलेशन गैलेक्सी',
+    tabGoals: 'साप्ताहिक लक्ष्य',
+    tabArchive: 'रीकैप वॉल्ट',
     mostActiveDay: 'सबसे सक्रिय दिन',
     totalChats: 'कुल बातचीत',
     messagesSent: 'संदेश भेजे गए',
@@ -480,27 +480,31 @@ ${mostActiveDay !== '—' ? `• Most Active Day: ${mostActiveDay} (${mostActive
         {/* ──────────────── NAVIGATION TABS ──────────────── */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-chat-scroll scrollbar-none">
           {[
-            { id: 'timeline', label: t.tabTimeline },
-            { id: 'topics', label: t.tabTopics },
-            { id: 'goals', label: t.tabGoals },
-            { id: 'archive', label: t.tabArchive },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                activeTab === tab.id
-                  ? isDark
-                    ? 'bg-[#4ADE80] text-[#07130B] shadow-md shadow-[#4ADE80]/15'
-                    : 'bg-[#183B28] text-[#FAF7F0] shadow-md'
-                  : isDark
-                    ? 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
-                    : 'bg-[#FDFBF7] border border-[#E3DDD1] text-[#3E5C48] hover:bg-[#F2ECE1] shadow-xs'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+            { id: 'timeline', label: t.tabTimeline, icon: Zap },
+            { id: 'topics', label: t.tabTopics, icon: Compass },
+            { id: 'goals', label: t.tabGoals, icon: Target },
+            { id: 'archive', label: t.tabArchive, icon: Archive },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-5 py-2.5 rounded-2xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-2 ${
+                  activeTab === tab.id
+                    ? isDark
+                      ? 'bg-[#4ADE80] text-[#07130B] shadow-md shadow-[#4ADE80]/15'
+                      : 'bg-[#183B28] text-[#FAF7F0] shadow-md'
+                    : isDark
+                      ? 'bg-[#13271C] border border-[#20422E] text-slate-300 hover:text-white hover:bg-[#1A3827]'
+                      : 'bg-[#FDFBF7] border border-[#E3DDD1] text-[#3E5C48] hover:bg-[#F2ECE1] shadow-xs'
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* ──────────────── TAB 1: S-CURVE INTERACTIVE TIMELINE ──────────────── */}
@@ -564,7 +568,10 @@ ${mostActiveDay !== '—' ? `• Most Active Day: ${mostActiveDay} (${mostActive
                   </span>
                 </div>
 
-                <p className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>💡 Highlight: {activeNode.highlight}</p>
+                <p className={`text-sm font-medium flex items-center gap-1.5 ${isDark ? 'text-slate-200' : 'text-[#0F2418]'}`}>
+                  <Lightbulb className="w-4 h-4 text-amber-500 shrink-0" />
+                  <span>Highlight: {activeNode.highlight}</span>
+                </p>
               </motion.div>
             )}
           </div>

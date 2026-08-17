@@ -3,7 +3,7 @@ import {
   Sparkles, BookOpen, PenTool, Pin, Trash2, Edit3, Heart, Save, 
   Search, Calendar, Filter, Mic, Lock, Eye, ArrowRight, X, Lightbulb, 
   Smile, CloudRain, Sun, Leaf, Flame, HelpCircle, Archive, Compass, Check, 
-  Quote, Moon, Trees, MessageSquare, Database
+  Quote, Moon, Trees, MessageSquare, Database, Sprout
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,9 +16,9 @@ const JOURNAL_TRANSLATIONS = {
   en: {
     heroTag: 'YOUR PRIVATE SPACE',
     heroTitle: 'Private Nature Thinking',
-    heroHighlight: 'Canvas 🍃',
+    heroHighlight: 'Canvas',
     heroSubtitle: 'A quiet, distraction-free space for your personal thoughts, field reflections, and eco-discoveries.',
-    zenModeBtn: '✨ Zen Writing Mode',
+    zenModeBtn: 'Zen Writing Mode',
     zenSubtitle: 'Focus. Write. Reflect.',
     tabJournalTitle: 'Journal Canvas',
     tabJournalSub: 'Write freely',
@@ -42,9 +42,9 @@ const JOURNAL_TRANSLATIONS = {
   gu: {
     heroTag: 'તમારી ખાનગી જગ્યા',
     heroTitle: 'ખાનગી પ્રકૃતિ વિચાર',
-    heroHighlight: 'કેનવાસ 🍃',
+    heroHighlight: 'કેનવાસ',
     heroSubtitle: 'તમારા વ્યક્તિગત વિચારો અને પ્રકૃતિના અવલોકનો માટે એક શાંત, વિક્ષેપ મુક્ત જગ્યા.',
-    zenModeBtn: '✨ ઝેન રાઇટિંગ મોડ',
+    zenModeBtn: 'ઝેન રાઇટિંગ મોડ',
     zenSubtitle: 'ધ્યાન. લખાણ. મંતવ્ય.',
     tabJournalTitle: 'જર્નલ કેનવાસ',
     tabJournalSub: 'મુક્તપણે લખો',
@@ -68,9 +68,9 @@ const JOURNAL_TRANSLATIONS = {
   hi: {
     heroTag: 'आपका निजी स्थान',
     heroTitle: 'निजी प्रकृति विचार',
-    heroHighlight: 'कैनवास 🍃',
+    heroHighlight: 'कैनवास',
     heroSubtitle: 'आपके व्यक्तिगत विचारों और प्रकृति के अवलोकनों के लिए एक शांत, व्याकुलता-मुक्त स्थान।',
-    zenModeBtn: '✨ ज़ेन राइटिंग मोड',
+    zenModeBtn: 'ज़ेन राइटिंग मोड',
     zenSubtitle: 'ध्यान। लेखन। विचार।',
     tabJournalTitle: 'जर्नल कैनवास',
     tabJournalSub: 'स्वतंत्र रूप से लिखें',
@@ -416,10 +416,10 @@ export default function Journal() {
             }`}
           >
             <div className="flex items-center gap-3.5">
-              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-lg shrink-0 ${
-                isDark ? 'bg-[#1A3827] border-[#4ADE80]/40' : 'bg-[#E1EFE0] border-[#C3DEC0]'
+              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${
+                isDark ? 'bg-[#1A3827] border-[#4ADE80]/40 text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
               }`}>
-                🌱
+                <Sprout className="w-5 h-5" />
               </div>
               <div>
                 <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.tabIdeaTitle}</h4>
@@ -444,10 +444,10 @@ export default function Journal() {
             }`}
           >
             <div className="flex items-center gap-3.5">
-              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-lg shrink-0 ${
-                isDark ? 'bg-[#1A3827] border-[#4ADE80]/40' : 'bg-[#E1EFE0] border-[#C3DEC0]'
+              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${
+                isDark ? 'bg-[#1A3827] border-[#4ADE80]/40 text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
               }`}>
-                🫙
+                <Archive className="w-5 h-5" />
               </div>
               <div>
                 <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.tabMemoryTitle}</h4>
@@ -472,10 +472,10 @@ export default function Journal() {
             }`}
           >
             <div className="flex items-center gap-3.5">
-              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-lg shrink-0 ${
-                isDark ? 'bg-[#1A3827] border-[#4ADE80]/40' : 'bg-[#E1EFE0] border-[#C3DEC0]'
+              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${
+                isDark ? 'bg-[#1A3827] border-[#4ADE80]/40 text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
               }`}>
-                💬
+                <MessageSquare className="w-5 h-5" />
               </div>
               <div>
                 <h4 className={`font-display text-sm font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.tabAskTitle}</h4>
@@ -496,10 +496,10 @@ export default function Journal() {
             isDark ? 'bg-[#0E2015] border-[#20452F]' : 'bg-[#FDFBF7] border-[#E3DDD1] shadow-sm'
           }`}>
             <div className={`flex items-center gap-3 border-b pb-4 ${isDark ? 'border-[#20452F]' : 'border-[#E3DDD1]'}`}>
-              <div className={`w-10 h-10 rounded-full border flex items-center justify-center text-lg ${
+              <div className={`w-10 h-10 rounded-full border flex items-center justify-center ${
                 isDark ? 'bg-[#1A3827] border-[#4ADE80]/50 text-[#4ADE80]' : 'bg-[#E1EFE0] border-[#C3DEC0] text-[#183B28]'
               }`}>
-                🍃
+                <Leaf className="w-5 h-5" />
               </div>
               <div>
                 <h3 className={`font-display text-xl font-bold ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{t.newReflectionTitle}</h3>
@@ -516,7 +516,7 @@ export default function Journal() {
                 <div className={`px-4 py-3.5 border-r ${
                   isDark ? 'border-[#20422E] bg-[#0E2015] text-[#4ADE80]' : 'border-[#E0D8C8] bg-[#EDE6D8] text-[#183B28]'
                 }`}>
-                  🍃
+                  <Leaf className="w-4 h-4" />
                 </div>
                 <input
                   value={title}
