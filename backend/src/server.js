@@ -51,14 +51,17 @@ if (process.env.CORS_ORIGIN) {
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.netlify.app') ||
+        origin.endsWith('.onrender.com') ||
+        origin.endsWith('.github.io')
+      ) {
         return callback(null, true);
       }
-      if (origin.endsWith('.vercel.app')) {
-        return callback(null, true);
-      }
-      callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     },
     credentials: true,
   })
