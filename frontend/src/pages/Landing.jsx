@@ -6,6 +6,7 @@ import { PulseOrb } from '../components/ui';
 import SplashIntro from '../components/SplashIntro';
 import Navbar from '../components/Navbar';
 import LithosHero from '../components/LithosHero';
+import HorizontalReviewsTicker from '../components/HorizontalReviewsTicker';
 import ScrollTypographyHighlight from '../components/ScrollTypographyHighlight';
 import AnimatedStatCard from '../components/AnimatedStatCard';
 import PricingSection from '../components/PricingSection';
@@ -270,7 +271,7 @@ export default function Landing() {
   const [splashDone, setSplashDone] = useState(false);
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 overflow-x-hidden ${
+    <div className={`min-h-screen transition-colors duration-300 overflow-x-clip ${
       isDark ? 'bg-[#0A1610] text-white' : 'bg-[#FAF7F0] text-[#0F2418]'
     }`}>
       {/* ────────────────────── 0. INITIAL SPLASH INTRO ANIMATION ────────────────────── */}
@@ -285,6 +286,10 @@ export default function Landing() {
         <LithosHero />
       </section>
 
+      {/* ────────────────────── 2. HORIZONTAL REVIEWS TICKER & STAIRCASE CARDS ────────────────────── */}
+      <section id="reviews" className="relative">
+        <HorizontalReviewsTicker />
+      </section>
       {/* ────────────────────── 3. SCROLL TYPOGRAPHY HIGHLIGHT ────────────────────── */}
       <section>
         <ScrollTypographyHighlight />
