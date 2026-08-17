@@ -112,6 +112,7 @@ export default function ShareCard({ discovery, onClose }) {
           </button>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="rounded-full border border-ink/10 text-forest/60 px-3 py-2.5 hover:bg-cream-deep transition-colors"
           >
             <X size={14} />

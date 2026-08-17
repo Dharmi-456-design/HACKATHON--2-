@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
+import { Badge, Card, Empty, ErrorBanner, Skeleton, FallbackImg } from '../components/ui';
 
 // Multilingual Translations Dictionary for Community Page
 const COMMUNITY_TRANSLATIONS = {
@@ -932,7 +932,7 @@ export default function Community() {
                   </p>
 
                   {postImage && (
-                    <img src={postImage} alt="Attachment Preview" className="w-full max-h-64 object-cover rounded-2xl border border-[#20422E] mt-2" />
+                    <FallbackImg src={postImage} alt="Attachment Preview" className="w-full max-h-64 object-cover rounded-2xl border border-[#20422E] mt-2" />
                   )}
 
                   {postTags && (
@@ -1267,7 +1267,7 @@ export default function Community() {
 
                   {/* Post Image Attachment */}
                   {post.image_url && (
-                    <img
+                    <FallbackImg
                       src={post.image_url}
                       alt="Attachment"
                       className={`w-full max-h-80 object-cover rounded-2xl border mt-3 ${

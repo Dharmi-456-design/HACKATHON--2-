@@ -367,7 +367,7 @@ export default function NatureMissions() {
                   <Zap className={`w-5 h-5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                   <span>Generate Challenge</span>
                 </h3>
-                <button onClick={() => setShowGenerateModal(false)} className={`cursor-pointer ${
+                <button onClick={() => setShowGenerateModal(false)} aria-label="Close" className={`cursor-pointer ${
                   isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
                 }`}>
                   <X className="w-5 h-5" />
@@ -832,7 +832,7 @@ export default function NatureMissions() {
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-                <button onClick={() => setSelectedMission(null)} className={`cursor-pointer ${
+                <button onClick={() => setSelectedMission(null)} aria-label="Close" className={`cursor-pointer ${
                   isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
                 }`}>
                   <X className="w-5 h-5" />

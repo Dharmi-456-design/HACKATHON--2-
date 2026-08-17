@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, fileToResizedBase64, uploadImage } from '../lib/api';
-import { ErrorBanner } from '../components/ui';
+import { ErrorBanner, FallbackImg } from '../components/ui';
 
 // Multilingual UI Translations Dictionary
 const TRANSLATIONS = {
@@ -1006,6 +1006,7 @@ export default function PulseChat() {
                   </div>
                   <button
                     onClick={() => setShowHistoryDrawer(false)}
+                    aria-label="Close history"
                     className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white hover:bg-[#1A3827]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#EDE6D8]'}`}
                   >
                     <X className="w-5 h-5" />
@@ -1335,7 +1336,7 @@ export default function PulseChat() {
                         <ImageIcon className="w-3 h-3" />
                         Image attached
                       </span>
-                      <img
+                      <FallbackImg
                         src={m.image}
                         alt="Attached observation"
                         className="rounded-xl max-h-48 w-auto object-cover border border-[#4ADE80]/40"
@@ -1400,7 +1401,7 @@ export default function PulseChat() {
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl w-fit border ${
             isDark ? 'bg-[#12241A] border-[#234A33]' : 'bg-[#F2ECE1] border-[#E0D8C8] shadow-xs'
           }`}>
-            <img src={attachedImage} alt="Attachment" className="w-8 h-8 rounded object-cover border border-[#4ADE80]/40" />
+            <FallbackImg src={attachedImage} alt="Attachment" className="w-8 h-8 rounded object-cover border border-[#4ADE80]/40" />
             <div className="flex flex-col min-w-0">
               <span className={`text-xs truncate max-w-[160px] ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
                 {attachedPayload?.name || 'Image attached'}
