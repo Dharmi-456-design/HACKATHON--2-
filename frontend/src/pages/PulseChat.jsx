@@ -203,6 +203,84 @@ function FormattedMessage({ content, isDark }) {
   );
 }
 
+function EkgPulseOrb({ size = 84, active = false }) {
+  return (
+    <div
+      className="relative inline-flex items-center justify-center shrink-0 gpu-layer"
+      style={{ width: size, height: size }}
+    >
+      <motion.span
+        animate={
+          active
+            ? { scale: [1, 1.25, 1], opacity: [0.4, 0.85, 0.4] }
+            : { scale: [0.96, 1.1, 0.96], opacity: [0.35, 0.65, 0.35] }
+        }
+        transition={{ duration: active ? 1.2 : 2.4, repeat: Infinity, ease: 'easeInOut' }}
+        className="absolute inset-0 rounded-full bg-[#4ADE80]/30 blur-md"
+      />
+      <div className="absolute inset-[3%] rounded-full bg-gradient-to-br from-[#2E6141] via-[#163321] to-[#0A180F] p-[2px] shadow-xl">
+        <div className="w-full h-full rounded-full bg-[#0E2015] flex items-center justify-center relative overflow-hidden border border-[#3E7D55]/60">
+          <svg viewBox="0 0 100 100" className="w-4/5 h-4/5 relative z-10">
+            <motion.path
+              d="M 10 50 L 30 50 L 37 32 L 45 68 L 53 20 L 61 78 L 69 40 L 76 54 L 82 50 L 90 50"
+              fill="none"
+              stroke="#4ADE80"
+              strokeWidth="4.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              animate={active ? { opacity: [0.5, 1, 0.5] } : { opacity: [0.8, 1, 0.8] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ filter: 'drop-shadow(0 0 8px #4ADE80)' }}
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LeafBranchHeader() {
+  return (
+    <div className="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none overflow-hidden hidden md:block select-none">
+      {[...Array(8)].map((_, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full bg-[#E6C176] animate-pulse"
+          style={{
+            width: 3 + ((i % 3) * 2),
+            height: 3 + ((i % 3) * 2),
+            right: `${15 + ((i * 9) % 35)}%`,
+            top: `${20 + ((i * 11) % 60)}%`,
+            boxShadow: '0 0 8px #E6C176',
+            animationDuration: `${2 + (i % 3)}s`,
+          }}
+        />
+      ))}
+      <svg viewBox="0 0 320 220" className="absolute right-0 top-1/2 -translate-y-1/2 h-[120%] w-auto opacity-75">
+        <path d="M 240 220 Q 200 130 130 30" fill="none" stroke="#1D452B" strokeWidth="4" strokeLinecap="round" />
+        <path d="M 130 30 Q 150 10 175 22 Q 150 45 130 30" fill="#285C3A" stroke="#3D8254" strokeWidth="1.5" />
+        <path d="M 150 60 Q 185 45 205 60 Q 160 85 150 60" fill="#1C452A" stroke="#316B45" strokeWidth="1.5" />
+        <path d="M 175 95 Q 215 80 235 100 Q 200 125 175 95" fill="#2C6942" stroke="#489A63" strokeWidth="1.5" />
+      </svg>
+    </div>
+  );
+}
+
+function BouncingDots() {
+  return (
+    <div className="flex items-center gap-1.5 px-3 py-2.5 bg-[#13271C] border border-[#20422E] rounded-2xl rounded-tl-xs shadow-xs">
+      {[0, 0.15, 0.3].map((delay, i) => (
+        <motion.span
+          key={i}
+          animate={{ y: [0, -4, 0], opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 0.6, repeat: Infinity, delay }}
+          className="w-2 h-2 rounded-full bg-[#4ADE80]"
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function PulseChat() {
   const { toggleTheme, isDark } = useTheme();
   const { session } = useAuth();
@@ -277,7 +355,7 @@ export default function PulseChat() {
     window.speechSynthesis.speak(utterance);
   }, [speakingId, lang]);
 
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.en || {};
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
   const todayDateString = new Date().toLocaleDateString('en-US', {
     weekday: 'short',
