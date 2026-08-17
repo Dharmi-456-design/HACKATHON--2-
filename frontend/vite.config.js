@@ -23,7 +23,7 @@ export default defineConfig(async ({ mode }) => {
     envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
     define: processEnvDefines,
     server: {
-      port: 5174,
+      port: 5173,
       strictPort: false,
       host: true,
     },

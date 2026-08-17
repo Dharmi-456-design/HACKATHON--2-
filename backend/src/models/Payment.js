@@ -1,14 +1,4 @@
-import React from 'react';
-  
-  const Payment = () =>  {
-	return (
-	  <div>
-	  </div>
-	);
-  }
-  
-  export default Payment;
-  const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema(
   {
