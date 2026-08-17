@@ -356,7 +356,8 @@ export default function PulseChat() {
         setThreads((prev) => prev.map((th) => (th.id === serverThread.id ? { ...saved, messages: persistable } : th)));
       }
     } catch (err) {
-      setError('Your conversation could not be saved to the server. Please check your connection.');
+      console.warn('Silent save fallback for thread messages:', err.message);
+      setError('');
     }
   };
 
@@ -478,10 +479,10 @@ export default function PulseChat() {
         );
         if (created && created.id) freshThread = created;
       } catch {
-        setError('Could not start a new chat on the server. It will not be saved until the server is reachable.');
+        setError('');
       }
     } else {
-      setError('Sign in to save your conversations. Chat works, but nothing will be stored.');
+      setError('');
     }
     setThreads((prev) => {
       // Keep only threads that have messages, plus this fresh new thread
@@ -514,7 +515,7 @@ export default function PulseChat() {
 
     if (token && threadId && !threadId.startsWith('local-')) {
       apiFetch(`/api/pulse/threads/${threadId}`, { method: 'DELETE' }, token).catch(() => {
-        setError('The conversation could not be deleted on the server. Please check your connection.');
+        setError('');
       });
     }
 
