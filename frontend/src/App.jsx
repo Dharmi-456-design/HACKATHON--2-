@@ -38,27 +38,24 @@ function RouteFallback() {
   );
 }
 
+function PublicOnlyRoute({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return <RouteFallback />;
+  if (user) return <Navigate to="/app" replace />;
+  return children;
+}
+
 function Gate({ children }) {
-  const { token, loading } = useAuth();
+  const { loading } = useAuth();
   const [ready, setReady] = useState(false);
-  const [onboarded, setOnboarded] = useState(true);
 
   useEffect(() => {
-    if (loading) return;
-    if (!token) {
-      setReady(true);
-      return;
-    }
-    apiFetch('/api/profile', {}, token)
-      .then((p) => setOnboarded(p?.onboarding_complete !== false))
-      .catch(() => setOnboarded(true))
-      .finally(() => setReady(true));
-  }, [token, loading]);
+    if (!loading) setReady(true);
+  }, [loading]);
 
   if (!ready) {
     return <RouteFallback />;
   }
-  if (!onboarded) return <Navigate to="/onboarding" replace />;
   return children;
 }
 
@@ -71,11 +68,46 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/lithos" element={<LithosHero />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signin" element={<Login />} />
-              <Route path="/auth" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/signup" element={<Register />} />
+              <Route
+                path="/login"
+                element={
+                  <PublicOnlyRoute>
+                    <Login />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/signin"
+                element={
+                  <PublicOnlyRoute>
+                    <Login />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/auth"
+                element={
+                  <PublicOnlyRoute>
+                    <Login />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicOnlyRoute>
+                    <Register />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <PublicOnlyRoute>
+                    <Register />
+                  </PublicOnlyRoute>
+                }
+              />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route
                 path="/onboarding"
