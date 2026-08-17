@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
-  const uri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/naturepluse';
+  const uri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/naturepulse';
   if (!process.env.MONGODB_URI && !process.env.MONGO_URI) {
     console.warn('⚠️ MONGO_URI / MONGODB_URI not specified in environment. Defaulting to local fallback.');
   }
