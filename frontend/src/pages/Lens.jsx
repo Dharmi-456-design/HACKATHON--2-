@@ -116,7 +116,7 @@ export default function Lens() {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('Species analysis is temporarily unavailable. Please try again shortly.');
+  const [error, setError] = useState('');
   const [preview, setPreview] = useState('');
   const [filePayload, setFilePayload] = useState(null);
   const [analysis, setAnalysis] = useState(null);
