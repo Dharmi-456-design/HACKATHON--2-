@@ -43,10 +43,14 @@ const allowedOrigins = [
   'https://naturepulse.vercel.app',
 ];
 if (process.env.CLIENT_URL) {
-  allowedOrigins.push(process.env.CLIENT_URL);
+  const cleanUrl = process.env.CLIENT_URL.replace(/\/+$/, '');
+  allowedOrigins.push(cleanUrl);
+  allowedOrigins.push(cleanUrl + '/');
 }
 if (process.env.CORS_ORIGIN) {
-  allowedOrigins.push(process.env.CORS_ORIGIN);
+  const cleanOrigin = process.env.CORS_ORIGIN.replace(/\/+$/, '');
+  allowedOrigins.push(cleanOrigin);
+  allowedOrigins.push(cleanOrigin + '/');
 }
 app.use(
   cors({
