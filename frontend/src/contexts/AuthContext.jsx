@@ -137,14 +137,15 @@ export function AuthProvider({ children }) {
             // Exchange failed — clear state
             setUser(null);
             setAuthToken(null);
-            setLoading(false);
-          return true;
+            clearToken();
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setAuthToken(null);
+          clearToken();
         }
-      } catch (err) {
-        console.warn('[AuthContext] Supabase session check skipped:', err);
       }
-      return false;
-    };
+    );
 
     // Check custom backend JWT
     const checkBackendAuth = async () => {
@@ -196,30 +197,6 @@ export function AuthProvider({ children }) {
       if (!hasSbSession) {
         checkBackendAuth();
       }
-    });
-
-    // Listen to Supabase Auth State Changes (e.g. Google OAuth redirect callback)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-
-      if (session && session.user) {
-        const exchanged = await exchangeSupabaseSession(session);
-        if (!mounted) return;
-        if (exchanged) {
-          setUser(exchanged.user);
-          setAuthToken(exchanged.token);
-          setToken(exchanged.token);
-        } else {
-          setUser(null);
-          setAuthToken(null);
-          clearToken();
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setAuthToken(null);
-        clearToken();
-      }
-      setLoading(false);
     });
 
     return () => {
