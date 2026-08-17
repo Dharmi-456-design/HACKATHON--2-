@@ -146,6 +146,23 @@ export default function Places() {
   // Persistent State
   const [places, setPlaces] = useState([]);
 
+  // Fetch dynamic places from backend MongoDB API
+  useEffect(() => {
+    let mounted = true;
+    apiFetch('/api/places')
+      .then((data) => {
+        if (mounted && Array.isArray(data) && data.length > 0) {
+          setPlaces(data);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch places:', err.message);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const [savedPlaceIds, setSavedPlaceIds] = useState([]);
   const [bookmarkError, setBookmarkError] = useState('');
 
