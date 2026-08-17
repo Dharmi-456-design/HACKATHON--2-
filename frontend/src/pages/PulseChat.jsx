@@ -1116,25 +1116,25 @@ export default function PulseChat() {
           <EkgPulseOrb size={84} active={busy} />
 
           <div className="space-y-1">
-            <p className={`text-xs sm:text-sm font-medium tracking-wide ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>{t.welcome}</p>
+            <p className={`text-xs sm:text-sm font-medium tracking-wide ${isDark ? 'text-slate-300' : 'text-slate-500'}`}>Welcome to</p>
             <h1 className={`font-display text-4xl sm:text-5xl font-bold tracking-tight flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              {t.title} <span className="text-2xl sm:text-3xl">🍃</span>
+              Pulse <span className="text-2xl sm:text-3xl">🍃</span>
             </h1>
 
             <div className={`text-sm sm:text-base leading-relaxed font-normal pt-0.5 ${isDark ? 'text-slate-200/90' : 'text-slate-600'}`}>
-              <p>{t.tagline1}</p>
-              <p>{t.tagline2}</p>
+              <p>Calm, encouraging, intelligent, practical.</p>
+              <p>Never a know-it-all.</p>
             </div>
 
             <div className={`flex flex-wrap items-center gap-3 pt-2 text-xs sm:text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-600'}`}>
               <div className="flex items-center gap-1.5">
                 <span>🍃</span>
-                <span>{t.badge1}</span>
+                <span>Live Neural Sensing</span>
               </div>
               <span className={isDark ? 'text-slate-600' : 'text-slate-300'}>|</span>
               <div className="flex items-center gap-1.5">
                 <span>🛡️</span>
-                <span>{t.badge2}</span>
+                <span>Your Ecological Guide</span>
               </div>
             </div>
           </div>
