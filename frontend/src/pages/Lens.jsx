@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, uploadImage, fileToResizedBase64, formatWhen } from '../lib/api';
-import { Badge, Card, Empty, ErrorBanner, Field, GhostButton, PrimaryButton, Skeleton, inputCls } from '../components/ui';
+import { Badge, Card, Empty, ErrorBanner, Field, FallbackImg, GhostButton, PrimaryButton, Skeleton, inputCls } from '../components/ui';
 import ShareCard from '../components/ShareCard';
 
 const prefersReducedMotion = () =>
@@ -361,7 +361,7 @@ export default function Lens() {
   const [saveSuccess, setSaveSuccess] = useState('');
 
   const save = async () => {
-    if (!filePayload && !preview) return;
+    if ((!filePayload && !preview) || !analysis) return;
     setSaving(true);
     setError('');
     setSaveSuccess('');
@@ -892,7 +892,7 @@ export default function Lens() {
               {discoveries.map((d) => (
                 <motion.div key={d.id} variants={stagger.item}>
                   <Card className="overflow-hidden flex gap-0">
-                    {d.image_url && <img src={d.image_url} alt="" className="h-24 w-24 object-cover shrink-0" />}
+                    {d.image_url && <FallbackImg src={d.image_url} alt="" className="h-24 w-24 object-cover shrink-0" />}
                     <div className="p-4 flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge tone={d.confidence === 'high' ? 'sage' : 'warn'}>{d.confidence}</Badge>

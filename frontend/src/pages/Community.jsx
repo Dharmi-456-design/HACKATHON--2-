@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch, formatWhen } from '../lib/api';
-import { Badge, Card, Empty, ErrorBanner, Skeleton } from '../components/ui';
+import { Badge, Card, Empty, ErrorBanner, Skeleton, FallbackImg } from '../components/ui';
 
 // Multilingual Translations Dictionary for Community Page
 const COMMUNITY_TRANSLATIONS = {
@@ -170,7 +170,7 @@ export default function Community() {
     id: p._id || p.id,
     author: {
       id: p.user || 'community',
-      name: 'Nature Explorer',
+      name: p.user_name || 'Nature Explorer',
       city: p.city || 'Shared Field',
       avatar: '🌿',
       bio: 'Shared field observation',
@@ -183,15 +183,16 @@ export default function Community() {
     tags: Array.isArray(p.tags) ? p.tags : [],
     pinned: false,
     created_at: p.createdAt || p.created_at || new Date().toISOString(),
-    reactions: { like: 0, insightful: 0, ecoLove: 0, hot: 0, educational: 0 },
+    reactions: p.reactions || { like: p.upvotes || 0, insightful: 0, ecoLove: 0, hot: 0, educational: 0 },
     userReactions: {},
-    comments: [],
+    comments: Array.isArray(p.comments) ? p.comments : [],
     aiSummary: null,
     image_url: p.image_url,
   });
 
   // Persistent States
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [savedPostIds, setSavedPostIds] = useState([]);
   const [followedUserIds, setFollowedUserIds] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -229,7 +230,8 @@ export default function Community() {
   useEffect(() => {
     apiFetch('/api/community', {}, null)
       .then((list) => setPosts(Array.isArray(list) ? list.map(toUiPost) : []))
-      .catch(() => setCommunityError('Could not load the community feed. Please check your connection and try again.'));
+      .catch(() => setCommunityError('Could not load the community feed. Please check your connection and try again.'))
+      .finally(() => setLoading(false));
   }, []);
 
   // Reaction Toggle Handler
@@ -533,6 +535,18 @@ export default function Community() {
 
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
 
+  if (loading) {
+    return (
+      <div className={`min-h-screen font-sans transition-colors duration-300 ${
+        isDark ? 'bg-[#07130B]' : 'bg-[#FAF7F0]'
+      }`}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-4">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-40" />)}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen font-sans selection:bg-[#4ADE80]/30 pb-20 transition-colors duration-300 ${
       isDark ? 'bg-[#07130B] text-slate-100' : 'bg-[#FAF7F0] text-[#0F2418]'
@@ -566,7 +580,7 @@ export default function Community() {
                     <Bell className={`w-5 h-5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                     <span>{t.notificationsTitle}</span>
                   </div>
-                  <button onClick={() => setShowNotifDrawer(false)} className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
+                  <button onClick={() => setShowNotifDrawer(false)} aria-label="Close notifications" className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -636,7 +650,7 @@ export default function Community() {
                     <p className={`text-xs font-medium ${isDark ? 'text-emerald-400' : 'text-[#183B28]'}`}>{selectedProfileUser.city}</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedProfileUser(null)} className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
+                <button onClick={() => setSelectedProfileUser(null)} aria-label="Close profile" className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -742,7 +756,7 @@ export default function Community() {
                       {t.preview}
                     </button>
                   </div>
-                  <button onClick={() => setShowCreateModal(false)} className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
+                  <button onClick={() => setShowCreateModal(false)} aria-label="Close create post" className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -932,7 +946,7 @@ export default function Community() {
                   </p>
 
                   {postImage && (
-                    <img src={postImage} alt="Attachment Preview" className="w-full max-h-64 object-cover rounded-2xl border border-[#20422E] mt-2" />
+                    <FallbackImg src={postImage} alt="Attachment Preview" className="w-full max-h-64 object-cover rounded-2xl border border-[#20422E] mt-2" />
                   )}
 
                   {postTags && (
@@ -1007,6 +1021,7 @@ export default function Community() {
                 isDark ? 'bg-[#1A3626] border-[#2D5A3F] text-slate-200 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:text-[#0F2418]'
               }`}
               title="Notifications"
+              aria-label="Notifications"
             >
               <Bell className="w-5 h-5" />
               {unreadNotifCount > 0 && (
@@ -1050,6 +1065,7 @@ export default function Community() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
                   className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}
                 >
                   <X className="w-4 h-4" />
@@ -1265,7 +1281,7 @@ export default function Community() {
 
                   {/* Post Image Attachment */}
                   {post.image_url && (
-                    <img
+                    <FallbackImg
                       src={post.image_url}
                       alt="Attachment"
                       className={`w-full max-h-80 object-cover rounded-2xl border mt-3 ${

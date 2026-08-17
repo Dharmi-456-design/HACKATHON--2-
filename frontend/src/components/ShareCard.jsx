@@ -56,7 +56,7 @@ export default function ShareCard({ discovery, onClose }) {
         >
           {/* Header */}
           <div className="flex items-center gap-2 px-4 pt-4 pb-2">
-            <img src="/logo.png" alt="NaturePulse Logo" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
+            <img src="/logo.webp" alt="NaturePulse Logo" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover' }} />
             <span style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 600, color: '#14261C' }}>NaturePulse</span>
           </div>
 
@@ -112,6 +112,7 @@ export default function ShareCard({ discovery, onClose }) {
           </button>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="rounded-full border border-ink/10 text-forest/60 px-3 py-2.5 hover:bg-cream-deep transition-colors"
           >
             <X size={14} />

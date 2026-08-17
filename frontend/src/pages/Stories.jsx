@@ -773,7 +773,7 @@ export default function Stories() {
                     }`}>
                       <Sparkles className="w-4 h-4" /> {t.aiAssistantTitle}
                     </p>
-                    <button onClick={() => setShowAIAssistant(false)} className={`cursor-pointer ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
+                    <button onClick={() => setShowAIAssistant(false)} aria-label="Close AI assistant" className={`cursor-pointer ${isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'}`}>
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -855,6 +855,7 @@ export default function Stories() {
                     <button
                       disabled={aiAssistantLoading || !customAssistPrompt.trim()}
                       onClick={() => executeAIAssist('custom')}
+                      aria-label="Send prompt"
                       className={`px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center gap-1 cursor-pointer disabled:opacity-40 transition-all ${
                         isDark ? 'bg-[#4ADE80] text-[#07130B] hover:bg-[#3ECE77]' : 'bg-[#183B28] text-[#FAF7F0] hover:bg-[#255239]'
                       }`}
@@ -1117,7 +1118,7 @@ export default function Stories() {
                   <Wand2 className={`w-5 h-5 ${isDark ? 'text-[#4ADE80]' : 'text-[#183B28]'}`} />
                   <span>{t.createModalTitle}</span>
                 </h2>
-                <button onClick={() => setShowCreateModal(false)} className={`cursor-pointer ${
+                <button onClick={() => setShowCreateModal(false)} aria-label="Close create story" className={`cursor-pointer ${
                   isDark ? 'text-slate-400 hover:text-white' : 'text-[#3E5C48] hover:text-[#0F2418]'
                 }`}>
                   <X className="w-5 h-5" />

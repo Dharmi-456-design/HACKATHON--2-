@@ -147,7 +147,7 @@ export default function WeeklyRecap() {
         startDay.setDate(startDay.getDate() - 6);
         for (let i = 0; i < 7; i++) {
           const k = startDay.toISOString().slice(0, 10);
-          if (!counts[k]) counts[k] = Math.floor(Math.random() * 3) + 1;
+          if (!counts[k]) counts[k] = 0;
           startDay.setDate(startDay.getDate() + 1);
         }
 
@@ -178,9 +178,12 @@ export default function WeeklyRecap() {
   useEffect(() => {
     if (!goalsLoadedRef.current) return;
     setGoalsError('');
-    apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ weekly_goals: goals }) }, token).catch(() => {
-      setGoalsError('Your goals could not be saved. Please check your connection and try again.');
-    });
+    const timeout = setTimeout(() => {
+      apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify({ weekly_goals: goals }) }, token).catch(() => {
+        setGoalsError('Your goals could not be saved. Please check your connection and try again.');
+      });
+    }, 800);
+    return () => clearTimeout(timeout);
   }, [goals, token]);
 
   // Build the 7-day nodes from real per-day observation counts

@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { apiFetch } from '../lib/api';
+import { FallbackImg } from '../components/ui';
 import { useLiveLocation, calculateHaversineDistance, formatDistance, formatTravelTime } from '../hooks/useLiveLocation';
 
 // Multilingual UI Translations for Nearby Discovery Engine
@@ -25,6 +26,8 @@ const NEARBY_TRANSLATIONS = {
     searchBtn: 'Search Radar',
     radiusLabel: 'Discovery Radius:',
     openNowFilter: 'Open Now Only',
+    locateMe: 'Locate Me',
+    locating: 'Locating…',
     comparePlacesBtn: 'Compare Places',
     buildRouteBtn: 'Build Afternoon Route →',
     tabRadarTitle: 'Interactive Radar Map',
@@ -53,6 +56,8 @@ const NEARBY_TRANSLATIONS = {
     searchBtn: 'રડાર શોધો',
     radiusLabel: 'શોધ ત્રિજ્યા:',
     openNowFilter: 'હાલમાં ખુલ્લું',
+    locateMe: 'મારું સ્થાન',
+    locating: 'સ્થાન શોધી રહ્યા…',
     comparePlacesBtn: 'સ્થળોની સરખામણી કરો',
     buildRouteBtn: '✨ બપોરનો રૂટ બનાવો →',
     tabRadarTitle: 'ઇન્ટરેક્ટિવ રડાર મેપ',
@@ -81,6 +86,8 @@ const NEARBY_TRANSLATIONS = {
     searchBtn: 'रडार खोजें',
     radiusLabel: 'खोज त्रिज्या:',
     openNowFilter: 'अभी खुला हुआ',
+    locateMe: 'मेरा स्थान',
+    locating: 'स्थान खोज रहे हैं…',
     comparePlacesBtn: 'स्थानों की तुलना करें',
     buildRouteBtn: '✨ दोपहर का मार्ग बनाएं →',
     tabRadarTitle: 'इंटरैक्टिव रडार मैप',
@@ -239,6 +246,8 @@ export default function Places() {
 
   // Sync places with API if available
   useEffect(() => {
+    // Skip if places were already loaded from the first fetch
+    if (places.length > 0) return;
     let mounted = true;
     apiFetch('/api/places')
       .then((data) => {
@@ -388,6 +397,7 @@ export default function Places() {
                 </div>
                 <button
                   onClick={() => setShowAllPlacesModal(false)}
+                  aria-label="Close"
                   className={`p-2 rounded-full border cursor-pointer ${
                     isDark ? 'bg-[#13271C] border-[#20422E] text-slate-300 hover:text-white' : 'bg-[#EDE6D8] border-[#D4CBB8] text-[#183B28] hover:text-[#0F2418]'
                   }`}
@@ -415,7 +425,7 @@ export default function Places() {
                           isDark ? 'bg-[#07150C] border-[#20452F] text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] shadow-sm'
                         }`}>
                           <div className="relative h-44 overflow-hidden">
-                            <img src={place.image} alt={place.name} className="w-full h-full object-cover" />
+                            <FallbackImg src={place.image} alt={place.name} className="w-full h-full object-cover" />
                             <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#07130B]/80 backdrop-blur-md text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/40">
                               {place.icon} {place.category}
                             </span>
@@ -877,7 +887,7 @@ export default function Places() {
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <img src={pick.image} alt={pick.name} className="w-12 h-12 rounded-xl object-cover" />
+                          <FallbackImg src={pick.image} alt={pick.name} className="w-12 h-12 rounded-xl object-cover" />
                           <div>
                             <h4 className={`font-display text-xs font-bold line-clamp-1 ${isDark ? 'text-white' : 'text-[#0F2418]'}`}>{pick.name}</h4>
                             <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-[#3E5C48]'}`}>{pick.category} · {pick.distance}</p>
@@ -941,7 +951,7 @@ export default function Places() {
                           isDark ? 'bg-[#07150C] border-[#20452F] text-white' : 'bg-[#FDFBF7] border-[#E3DDD1] text-[#0F2418] shadow-sm'
                         }`}>
                           <div className="relative h-44 overflow-hidden">
-                            <img src={place.image} alt={place.name} className="w-full h-full object-cover" />
+                            <FallbackImg src={place.image} alt={place.name} className="w-full h-full object-cover" />
                             <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#07130B]/80 backdrop-blur-md text-[10px] font-bold text-[#4ADE80] border border-[#4ADE80]/40">
                               {place.icon} {place.category}
                             </span>
@@ -1088,7 +1098,7 @@ export default function Places() {
                   <div key={place.id} className={`rounded-3xl border overflow-hidden p-4 space-y-3 ${
                     isDark ? 'bg-[#07150C] border-[#20422E]' : 'bg-[#F4F7F4] border-slate-200'
                   }`}>
-                    <img src={place.image} alt="" className="w-full h-36 object-cover rounded-2xl" />
+                    <FallbackImg src={place.image} alt="" className="w-full h-36 object-cover rounded-2xl" />
                     <div className="space-y-1">
                       <h4 className="font-bold text-sm">{place.name}</h4>
                       <p className="text-xs text-slate-400">{place.category} · {place.address}</p>

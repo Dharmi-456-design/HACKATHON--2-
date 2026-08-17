@@ -80,9 +80,25 @@ const uploadImage = asyncHandler(async (req, res) => {
   // 2. Check for base64 payload in req.body
   const base64Input = req.body?.base64 || req.body?.imageBase64 || req.body?.image || req.body?.dataUrl;
   if (base64Input) {
+    // Validate base64 size (roughly 6.7MB base64 = 5MB binary)
+    const rawB64 = base64Input.includes(',') ? base64Input.split(',')[1] : base64Input;
+    const estimatedBytes = Math.ceil(rawB64.length * 3 / 4);
+    if (estimatedBytes > 5 * 1024 * 1024) {
+      res.status(400);
+      throw new Error('File too large (max 5MB)');
+    }
+
     const dataUri = base64Input.startsWith('data:')
       ? base64Input
       : `data:${req.body?.mime || 'image/jpeg'};base64,${base64Input}`;
+
+    // Validate MIME type
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'];
+    const mime = (req.body?.mime || 'image/jpeg').toLowerCase();
+    if (!allowedMimes.includes(mime)) {
+      res.status(400);
+      throw new Error('Only image files (jpeg, png, gif, webp, heic) are allowed');
+    }
 
     if (cloudinaryConfigured) {
       try {

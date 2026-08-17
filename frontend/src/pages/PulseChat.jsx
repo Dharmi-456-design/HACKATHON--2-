@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch, fileToResizedBase64, uploadImage } from '../lib/api';
-import { ErrorBanner } from '../components/ui';
+import { ErrorBanner, FallbackImg } from '../components/ui';
 import BlackHole from '../components/BlackHole';
 
 // Multilingual UI Translations Dictionary
@@ -208,6 +208,16 @@ export default function PulseChat() {
   const [error, setError] = useState('');
   const [copiedId, setCopiedId] = useState(null);
   const endRef = useRef(null);
+
+  const copyMessage = useCallback(async (id, content) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      // Clipboard API not available or denied
+    }
+  }, []);
 
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
@@ -740,7 +750,7 @@ export default function PulseChat() {
       setMessages(finalMsgs);
       saveActiveThreadMessages(finalMsgs);
     } catch {
-      setError('');
+      setError('Unable to reach Pulse AI. Please check your connection and try again.');
       let replyText = `I observed your note: "${fullMessageContent}". Nature ecosystems respond dynamically to shade canopy, seasonal humidity, and bird nesting corridors.`;
       const isGujarati = lang === 'gu' || /[\u0A80-\u0AFF]/.test(fullMessageContent) || /(vishe|kaho|kem|kya|che|nthi|su|chhe|mate|visit|joiye|kaya|kya|batao|kro)/i.test(fullMessageContent);
       if (isGujarati) {
@@ -775,6 +785,11 @@ export default function PulseChat() {
     <div className={`h-[calc(100vh-2rem)] md:h-screen w-full max-w-4xl mx-auto px-3 sm:px-6 py-3 flex flex-col overflow-hidden font-sans selection:bg-[#4ADE80]/30 selection:text-white relative gpu-layer transition-colors duration-300 ${
       isDark ? 'text-slate-100' : 'text-slate-900'
     }`}>
+      {loading && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0A1610]/80 backdrop-blur-sm">
+          <div className="w-8 h-8 rounded-full border-2 border-[#4ADE80]/30 border-t-[#4ADE80] animate-spin" />
+        </div>
+      )}
       {/* ──────────────── 3D BLACK HOLE BACKGROUND ACCRETION DISK ──────────────── */}
       <div className="absolute inset-0 pointer-events-none z-0 opacity-40 sm:opacity-55 overflow-hidden">
         <BlackHole
@@ -788,7 +803,6 @@ export default function PulseChat() {
           colors={isDark ? ['#4ADE80', '#22C55E', '#A7F3D0', '#ffffff', '#15803D'] : ['#183B28', '#2D5A3F', '#4ADE80', '#15803D', '#3E5C48']}
         />
       </div>
-
       {/* Hidden File Input for Image Selection */}
       <input
         type="file"
@@ -1011,6 +1025,7 @@ export default function PulseChat() {
                   </div>
                   <button
                     onClick={() => setShowHistoryDrawer(false)}
+                    aria-label="Close history"
                     className={`p-1 rounded-full ${isDark ? 'text-slate-400 hover:text-white hover:bg-[#1A3827]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#EDE6D8]'}`}
                   >
                     <X className="w-5 h-5" />
@@ -1076,6 +1091,7 @@ export default function PulseChat() {
                               }}
                               className={`p-1 rounded ${isDark ? 'text-slate-400 hover:text-white hover:bg-[#254B35]' : 'text-[#3E5C48] hover:text-[#0F2418] hover:bg-[#EDE6D8]'}`}
                               title="Rename"
+                              aria-label="Rename thread"
                             >
                               <Edit2 className="w-3 h-3" />
                             </button>
@@ -1083,6 +1099,7 @@ export default function PulseChat() {
                               onClick={(e) => deleteThread(e, th.id)}
                               className={`p-1 rounded hover:text-red-500 ${isDark ? 'text-slate-400 hover:bg-[#254B35]' : 'text-[#3E5C48] hover:bg-[#EDE6D8]'}`}
                               title="Delete"
+                              aria-label="Delete thread"
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -1338,7 +1355,7 @@ export default function PulseChat() {
                         <ImageIcon className="w-3 h-3" />
                         Image attached
                       </span>
-                      <img
+                      <FallbackImg
                         src={m.image}
                         alt="Attached observation"
                         className="rounded-xl max-h-48 w-auto object-cover border border-[#4ADE80]/40"
@@ -1403,7 +1420,7 @@ export default function PulseChat() {
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl w-fit border ${
             isDark ? 'bg-[#12241A] border-[#234A33]' : 'bg-[#F2ECE1] border-[#E0D8C8] shadow-xs'
           }`}>
-            <img src={attachedImage} alt="Attachment" className="w-8 h-8 rounded object-cover border border-[#4ADE80]/40" />
+            <FallbackImg src={attachedImage} alt="Attachment" className="w-8 h-8 rounded object-cover border border-[#4ADE80]/40" />
             <div className="flex flex-col min-w-0">
               <span className={`text-xs truncate max-w-[160px] ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
                 {attachedPayload?.name || 'Image attached'}
